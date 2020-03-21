@@ -45,7 +45,7 @@ class Denon(object):
         return denons[0]
 
     def connect(self):
-        sys.stdout.write("Connecting to %s.\n"%self.host)
+        sys.stderr.write("Connecting to %s.\n"%self.host)
         self.telnet = Telnet(self.host,23,timeout=2)
     
     @property
