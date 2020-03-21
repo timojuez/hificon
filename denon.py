@@ -24,7 +24,8 @@ class DenonDiscoverer(object):
         if len(denons) == 0:
             sys.stderr.write("INFO: #%d No Denons found, retry...\n"%try_)
             time.sleep(5)
-            if try_ < 10: return self.findDevices(try_=try_+1)
+            if try_ > 10: raise RuntimeError("No Denon found.")
+            return self.findDevices(try_=try_+1)
         self.devices = devices
         self.denons = denons
 
