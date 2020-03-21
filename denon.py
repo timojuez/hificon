@@ -1,4 +1,7 @@
-import sys, time, pulsectl, subprocess
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*- 
+
+import sys, time, pulsectl, subprocess, argparse
 from telnetlib import Telnet
 
 
@@ -61,14 +64,14 @@ class Denon(object):
         return f
     
     @_requireConnection
-    def __call__(self, *cmds):
+    def __call__(self, *cmds, verbose=False):
         """ send command to AVR """
         cmd = "\n".join(cmds)
-        print(cmd)
+        if verbose: print(cmd)
         self.telnet.write(("%s\n"%cmd).encode("ascii"))
         if "?" in cmd:
             r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
-            print(r)
+            if verbose: print(r)
             return r
 
     @_requireConnection
@@ -77,4 +80,23 @@ class Denon(object):
         self("PWON")
         time.sleep(3)
         
+
+class CLI(object):
+    
+    def __init__(self):
+        parser = argparse.ArgumentParser(description='Controller for Denon AVR - CLI')
+        parser.add_argument("command", nargs="+", type=str, help='Denon command')
+        parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
+        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
+        self.args = parser.parse_args()
         
+    def __call__(self):
+        denon = Denon(self.args.host)
+        for cmd in self.args.command:
+            r = denon(cmd, verbose=self.args.verbose)
+            if r: print(r)
+            
+        
+if __name__ == "__main__":
+    CLI()()
+
