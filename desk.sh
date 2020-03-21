@@ -1,5 +1,9 @@
-#!/bin/bash
+#!/bin/bash -e
 source `dirname $(readlink -f $0)`/include.sh
 
-denon 'PWON' 'PSFRONT SPB' 'MSSTEREO'
+if [ "$(denon PW?)" != "PWON" ]; then
+    denon PWON
+    sleep 3
+fi
+denon 'PSFRONT SPB' 'MSSTEREO'
 
