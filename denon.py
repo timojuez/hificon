@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import sys, time, pulsectl, subprocess, argparse, os
+import sys, time, subprocess, argparse, os, json, socket
 from telnetlib import Telnet
 
-CONFIG=os.path.expanduser("~/.denon_hostname")
+CONFIG=os.path.expanduser("~/.denon_discoverer")
 
 
 class DenonDiscoverer(object):
@@ -12,16 +12,25 @@ class DenonDiscoverer(object):
     Search local network for Denon AVR
     """
 
-    def __init__(self, timeout=5):
+    def __init__(self, timeout=5, usecache=True):
         self.timeout = timeout
-        try: self.findDevices()
+        if usecache and os.path.exists(CONFIG):
+            with open(CONFIG) as f:
+                d = json.load(f)
+                self.devices = d["devices"]
+                self.denons = d["denons"]
+                return
+        self.findDevices()
+        with open(CONFIG,"w") as f:
+            json.dump(dict(devices=self.devices,denons=self.denons),f)
+
+    def findDevices(self, try_=1):
+        try:
+            devices = subprocess.run(
+                ["/usr/sbin/arp","-a"],stdout=subprocess.PIPE).stdout.decode().strip().split("\n")
         except Exception as e:
             sys.stderr.write("ERROR detecting Denon IP address.\n")
             raise
-
-    def findDevices(self, try_=1):
-        devices = subprocess.run(
-            ["/usr/sbin/arp","-a"],stdout=subprocess.PIPE).stdout.decode().strip().split("\n")
         devices = [e.split(" ",1)[0] for e in devices]
         denons = [d for d in devices if d.lower().startswith("denon")]
         if len(denons) == 0:
@@ -42,35 +51,40 @@ class Denon(object):
 
     def __init__(self, host=None):
         self.host = host or self._detectHostname()
-        self.connect()
+        #self.connect()
 
     def _detectHostname(self):
-        if os.path.exists(CONFIG):
-            with open(CONFIG) as f:
-                return f.read().strip()
         denons = DenonDiscoverer().denons
         if len(denons) > 1: sys.stderr.write("WARNING: Denon device ambiguous: %s.\n"%(", ".join(denons)))
-        host = denons[0]
-        with open(CONFIG,"w") as f:
-            f.write(host)
-        return host
+        return denons[0]
 
     def connect(self):
-        sys.stderr.write("Connecting to %s.\n"%self.host)
-        self.telnet = Telnet(self.host,23,timeout=2)
+        sys.stderr.write("Connecting to %s... "%self.host)
+        sys.stderr.flush()
+        try:
+            self.telnet = Telnet(self.host,23,timeout=2)
+        except socket.gaierror:
+            sys.stderr.write("Hostname not found.\n")
+            return False
+        except socket.timeout:
+            sys.stderr.write("Timeout.\n")
+            return False
+        else: 
+            sys.stderr.write("ok\n")
+            return True
     
     @property
     def is_connected(self):
         try: self.telnet.write(b"TEST\n")
-        except OSError: return False
+        except (OSError, AttributeError) as e: return False
         else: return True
 
     def _requireConnection(func):
         def f(self,*args,**xargs):
-            if self.is_connected or self.connect() and self.is_connected:
+            if self.is_connected or self.connect():
                 return func(self,*args,**xargs)
             else: 
-                sys.stderr.write("WARNING: No connection. Dropped %s(%s).\n"
+                raise ConnectionError("No connection to AVR. Dropped %s(%s)."
                     %(func, ", ".join(args)) )
         return f
     
@@ -86,11 +100,21 @@ class Denon(object):
             return r
 
     @_requireConnection
-    def require_poweron(self):
+    def poweron(self):
         if self("PW?") == 'PWON': return
         self("PWON")
         time.sleep(3)
         
+
+class DenonSilentException(Denon):
+    """ Denon class that catches the ConnectionError """
+    
+    def __call__(self, *args, **xargs):
+        try:
+            return super(DenonSilentException,self).__call__(*args,**xargs)
+        except ConnectionError as e:
+            print(str(e))
+    
 
 class CLI(object):
     
