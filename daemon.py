@@ -31,8 +31,8 @@ class PulseListener(object):
                 sink = self.pulse.sink_list()[0]
                 volume = round(sink.volume.value_flat*self.maxvol)
                 muted = sink.mute
-                denon("MUON" if muted else "MUOFF")
-                if not muted: denon("MV%d"%volume)
+                self.denon("MUON" if muted else "MUOFF")
+                if not muted: self.denon("MV%d"%volume)
 
     def callback(self, ev):
         if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
