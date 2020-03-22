@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-import argparse, threading, time, pulsectl
+import argparse, threading, time, pulsectl, signal
 import dbus
 from gi.repository import GLib, Gio
-from .denon import DenonSilentException as Denon
+from denon import DenonSilentException as Denon
 
 
 class PulseListener(object):
@@ -62,23 +62,18 @@ class DBusListener(object):
             '/org/freedesktop/login1',
             None,
             Gio.DBusSignalFlags.NONE,
-            onLoginmanagerEvent,
+            self.onLoginmanagerEvent,
             None)
 
     def __call__(self):
-        self.poweron()
+        self.denon.poweron_wait()
         loop = GLib.MainLoop()
         loop.run()
         
     def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
-        if parameters[0]: self.poweroff()
-        else: self.poweron()
+        if parameters[0]: self.denon.poweroff()
+        else: self.denon.poweron_wait()
     
-    def poweron(self):
-        if not self.denon.is_connected:
-            while not self.denon.connect(): time.sleep(3)
-        self.denon("PWON")
-        
 
 class Main(object):
     
@@ -86,19 +81,19 @@ class Main(object):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
         parser.add_argument('--host', type=str, metavar="IP", default=None, help='AVR IP or hostname. Default: auto detect')
         parser.add_argument('--maxvol', type=int, metavar="0..100", required=True, help='Equals 100%% volume in pulse')
-        parser.add_argument('--no-power-control', type=bool, default=False, action="store_true", help='Do not control the AVR power state')
+        parser.add_argument('--no-power-control', default=False, action="store_true", help='Do not control the AVR power state')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
         self.denon = Denon(self.args.host)
         if not self.args.no_power_control:
-            signal.signal(signal.SIGTERM, self.poweroff)
-            threading.Thread(DBusListener(self.denon)).start()
-        threading.Thread(PulseListener(self.denon,self.args.maxvol)).start()
+            signal.signal(signal.SIGTERM, self.on_shutdown)
+            threading.Thread(target=DBusListener(self.denon)).start()
+        threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
 
-    def poweroff(self, sig, frame):
-        self.denon("PWSTANDBY")
+    def on_shutdown(self, sig, frame):
+        self.denon.poweroff()
         
     
 if __name__ == "__main__":
