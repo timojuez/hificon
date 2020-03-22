@@ -1,5 +1,5 @@
-# Freenon
-### Denon AVR Controlling Software for GNU
+# Freenon - Free Denon AVR Controlling Software for GNU
+### Control power and master volume with your Ubuntu laptop or similar
 
 ## Install
 
