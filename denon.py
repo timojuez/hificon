@@ -43,7 +43,38 @@ class DenonDiscoverer(object):
         self.denons = denons
 
 
-class Denon(object):
+def _requireConnection(func):
+    """ decorator for functions inside Denon class """
+    def f(self,*args,**xargs):
+        if self.is_connected or self.connect():
+            return func(self,*args,**xargs)
+        else: 
+            raise ConnectionError("No connection to AVR. Dropped %s(%s)."
+                %(func, ", ".join(args)) )
+    return f
+
+
+class DenonMethodsMixin(object):
+    """ Mapping of commands into python methods """
+
+    @_requireConnection
+    def poweron(self):
+        if self("PW?") == 'PWON': return
+        self("PWON")
+        time.sleep(3)
+
+    def poweron_wait(self):
+        """ wait for connection and power on """
+        if not self.is_connected:
+            while not self.connect(): time.sleep(3)
+        self("PWON")
+
+    @_requireConnection
+    def poweroff(self):
+        self("PWSTANDBY")
+
+
+class Denon(DenonMethodsMixin):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
     @host is the AVR's hostname or IP.
@@ -79,15 +110,6 @@ class Denon(object):
         except (OSError, AttributeError) as e: return False
         else: return True
 
-    def _requireConnection(func):
-        def f(self,*args,**xargs):
-            if self.is_connected or self.connect():
-                return func(self,*args,**xargs)
-            else: 
-                raise ConnectionError("No connection to AVR. Dropped %s(%s)."
-                    %(func, ", ".join(args)) )
-        return f
-    
     @_requireConnection
     def __call__(self, *cmds, verbose=False):
         """ send command to AVR """
@@ -98,12 +120,6 @@ class Denon(object):
             r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
             if verbose: print(r)
             return r
-
-    @_requireConnection
-    def poweron(self):
-        if self("PW?") == 'PWON': return
-        self("PWON")
-        time.sleep(3)
         
 
 class DenonSilentException(Denon):
