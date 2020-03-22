@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import sys, time, pulsectl, subprocess, argparse
+import sys, time, pulsectl, subprocess, argparse, os
 from telnetlib import Telnet
+
+CONFIG=os.path.expanduser("~/.denon_hostname")
 
 
 class DenonDiscoverer(object):
@@ -10,7 +12,8 @@ class DenonDiscoverer(object):
     Search local network for Denon AVR
     """
 
-    def __init__(self):
+    def __init__(self, timeout=5):
+        self.timeout = timeout
         try: self.findDevices()
         except Exception as e:
             sys.stderr.write("ERROR detecting Denon IP address.\n")
@@ -23,8 +26,9 @@ class DenonDiscoverer(object):
         denons = [d for d in devices if d.lower().startswith("denon")]
         if len(denons) == 0:
             sys.stderr.write("INFO: #%d No Denons found, retry...\n"%try_)
-            time.sleep(5)
-            if try_ > 10: raise RuntimeError("No Denon found.")
+            sleep = 5
+            if try_*sleep > self.timeout: raise TimeoutError("No Denon found.")
+            time.sleep(sleep)
             return self.findDevices(try_=try_+1)
         self.devices = devices
         self.denons = denons
@@ -41,9 +45,15 @@ class Denon(object):
         self.connect()
 
     def _detectHostname(self):
+        if os.path.exists(CONFIG):
+            with open(CONFIG) as f:
+                return f.read().strip()
         denons = DenonDiscoverer().denons
         if len(denons) > 1: sys.stderr.write("WARNING: Denon device ambiguous: %s.\n"%(", ".join(denons)))
-        return denons[0]
+        host = denons[0]
+        with open(CONFIG,"w") as f:
+            f.write(host)
+        return host
 
     def connect(self):
         sys.stderr.write("Connecting to %s.\n"%self.host)
