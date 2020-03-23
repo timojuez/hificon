@@ -67,7 +67,7 @@ class DenonMethodsMixin(object):
         """ wait for connection and power on """
         if not self.is_connected:
             while not self.connect(): time.sleep(3)
-        self("PWON")
+        self.poweron()
 
     @_requireConnection
     def poweroff(self):
