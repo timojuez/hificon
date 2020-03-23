@@ -72,7 +72,27 @@ class DenonMethodsMixin(object):
     @_requireConnection
     def poweroff(self):
         self("PWSTANDBY")
+        
+    @_requireConnection
+    def getVolume(self):
+        return int(self("MV?")[2:])
 
+    @_requireConnection
+    def setVolume(self, vol):
+        self("MV%d"%vol)
+        
+    volume = property(getVolume,setVolume)
+    
+    @_requireConnection
+    def getMuted(self):
+        return self("MU?") == "MUON"
+
+    @_requireConnection
+    def setMuted(self, mute):
+        self("MUON" if mute else "MUOFF")
+
+    muted = property(getMuted,setMuted)
+    
 
 class Denon(DenonMethodsMixin):
     """
@@ -80,7 +100,8 @@ class Denon(DenonMethodsMixin):
     @host is the AVR's hostname or IP.
     """
 
-    def __init__(self, host=None):
+    def __init__(self, host=None, verbose=False):
+        self.verbose = verbose
         self.host = host or self._detectHostname()
         #self.connect()
 
@@ -111,14 +132,14 @@ class Denon(DenonMethodsMixin):
         else: return True
 
     @_requireConnection
-    def __call__(self, *cmds, verbose=False):
+    def __call__(self, *cmds):
         """ send command to AVR """
         cmd = "\n".join(cmds)
-        if verbose: print(cmd)
+        if self.verbose: print("[Denon cli] %s"%cmd)
         self.telnet.write(("%s\n"%cmd).encode("ascii"))
         if "?" in cmd:
             r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
-            if verbose: print(r)
+            if self.verbose: print(r)
             return r
         
 
@@ -142,9 +163,9 @@ class CLI(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        denon = Denon(self.args.host)
+        denon = Denon(self.args.host, verbose=self.args.verbose)
         for cmd in self.args.command:
-            r = denon(cmd, verbose=self.args.verbose)
+            r = denon(cmd)
             if r: print(r)
             
         
