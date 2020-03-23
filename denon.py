@@ -43,17 +43,6 @@ class DenonDiscoverer(object):
         self.denons = denons
 
 
-def _requireConnection(func):
-    """ decorator for functions inside Denon class """
-    def f(self,*args,**xargs):
-        if self.is_connected or self.connect():
-            return func(self,*args,**xargs)
-        else: 
-            raise ConnectionError("No connection to AVR. Dropped %s(%s)."
-                %(func, ", ".join(args)) )
-    return f
-
-
 def lazy_property(getter,setter):
     def getterL(name):
         r = getattr(getter, "lazyval", getter(name))
@@ -68,7 +57,6 @@ def lazy_property(getter,setter):
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
-    @_requireConnection
     def poweron(self):
         if self("PW?") == 'PWON': return
         self("PWON")
@@ -76,30 +64,28 @@ class DenonMethodsMixin(object):
 
     def poweron_wait(self):
         """ wait for connection and power on """
-        if not self.is_connected:
-            while not self.connect(): time.sleep(3)
+        telnet = self.telnet()
+        while not telnet:
+            telnet = self.telnet()
+            time.sleep(3)
+        telnet.close()
         self.poweron()
 
-    @_requireConnection
     def poweroff(self):
         self("PWSTANDBY")
         
-    @_requireConnection
     def getVolume(self):
         val = self("MV?")[2:]
         return int(val.ljust(3,"0"))/10
 
-    @_requireConnection
     def setVolume(self, vol):
         self("MV%02d"%vol)
         
     volume = lazy_property(getVolume,setVolume)
     
-    @_requireConnection
     def getMuted(self):
         return self("MU?") == "MUON"
 
-    @_requireConnection
     def setMuted(self, mute):
         self("MUON" if mute else "MUOFF")
 
@@ -115,18 +101,16 @@ class Denon(DenonMethodsMixin):
     def __init__(self, host=None, verbose=False):
         self.verbose = verbose
         self.host = host or self._detectHostname()
-        #self.connect()
+        sys.stderr.write('AVR "%s"\n'%self.host)
 
     def _detectHostname(self):
         denons = DenonDiscoverer().denons
         if len(denons) > 1: sys.stderr.write("WARNING: Denon device ambiguous: %s.\n"%(", ".join(denons)))
         return denons[0]
 
-    def connect(self):
-        sys.stderr.write("Connecting to %s... "%self.host)
-        sys.stderr.flush()
+    def telnet(self):
         try:
-            self.telnet = Telnet(self.host,23,timeout=2)
+            telnet = Telnet(self.host,23,timeout=2)
         except socket.gaierror:
             sys.stderr.write("Hostname not found.\n")
             return False
@@ -134,8 +118,7 @@ class Denon(DenonMethodsMixin):
             sys.stderr.write("Timeout.\n")
             return False
         else: 
-            sys.stderr.write("ok\n")
-            return True
+            return telnet
     
     @property
     def is_connected(self):
@@ -143,16 +126,20 @@ class Denon(DenonMethodsMixin):
         except (OSError, AttributeError) as e: return False
         else: return True
 
-    @_requireConnection
-    def __call__(self, *cmds):
+    def __call__(self, cmd):
         """ send command to AVR """
-        cmd = "\n".join(cmds)
-        if self.verbose: print("[Denon cli] %s"%cmd)
-        self.telnet.write(("%s\n"%cmd).encode("ascii"))
-        if "?" in cmd:
-            r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
-            if self.verbose: print(r)
-            return r
+        telnet = self.telnet()
+        if not telnet:
+            sys.stderr.write("[Warning] dropping call\n")
+            return
+        try:
+            if self.verbose: print("[Denon cli] %s"%cmd)
+            telnet.write(("%s\n"%cmd).encode("ascii"))
+            if "?" in cmd:
+                r = telnet.read_until(b"\r",timeout=2).strip().decode()
+                if self.verbose: print(r)
+                return r
+        finally: telnet.close()
         
 
 class DenonSilentException(Denon):
