@@ -9,6 +9,7 @@
 - Denon AVR compatible (tested with X1400H)
 - Network connection
 
+
 ## Daemon
 This connects the Pulseaudio volume controller to the Denon master volume, switches the AVR on and off when starting/suspending/resuming/shutdown.
 `./daemon --maxvol 50`
@@ -22,6 +23,8 @@ Plain commands can be sent to the AVR
 
 See the .sh scripts for examples.
 
+
 ## Limitations
-This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
+- The software volume currently stays the same as the hardware volume. When the software volume is at 50%, it sets the AVR volume to 50% and then you have 25% volume. Instead, software volume shall be at 100% and hardware volume 25% to save energy. This has to be fixed in a future version. As a workaround use a --maxvol as low as you need!
+- This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 
