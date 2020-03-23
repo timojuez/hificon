@@ -1,4 +1,4 @@
-# Freenon - Free Denon AVR Controlling Software for GNU
+# Freenon - Free Denon Network AVR Controlling Software for GNU
 ### Control power and master volume with your Ubuntu laptop or similar
 
 ## Install
@@ -6,6 +6,8 @@
 ### Requirements
 - GNU OS (e.g. Ubuntu) or cygwin
 - Python 3
+- Denon AVR compatible (tested with X1400H)
+- Network connection
 
 ## Daemon
 This connects the Pulseaudio volume controller to the Denon master volume, switches the AVR on and off when starting/suspending/resuming/shutdown.
