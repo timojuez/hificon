@@ -54,6 +54,17 @@ def _requireConnection(func):
     return f
 
 
+def lazy_property(getter,setter):
+    def getterL(name):
+        r = getattr(getter, "lazyval", getter(name))
+        getter.lazyval = r
+        return r
+    def setterL(name, val):
+        getter.lazyval = val
+        return setter(name, val)
+    return property(getterL, setterL)
+    
+
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
@@ -75,13 +86,14 @@ class DenonMethodsMixin(object):
         
     @_requireConnection
     def getVolume(self):
-        return int(self("MV?")[2:])
+        val = self("MV?")[2:]
+        return int(val.ljust(3,"0"))/10
 
     @_requireConnection
     def setVolume(self, vol):
-        self("MV%d"%vol)
+        self("MV%02d"%vol)
         
-    volume = property(getVolume,setVolume)
+    volume = lazy_property(getVolume,setVolume)
     
     @_requireConnection
     def getMuted(self):
@@ -91,7 +103,7 @@ class DenonMethodsMixin(object):
     def setMuted(self, mute):
         self("MUON" if mute else "MUOFF")
 
-    muted = property(getMuted,setMuted)
+    muted = lazy_property(getMuted,setMuted)
     
 
 class Denon(DenonMethodsMixin):
