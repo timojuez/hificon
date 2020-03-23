@@ -10,6 +10,7 @@ class PulseListener(object):
     Connects to pulseaudio and communicates with a Denon instance.
     Main task: volume control
     """
+    sink = 0
 
     def __init__(self, avr, maxvol):
         self.denon = avr
@@ -18,6 +19,7 @@ class PulseListener(object):
     def __call__(self):
         with pulsectl.Pulse('event-printer') as pulse:
             self.pulse = pulse
+            self.updatePulseValues()
             # print('Event types:', pulsectl.PulseEventTypeEnum)
             # print('Event facilities:', pulsectl.PulseEventFacilityEnum)
             # print('Event masks:', pulsectl.PulseEventMaskEnum)
@@ -28,12 +30,24 @@ class PulseListener(object):
             while True:
                 try: pulse.event_listen()
                 except KeyboardInterrupt: pass
-                sink = self.pulse.sink_list()[0]
-                volume = round(sink.volume.value_flat*self.maxvol)
-                muted = sink.mute
-                self.denon("MUON" if muted else "MUOFF")
-                if not muted: self.denon("MV%d"%volume)
+                print("[Event] Pulseaudio change")
+                sink = self.pulse.sink_list()[self.sink]
+                avr_vol = round(sink.volume.value_flat*self.maxvol)
+                if self.denon.muted != sink.mute: self.denon.muted = sink.mute
+                if not sink.mute: self.denon.volume = avr_vol
 
+    def updatePulseValues(self):
+        """ Set pulse volume and mute according to AVR """
+        try:
+            avr_vol = self.denon.getVolume()
+            avr_muted = self.denon.muted
+        except: return
+        pulse_vol = avr_vol/self.maxvol
+        self.pulse.volume_set_all_chans(
+            self.pulse.sink_list()[self.sink], pulse_vol)
+        #TODO self.pulse.muted = avr_muted
+        print("[Pulse] setting volume to %0.2f"%pulse_vol)
+        
     def callback(self, ev):
         if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
             and ev.t == pulsectl.PulseEventTypeEnum.change): return
@@ -66,13 +80,18 @@ class DBusListener(object):
             None)
 
     def __call__(self):
+        print("[Event] Startup")
         self.denon.poweron_wait()
         loop = GLib.MainLoop()
         loop.run()
         
     def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
-        if parameters[0]: self.denon.poweroff()
-        else: self.denon.poweron_wait()
+        if parameters[0]: 
+            print("[Event] Suspend")
+            self.denon.poweroff()
+        else: 
+            print("[Event] Resume")
+            self.denon.poweron_wait()
     
 
 class Main(object):
@@ -86,13 +105,15 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        self.denon = Denon(self.args.host)
+        self.denon = Denon(self.args.host, verbose=self.args.verbose)
         if not self.args.no_power_control:
             signal.signal(signal.SIGTERM, self.on_shutdown)
             threading.Thread(target=DBusListener(self.denon)).start()
+            time.sleep(1)
         threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
 
     def on_shutdown(self, sig, frame):
+        print("[Event] Shutdown")
         self.denon.poweroff()
         
     
