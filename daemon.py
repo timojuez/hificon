@@ -17,23 +17,6 @@ class PulseCommunicator(object):
         self.maxvol = maxvol
         self.pulse = pulsectl.Pulse("Freenon")
     
-    def listenForEvents(self):
-        self.updatePulseValues()
-        #self.pulse.event_mask_set('all')
-        self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink)
-        self.pulse.event_callback_set(self.callback)
-        while True:
-            try: self.pulse.event_listen()
-            except KeyboardInterrupt: return
-            print("[Event] Pulseaudio change")
-            self.updateAvrValues()
-
-    def callback(self, ev):
-        if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
-            and ev.t == pulsectl.PulseEventTypeEnum.change): return
-        #print('Pulse event:', ev)
-        raise pulsectl.PulseLoopStop
-    
     def updateAvrValues(self):
         """ Set AVR volume and mute according to Pulse """
         sink = self.pulse.sink_list()[self.sink]
@@ -57,6 +40,26 @@ class PulseCommunicator(object):
         """ Is being executed after resume from suspension """
         self.updateAvrValues()
         
+
+class PulseListener(PulseCommunicator):
+
+    def __call__(self):
+        self.updatePulseValues()
+        #self.pulse.event_mask_set('all')
+        self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink)
+        self.pulse.event_callback_set(self.callback)
+        while True:
+            try: self.pulse.event_listen()
+            except KeyboardInterrupt: return
+            print("[Event] Pulseaudio change")
+            self.updateAvrValues()
+
+    def callback(self, ev):
+        if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
+            and ev.t == pulsectl.PulseEventTypeEnum.change): return
+        #print('Pulse event:', ev)
+        raise pulsectl.PulseLoopStop
+    
 
 class DBusListener(object):
     """
@@ -111,11 +114,11 @@ class Main(object):
         
     def __call__(self):
         self.denon = Denon(self.args.host, verbose=self.args.verbose)
-        pulse_c = PulseCommunicator(self.denon,self.args.maxvol)
         if not self.args.no_power_control:
             signal.signal(signal.SIGTERM, self.on_shutdown)
-            threading.Thread(target=DBusListener(self.denon,pulse_c)).start()
-        threading.Thread(target=pulse_c.listenForEvents).start()
+            pulse = PulseCommunicator(self.denon,self.args.maxvol)
+            threading.Thread(target=DBusListener(self.denon,pulse)).start()
+        threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
 
     def on_shutdown(self, sig, frame):
         print("[Event] Shutdown")
