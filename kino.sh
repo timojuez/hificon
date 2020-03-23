@@ -5,5 +5,5 @@ if [ "$(denon PW?)" != "PWON" ]; then
     denon PWON
     sleep 3
 fi
-denon 'PSFRONT SPA' 'MSDOLBY DIGITAL'
+denon 'PSFRONT SPA' 'MSDOLBY DIGITAL' 'SISAT/CBL'
 
