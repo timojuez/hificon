@@ -14,6 +14,8 @@
 This connects the Pulseaudio volume controller to the Denon master volume, switches the AVR on and off when starting/suspending/resuming/shutdown.
 `./daemon --maxvol 50`
 
+For infos about the parameters see `./daemon --help`.
+
 Note that this program is still in development and therefore start it with all sound output stopped and choose a --maxvol way lower than 100.
 
 
