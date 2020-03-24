@@ -14,6 +14,7 @@ class DenonHandleEvents(Denon):
             sys.stderr.write("[Event] connection lost\n")
             self.wait_for_connection()
             sys.stderr.write("[Event] reconnected\n")
+            self.reset()
             pulse_c.on_reconnect()
             raise
 
@@ -43,7 +44,7 @@ class PulseCommunicator(object):
     def updatePulseValues(self):
         """ Set pulse volume and mute according to AVR """
         try:
-            avr_vol = self.denon.getVolume()
+            avr_vol = self.denon.volume
             avr_muted = self.denon.muted
         except OSError: return
         pulse_vol = avr_vol/self.maxvol
@@ -113,6 +114,7 @@ class DBusListener(object):
             except OSError: pass
         else: 
             print("[Event] Resume")
+            self.denon.reset()
             self.denon.poweron_wait()
             pulse_c.on_resume()
     
