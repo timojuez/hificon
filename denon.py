@@ -57,7 +57,7 @@ def lazy_property(getter,setter):
         setter(name, val)
     return property(getterL, setterL)
     
-
+    
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
@@ -66,13 +66,17 @@ class DenonMethodsMixin(object):
         self("PWON")
         time.sleep(3)
 
+    def connected(self):
+        try: Denon.__call__(self,"")
+        except OSError: return False
+        else: return True
+    
+    def wait_for_connection(self):
+        while not self.connected(): time.sleep(3)
+        
     def poweron_wait(self):
         """ wait for connection and power on """
-        telnet = self.telnet()
-        while not telnet:
-            telnet = self.telnet()
-            time.sleep(3)
-        telnet.close()
+        self.wait_for_connection()
         self.poweron()
 
     def poweroff(self):
@@ -112,43 +116,16 @@ class Denon(DenonMethodsMixin):
         if len(denons) > 1: sys.stderr.write("WARNING: Denon device ambiguous: %s.\n"%(", ".join(denons)))
         return denons[0]
 
-    def telnet(self):
-        try:
-            telnet = Telnet(self.host,23,timeout=2)
-        except socket.gaierror:
-            sys.stderr.write("Hostname not found.\n")
-            return False
-        except socket.timeout:
-            sys.stderr.write("Timeout.\n")
-            return False
-        else: 
-            return telnet
-
     def __call__(self, cmd):
         """ send command to AVR """
-        telnet = self.telnet()
-        if not telnet:
-            sys.stderr.write("[Warning] dropping call\n")
-            return
-        try:
+        with Telnet(self.host,23,timeout=2) as telnet:
             if self.verbose: print("[Denon cli] %s"%cmd)
             telnet.write(("%s\n"%cmd).encode("ascii"))
             if "?" in cmd:
                 r = telnet.read_until(b"\r",timeout=2).strip().decode()
                 if self.verbose: print(r)
                 return r
-        finally: telnet.close()
         
-
-class DenonSilentException(Denon):
-    """ Denon class that catches the ConnectionError """
-    
-    def __call__(self, *args, **xargs):
-        try:
-            return super(DenonSilentException,self).__call__(*args,**xargs)
-        except ConnectionError as e:
-            print(str(e))
-    
 
 class CLI(object):
     
