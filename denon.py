@@ -44,13 +44,15 @@ class DenonDiscoverer(object):
 
 
 def lazy_property(getter,setter):
+    cache = []
     def getterL(name):
-        r = getattr(getter, "lazyval", getter(name))
-        getter.lazyval = r
-        return r
+        if cache: return cache[0]
+        cache.append(getter(name))
+        return cache[0]
     def setterL(name, val):
-        getter.lazyval = val
-        return setter(name, val)
+        cache.clear()
+        cache.append(val)
+        setter(name, val)
     return property(getterL, setterL)
     
 
@@ -119,12 +121,6 @@ class Denon(DenonMethodsMixin):
             return False
         else: 
             return telnet
-    
-    @property
-    def is_connected(self):
-        try: self.telnet.write(b"TEST\n")
-        except (OSError, AttributeError) as e: return False
-        else: return True
 
     def __call__(self, cmd):
         """ send command to AVR """
