@@ -20,9 +20,10 @@ class PulseCommunicator(object):
     def updateAvrValues(self):
         """ Set AVR volume and mute according to Pulse """
         sink = self.pulse.sink_list()[self.sink]
+        pulsemuted = bool(sink.mute)
         avr_vol = round(sink.volume.value_flat*self.maxvol)
-        if self.denon.muted != sink.mute: self.denon.muted = sink.mute
-        if not sink.mute: self.denon.volume = avr_vol
+        if self.denon.muted != pulsemuted: self.denon.muted = pulsemuted
+        if not pulsemuted: self.denon.volume = avr_vol
 
     def updatePulseValues(self):
         """ Set pulse volume and mute according to AVR """
