@@ -43,20 +43,28 @@ class DenonDiscoverer(object):
         self.denons = denons
 
 
-def lazy_property(getter,setter):
+class Lazy_property(object):
     """ like property() but caches the response of getter """
-    
-    cache = []
-    def getterL(name):
-        if cache: return cache[0]
-        cache.append(getter(name))
-        return cache[0]
-    def setterL(name, val):
-        cache.clear()
-        cache.append(val)
-        setter(name, val)
-    return property(getterL, setterL)
-    
+
+    storage = dict()
+
+    def __init__(self, fget, fset):
+        self.fget = fget
+        self.fset = fset
+
+    def __get__(self, obj, type=None):
+        if self in self.storage: return self.storage[self]
+        val = self.storage[self] = self.fget(obj)
+        return val
+
+    def __set__(self, obj, value):
+        self.fset(obj,value)
+        self.storage[self] = value
+
+    @classmethod
+    def reset(self):
+        self.storage.clear()
+
     
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
@@ -89,7 +97,7 @@ class DenonMethodsMixin(object):
     def setVolume(self, vol):
         self("MV%02d"%vol)
         
-    volume = lazy_property(getVolume,setVolume)
+    volume = Lazy_property(getVolume,setVolume)
     
     def getMuted(self):
         return self("MU?") == "MUON"
@@ -97,7 +105,11 @@ class DenonMethodsMixin(object):
     def setMuted(self, mute):
         self("MUON" if mute else "MUOFF")
 
-    muted = lazy_property(getMuted,setMuted)
+    muted = Lazy_property(getMuted,setMuted)
+    
+    def reset(self):
+        """ resets lazy properties' cache """
+        Lazy_property.reset()
     
 
 class Denon(DenonMethodsMixin):
@@ -122,7 +134,9 @@ class Denon(DenonMethodsMixin):
             if self.verbose: print("[Denon cli] %s"%cmd)
             telnet.write(("%s\n"%cmd).encode("ascii"))
             if "?" in cmd:
-                r = telnet.read_until(b"\r",timeout=2).strip().decode()
+                for i in range(5):
+                    r = telnet.read_until(b"\r",timeout=2).strip().decode()
+                    if not r or r.startswith(cmd.replace("?","")): break
                 if self.verbose: print(r)
                 return r
         
