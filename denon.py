@@ -44,6 +44,8 @@ class DenonDiscoverer(object):
 
 
 def lazy_property(getter,setter):
+    """ like property() but caches the response of getter """
+    
     cache = []
     def getterL(name):
         if cache: return cache[0]
