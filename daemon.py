@@ -1,8 +1,21 @@
 #!/usr/bin/env python3
-import argparse, threading, time, pulsectl, signal
+import argparse, threading, time, pulsectl, signal, sys
 import dbus
 from gi.repository import GLib, Gio
-from denon import DenonSilentException as Denon
+from denon import Denon
+
+
+class DenonHandleEvents(Denon):
+    
+    def __call__(self,*args,**xargs):
+        try: return super(DenonHandleEvents,self).__call__(*args,**xargs)
+        except OSError: 
+            sys.stderr.write("[Warning] dropping call\n")
+            sys.stderr.write("[Event] connection lost\n")
+            self.wait_for_connection()
+            sys.stderr.write("[Event] reconnected\n")
+            pulse_c.on_reconnect()
+            raise
 
 
 class PulseCommunicator(object):
@@ -22,24 +35,31 @@ class PulseCommunicator(object):
         sink = self.pulse.sink_list()[self.sink]
         pulsemuted = bool(sink.mute)
         avr_vol = round(sink.volume.value_flat*self.maxvol)
-        if self.denon.muted != pulsemuted: self.denon.muted = pulsemuted
-        if not pulsemuted: self.denon.volume = avr_vol
+        try:
+            if self.denon.muted != pulsemuted: self.denon.muted = pulsemuted
+            if not pulsemuted and self.denon.volume != avr_vol: self.denon.volume = avr_vol
+        except OSError: pass
 
     def updatePulseValues(self):
         """ Set pulse volume and mute according to AVR """
         try:
             avr_vol = self.denon.getVolume()
             avr_muted = self.denon.muted
-        except: return
+        except OSError: return
         pulse_vol = avr_vol/self.maxvol
-        self.pulse.volume_set_all_chans(
-            self.pulse.sink_list()[self.sink], pulse_vol)
-        #TODO self.pulse.muted = avr_muted
-        print("[Pulse] setting volume to %0.2f"%pulse_vol)
+        self.pulse.mute(self.pulse.sink_list()[self.sink],avr_muted)
+        if not avr_muted: 
+            self.pulse.volume_set_all_chans(
+                self.pulse.sink_list()[self.sink], pulse_vol)
+            print("[Pulse] setting volume to %0.2f"%pulse_vol)
         
     def on_resume(self):
         """ Is being executed after resume from suspension """
-        self.updateAvrValues()
+        self.updatePulseValues()
+        
+    def on_reconnect(self):
+        """ Execute when reconnected after connection aborted """
+        self.updatePulseValues()
         
 
 class PulseListener(PulseCommunicator):
@@ -68,19 +88,12 @@ class DBusListener(object):
     Main tasks: Power on on wifi connection, power off on standby
     """
     
-    def __init__(self, avr, pulse_c=None):
+    def __init__(self, avr):
         self.denon = avr
-        self.pulse_c = pulse_c
         print("[Event] Startup")
         self.denon.poweron_wait()
 
     def __call__(self):
-        #dbus.mainloop.glib.DBusGMainLoop(set_as_default=True)
-        #self.session_bus = dbus.SessionBus()
-        #self.system_bus = dbus.SystemBus()
-        #session_bus.add_signal_receiver(
-        #    self.poweron,'Resuming','org.freedesktop.UPower','org.freedesktop.UPower')
-
         system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
         system_bus.signal_subscribe('org.freedesktop.login1',
             'org.freedesktop.login1.Manager',
@@ -96,11 +109,12 @@ class DBusListener(object):
     def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
         if parameters[0]: 
             print("[Event] Suspend")
-            self.denon.poweroff()
+            try: self.denon.poweroff()
+            except OSError: pass
         else: 
             print("[Event] Resume")
             self.denon.poweron_wait()
-            if self.pulse_c: self.pulse_c.on_resume()
+            pulse_c.on_resume()
     
 
 class Main(object):
@@ -114,16 +128,18 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        self.denon = Denon(self.args.host, verbose=self.args.verbose)
+        global pulse_c
+        self.denon = DenonHandleEvents(self.args.host, verbose=self.args.verbose)
+        pulse_c = PulseCommunicator(self.denon,self.args.maxvol)
         if not self.args.no_power_control:
             signal.signal(signal.SIGTERM, self.on_shutdown)
-            pulse = PulseCommunicator(self.denon,self.args.maxvol)
-            threading.Thread(target=DBusListener(self.denon,pulse)).start()
+            threading.Thread(target=DBusListener(self.denon)).start()
         threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
 
     def on_shutdown(self, sig, frame):
         print("[Event] Shutdown")
-        self.denon.poweroff()
+        try: self.denon.poweroff()
+        except OSError: pass
         
     
 if __name__ == "__main__":
