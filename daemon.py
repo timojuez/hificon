@@ -1,22 +1,28 @@
 #!/usr/bin/env python3
-import argparse, threading, time, pulsectl, signal, sys
+import argparse, threading, time, pulsectl, signal, sys, socket
 import dbus
 from gi.repository import GLib, Gio
 from denon import Denon
 
 
-class DenonHandleEvents(Denon):
-    
-    def __call__(self,*args,**xargs):
-        try: return super(DenonHandleEvents,self).__call__(*args,**xargs)
-        except OSError: 
-            sys.stderr.write("[Warning] dropping call\n")
-            sys.stderr.write("[Event] connection lost\n")
-            self.wait_for_connection()
-            sys.stderr.write("[Event] reconnected\n")
-            self.reset()
-            pulse_c.on_reconnect()
-            raise
+class IfConnected(object):
+    """ with IfConnected(denon): 
+        stops execution when connection lost, wait for reconnect and fire events
+    """
+
+    def __init__(self, denon):
+        self.denon = denon
+        
+    def __enter__(self): pass
+
+    def __exit__(self, type, value, traceback):
+        if type not in (socket.timeout, socket.gaierror, socket.herror): return False
+        sys.stderr.write("[Event] connection lost\n")
+        sys.stderr.write("[Warning] dropping call\n")
+        self.denon.wait_for_connection()
+        sys.stderr.write("[Event] reconnected\n")
+        pulse_c.on_reconnect()
+        return True
 
 
 class PulseCommunicator(object):
@@ -36,23 +42,22 @@ class PulseCommunicator(object):
         sink = self.pulse.sink_list()[self.sink]
         pulsemuted = bool(sink.mute)
         avr_vol = round(sink.volume.value_flat*self.maxvol)
-        try:
+        with ifConnected: 
             if self.denon.muted != pulsemuted: self.denon.muted = pulsemuted
             if not pulsemuted and self.denon.volume != avr_vol: self.denon.volume = avr_vol
-        except OSError: pass
 
     def updatePulseValues(self):
         """ Set pulse volume and mute according to AVR """
-        try:
+        self.denon.reset()
+        with ifConnected: 
             avr_vol = self.denon.volume
             avr_muted = self.denon.muted
-        except OSError: return
-        pulse_vol = avr_vol/self.maxvol
-        self.pulse.mute(self.pulse.sink_list()[self.sink],avr_muted)
-        if not avr_muted: 
-            self.pulse.volume_set_all_chans(
-                self.pulse.sink_list()[self.sink], pulse_vol)
-            print("[Pulse] setting volume to %0.2f"%pulse_vol)
+            pulse_vol = avr_vol/self.maxvol
+            self.pulse.mute(self.pulse.sink_list()[self.sink],avr_muted)
+            if not avr_muted: 
+                self.pulse.volume_set_all_chans(
+                    self.pulse.sink_list()[self.sink], pulse_vol)
+                print("[Pulse] setting volume to %0.2f"%pulse_vol)
         
     def on_resume(self):
         """ Is being executed after resume from suspension """
@@ -110,11 +115,9 @@ class DBusListener(object):
     def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
         if parameters[0]: 
             print("[Event] Suspend")
-            try: self.denon.poweroff()
-            except OSError: pass
+            with ifConnected: self.denon.poweroff()
         else: 
             print("[Event] Resume")
-            self.denon.reset()
             self.denon.poweron_wait()
             pulse_c.on_resume()
     
@@ -130,8 +133,9 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        global pulse_c
-        self.denon = DenonHandleEvents(self.args.host, verbose=self.args.verbose)
+        global pulse_c, ifConnected
+        self.denon = Denon(self.args.host, verbose=self.args.verbose)
+        ifConnected = IfConnected(self.denon)
         pulse_c = PulseCommunicator(self.denon,self.args.maxvol)
         if not self.args.no_power_control:
             signal.signal(signal.SIGTERM, self.on_shutdown)
@@ -140,8 +144,7 @@ class Main(object):
 
     def on_shutdown(self, sig, frame):
         print("[Event] Shutdown")
-        try: self.denon.poweroff()
-        except OSError: pass
+        with ifConnected: self.denon.poweroff()
         
     
 if __name__ == "__main__":
