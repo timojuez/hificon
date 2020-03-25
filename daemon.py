@@ -71,7 +71,10 @@ class PulseCommunicator(object):
 class PulseListener(PulseCommunicator):
 
     def __call__(self):
-        self.updatePulseValues()
+        print("[Event] Startup")
+        if self.denon.poweron_wait() == 1: self.updateAvrValues()
+        else: self.updatePulseValues() # AVR was already on
+        
         #self.pulse.event_mask_set('all')
         self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink)
         self.pulse.event_callback_set(self.callback)
@@ -96,8 +99,6 @@ class DBusListener(object):
     
     def __init__(self, avr):
         self.denon = avr
-        print("[Event] Startup")
-        self.denon.poweron_wait()
 
     def __call__(self):
         system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)

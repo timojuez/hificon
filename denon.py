@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import sys, time, subprocess, argparse, os, json, socket
+import sys, time, subprocess, argparse, os, json
 from telnetlib import Telnet
 
 CONFIG=os.path.expanduser("~/.denon_discoverer")
@@ -70,12 +70,13 @@ class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
     def poweron(self):
-        if self("PW?") == 'PWON': return
+        if self("PW?") == 'PWON': return 0
         self("PWON")
         time.sleep(3)
+        return 1
 
     def connected(self):
-        try: Denon.__call__(self,"")
+        try: self("")
         except OSError: return False
         else: return True
     
@@ -85,7 +86,7 @@ class DenonMethodsMixin(object):
     def poweron_wait(self):
         """ wait for connection and power on """
         self.wait_for_connection()
-        self.poweron()
+        return self.poweron()
 
     def poweroff(self):
         self("PWSTANDBY")
