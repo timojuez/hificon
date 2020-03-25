@@ -111,6 +111,10 @@ class DenonMethodsMixin(object):
     def reset(self):
         """ resets lazy properties' cache """
         Lazy_property.reset()
+        
+    def running(self):
+        """ return True if power is on """
+        return self("PW?") == "PWON"
     
 
 class Denon(DenonMethodsMixin):
