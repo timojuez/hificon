@@ -5,6 +5,14 @@ from gi.repository import GLib, Gio
 from denon import Denon
 
 
+class DenonCustomPowerControl(Denon):
+    
+    def __init__(self, *args, no_poweron, no_poweroff, **xargs):
+        super(DenonCustomPowerControl,self).__init__(*args,**xargs)
+        if no_poweron: self.poweron = lambda self:None
+        if no_poweroff: self.poweroff = lambda self:None
+        
+
 class IfConnected(object):
     """ with IfConnected(denon): 
         stops execution when connection lost, wait for reconnect and fire events
@@ -59,9 +67,19 @@ class PulseCommunicator(object):
                     self.pulse.sink_list()[self.sink], pulse_vol)
                 print("[Pulse] setting volume to %0.2f"%pulse_vol)
         
+    def denon_connect_sync_wait(self):
+        self.denon.wait_for_connection()
+        if self.denon.running(): pulse_c.updatePulseValues()
+        else:
+            self.denon.poweron()
+            pulse_c.updateAvrValues()
+
+    def on_startup(self):
+        self.denon_connect_sync_wait()
+        
     def on_resume(self):
         """ Is being executed after resume from suspension """
-        self.updatePulseValues()
+        self.denon_connect_sync_wait()
         
     def on_reconnect(self):
         """ Execute when reconnected after connection aborted """
@@ -71,10 +89,6 @@ class PulseCommunicator(object):
 class PulseListener(PulseCommunicator):
 
     def __call__(self):
-        print("[Event] Startup")
-        if self.denon.poweron_wait() == 1: self.updateAvrValues()
-        else: self.updatePulseValues() # AVR was already on
-        
         #self.pulse.event_mask_set('all')
         self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink)
         self.pulse.event_callback_set(self.callback)
@@ -119,7 +133,6 @@ class DBusListener(object):
             with ifConnected: self.denon.poweroff()
         else: 
             print("[Event] Resume")
-            self.denon.poweron_wait()
             pulse_c.on_resume()
     
 
@@ -129,18 +142,21 @@ class Main(object):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
         parser.add_argument('--host', type=str, metavar="IP", default=None, help='AVR IP or hostname. Default: auto detect')
         parser.add_argument('--maxvol', type=int, metavar="0..100", required=True, help='Equals 100%% volume in pulse')
-        parser.add_argument('--no-power-control', default=False, action="store_true", help='Do not control the AVR power state and do not connect to system bus')
+        parser.add_argument('--no-power-on', default=False, action="store_true", help='Do not switch the AVR on when starting/resuming')
+        parser.add_argument('--no-power-off', default=False, action="store_true", help='Do not switch the AVR off on suspend/shutdown')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
         global pulse_c, ifConnected
-        self.denon = Denon(self.args.host, verbose=self.args.verbose)
+        print("[Event] Startup")
+        self.denon = DenonCustomPowerControl(self.args.host, verbose=self.args.verbose, no_poweron=self.args.no_power_on,no_poweroff=self.args.no_power_off)
         ifConnected = IfConnected(self.denon)
         pulse_c = PulseCommunicator(self.denon,self.args.maxvol)
-        if not self.args.no_power_control:
-            signal.signal(signal.SIGTERM, self.on_shutdown)
-            threading.Thread(target=DBusListener(self.denon)).start()
+        pulse_c.on_startup()
+        
+        signal.signal(signal.SIGTERM, self.on_shutdown)
+        threading.Thread(target=DBusListener(self.denon)).start()
         threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
 
     def on_shutdown(self, sig, frame):
