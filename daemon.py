@@ -9,27 +9,23 @@ class DenonCustomPowerControl(Denon):
     
     def __init__(self, *args, no_poweron, no_poweroff, **xargs):
         super(DenonCustomPowerControl,self).__init__(*args,**xargs)
-        if no_poweron: self.poweron = lambda self:None
-        if no_poweroff: self.poweroff = lambda self:None
+        if no_poweron: self.poweron = lambda:None
+        if no_poweroff: self.poweroff = lambda:None
         
 
 class IfConnected(object):
     """ with IfConnected(denon): 
-        stops execution when connection lost, wait for reconnect and fire events
+        stops execution when connection lost, fire connection_lost event
     """
 
-    def __init__(self, denon):
-        self.denon = denon
+    def __init__(self, event_listener):
+        self.el = event_listener
         
     def __enter__(self): pass
 
     def __exit__(self, type, value, traceback):
         if type not in (socket.timeout, socket.gaierror, socket.herror): return False
-        sys.stderr.write("[Event] connection lost\n")
-        sys.stderr.write("[Warning] dropping call\n")
-        self.denon.wait_for_connection()
-        sys.stderr.write("[Event] reconnected\n")
-        pulse_c.on_reconnect()
+        self.el.on_connection_lost()
         return True
 
 
@@ -67,26 +63,52 @@ class PulseCommunicator(object):
                     self.pulse.sink_list()[self.sink], pulse_vol)
                 print("[Pulse] setting volume to %0.2f"%pulse_vol)
         
+        
+class EventListener(PulseCommunicator):
+
     def denon_connect_sync_wait(self):
         self.denon.wait_for_connection()
-        if self.denon.running(): pulse_c.updatePulseValues()
+        if self.denon.running(): self.updatePulseValues()
         else:
             self.denon.poweron()
-            pulse_c.updateAvrValues()
+            self.updateAvrValues()
 
     def on_startup(self):
+        """ program start """
+        print("[Event] Startup")
         self.denon_connect_sync_wait()
         
+    def on_shutdown(self, sig, frame):
+        """ when shutting down computer """
+        print("[Event] Shutdown")
+        with ifConnected: self.denon.poweroff()
+        
+    def on_suspend(self):
+        print("[Event] Suspend")
+        with ifConnected: self.denon.poweroff()
+    
     def on_resume(self):
         """ Is being executed after resume from suspension """
+        print("[Event] Resume")
         self.denon_connect_sync_wait()
         
+    def on_connection_lost(self):
+        sys.stderr.write("[Event] connection lost\n")
+        sys.stderr.write("[Warning] dropping call\n")
+        self.denon.wait_for_connection()
+        self.on_reconnect()
+    
     def on_reconnect(self):
         """ Execute when reconnected after connection aborted """
+        sys.stderr.write("[Event] reconnected\n")
         self.updatePulseValues()
         
+    def on_pulseaudio_event(self):
+        print("[Event] Pulseaudio change")
+        self.updateAvrValues()
+        
 
-class PulseListener(PulseCommunicator):
+class PulseListener(EventListener):
 
     def __call__(self):
         #self.pulse.event_mask_set('all')
@@ -95,8 +117,7 @@ class PulseListener(PulseCommunicator):
         while True:
             try: self.pulse.event_listen()
             except KeyboardInterrupt: return
-            print("[Event] Pulseaudio change")
-            self.updateAvrValues()
+            self.on_pulseaudio_event()
 
     def callback(self, ev):
         if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
@@ -107,12 +128,11 @@ class PulseListener(PulseCommunicator):
 
 class DBusListener(object):
     """
-    Connects to DBus and communicates with a Denon instance.
-    Main tasks: Power on on wifi connection, power off on standby
+    Connects to system bus and fire events, e.g. on shutdown and suspend
     """
     
-    def __init__(self, avr):
-        self.denon = avr
+    def __init__(self, event_listener):
+        self.el = event_listener
 
     def __call__(self):
         system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
@@ -128,12 +148,10 @@ class DBusListener(object):
         loop.run()
         
     def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
-        if parameters[0]: 
-            print("[Event] Suspend")
-            with ifConnected: self.denon.poweroff()
+        if parameters[0]:
+            self.el.on_suspend() 
         else: 
-            print("[Event] Resume")
-            pulse_c.on_resume()
+            self.el.on_resume()
     
 
 class Main(object):
@@ -148,21 +166,16 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        global pulse_c, ifConnected
-        print("[Event] Startup")
-        self.denon = DenonCustomPowerControl(self.args.host, verbose=self.args.verbose, no_poweron=self.args.no_power_on,no_poweroff=self.args.no_power_off)
-        ifConnected = IfConnected(self.denon)
-        pulse_c = PulseCommunicator(self.denon,self.args.maxvol)
-        pulse_c.on_startup()
+        global ifConnected
+        denon = DenonCustomPowerControl(self.args.host, verbose=self.args.verbose, no_poweron=self.args.no_power_on,no_poweroff=self.args.no_power_off)
+        el = EventListener(denon,self.args.maxvol)
+        ifConnected = IfConnected(el)
+        el.on_startup()
         
-        signal.signal(signal.SIGTERM, self.on_shutdown)
-        threading.Thread(target=DBusListener(self.denon)).start()
-        threading.Thread(target=PulseListener(self.denon,self.args.maxvol)).start()
+        signal.signal(signal.SIGTERM, el.on_shutdown)
+        threading.Thread(target=DBusListener(el)).start()
+        threading.Thread(target=PulseListener(denon,self.args.maxvol)).start()
 
-    def on_shutdown(self, sig, frame):
-        print("[Event] Shutdown")
-        with ifConnected: self.denon.poweroff()
-        
     
 if __name__ == "__main__":
     Main()()
