@@ -27,11 +27,11 @@ See configuration options in ~/.freenon.cfg and src/denon/freenon.cfg.default.
 Note that this program is still in development and therefore start it with all sound output stopped and choose a --maxvol way lower than 100.
 
 
-### CLI
+### CLI and shortcuts
 Plain commands can be sent to the AVR
 `freenon_cmd [command]`
 
-See the .sh scripts for examples.
+See the ./examples.
 
 
 ## Limitations
