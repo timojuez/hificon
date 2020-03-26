@@ -3,6 +3,7 @@ import argparse, threading, time, pulsectl, signal, sys, socket
 import dbus
 from gi.repository import GLib, Gio
 from denon import Denon
+from config import config
 
 
 class DenonCustomPowerControl(Denon):
@@ -97,7 +98,7 @@ class EventListener(PulseCommunicator):
         
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
-        print("[Event] connected")
+        print("[Event] connected to %s"%self.denon.host)
         if self.denon.running(): self.updatePulseValues()
         
     def on_connection_lost(self):
@@ -159,15 +160,15 @@ class Main(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
         parser.add_argument('--host', type=str, metavar="IP", default=None, help='AVR IP or hostname. Default: auto detect')
-        parser.add_argument('--maxvol', type=int, metavar="0..100", required=True, help='Equals 100%% volume in pulse')
-        parser.add_argument('--no-power-on', default=False, action="store_true", help='Do not switch the AVR on when starting/resuming')
-        parser.add_argument('--no-power-off', default=False, action="store_true", help='Do not switch the AVR off on suspend/shutdown')
+        parser.add_argument('--maxvol', type=int, metavar="0..98", required=True, help='Equals 100%% volume in pulse')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
         global ifConnected
-        denon = DenonCustomPowerControl(self.args.host, verbose=self.args.verbose, no_poweron=self.args.no_power_on,no_poweroff=self.args.no_power_off)
+        denon = DenonCustomPowerControl(self.args.host, verbose=self.args.verbose,
+            no_poweron=not config.getboolean("DEFAULT","control_power_on"),
+            no_poweroff=not config.getboolean("DEFAULT","control_power_off") )
         el = EventListener(denon,self.args.maxvol)
         ifConnected = IfConnected(el)
         el.on_startup()

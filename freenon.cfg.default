@@ -1,0 +1,8 @@
+[DEFAULT]
+# Switch the AVR on when starting/resuming
+control_power_on = yes
+# Switch the AVR off on suspend/shutdown
+control_power_off = yes
+
+# Host = 1.2.3.4
+

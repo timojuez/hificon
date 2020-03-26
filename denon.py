@@ -1,46 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import sys, time, subprocess, argparse, os, json
+import sys, time, argparse
 from telnetlib import Telnet
-
-CONFIG=os.path.expanduser("~/.denon_discoverer")
-
-
-class DenonDiscoverer(object):
-    """
-    Search local network for Denon AVR
-    """
-
-    def __init__(self, timeout=5, usecache=True):
-        self.timeout = timeout
-        if usecache and os.path.exists(CONFIG):
-            with open(CONFIG) as f:
-                d = json.load(f)
-                self.devices = d["devices"]
-                self.denons = d["denons"]
-                return
-        self.findDevices()
-        with open(CONFIG,"w") as f:
-            json.dump(dict(devices=self.devices,denons=self.denons),f)
-
-    def findDevices(self, try_=1):
-        try:
-            devices = subprocess.run(
-                ["/usr/sbin/arp","-a"],stdout=subprocess.PIPE).stdout.decode().strip().split("\n")
-        except Exception as e:
-            sys.stderr.write("ERROR detecting Denon IP address.\n")
-            raise
-        devices = [e.split(" ",1)[0] for e in devices]
-        denons = [d for d in devices if d.lower().startswith("denon")]
-        if len(denons) == 0:
-            sys.stderr.write("INFO: #%d No Denons found, retry...\n"%try_)
-            sleep = 5
-            if try_*sleep > self.timeout: raise TimeoutError("No Denon found.")
-            time.sleep(sleep)
-            return self.findDevices(try_=try_+1)
-        self.devices = devices
-        self.denons = denons
+from config import config
+from setup import DenonDiscoverer
 
 
 class Lazy_property(object):
@@ -125,13 +89,8 @@ class Denon(DenonMethodsMixin):
 
     def __init__(self, host=None, verbose=False):
         self.verbose = verbose
-        self.host = host or self._detectHostname()
-        sys.stderr.write('AVR "%s"\n'%self.host)
-
-    def _detectHostname(self):
-        denons = DenonDiscoverer().denons
-        if len(denons) > 1: sys.stderr.write("WARNING: Denon device ambiguous: %s.\n"%(", ".join(denons)))
-        return denons[0]
+        self.host = host or config["DEFAULT"].get("Host") or DenonDiscoverer().denon
+        if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
 
     def __call__(self, cmd):
         """ send command to AVR """
@@ -159,7 +118,7 @@ class CLI(object):
         denon = Denon(self.args.host, verbose=self.args.verbose)
         for cmd in self.args.command:
             r = denon(cmd)
-            if r: print(r)
+            if r and not self.args.verbose: print(r)
             
         
 if __name__ == "__main__":
