@@ -2,8 +2,8 @@
 import argparse, threading, time, pulsectl, signal, sys, socket
 import dbus
 from gi.repository import GLib, Gio
-from denon import Denon
-from config import config
+from .denon import Denon
+from .config import config
 
 
 class DenonCustomPowerControl(Denon):
@@ -177,7 +177,8 @@ class Main(object):
         threading.Thread(target=DBusListener(el)).start()
         threading.Thread(target=PulseListener(denon,self.args.maxvol)).start()
 
-    
+
+main = lambda:Main()()    
 if __name__ == "__main__":
-    Main()()
+    main()
 

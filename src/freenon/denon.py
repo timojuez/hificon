@@ -3,8 +3,8 @@
 
 import sys, time, argparse
 from telnetlib import Telnet
-from config import config
-from setup import DenonDiscoverer
+from .config import config
+from .setup import DenonDiscoverer
 
 
 class Lazy_property(object):
@@ -120,7 +120,8 @@ class CLI(object):
             r = denon(cmd)
             if r and not self.args.verbose: print(r)
             
-        
+
+main = lambda:CLI()()
 if __name__ == "__main__":
-    CLI()()
+    main()
 

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import subprocess, sys, netifaces, ipaddress, nmap
-from config import config
+from .config import config
 
 
 class DenonDiscoverer(object):
