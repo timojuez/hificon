@@ -15,7 +15,7 @@ class DenonCustomPowerControl(Denon):
 
 class IfConnected(object):
     """ with IfConnected(denon): 
-        stops execution when connection lost, fire connection_lost event
+        stops execution on connection errors and fire events
     """
 
     def __init__(self, event_listener):
@@ -26,6 +26,9 @@ class IfConnected(object):
     def __exit__(self, type, value, traceback):
         if type not in (socket.timeout, socket.gaierror, socket.herror): return False
         self.el.on_connection_lost()
+        sys.stderr.write("[Warning] dropping call\n")
+        self.denon.wait_for_connection()
+        self.el.on_connect()
         return True
 
 
@@ -68,10 +71,10 @@ class EventListener(PulseCommunicator):
 
     def denon_connect_sync_wait(self):
         self.denon.wait_for_connection()
-        if self.denon.running(): self.updatePulseValues()
-        else:
-            self.denon.poweron()
-            self.updateAvrValues()
+        self.on_connect()
+        #if not self.denon.running():
+        self.denon.poweron()
+        self.updateAvrValues()
 
     def on_startup(self):
         """ program start """
@@ -92,17 +95,14 @@ class EventListener(PulseCommunicator):
         print("[Event] Resume")
         self.denon_connect_sync_wait()
         
-    def on_connection_lost(self):
-        sys.stderr.write("[Event] connection lost\n")
-        sys.stderr.write("[Warning] dropping call\n")
-        self.denon.wait_for_connection()
-        self.on_reconnect()
-    
-    def on_reconnect(self):
-        """ Execute when reconnected after connection aborted """
-        sys.stderr.write("[Event] reconnected\n")
-        self.updatePulseValues()
+    def on_connect(self):
+        """ Execute when connected e.g. after connection aborted """
+        print("[Event] connected")
+        if self.denon.running(): self.updatePulseValues()
         
+    def on_connection_lost(self):
+        print("[Event] connection lost")
+    
     def on_pulseaudio_event(self):
         print("[Event] Pulseaudio change")
         self.updateAvrValues()
