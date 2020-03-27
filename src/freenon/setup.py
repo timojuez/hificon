@@ -61,6 +61,7 @@ class PrivateNetwork(object):
             for h in hosts: yield h
 
 
+def main(): DenonDiscoverer()
 if __name__ == "__main__":
-    DenonDiscoverer()
+    main()
 
