@@ -70,33 +70,33 @@ class EventHandler(object):
 
     def on_startup(self):
         """ program start """
-        print("[Event] Startup")
+        print("[Event] Startup", file=sys.stderr)
         self.denon_connect_sync_wait()
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        print("[Event] Shutdown")
+        print("[Event] Shutdown", file=sys.stderr)
         with self.denon.ifConnected: self.denon.poweroff()
         
     def on_suspend(self):
-        print("[Event] Suspend")
+        print("[Event] Suspend", file=sys.stderr)
         with self.denon.ifConnected: self.denon.poweroff()
     
     def on_resume(self):
         """ Is being executed after resume from suspension """
-        print("[Event] Resume")
+        print("[Event] Resume", file=sys.stderr)
         self.denon_connect_sync_wait()
         
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
-        print("[Event] connected to %s"%self.denon.host)
+        print("[Event] connected to %s"%self.denon.host, file=sys.stderr)
         if self.denon.running(): self.updatePluginValues()
         
     def on_connection_lost(self):
-        print("[Event] connection lost")
+        print("[Event] connection lost", file=sys.stderr)
     
     def on_plugin_change(self):
-        print("[Event] Plugin change")
+        print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
         
 
