@@ -100,14 +100,14 @@ class Denon(DenonMethodsMixin):
     def __call__(self, cmd, ignoreMvmax=True):
         """ send command to AVR """
         with Telnet(self.host,23,timeout=2) as telnet:
-            if self.verbose: print("[Denon cli] %s"%cmd)
+            if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
             telnet.write(("%s\n"%cmd).encode("ascii"))
             if "?" in cmd:
                 for i in range(5):
                     r = telnet.read_until(b"\r",timeout=2).strip().decode()
                     if ignoreMvmax and r.startswith("MVMAX"): continue
                     if not r or r.startswith(cmd.replace("?","")): break
-                if self.verbose: print(r)
+                if self.verbose: print(r, file=sys.stderr)
                 return r
         
 
