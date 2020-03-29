@@ -31,7 +31,12 @@ Note that this program is still in development and therefore start it with all s
 Plain commands can be sent to the AVR
 `freenon_cmd [command]`
 
-See the ./examples.
+See the ./examples/*.sh.
+
+
+## Development
+It is possible to create a customised daemon that keeps your own program synchronised with the AVR.
+See ./examples/dummy_daemon.py
 
 
 ## Limitations
