@@ -34,9 +34,10 @@ class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
     def poweron(self):
-        if self("PW?") == 'PWON': return 0
+        if not config.getboolean("DEFAULT","control_power_on") or self("PW?") == 'PWON':
+            return 0
         self("PWON")
-        time.sleep(3)
+        time.sleep(3) #TODO
         return 1
 
     def connected(self):
@@ -53,7 +54,9 @@ class DenonMethodsMixin(object):
         return self.poweron()
 
     def poweroff(self):
+        if not config.getboolean("DEFAULT","control_power_off"): return 0
         self("PWSTANDBY")
+        return 1
         
     def getVolume(self):
         val = self("MV?")[2:]
