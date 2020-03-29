@@ -83,6 +83,8 @@ class DenonMethodsMixin(object):
         """ return True if power is on """
         return self("PW?") == "PWON"
     
+    is_running = Lazy_property(running,None)
+    
 
 class Denon(DenonMethodsMixin):
     """
