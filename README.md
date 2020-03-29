@@ -40,7 +40,6 @@ See ./examples/dummy_daemon.py
 
 
 ## Limitations
-- Pulse volume is being forwarded to AVR but not vice versa
 - The software volume currently stays the same as the hardware volume. When the software volume is at 50%, it sets the AVR volume to 50% and then you have 25% volume. Instead, software volume shall be at 100% and hardware volume 25% to save energy. This has to be fixed in a future version. As a workaround use a --maxvol as low as you need!
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 

@@ -1,5 +1,6 @@
 import threading, time, signal, sys, socket
 import dbus
+from datetime import timedelta, datetime
 from gi.repository import GLib, Gio
 from .denon import Denon
 #from .config import config
@@ -31,7 +32,19 @@ class IfConnected(object):
         self.el.on_connect()
         return True
 
-        
+
+updateLock = threading.Lock()
+avrLock = threading.Lock()
+def threadlock(lock):
+    def decorator(func):
+        def f(*args,**xargs):
+            lock.acquire()
+            try: return func(*args,**xargs)
+            finally: lock.release()
+        return f
+    return decorator
+    
+    
 class EventHandler(object):
     """
     Event handler that keeps up to date the plugin data such as the volume
@@ -45,17 +58,23 @@ class EventHandler(object):
         self.on_startup()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self)).start()
+        self.avrListener = AvrListener(self, self.denon)
+        threading.Thread(target=self.avrListener).start()
 
+    @threadlock(avrLock)
+    @threadlock(updateLock)
     def updateAvrValues(self):
         pluginmuted = self.plugin.getMuted()
         pluginvol = self.plugin.getVolume()
         with self.denon.ifConnected: 
             if self.denon.muted != pluginmuted: self.denon.muted = pluginmuted
             if not pluginmuted and self.denon.volume != pluginvol: self.denon.volume = pluginvol
+            if hasattr(self,"avrListener"): self.avrListener.reset()
     
-    def updatePluginValues(self):
+    @threadlock(updateLock)
+    def updatePluginValues(self, denonReset=True):
         """ Set plugin volume and mute according to AVR """
-        self.denon.reset()
+        if denonReset: self.denon.reset()
         with self.denon.ifConnected: 
             avr_muted = self.denon.muted
             self.plugin.update_muted(avr_muted)
@@ -99,6 +118,18 @@ class EventHandler(object):
         print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
         
+    def on_avr_change(self, attr):
+        print("[Event] AVR attribute changed", file=sys.stderr)
+        self.updatePluginValues(False)
+        
+    def on_avr_poweron(self):
+        print("[Event] AVR power on", file=sys.stderr)
+        time.sleep(3) #TODO
+        self.updateAvrValues()
+        
+    def on_avr_poweroff(self):
+        print("[Event] AVR power off", file=sys.stderr)
+        
 
 class DBusListener(object):
     """
@@ -126,6 +157,40 @@ class DBusListener(object):
             self.el.on_suspend() 
         else: 
             self.el.on_resume()
+
+
+class AvrListener(object):
+    observe=["volume","muted","is_running"]
+        
+    def __init__(self, eh, denon):
+        self.eh = eh
+        self.denon = denon
+
+    def reset(self):
+        self.lastUpdate = datetime.now()
+
+    def __call__(self):
+        self.reset()
+        while True:
+            time.sleep(1)
+            with self.denon.ifConnected:
+                #if not avrLock.locked(): 
+                self._checkAttributes()
+
+    def _checkAttributes(self):
+        avrLock.acquire()
+        try:
+            if datetime.now() < self.lastUpdate+timedelta(seconds=1): return
+            #print("[AvrListener] check", file=sys.stderr)
+            previous = {attr:getattr(self.denon,attr) for attr in self.observe}
+            self.denon.reset()
+            new = {attr:getattr(self.denon,attr) for attr in self.observe}
+        finally: avrLock.release()
+        for attr in self.observe:
+            if new[attr] != previous[attr]:
+                if attr == "is_running":
+                    if new[attr]: self.eh.on_avr_poweron()
+                    else: self.eh.on_avr_poweroff()
+                elif self.denon.is_running: 
+                    self.eh.on_avr_change(attr)
     
-
-
