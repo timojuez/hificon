@@ -97,7 +97,7 @@ class Denon(DenonMethodsMixin):
         self.host = host or config["DEFAULT"].get("Host") or DenonDiscoverer().denon
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
 
-    def __call__(self, cmd):
+    def __call__(self, cmd, ignoreMvmax=True):
         """ send command to AVR """
         with Telnet(self.host,23,timeout=2) as telnet:
             if self.verbose: print("[Denon cli] %s"%cmd)
@@ -105,6 +105,7 @@ class Denon(DenonMethodsMixin):
             if "?" in cmd:
                 for i in range(5):
                     r = telnet.read_until(b"\r",timeout=2).strip().decode()
+                    if ignoreMvmax and r.startswith("MVMAX"): continue
                     if not r or r.startswith(cmd.replace("?","")): break
                 if self.verbose: print(r)
                 return r
