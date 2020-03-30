@@ -6,3 +6,7 @@ control_power_off = yes
 
 # Host = 1.2.3.4
 
+[Pulse]
+# 100% volume in Pulseaudio equals @maxvol in AVR
+maxvol = 70
+

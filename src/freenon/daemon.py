@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse, pulsectl
 from .libdaemon import PluginInterface, EventHandler
+from .config import config
 
 
 class AbstractPulse(object):
@@ -10,9 +11,9 @@ class AbstractPulse(object):
 class PulsePluginRelative(AbstractPulse,PluginInterface):
     sink = 0
 
-    def __init__(self, maxvol):
+    def __init__(self):
         super(PulsePluginRelative,self).__init__()
-        self.maxvol = maxvol
+        self.maxvol = config.getint("Pulse","maxvol")
     
     def getVolume(self):
         """ Set AVR volume and mute according to Pulse """
@@ -66,14 +67,13 @@ class Main(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
         parser.add_argument('--absolute', action="store_true",default=False, help='Change pulseaudio absolute volume when AVR volume changes via remote')
-        parser.add_argument('--maxvol', type=int, metavar="0..98", required=True, help='Equals 100%% volume in pulse')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
         PulsePlugin = PulsePluginRelative if not self.args.absolute else \
             PulsePluginAbsolute
-        el = EventHandler(PulsePlugin(self.args.maxvol), verbose=self.args.verbose)
+        el = EventHandler(PulsePlugin(), verbose=self.args.verbose)
         PulseListener()(el)
 
 
