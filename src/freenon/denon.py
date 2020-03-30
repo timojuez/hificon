@@ -68,7 +68,7 @@ class DenonMethodsMixin(object):
 
     def setVolume(self, vol):
         vol = roundVolume(vol)
-        self("MV%d"%(vol*10))
+        self("MV%03d"%(vol*10))
         return vol
         
     volume = Lazy_property(getVolume,setVolume)
