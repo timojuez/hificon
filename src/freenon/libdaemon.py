@@ -28,7 +28,7 @@ class IfConnected(object):
         if type not in (socket.timeout, socket.gaierror, socket.herror): return False
         self.el.on_connection_lost()
         sys.stderr.write("[Warning] dropping call\n")
-        self.el.wait_for_connection()
+        self.el.denon.wait_for_connection()
         self.el.on_connect()
         return True
 
