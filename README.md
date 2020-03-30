@@ -1,5 +1,5 @@
-# Freenon - Free Denon Network AVR Controlling Software for GNU
-### Control power and master volume with your Ubuntu laptop or similar
+# Freenon Network AVR Controlling Software
+### Control your Denon AVR's power and master volume with your Ubuntu laptop or similar
 
 ## Requirements
 - GNU OS (e.g. Ubuntu) or cygwin
