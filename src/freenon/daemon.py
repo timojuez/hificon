@@ -17,7 +17,7 @@ class PulsePlugin(AbstractPulse,PluginInterface):
     def getVolume(self):
         """ Set AVR volume and mute according to Pulse """
         sink = self.pulse.sink_list()[self.sink]
-        volume = round(sink.volume.value_flat*self.maxvol)
+        volume = sink.volume.value_flat*self.maxvol
         return volume
         
     def getMuted(self):
