@@ -7,11 +7,11 @@ class AbstractPulse(object):
     def __init__(self): self.pulse = pulsectl.Pulse("Freenon")
     
     
-class PulsePlugin(AbstractPulse,PluginInterface):
+class PulsePluginRelative(AbstractPulse,PluginInterface):
     sink = 0
 
     def __init__(self, maxvol):
-        super(PulsePlugin,self).__init__()
+        super(PulsePluginRelative,self).__init__()
         self.maxvol = maxvol
     
     def getVolume(self):
@@ -25,13 +25,21 @@ class PulsePlugin(AbstractPulse,PluginInterface):
         return bool(sink.mute)
         
     def update_volume(self, volume):
+        pulsevol = self.pulse.sink_list()[self.sink].volume.value_flat
+        self.maxvol = min(98,max(volume/max(0.01,pulsevol),10))
+        print("[Pulse] 100%% := %02d"%self.maxvol)
+    
+    def update_muted(self, muted):
+        self.pulse.mute(self.pulse.sink_list()[self.sink],muted)
+
+
+class PulsePluginAbsolute(PulsePluginRelative):
+
+    def update_volume(self, volume):
         volume = volume/self.maxvol
         self.pulse.volume_set_all_chans(
             self.pulse.sink_list()[self.sink], volume)
         print("[Pulse] setting volume to %0.2f"%volume)
-    
-    def update_muted(self, muted):
-        self.pulse.mute(self.pulse.sink_list()[self.sink],muted)
 
 
 class PulseListener(AbstractPulse):
@@ -57,11 +65,14 @@ class Main(object):
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
+        parser.add_argument('--absolute', action="store_true",default=False, help='Change pulseaudio absolute volume when AVR volume changes via remote')
         parser.add_argument('--maxvol', type=int, metavar="0..98", required=True, help='Equals 100%% volume in pulse')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
+        PulsePlugin = PulsePluginRelative if not self.args.absolute else \
+            PulsePluginAbsolute
         el = EventHandler(PulsePlugin(self.args.maxvol), verbose=self.args.verbose)
         PulseListener()(el)
 
