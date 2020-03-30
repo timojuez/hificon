@@ -26,7 +26,7 @@ class Lazy_property(object):
         return val
 
     def __set__(self, obj, value):
-        self.fset(obj,value)
+        value = self.fset(obj,value)
         self.storage[self] = value
 
     @classmethod
@@ -67,7 +67,9 @@ class DenonMethodsMixin(object):
         return int(val.ljust(3,"0"))/10
 
     def setVolume(self, vol):
-        self("MV%d"%(roundVolume(vol)*10))
+        vol = roundVolume(vol)
+        self("MV%d"%(vol*10))
+        return vol
         
     volume = Lazy_property(getVolume,setVolume)
     
@@ -76,6 +78,7 @@ class DenonMethodsMixin(object):
 
     def setMuted(self, mute):
         self("MUON" if mute else "MUOFF")
+        return mute
 
     muted = Lazy_property(getMuted,setMuted)
     
