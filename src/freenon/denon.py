@@ -7,6 +7,10 @@ from .config import config
 from .setup import DenonDiscoverer
 
 
+def roundVolume(vol):
+    return .5*round(vol/.5)
+    
+    
 class Lazy_property(object):
     """ like property() but caches the response of getter """
 
@@ -63,7 +67,7 @@ class DenonMethodsMixin(object):
         return int(val.ljust(3,"0"))/10
 
     def setVolume(self, vol):
-        self("MV%02d"%vol)
+        self("MV%d"%(roundVolume(vol)*10))
         
     volume = Lazy_property(getVolume,setVolume)
     
@@ -103,7 +107,7 @@ class Denon(DenonMethodsMixin):
             if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
             telnet.write(("%s\n"%cmd).encode("ascii"))
             if "?" in cmd:
-                for i in range(5):
+                for i in range(15):
                     r = telnet.read_until(b"\r",timeout=2).strip().decode()
                     if ignoreMvmax and r.startswith("MVMAX"): continue
                     if not r or r.startswith(cmd.replace("?","")): break
