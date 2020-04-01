@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse, pulsectl
+from threading import Timer
 from .libdaemon import PluginInterface, EventHandler
 from .config import config
 
@@ -50,20 +51,48 @@ class PulseListener(AbstractPulse):
     """ Listen for pulseaudio change events """
 
     def __call__(self, el):
+        self.el = el
         #self.pulse.event_mask_set('all')
-        self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink)
+        self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink,
+            pulsectl.PulseEventMaskEnum.sink_input)
         self.pulse.event_callback_set(self.callback)
         while True:
             try: self.pulse.event_listen()
             except KeyboardInterrupt: return
-            el.on_plugin_change()
+            if self.ev.facility == pulsectl.PulseEventFacilityEnum.sink:
+                self._on_pulse_sink_event()
+            elif self.ev.facility == pulsectl.PulseEventFacilityEnum.sink_input:
+                self._on_pulse_sink_input_event()
 
     def callback(self, ev):
-        if not (ev.facility == pulsectl.PulseEventFacilityEnum.sink
-            and ev.t == pulsectl.PulseEventTypeEnum.change): return
+        self.ev = ev
         #print('Pulse event:', ev)
         raise pulsectl.PulseLoopStop
+
+    def _on_pulse_sink_event(self):
+        if self.ev.t == pulsectl.PulseEventTypeEnum.change:
+            self.el.on_plugin_change()
+
+    def _on_pulse_sink_input_event(self):
+        if self.ev.t == pulsectl.PulseEventTypeEnum.new:
+            print("[Pulse] start playing")
+            if hasattr(self,"poweroff"): self.poweroff.cancel()
+            self.el.denon.poweron()
+        elif pulsectl.PulseEventTypeEnum.remove and len(self.pulse.sink_input_list()) == 0:
+            print("[Pulse] stopped")
+            self.start_poweroff_timeout()
     
+    def start_poweroff_timeout(self):
+        try: timeout = config.getfloat("Pulse","poweroff_timeout")*60
+        except ValueError: return
+        if not timeout: return
+        self.poweroff = Timer(timeout,self.on_idle)
+        self.poweroff.start()
+    
+    def on_idle(self):
+        print("[Pulse] idling")
+        self.el.denon.poweroff()
+        
     
 class Main(object):
     

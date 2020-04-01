@@ -10,3 +10,6 @@ control_power_off = yes
 # 100% volume in Pulseaudio equals @maxvol in AVR
 maxvol = 70
 
+# Delay in minutes to power off AVR after last output stopped (float or "no")
+poweroff_timeout = 10
+
