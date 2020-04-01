@@ -38,7 +38,7 @@ class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
     def poweron(self):
-        if not config.getboolean("DEFAULT","control_power_on") or self("PW?") == 'PWON':
+        if not config.getboolean("AVR","control_power_on") or self("PW?") == 'PWON':
             return 0
         self("PWON")
         time.sleep(3) #TODO
@@ -58,7 +58,7 @@ class DenonMethodsMixin(object):
         return self.poweron()
 
     def poweroff(self):
-        if not config.getboolean("DEFAULT","control_power_off"): return 0
+        if not config.getboolean("AVR","control_power_off"): return 0
         self("PWSTANDBY")
         return 1
         
@@ -101,7 +101,7 @@ class Denon(DenonMethodsMixin):
 
     def __init__(self, host=None, verbose=False):
         self.verbose = verbose
-        self.host = host or config["DEFAULT"].get("Host") or DenonDiscoverer().denon
+        self.host = host or config["AVR"].get("Host") or DenonDiscoverer().denon
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
 
     def __call__(self, cmd, ignoreMvmax=True):

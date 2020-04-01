@@ -15,7 +15,7 @@ class DenonDiscoverer(object):
             if host.lower().startswith("denon"):
                 print("Found '%s'."%host)
                 self.denon = host
-                config["DEFAULT"]["Host"] = host
+                config["AVR"]["Host"] = host
                 config.save()
                 return
         raise Exception("No Denon AVR found in local network. Check if AVR is connected or"

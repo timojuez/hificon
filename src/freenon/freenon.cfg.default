@@ -1,4 +1,4 @@
-[DEFAULT]
+[AVR]
 # Switch the AVR on when starting/resuming
 control_power_on = yes
 # Switch the AVR off on suspend/shutdown
