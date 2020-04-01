@@ -37,6 +37,9 @@ class PulsePluginRelative(AbstractPulse,PluginInterface):
 class PulsePluginAbsolute(PulsePluginRelative):
 
     def update_volume(self, volume):
+        if volume > self.maxvol: 
+            self.maxvol = volume
+            print("[Pulse] 100%% := %02d"%self.maxvol)
         volume = volume/self.maxvol
         self.pulse.volume_set_all_chans(
             self.pulse.sink_list()[self.sink], volume)
