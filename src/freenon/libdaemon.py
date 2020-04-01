@@ -84,7 +84,7 @@ class EventHandler(object):
         self.denon.wait_for_connection()
         self.on_connect()
         #if not self.denon.running():
-        self.denon.poweron()
+        #self.denon.poweron()
         self.updateAvrValues()
 
     def on_startup(self):
