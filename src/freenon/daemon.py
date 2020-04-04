@@ -98,13 +98,12 @@ class Main(object):
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
-        parser.add_argument('--absolute', action="store_true",default=False, help='Change pulseaudio absolute volume when AVR volume changes via remote')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
-        PulsePlugin = PulsePluginRelative if not self.args.absolute else \
-            PulsePluginAbsolute
+        PulsePlugin = PulsePluginAbsolute if config.getboolean("Pulse","absolute") else \
+            PulsePluginRelative
         el = EventHandler(PulsePlugin(), verbose=self.args.verbose)
         PulseListener()(el)
 

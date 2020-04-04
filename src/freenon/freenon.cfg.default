@@ -13,3 +13,6 @@ maxvol = 70
 # Delay in minutes to power off AVR after last output stopped (float or "no")
 poweroff_timeout = 10
 
+# Change pulseaudio absolute volume when AVR volume changes via remote
+absolute = yes
+
