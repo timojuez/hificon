@@ -3,9 +3,14 @@
 
 ## Requirements
 - GNU OS (e.g. Ubuntu) or cygwin
-- Python 3
+- Python 3 and Pip
 - Denon AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
-- LAN connection with private nameserver
+
+**Recommended:**
+- GNU/Linux
+- SystemD
+- Private nameserver on LAN
+- Pulseaudio
 
 
 ## Install
