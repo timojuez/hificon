@@ -6,17 +6,19 @@
 - Python 3 and Pip
 - Denon AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 
-**Recommended:**
-- GNU/Linux
-- SystemD
+**For automatic freenon_setup:**
 - Private nameserver on LAN
+- nmap and net-tools
+
+**For freenon_daemon:**
+- SystemD
 - Pulseaudio
 
 
 ## Install
 
-Install the python3 development package and pip:
-`sudo apt-get install python3-dev python3-pip`
+Install the requirements:
+`sudo apt-get install python3-dev python3-pip nmap net-tools`
 
 Cloning this repository in the current directory and installing via pip:
 `$ git clone https://github.com/timojuez/denonavr.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/ && rm -R ./freenon && freenon_setup`
