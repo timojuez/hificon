@@ -51,7 +51,7 @@ See the ./examples/*.sh.
 
 ## Development
 It is possible to create a customised daemon that keeps your own program synchronised with the AVR.
-See ./examples/dummy_daemon.py
+See ./examples/custom_app.py
 
 
 ## Limitations
