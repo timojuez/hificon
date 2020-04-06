@@ -55,7 +55,7 @@ class EventHandler(object):
         self.plugin = plugin
         self.denon = Denon(verbose=verbose)
         self.denon.ifConnected = IfConnected(self)
-        self.on_startup()
+        threading.Thread(target=self.on_startup).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self)).start()
         self.avrListener = AvrListener(self, self.denon)
@@ -80,17 +80,14 @@ class EventHandler(object):
             self.plugin.update_muted(avr_muted)
             if not avr_muted: self.plugin.update_volume(self.denon.volume)
 
-    def denon_connect_sync_wait(self):
+    def denon_connect(self):
         self.denon.wait_for_connection()
         self.on_connect()
-        #if not self.denon.running():
-        #self.denon.poweron()
-        self.updateAvrValues()
 
     def on_startup(self):
         """ program start """
         print("[Event] Startup", file=sys.stderr)
-        self.denon_connect_sync_wait()
+        self.denon_connect()
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
@@ -104,7 +101,7 @@ class EventHandler(object):
     def on_resume(self):
         """ Is being executed after resume from suspension """
         print("[Event] Resume", file=sys.stderr)
-        self.denon_connect_sync_wait()
+        self.denon_connect()
         
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
