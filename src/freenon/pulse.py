@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse, pulsectl
 from threading import Timer
-from .libdaemon import PluginInterface, EventHandler
+from .synctools import PluginInterface, EventHandler
 from .config import config
 
 

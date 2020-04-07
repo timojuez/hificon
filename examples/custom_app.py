@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from freenon.libdaemon import PluginInterface, EventHandler
+from freenon.synctools import PluginInterface, EventHandler
 
 
 class MyPlugin(PluginInterface):
