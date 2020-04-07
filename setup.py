@@ -18,7 +18,7 @@ setup(name='freenon',
       include_package_data=True,
       entry_points={'console_scripts': [
         'freenon_cmd = freenon.denon:main',
-        'freenon_daemon = freenon.daemon:main',
+        'freenon_pulse = freenon.pulse:main',
         'freenon_setup = freenon.setup:main',
       ]},
 )
