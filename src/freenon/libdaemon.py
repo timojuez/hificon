@@ -101,6 +101,7 @@ class EventHandler(object):
     def on_resume(self):
         """ Is being executed after resume from suspension """
         print("[Event] Resume", file=sys.stderr)
+        self.on_connection_lost()
         self.denon_connect()
         
     def on_connect(self):
