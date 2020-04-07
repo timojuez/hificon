@@ -19,6 +19,7 @@ setup(name='freenon',
       entry_points={'console_scripts': [
         'freenon_cmd = freenon.denon:main',
         'freenon_pulse = freenon.pulse:main',
+        'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main',
         'freenon_setup = freenon.setup:main',
       ]},
 )

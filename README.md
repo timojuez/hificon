@@ -2,9 +2,10 @@
 ### Control your Denon AVR's power and master volume with your Ubuntu laptop or similar
 
 ## Requirements
+- Denon AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - GNU OS (e.g. Ubuntu) or cygwin
 - Python 3 and Pip
-- Denon AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
+- Telnet
 
 **For automatic freenon_setup:**
 - Private nameserver on LAN
@@ -32,14 +33,20 @@ To uninstall: `pip3 uninstall freenon`
 ### Configuration
 See configuration options in ~/.freenon.cfg and src/denon/freenon.cfg.default.
 
-Note that this program is still in development and therefore start it with all sound output stopped and choose a maxvol way lower than 98.
+Note that this program is still in development and therefore start it with all sound output stopped.
 
 
 ## Usage
 
-### Synchronisation with Pulse
+### Method A: Gtk Tray Icon
+This lets you control the volume by scrolling over a tray icon.
+`freenon_gtk_tray_icon`
+
+### Method B: Synchronisation with Pulse
 This connects the Pulseaudio volume controller to the Denon master volume, switches the AVR on and off when starting playback/idle/suspending/shutdown.
 `freenon_pulse`
+
+**Notice:** The software volume stays the same as the hardware volume. When the software volume is at 50%, it sets the AVR volume to 50% and then you have 25% volume. Instead, software volume shall be at 100% and hardware volume 25% to save energy. As a workaround, set maxvol in the config as low as you need or try method A!
 
 
 ### CLI and shortcuts
@@ -55,6 +62,5 @@ See ./examples/custom_app.py
 
 
 ## Limitations
-- freenon_pulse: The software volume currently stays the same as the hardware volume. When the software volume is at 50%, it sets the AVR volume to 50% and then you have 25% volume. Instead, software volume shall be at 100% and hardware volume 25% to save energy. This has to be fixed by implementing a separate volume control applet. As a workaround use a maxvol as low as you need! See config.
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 
