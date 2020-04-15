@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, threading
+import argparse, threading, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
@@ -16,6 +16,7 @@ class MyEventHandler(EventHandler):
         super(MyEventHandler,self).on_connect()
         self.updatePluginValues()
         self.plugin.show()
+        # TODO: if pulse is playing: with self.denon.ifConnected: self.denon.poweron()
 
     def on_connection_lost(self):
         super(MyEventHandler,self).on_connection_lost()
@@ -32,7 +33,7 @@ class FreenonPluginMixin(PluginInterface):
         return self.volume == 0
         
     def update_volume(self, volume):
-        print(volume)
+        print(volume, file=sys.stderr)
         self.volume = volume
         self.updateIcon()
         
@@ -93,7 +94,7 @@ class Main(object):
         
     def __call__(self):
         tray = Tray()
-        eh = MyEventHandler(tray)
+        eh = MyEventHandler(tray, verbose=self.args.verbose)
         tray.eh = eh
         PulseSinkInputListener()(eh)
         
