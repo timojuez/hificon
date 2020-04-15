@@ -113,9 +113,10 @@ class Denon(DenonMethodsMixin):
                 for i in range(15):
                     r = telnet.read_until(b"\r",timeout=2).strip().decode()
                     if ignoreMvmax and r.startswith("MVMAX"): continue
-                    if not r or r.startswith(cmd.replace("?","")): break
-                if self.verbose: print(r, file=sys.stderr)
-                return r
+                    if not r or r.startswith(cmd.replace("?","")): 
+                        if self.verbose: print(r, file=sys.stderr)
+                        return r
+                raise Exception("No answer received")
         
 
 class CLI(object):
