@@ -25,6 +25,7 @@ class IfConnected(object):
     def __enter__(self): pass
 
     def __exit__(self, type, value, traceback):
+        # TODO: catch denon.__call__."No answer received"?
         if type not in (socket.timeout, socket.gaierror, socket.herror): return False
         self.el.on_connection_lost()
         sys.stderr.write("[Warning] dropping call\n")
@@ -159,6 +160,7 @@ class DBusListener(object):
 
 class AvrListener(object):
     observe=["volume","muted","is_running"]
+    # TODO: instead keep telnet connection and keep reading bytes
         
     def __init__(self, eh, denon):
         self.eh = eh
