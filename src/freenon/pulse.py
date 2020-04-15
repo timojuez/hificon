@@ -77,7 +77,7 @@ class PulseListener(AbstractPulse):
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
             print("[Pulse] start playing")
             if hasattr(self,"poweroff"): self.poweroff.cancel()
-            self.el.denon.poweron()
+            with self.el.denon.ifConnected: self.el.denon.poweron()
         elif pulsectl.PulseEventTypeEnum.remove and len(self.pulse.sink_input_list()) == 0:
             print("[Pulse] stopped")
             self.start_poweroff_timeout()
@@ -91,7 +91,7 @@ class PulseListener(AbstractPulse):
     
     def on_idle(self):
         print("[Pulse] idling")
-        self.el.denon.poweroff()
+        with self.el.denon.ifConnected: self.el.denon.poweroff()
         
     
 class Main(object):
