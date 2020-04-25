@@ -15,7 +15,7 @@
 - Pulseaudio
 
 **For mouse and keyboard volume key support**
-- Xorg
+- Xserver, macOS or Windows
 
 **For the tray icon**
 - GTK
@@ -46,10 +46,16 @@ Note that this program is still in development and therefore try it with all sou
 ### Method A: Gtk Tray Icon
 This lets you control the volume by scrolling over a tray icon.
 `freenon_gtk_tray_icon`
+You may want to add the command to autostart.
 
-To permanently connect the mouse and keyboard volume keys to the AVR for the current user:
+To connect the mouse and keyboard volume keys to the AVR for the current user:
+#### On Xorg
 `freenon_setup --keys`
 To undo, remove the lines after ## FREENON in ~/.xbindkeysrc and restart xbindkeys.
+
+#### On other platforms
+Setup: `pip3 install --user pynput`
+To connect the extra mouse buttons, start `freenon_mouse_binding`. You may want to add the command to autostart.
 
 
 ### Method B: Synchronisation with Pulse

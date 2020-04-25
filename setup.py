@@ -16,6 +16,7 @@ setup(name='freenon',
         "autosetup": ["python-nmap", "netifaces"],
         "pulse": ["pulsectl"],
         "gi": ["PyGObject","pycairo"],
+        "pynput": ["pynput"],
       },
       include_package_data=True,
       entry_points={'console_scripts': [
@@ -24,6 +25,7 @@ setup(name='freenon',
         'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main [pulse,gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
         'freenon_key_event_handler = freenon.key_event_handler:main',
+        'freenon_mouse_binding = freenon.mouse_binding:main [pyinput]',
       ]},
 )
 
