@@ -2,7 +2,7 @@
 ### Control your Denon AVR's power and master volume with your Ubuntu laptop or similar
 
 ## Requirements
-- Denon AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
+- Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - GNU OS (e.g. Ubuntu) or cygwin
 - Python 3 and Pip
 - Telnet
@@ -14,6 +14,12 @@
 **For automatic power control:**
 - SystemD
 - Pulseaudio
+
+**For mouse and keyboard volume key support**
+- Xorg
+
+**For tray icon**
+- GTK
 
 
 ## Install
@@ -33,7 +39,7 @@ To uninstall: `pip3 uninstall freenon`
 ### Configuration
 See configuration options in ~/.freenon.cfg and src/denon/freenon.cfg.default.
 
-Note that this program is still in development and therefore start it with all sound output stopped.
+Note that this program is still in development and therefore try it with all sound output muted.
 
 
 ## Usage
