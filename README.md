@@ -48,9 +48,9 @@ This lets you control the volume by scrolling over a tray icon.
 `freenon_gtk_tray_icon`
 You may want to add the command to autostart.
 
-To connect the mouse and keyboard volume keys to the AVR for the current user:
+Use mouse and keyboard volume keys to switch on AVR and control its volume:
 #### On Xorg
-`freenon_setup --keys`
+Install permanently for current user: `freenon_setup --keys`
 To undo, remove the lines after ## FREENON in ~/.xbindkeysrc and restart xbindkeys.
 
 #### On other platforms
