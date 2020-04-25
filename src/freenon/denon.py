@@ -39,8 +39,8 @@ class Lazy_property(object):
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
-    def poweron(self):
-        if not config.getboolean("AVR","control_power_on") or self("PW?") == 'PWON':
+    def poweron(self,force=False):
+        if not force and not config.getboolean("AVR","control_power_on") or self("PW?") == 'PWON':
             return 0
         self("PWON")
         time.sleep(3) #TODO
@@ -59,8 +59,8 @@ class DenonMethodsMixin(object):
         self.wait_for_connection()
         return self.poweron()
 
-    def poweroff(self):
-        if not config.getboolean("AVR","control_power_off"): return 0
+    def poweroff(self, force=False):
+        if not force and not config.getboolean("AVR","control_power_off"): return 0
         self("PWSTANDBY")
         return 1
         
