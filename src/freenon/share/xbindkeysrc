@@ -1,0 +1,18 @@
+## FREENON SETTINGS
+
+"freenon_key_event_handler --down --pressed"
+  b:8
+  XF86AudioLowerVolume
+  
+"freenon_key_event_handler --down --released"
+  b:8 + Release
+  XF86AudioLowerVolume + Release
+    
+"freenon_key_event_handler --up --pressed"
+  b:9
+  XF86AudioRaiseVolume
+
+"freenon_key_event_handler --up --released"
+  b:9 + Release
+  XF86AudioRaiseVolume + Release
+  

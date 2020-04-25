@@ -1,9 +1,39 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import subprocess, sys, netifaces, ipaddress, nmap
+import subprocess, sys, netifaces, ipaddress, nmap, os, argparse
 from .config import config
 
+
+class Main(object):
+
+    def __init__(self):
+        parser = argparse.ArgumentParser(description='Freenon Setup Tool')
+        discover = parser.add_mutually_exclusive_group()
+        discover.add_argument('--discover', default=True, action="store_true", help='Include AVR discovering (default)')
+        discover.add_argument('--no-discover', dest="discover", action="store_false")
+
+        keys = parser.add_mutually_exclusive_group()
+        keys.add_argument('--keys', default=False, action="store_true", help='Setup mouse and keyboard volume keys binding for current user')
+        keys.add_argument('--no-keys', dest="keys", action="store_false", help='(default)')
+        
+        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
+        self.args = parser.parse_args()
+        
+    def __call__(self):
+        if self.args.discover: DenonDiscoverer()
+        if self.args.keys: setup_xorg_key_binding()
+        
+
+def setup_xorg_key_binding():
+    if not os.path.exists(os.path.expanduser("~/.xbindkeysrc")):
+        os.system("xbindkeys -d > ~/.xbindkeysrc")
+    with open(os.path.join(os.path.dirname(__file__),"share","xbindkeysrc")) as fp:
+        content = fp.read()
+    with open(os.path.expanduser("~/.xbindkeysrc"),"a+") as fp:
+        fp.write("\n%s"%content)
+    os.system("xbindkeys --poll-rc")
+    
 
 class DenonDiscoverer(object):
     """
@@ -61,7 +91,7 @@ class PrivateNetwork(object):
             for h in hosts: yield h
 
 
-def main(): DenonDiscoverer()
+def main(): Main()()
 if __name__ == "__main__":
     main()
 
