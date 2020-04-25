@@ -3,6 +3,8 @@
 
 import os,time,argparse
 from .denon import Denon
+from .config import config
+
 
 PIDFILE="/tmp/freenon_key.pid"
 
@@ -18,6 +20,7 @@ class Main(object):
         group2.add_argument("--pressed", action="store_true", default=False, help="Key pressed")
         group2.add_argument("--released", action="store_true", default=False, help="Key released")
         self.args = parser.parse_args()
+        self.denon = Denon()
 
     def __call__(self):
         cmd = "MVUP" if self.args.up else "MVDOWN"
@@ -27,10 +30,10 @@ class Main(object):
     def press(self, *cmds):
         with open(PIDFILE,"w") as fp:
             fp.write(str(os.getpid()))
-        denon = Denon()
+        interval = config.getfloat("KeyEventHandling","interval")/1000
         while True:
-            for cmd in cmds: denon(cmd)
-            time.sleep(0.03)
+            for cmd in cmds: self.denon(cmd)
+            time.sleep(interval)
 
     def release(self, *cmds):
         for i in range(500):
@@ -38,10 +41,12 @@ class Main(object):
                 with open(PIDFILE) as fp: 
                     try: pid=int(fp.read().strip())
                     except ValueError: continue
+                # on_button_release:
                 os.kill(pid,9)
                 os.remove(PIDFILE)
+                self.denon.poweron(True)
                 break
-            time.sleep(0.01)
+            time.sleep(0.05)
 
 
 main = lambda:Main()()

@@ -16,3 +16,7 @@ poweroff_timeout = 10
 # Change pulseaudio absolute volume when AVR volume changes via remote
 absolute = yes
 
+[KeyEventHandling]
+# Send volume up/down event to AVR each @interval milliseconds while key is pressed
+interval = 30
+

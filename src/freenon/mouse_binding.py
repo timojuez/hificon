@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*- 
 
 from threading import Lock, Timer
-from .denon import Denon
 from pynput.mouse import Listener, Button, Controller
+from .denon import Denon
+from .config import config
 
 
 class Main(object):
@@ -11,25 +12,26 @@ class Main(object):
     def __init__(self):
         self.lock = Lock()
         self.denon = Denon()
+        self.interval = config.getfloat("KeyEventHandling","interval")/1000
         
     def on_click(self, x, y, button, pressed):
         if button not in (Button.button8, Button.button9):
             self._lastaction = (x,y,button,pressed)
             return False
         if pressed: 
-            if button == Button.button9: self.interval("MVUP")
-            else: self.interval("MVDOWN")
+            if button == Button.button9: self.interval_function("MVUP")
+            else: self.interval_function("MVDOWN")
         else:
             self.lock.acquire()
             try: self.timer.cancel()
             finally: self.lock.release()
 
-    def interval(self,cmd):
+    def interval_function(self,cmd):
         # TODO: instead of Timer create thread of key_event_handler
         self.lock.acquire()
         try:
             self.denon(cmd)
-            self.timer = Timer(.03,self.interval,(cmd,))
+            self.timer = Timer(self.interval,self.interval_function,(cmd,))
             self.timer.start()
         finally: self.lock.release()
     
