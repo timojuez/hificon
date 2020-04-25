@@ -18,7 +18,7 @@
 **For mouse and keyboard volume key support**
 - Xorg
 
-**For tray icon**
+**For the tray icon**
 - GTK
 
 
@@ -47,6 +47,11 @@ Note that this program is still in development and therefore try it with all sou
 ### Method A: Gtk Tray Icon
 This lets you control the volume by scrolling over a tray icon.
 `freenon_gtk_tray_icon`
+
+To permanently connect the mouse and keyboard volume keys to the AVR for the current user:
+`freenon_setup --keys`
+To undo, remove the lines after ## FREENON in ~/.xbindkeysrc and restart xbindkeys.
+
 
 ### Method B: Synchronisation with Pulse
 This connects the Pulseaudio volume controller to the Denon master volume, switches the AVR on and off when starting playback/idle/suspending/shutdown.
