@@ -15,7 +15,7 @@ class MyConfigParser(configparser.ConfigParser):
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = MyConfigParser()
 config.read([
-    os.path.join(script_dir,"freenon.cfg.default"), 
+    os.path.join(script_dir,"share","freenon.cfg.default"), 
     FILE
 ])
 
