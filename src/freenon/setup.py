@@ -28,7 +28,8 @@ class Main(object):
 def setup_xorg_key_binding():
     if not os.path.exists(os.path.expanduser("~/.xbindkeysrc")):
         os.system("xbindkeys -d > ~/.xbindkeysrc")
-    with open(os.path.join(os.path.dirname(__file__),"share","xbindkeysrc")) as fp:
+    scriptpath = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(scriptpath,"share","xbindkeysrc")) as fp:
         content = fp.read()
     with open(os.path.expanduser("~/.xbindkeysrc"),"a+") as fp:
         fp.write("\n%s"%content)
