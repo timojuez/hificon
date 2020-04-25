@@ -3,7 +3,6 @@
 
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
-- GNU OS (e.g. Ubuntu) or cygwin
 - Python 3 and Pip
 - Telnet
 
@@ -25,10 +24,10 @@
 ## Install
 
 Install the requirements:
-`sudo apt-get install python3-dev python3-pip nmap net-tools`
+`sudo apt-get install python3-dev python3-pip nmap net-tools python3-gi`
 
 Cloning this repository in the current directory and installing via pip:
-`$ git clone https://github.com/timojuez/denonavr.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/ && rm -R ./freenon && freenon_setup`
+`$ git clone https://github.com/timojuez/denonavr.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[pulse,autosetup,gi] && rm -R ./freenon && freenon_setup`
 
 If you do not have a nameserver in your LAN or freenon_setup cannot find your Denon device, set the 
 host IP manually in the config file.
@@ -68,8 +67,10 @@ See the ./examples/*.sh.
 
 
 ## Development
-It is possible to create a customised controller that keeps your own program synchronised with the AVR.
+It is possible to create a customised controller that keeps your own program synchronised with the AVR. Its dependency is freenon[gi] and optionally freenon[autosetup,pulse].
 See ./examples/custom_app.py
+
+If your development only relies on sending commands to the AVR, you need the class freenon.denon.Denon. Your requirement is purely the freenon package and optionally freenon[autosetup].
 
 
 ## Limitations

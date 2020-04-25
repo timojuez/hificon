@@ -4,7 +4,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from .synctools import PluginInterface, EventHandler
-from .pulse import PulseListener
+try: from .pulse import PulseListener, pulsectl
+except ImportError: PulseListener = object
+
 
 VOLUME_MAX = 60
 VOLUME_DIFF = 3
@@ -96,7 +98,7 @@ class Main(object):
         tray = Tray()
         eh = MyEventHandler(tray, verbose=self.args.verbose)
         tray.eh = eh
-        PulseSinkInputListener()(eh)
+        if "pulsectl" in globals(): PulseSinkInputListener()(eh)
         
 
 main = lambda:Main()()    

@@ -1,5 +1,4 @@
 import threading, time, signal, sys, socket
-import dbus
 from datetime import timedelta, datetime
 from gi.repository import GLib, Gio
 from .denon import Denon, roundVolume

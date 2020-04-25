@@ -4,7 +4,9 @@
 import sys, time, argparse
 from telnetlib import Telnet
 from .config import config
-from .setup import DenonDiscoverer
+from .config import FILE as CONFFILE
+try: from .setup import DenonDiscoverer
+except ImportError: pass
 
 
 def roundVolume(vol):
@@ -101,7 +103,10 @@ class Denon(DenonMethodsMixin):
 
     def __init__(self, host=None, verbose=False):
         self.verbose = verbose
-        self.host = host or config["AVR"].get("Host") or DenonDiscoverer().denon
+        self.host = host or config["AVR"].get("Host") or \
+            "DenonDiscoverer" in globals() and DenonDiscoverer().denon
+        if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
+            "IP or hostname in %s."%CONFFILE)
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
 
     def __call__(self, cmd, ignoreMvmax=True):

@@ -14,7 +14,7 @@ class Main(object):
         discover.add_argument('--no-discover', dest="discover", action="store_false")
 
         keys = parser.add_mutually_exclusive_group()
-        keys.add_argument('--keys', default=False, action="store_true", help='Setup mouse and keyboard volume keys binding for current user')
+        keys.add_argument('--keys', default=False, action="store_true", help='Setup Xorg mouse and keyboard volume keys binding for current user')
         keys.add_argument('--no-keys', dest="keys", action="store_false", help='(default)')
         
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
