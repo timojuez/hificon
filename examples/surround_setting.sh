@@ -1,9 +1,7 @@
 #!/bin/bash -e
-source `dirname $(readlink -f $0)`/include.sh
-
-if [ "$(denon PW?)" != "PWON" ]; then
-    denon PWON
+if [ "$(freenon_cmd PW?)" != "PWON" ]; then
+    freenon_cmd PWON
     sleep 3
 fi
-denon 'PSFRONT SPA' 'MSDOLBY DIGITAL' 'SISAT/CBL'
+freenon_cmd 'DIM DAR' 'PSFRONT SPA' 'SISAT/CBL' 'MSDTS SURROUND' #'MSDOLBY DIGITAL'
 
