@@ -48,7 +48,7 @@ class Main(object):
         try:
             with open(PIDFILE) as fp:
                 d = json.load(fp)
-        except FileNotFoundError: return False
+        except (FileNotFoundError, json.decoder.JSONDecodeError): return False
         pid = d["pid"]
         if cmd is not None and d["cmd"] != cmd: return True
         # on_button_release:
@@ -58,7 +58,7 @@ class Main(object):
         return True
     
     def release(self, cmd):
-        for i in range(20):
+        for i in range(3):
             if self._release(cmd):
                 self.denon.poweron(True)
                 break
