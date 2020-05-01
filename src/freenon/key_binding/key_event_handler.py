@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import os,time,argparse,json
+from filelock import Timeout, FileLock
 from .volume_changer import VolumeChanger
 
 
@@ -20,16 +21,18 @@ class Main(VolumeChanger):
         group2.add_argument("--released", action="store_true", default=False, help="Key released")
         self.args = parser.parse_args()
         super(Main,self).__init__()
+        self.lock = FileLock("freenon_key.lock")
 
     def __call__(self):
         func = self.press if self.args.pressed else self.releasePoll
         func(self.args.up)
     
     def press(self, button):
-        if self.load():
-            self.release(None)
-        with open(PIDFILE,"x") as fp:
-            json.dump(dict(pid=os.getpid(), button=button),fp)
+        with self.lock:
+            if self.load():
+                self.release(None)
+            with open(PIDFILE,"x") as fp:
+                json.dump(dict(pid=os.getpid(), button=button),fp)
         self.set_button(button)
         self.start()
 
@@ -46,14 +49,16 @@ class Main(VolumeChanger):
         os.remove(PIDFILE)
         try: os.kill(self.pid,9)
         except ProcessLookupError: pass
+        super(Main,self).stop()
         return True
     
     def releasePoll(self, button):
-        for i in range(3):
-            if self.load():
-                self.release(button)
-                break
-            time.sleep(0.05)
+        with self.lock:
+            for i in range(3):
+                if self.load():
+                    self.release(button)
+                    break
+                time.sleep(0.05)
 
 
 main = lambda:Main()()
