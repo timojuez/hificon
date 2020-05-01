@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import os,time,argparse,json
-from filelock import Timeout, FileLock
+from filelock import FileLock
 from .volume_changer import VolumeChanger
 
 
