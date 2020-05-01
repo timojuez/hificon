@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import subprocess, sys, netifaces, ipaddress, nmap, os, argparse
+import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil
 from .config import config
 
 
@@ -28,9 +28,7 @@ class Main(object):
 def setup_xorg_key_binding():
     if not os.path.exists(os.path.expanduser("~/.xbindkeysrc")):
         os.system("xbindkeys -d > ~/.xbindkeysrc")
-    scriptpath = os.path.dirname(os.path.abspath(__file__))
-    with open(os.path.join(scriptpath,"share","xbindkeysrc")) as fp:
-        content = fp.read()
+    content = pkgutil.get_data(__name__,"share/xbindkeysrc").decode()
     with open(os.path.expanduser("~/.xbindkeysrc"),"a+") as fp:
         fp.write("\n%s"%content)
     os.system("xbindkeys --poll-rc")
