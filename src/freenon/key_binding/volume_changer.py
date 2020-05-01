@@ -23,7 +23,7 @@ class VolumeChanger(object):
         self.button = button
         
     def start(self):
-        """ listen for keys and stop when all released """
+        """ listen for keys and stop when all released. Start in extra process or thread """
         while True:
             b = self.button
             if b is None: break
