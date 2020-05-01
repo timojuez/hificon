@@ -24,8 +24,8 @@ setup(name='freenon',
         'freenon_pulse = freenon.pulse:main [pulse,gi]',
         'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main [pulse,gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
-        'freenon_key_event_handler = freenon.key_event_handler:main',
-        'freenon_mouse_binding = freenon.mouse_binding:main [pyinput]',
+        'freenon_key_event_handler = freenon.key_binding.key_event_handler:main',
+        'freenon_mouse_binding = freenon.key_binding.mouse_binding:main [pyinput]',
       ]},
 )
 

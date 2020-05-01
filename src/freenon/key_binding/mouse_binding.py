@@ -3,7 +3,7 @@
 
 from threading import Thread, Lock
 from pynput.mouse import Listener, Button, Controller
-from .key_event_handler import VolumeChanger
+from .volume_changer import VolumeChanger
 
 
 VOLUP = Button.button9
