@@ -9,7 +9,22 @@ from .config import config
 PIDFILE="/tmp/freenon_key_pid.json"
 
 
-class Main(object):
+class KeyActions(object):
+
+    def __init__(self):
+        self.denon = Denon()
+
+    def on_press(self, cmd):
+        interval = config.getfloat("KeyEventHandling","interval")/1000
+        while True:
+            self.denon(cmd)
+            time.sleep(interval)
+
+    def on_release(self, cmd):
+        self.denon.poweron(True)
+    
+
+class Main(KeyActions):
 
     def __init__(self):
         parser = argparse.ArgumentParser(description='Call this to handle volume button press and release events')
@@ -20,7 +35,7 @@ class Main(object):
         group2.add_argument("--pressed", action="store_true", default=False, help="Key pressed")
         group2.add_argument("--released", action="store_true", default=False, help="Key released")
         self.args = parser.parse_args()
-        self.denon = Denon()
+        super(Main,self).__init__()
 
     def __call__(self):
         cmd = "MVUP" if self.args.up else "MVDOWN"
@@ -35,11 +50,8 @@ class Main(object):
         with open(PIDFILE,"x") as fp:
             json.dump(dict(pid=os.getpid(), cmd=cmd),fp)
             #fp.write(str(os.getpid()))
-        interval = config.getfloat("KeyEventHandling","interval")/1000
-        while True:
-            self.denon(cmd)
-            time.sleep(interval)
-
+        self.on_press(cmd)
+    
     def _release(self,cmd=None):
         """ 
         @cmd: release button for cmd @cmd. If None, release all buttons
@@ -50,17 +62,19 @@ class Main(object):
                 d = json.load(fp)
         except (FileNotFoundError, json.decoder.JSONDecodeError): return False
         pid = d["pid"]
-        if cmd is not None and d["cmd"] != cmd: return True
+
         # on_button_release:
+        if cmd is not None and d["cmd"] != cmd: return True
         try: os.kill(pid,9)
         except ProcessLookupError: pass
+
         os.remove(PIDFILE)
         return True
     
     def release(self, cmd):
         for i in range(3):
             if self._release(cmd):
-                self.denon.poweron(True)
+                self.on_release()
                 break
             time.sleep(0.05)
 
