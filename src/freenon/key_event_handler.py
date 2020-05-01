@@ -7,24 +7,43 @@ from .config import config
 
 
 PIDFILE="/tmp/freenon_key_pid.json"
+BUTTON2CMD = {True:"MVUP", False:"MVDOWN"}
 
 
-class KeyActions(object):
+class VolumeChanger(object):
+    """ 
+    Class for managing volume up/down while hot key pressed
+    when both hot keys are being pressed, last one counts
+    """
 
     def __init__(self):
         self.denon = Denon()
+        self.interval = config.getfloat("KeyEventHandling","interval")/1000
+        self.button = None
 
-    def on_press(self, cmd):
-        interval = config.getfloat("KeyEventHandling","interval")/1000
+    def set_button(self, button):
+        """ set or change currently pressed hot key before or while start() is running """
+        self.button = button
+        
+    def start(self):
+        """ listen for keys and stop when all released """
         while True:
-            self.denon(cmd)
-            time.sleep(interval)
+            b = self.button
+            if b is None: break
+            self.denon(BUTTON2CMD[b])
+            time.sleep(self.interval)
 
-    def on_release(self, cmd):
+    def release(self, button):
+        """ button released """
+        if button is not None and self.button != button: return
+        self.stop()
+        
+    def stop(self):
+        self.button = None
         self.denon.poweron(True)
-    
-
-class Main(KeyActions):
+        
+        
+class Main(VolumeChanger):
 
     def __init__(self):
         parser = argparse.ArgumentParser(description='Call this to handle volume button press and release events')
@@ -38,43 +57,36 @@ class Main(KeyActions):
         super(Main,self).__init__()
 
     def __call__(self):
-        cmd = "MVUP" if self.args.up else "MVDOWN"
-        func = self.press if self.args.pressed else self.release
-        func(cmd)
+        func = self.press if self.args.pressed else self.releasePoll
+        func(self.args.up)
     
-    def press(self, cmd):
-        #for i in range(20):
-        #    if not os.path.exists(PIDFILE): break
-        #    time.sleep(0.05)
-        self._release()
+    def press(self, button):
+        if self.load():
+            self.release(None)
         with open(PIDFILE,"x") as fp:
-            json.dump(dict(pid=os.getpid(), cmd=cmd),fp)
-            #fp.write(str(os.getpid()))
-        self.on_press(cmd)
-    
-    def _release(self,cmd=None):
-        """ 
-        @cmd: release button for cmd @cmd. If None, release all buttons
-        @return bool: success 
-        """
+            json.dump(dict(pid=os.getpid(), button=button),fp)
+        self.set_button(button)
+        self.start()
+
+    def load(self):
         try:
             with open(PIDFILE) as fp:
                 d = json.load(fp)
         except (FileNotFoundError, json.decoder.JSONDecodeError): return False
-        pid = d["pid"]
-
-        # on_button_release:
-        if cmd is not None and d["cmd"] != cmd: return True
-        try: os.kill(pid,9)
-        except ProcessLookupError: pass
-
-        os.remove(PIDFILE)
+        self.pid = d["pid"]
+        self.set_button(d["button"])
         return True
     
-    def release(self, cmd):
+    def stop(self):
+        os.remove(PIDFILE)
+        try: os.kill(self.pid,9)
+        except ProcessLookupError: pass
+        return True
+    
+    def releasePoll(self, button):
         for i in range(3):
-            if self._release(cmd):
-                self.on_release()
+            if self.load():
+                self.release(button)
                 break
             time.sleep(0.05)
 
