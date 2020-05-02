@@ -21,7 +21,7 @@ class Main(VolumeChanger):
         group2.add_argument("--released", action="store_true", default=False, help="Key released")
         self.args = parser.parse_args()
         super(Main,self).__init__()
-        self.lock = FileLock("freenon_key.lock")
+        self.lock = FileLock("%s.lock"%PIDFILE)
 
     def __call__(self):
         func = self.press if self.args.pressed else self.releasePoll
