@@ -26,7 +26,7 @@ class Main(VolumeChanger):
             if pressed:
                 self.set_button(button)
                 if self.thread is None:
-                    self.thread = Thread(target=self.start,daemon=True)
+                    self.thread = Thread(target=self.start,name="VolumeChanger",daemon=True)
                     self.thread.start()
             else:
                 self.release(button)
