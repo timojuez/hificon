@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-import time 
+import time
+from threading import Thread
 from ..denon import Denon
 from ..config import config
 
@@ -37,6 +38,6 @@ class VolumeChanger(object):
         
     def stop(self):
         self.button = None
-        self.denon.poweron(True)
+        Thread(target=self.denon.poweron, args=(True,), name="poweron", daemon=False).start()
         
         
