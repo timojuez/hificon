@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import sys, time, argparse
+import sys, time, argparse, socket
 from threading import Lock, Thread
 from telnetlib import Telnet
 from .config import config
@@ -14,7 +14,7 @@ def roundVolume(vol):
     return .5*round(vol/.5)
     
     
-class Lazy_property(object):
+class Lazy_property(object): # deprecated por synctools.AvrListener
     """ like property() but caches the response of getter """
 
     storage = dict()
@@ -48,8 +48,8 @@ class DenonMethodsMixin(object):
         return 1
 
     def connected(self):
-        try: self("")
-        except OSError: return False
+        try: self.connect()
+        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror): return False
         else: return True
     
     def wait_for_connection(self):
