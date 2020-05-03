@@ -4,7 +4,6 @@
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - Python 3 and Pip
-- Telnet
 
 **For automatic freenon_setup:**
 - Private nameserver on LAN
