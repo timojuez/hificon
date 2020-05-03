@@ -65,8 +65,9 @@ class DenonMethodsMixin(object):
         return 1
         
     def getVolume(self):
-        val = self("MV?")[2:]
-        return int(val.ljust(3,"0"))/10
+        val = self("MV?")
+        if not val: return None
+        return int(val[2:].ljust(3,"0"))/10
 
     def setVolume(self, vol):
         vol = roundVolume(vol)
@@ -76,7 +77,7 @@ class DenonMethodsMixin(object):
     volume = Lazy_property(getVolume,setVolume)
     
     def getMuted(self):
-        return self("MU?") == "MUON"
+        return {"MUON":True, "MUOFF":False, None:None}[self("MU?")]
 
     def setMuted(self, mute):
         self("MUON" if mute else "MUOFF")
@@ -90,7 +91,7 @@ class DenonMethodsMixin(object):
         
     def running(self):
         """ return True if power is on """
-        return self("PW?") == "PWON"
+        return {"PWON":True, "PWSTANDBY":False, None:None}[self("PW?")]
     
     is_running = Lazy_property(running,None)
     
@@ -110,7 +111,9 @@ class Denon(DenonMethodsMixin):
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
 
     def __call__(self, cmd, ignoreMvmax=True):
-        """ send command to AVR """
+        """ 
+        Send command to AVR
+        """
         with Telnet(self.host,23,timeout=2) as telnet:
             if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
             telnet.write(("%s\n"%cmd).encode("ascii"))
@@ -121,7 +124,7 @@ class Denon(DenonMethodsMixin):
                     if not r or r.startswith(cmd.replace("?","")): 
                         if self.verbose: print(r, file=sys.stderr)
                         return r
-                raise Exception("No answer received")
+                sys.stderr.write("WARNING: Got no answer for `%s`.\n"%cmd)
         
 
 class CLI(object):
