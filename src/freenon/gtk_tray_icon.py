@@ -98,7 +98,8 @@ class Main(object):
         tray = Tray()
         eh = MyEventHandler(tray, verbose=self.args.verbose)
         tray.eh = eh
-        if "pulsectl" in globals(): PulseSinkInputListener()(eh)
+        if "pulsectl" in globals(): PulseSinkInputListener(eh)()
+        eh.loop()
         
 
 main = lambda:Main()()    

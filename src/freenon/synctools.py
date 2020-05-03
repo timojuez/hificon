@@ -55,12 +55,17 @@ class EventHandler(object):
         self.plugin = plugin
         self.denon = Denon(verbose=verbose)
         self.denon.ifConnected = IfConnected(self)
-        threading.Thread(target=self.on_startup, name="on_startup").start()
+        threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
         self.avrListener = AvrListener(self, self.denon)
         threading.Thread(target=self.avrListener, name="AvrListener", daemon=True).start()
 
+    def loop(self):
+        try:
+            while True: time.sleep(1000)
+        except KeyboardInterrupt: pass
+    
     @threadlock(avrLock)
     @threadlock(updateLock)
     def updateAvrValues(self):

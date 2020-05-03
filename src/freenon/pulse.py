@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse, pulsectl
-from threading import Timer
+from threading import Timer, Thread
 from .synctools import PluginInterface, EventHandler
 from .config import config
 
@@ -49,9 +49,16 @@ class PulsePluginAbsolute(PulsePluginRelative):
 
 class PulseListener(AbstractPulse):
     """ Listen for pulseaudio change events """
-
-    def __call__(self, el):
+    
+    def __init__(self, el):
+        super(PulseListener,self).__init__()
         self.el = el
+
+    def __call__(self, *args, **xargs):
+        Thread(target=self.loop, name=self.__class__.__name__, daemon=True,
+            args=args, kwargs=xargs).start()
+        
+    def loop(self):
         #self.pulse.event_mask_set('all')
         self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink,
             pulsectl.PulseEventMaskEnum.sink_input)
@@ -104,8 +111,8 @@ class Main(object):
     def __call__(self):
         PulsePlugin = PulsePluginAbsolute if config.getboolean("Pulse","absolute") else \
             PulsePluginRelative
-        el = EventHandler(PulsePlugin(), verbose=self.args.verbose)
-        PulseListener()(el)
+        eh = EventHandler(PulsePlugin(), verbose=self.args.verbose)
+        PulseListener(eh).loop()
 
 
 main = lambda:Main()()    
