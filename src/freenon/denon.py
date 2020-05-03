@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import sys, time, argparse
+from threading import Lock, Thread
 from telnetlib import Telnet
 from .config import config
 from .config import FILE as CONFFILE
@@ -109,30 +110,59 @@ class Denon(DenonMethodsMixin):
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
+        self._received = []
+        self.lock = Lock()
+        self.connect()
+
+    def connect(self):
+        self.telnet = Telnet(self.host,23,timeout=2)
 
     def __call__(self, cmd, ignoreMvmax=True):
         """ 
         Send command to AVR
         """
-        with Telnet(self.host,23,timeout=2) as telnet:
+        def _return(r):
+            if self.verbose: print(r, file=sys.stderr)
+            return r
+        condition = lambda r: not (ignoreMvmax and r.startswith("MVMAX")) \
+            and r.startswith(cmd.replace("?",""))
+
+        self.lock.acquire()
+        try:
             if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
-            telnet.write(("%s\n"%cmd).encode("ascii"))
-            if "?" in cmd:
-                for i in range(15):
-                    r = telnet.read_until(b"\r",timeout=2).strip().decode()
-                    if ignoreMvmax and r.startswith("MVMAX"): continue
-                    if not r or r.startswith(cmd.replace("?","")): 
-                        if self.verbose: print(r, file=sys.stderr)
-                        return r
-                sys.stderr.write("WARNING: Got no answer for `%s`.\n"%cmd)
+            pos_received = len(self._received)
+            self.telnet.write(("%s\n"%cmd).encode("ascii"))
+            if "?" not in cmd: return
+            for r in self._received[pos_received:]:
+                if condition(r): 
+                    self._received.remove(r)
+                    return _return(r)
+            for i in range(15):
+                r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
+                if not r: return r # timeout
+                if condition(r): return _return(r)
+                else: self._received.append(r)
+            sys.stderr.write("WARNING: Got no answer for `%s`.\n"%cmd)                
+        finally: self.lock.release()
+        
+    def read(self):
+        """ Wait until a message has been received from AVR and return it """
+        while True:
+            self.lock.acquire()
+            try:
+                if self._received: return self._received.pop(0)
+            finally: self.lock.release()
+            r = self.telnet.read_until(b'\r',timeout=100).strip().decode()
+            if r: self._received.append(r)
         
 
 class CLI(object):
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Controller for Denon AVR - CLI')
-        parser.add_argument("command", nargs="+", type=str, help='Denon command')
+        parser.add_argument("command", nargs="*", type=str, help='Denon command')
         parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
+        parser.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
@@ -141,6 +171,14 @@ class CLI(object):
         for cmd in self.args.command:
             r = denon(cmd)
             if r and not self.args.verbose: print(r)
+        if self.args.follow:
+            def reader():
+                while True: print("%s"%denon.read())
+            Thread(target=reader,name="Reader",daemon=True).start()
+            while True:
+                try: cmd = input().strip()
+                except KeyboardInterrupt: break
+                denon.telnet.write(("%s\n"%cmd).encode("ascii"))
             
 
 main = lambda:CLI()()
