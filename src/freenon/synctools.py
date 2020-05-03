@@ -1,4 +1,4 @@
-import threading, time, signal, sys, socket
+import threading, time, signal, sys
 from datetime import timedelta, datetime
 from gi.repository import GLib, Gio
 from .denon import Denon, roundVolume
@@ -24,8 +24,7 @@ class IfConnected(object):
     def __enter__(self): pass
 
     def __exit__(self, type, value, traceback):
-        # TODO: catch denon.__call__."No answer received"?
-        if type not in (socket.timeout, socket.gaierror, socket.herror): return False
+        if type not in (EOFError,): return False # TODO: +error by Telnet.write()?
         self.el.on_connection_lost()
         sys.stderr.write("[Warning] dropping call\n")
         self.el.denon.wait_for_connection()
@@ -34,7 +33,6 @@ class IfConnected(object):
 
 
 updateLock = threading.Lock()
-avrLock = threading.Lock()
 def threadlock(lock):
     def decorator(func):
         def f(*args,**xargs):
@@ -53,20 +51,18 @@ class EventHandler(object):
     
     def __init__(self, plugin, verbose=False):
         self.plugin = plugin
-        self.denon = Denon(verbose=verbose)
+        self.denon = Denon(verbose=verbose) # TODO: may raise on connect()
         self.denon.ifConnected = IfConnected(self)
         threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
-        self.avrListener = AvrListener(self, self.denon)
-        threading.Thread(target=self.avrListener, name="AvrListener", daemon=True).start()
+        AvrListener(self, self.denon)()
 
     def loop(self):
         try:
             while True: time.sleep(1000)
         except KeyboardInterrupt: pass
     
-    @threadlock(avrLock)
     @threadlock(updateLock)
     def updateAvrValues(self):
         pluginmuted = self.plugin.getMuted()
@@ -74,7 +70,6 @@ class EventHandler(object):
         with self.denon.ifConnected: 
             if self.denon.muted != pluginmuted: self.denon.muted = pluginmuted
             if not pluginmuted and self.denon.volume != pluginvol: self.denon.volume = pluginvol
-            if hasattr(self,"avrListener"): self.avrListener.reset()
     
     @threadlock(updateLock)
     def updatePluginValues(self, denonReset=True):
@@ -121,9 +116,9 @@ class EventHandler(object):
         print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
         
-    def on_avr_change(self, attr):
+    def on_avr_change(self):
         print("[Event] AVR attribute changed", file=sys.stderr)
-        self.updatePluginValues(False)
+        self.updatePluginValues()
         
     def on_avr_poweron(self):
         print("[Event] AVR power on", file=sys.stderr)
@@ -163,38 +158,27 @@ class DBusListener(object):
 
 
 class AvrListener(object):
-    observe=["volume","muted","is_running"]
-    # TODO: instead keep telnet connection and keep reading bytes
         
     def __init__(self, eh, denon):
         self.eh = eh
         self.denon = denon
 
     def reset(self):
-        self.lastUpdate = datetime.now()
+        pass
 
     def __call__(self):
-        self.reset()
+        threading.Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
+        
+    def loop(self):
         while True:
-            time.sleep(1)
             with self.denon.ifConnected:
-                #if not avrLock.locked(): 
                 self._checkAttributes()
 
     def _checkAttributes(self):
-        avrLock.acquire()
-        try:
-            if datetime.now() < self.lastUpdate+timedelta(seconds=1): return
-            #print("[AvrListener] check", file=sys.stderr)
-            previous = {attr:getattr(self.denon,attr) for attr in self.observe}
-            self.denon.reset()
-            new = {attr:getattr(self.denon,attr) for attr in self.observe}
-        finally: avrLock.release()
-        for attr in self.observe:
-            if new[attr] != previous[attr]:
-                if attr == "is_running":
-                    if new[attr]: self.eh.on_avr_poweron()
-                    else: self.eh.on_avr_poweroff()
-                elif self.denon.is_running: 
-                    self.eh.on_avr_change(attr)
-    
+            r = self.denon.read()
+            if r.startswith("MVMAX"): pass
+            elif r[0:2] in ("MU","MV"): self.eh.on_avr_change()
+            elif r == 'PWON': self.eh.on_avr_poweron()
+            elif r == 'PWSTANDBY': self.eh.on_avr_poweroff()
+
+
