@@ -44,7 +44,7 @@ class VolumeChanger(object):
         
     def _loop(self):
         """ listen for keys and stop when all released. Start in extra process or thread """
-        while True:
+        for _ in range(60): # max increase 60 steps for security
             b = self.button
             if b is None: break
             self.denon(BUTTON2CMD[b])
