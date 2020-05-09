@@ -183,13 +183,13 @@ class Denon(DenonMethodsMixin):
             cmd = self._send(cmd)
             for i in range(15):
                 pos_received_new = len(self._received)
-                for r in self._received[pos_received:]:
+                for r in self._received[pos_received:pos_received_new]:
                     if condition(r): 
                         self._received.remove(r)
                         return _return(r)
                 pos_received = pos_received_new
                 r = self._read(2)
-                if not r: # timeout
+                if not r and i>5: # timeout #TODO
                     sys.stderr.write("(timeout) ")
                     break
                 if condition(r): return _return(r)
