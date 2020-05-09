@@ -105,6 +105,7 @@ class EventHandler(object):
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         print("[Event] connected to %s"%self.denon.host, file=sys.stderr)
+        self.denon.poll_all()
         if self.denon.is_running: self.updatePluginValues()
         
     def on_connection_lost(self):
@@ -168,7 +169,7 @@ class AvrListener(object):
         while True:
             with self.denon.ifConnected:
                 cmd = self.denon.read()
-                attrib, old, new = self.denon.update(cmd)
+                attrib, old, new = self.denon.consume(cmd)
                 if attrib and old != new: self._on_avr_change(attrib,new)
 
     def _on_avr_change(self, attrib, value):

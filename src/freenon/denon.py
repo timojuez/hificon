@@ -26,12 +26,13 @@ class DenonFeature(AbstractDenonFeature):
 
     #def __init__(self): self.features= []
     
+    def _poll(self, denon):
+        return self._consume(denon, denon("%s?"%self.function))
+    
     def __get__(self, denon, cls):
         if denon is None: return self
         try: return denon.__dict__[self._name]
-        except KeyError:
-            new = self.consume(denon, denon("%s?"%self.function))
-            return denon.__dict__[self._name]
+        except KeyError: return self.poll(denon)
         
     def __set__(self, denon, value):
         denon.__dict__[self._name] = value
@@ -44,7 +45,7 @@ class DenonFeature(AbstractDenonFeature):
         self_._name = name
         self.features.append((cls, self_))
     
-    def consume(self, denon, cmd):
+    def _consume(self, denon, cmd):
         """
         Update property according to @cmd
         @denon property owner
@@ -56,22 +57,29 @@ class DenonFeature(AbstractDenonFeature):
         return denon.__dict__[self._name]
         
     @classmethod
-    def update(self, denon, cmd):
+    def consume(self, denon, cmd):
         """
         Update attributes in object @denon using message @cmd from AVR
         @returns: (attrib name, old value, new value)
         """
         for cls, self_ in self.features:
-            if cmd.startswith(self_.function): #FIXME make sure self_ belongs to instance "denon"
+            if cmd.startswith(self_.function) and issubclass(denon.__class__,cls):
                 old = denon.__dict__.get(self_._name)
-                new = self_.consume(denon, cmd)
+                new = self_._consume(denon, cmd)
                 return self_._name, old, new
         return None, None, None
-        
+    
+    @classmethod
+    def poll_all(self, denon):
+        """ refresh all DenonFeature attributes """
+        for cls, self_ in self.features:
+            self_._poll()
+            
 
 class DenonFeature_Maxvol(DenonFeature):
     function="MVMAX"
     
+    _poll = lambda *args:None
     def decodeVal(self, val): pass # TODO
     def encodeVal(self, val): pass
     
@@ -208,8 +216,11 @@ class Denon(DenonMethodsMixin):
             r = self._read(5)
             if r: self._received.append(r)
 
-    def update(self, cmd):
-        return DenonFeature.update(self, cmd)
+    def consume(self, cmd):
+        return DenonFeature.consume(self, cmd)
+        
+    def poll_all(self):
+        DenonFeature.poll_all(self)
 
 
 class CLI(object):
