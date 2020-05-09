@@ -72,13 +72,14 @@ class DenonFeature(AbstractDenonFeature):
 class DenonFeature_Maxvol(DenonFeature):
     function="MVMAX"
     
-    def decodeVal(self, val): pass
+    def decodeVal(self, val): pass # TODO
     def encodeVal(self, val): pass
     
 
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
-
+    # TODO: value may be relative?
+    
     @staticmethod
     def _roundVolume(vol):
         return .5*round(vol/.5)
