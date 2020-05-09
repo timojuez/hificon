@@ -4,7 +4,9 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from .synctools import PluginInterface, EventHandler
-try: from .pulse import PulseListener, pulsectl
+try: 
+    from .pulse import PulseListener, pulsectl
+    from .pulse import PulseEventHandler as EventHandler
 except ImportError: PulseListener = object
 
 
@@ -15,10 +17,9 @@ VOLUME_DIFF = 3
 class MyEventHandler(EventHandler):
 
     def on_connect(self):
-        super(MyEventHandler,self).on_connect()
         self.updatePluginValues()
         self.plugin.show()
-        # TODO: if pulse is playing: with self.denon.ifConnected: self.denon.poweron()
+        super(MyEventHandler,self).on_connect()
 
     def on_connection_lost(self):
         super(MyEventHandler,self).on_connection_lost()
