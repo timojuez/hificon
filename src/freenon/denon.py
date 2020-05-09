@@ -73,6 +73,13 @@ class DenonFeature(AbstractDenonFeature):
         return None, None, None
         
 
+class DenonFeature_Maxvol(DenonFeature):
+    function="MVMAX"
+    
+    def decodeVal(self, val): pass
+    def encodeVal(self, val): pass
+    
+
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
 
@@ -98,6 +105,7 @@ class DenonFeature_Muted(DenonFeature):
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
+    maxvol = DenonFeature_Maxvol()
     volume = DenonFeature_Volume()
     muted = DenonFeature_Muted()
     is_running = DenonFeature_Power()
@@ -157,7 +165,7 @@ class Denon(DenonMethodsMixin):
         try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
         
-    def __call__(self, cmd, ignoreMvmax=True):
+    def __call__(self, cmd):
         """ 
         Send command to AVR
         """
@@ -167,8 +175,7 @@ class Denon(DenonMethodsMixin):
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)
             return r
-        condition = lambda r: not (ignoreMvmax and r.startswith("MVMAX")) \
-            and r.startswith(cmd.replace("?",""))
+        condition = lambda r: r.startswith(cmd.replace("?",""))
 
         self.lock.acquire()
         try:
