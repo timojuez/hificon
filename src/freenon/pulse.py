@@ -5,8 +5,19 @@ from .synctools import PluginInterface, EventHandler
 from .config import config
 
 
+class PulseEventHandler(EventHandler):
+
+    def on_connect(self):
+        super(PulseEventHandler,self).on_connect()
+        if self.plugin.pulse_is_playing():
+            with self.denon.ifConnected: self.denon.poweron()
+
+
 class AbstractPulse(object):
     def __init__(self): self.pulse = pulsectl.Pulse("Freenon")
+    
+    def pulse_is_playing(self):
+        return len(self.pulse.sink_input_list()) > 0
     
     
 class PulsePluginRelative(AbstractPulse,PluginInterface):
@@ -85,7 +96,7 @@ class PulseListener(AbstractPulse):
             print("[Pulse] start playing")
             if hasattr(self,"poweroff"): self.poweroff.cancel()
             with self.el.denon.ifConnected: self.el.denon.poweron()
-        elif pulsectl.PulseEventTypeEnum.remove and len(self.pulse.sink_input_list()) == 0:
+        elif pulsectl.PulseEventTypeEnum.remove and not self.pulse_is_playing():
             print("[Pulse] stopped")
             self.start_poweroff_timeout()
     
@@ -111,7 +122,7 @@ class Main(object):
     def __call__(self):
         PulsePlugin = PulsePluginAbsolute if config.getboolean("Pulse","absolute") else \
             PulsePluginRelative
-        eh = EventHandler(PulsePlugin(), verbose=self.args.verbose)
+        eh = PulseEventHandler(PulsePlugin(), verbose=self.args.verbose)
         PulseListener(eh).loop()
 
 
