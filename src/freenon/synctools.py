@@ -76,7 +76,7 @@ class EventHandler(object):
         """ Set plugin volume and mute according to AVR """
         avr_muted = self.denon.muted
         self.plugin.update_muted(avr_muted)
-        if not avr_muted: self.plugin.update_volume(self.denon.volume)
+        if avr_muted == False: self.plugin.update_volume(self.denon.volume)
 
     def denon_connect(self):
         self.denon.wait_for_connection()
@@ -114,7 +114,7 @@ class EventHandler(object):
         print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
         
-    def on_avr_change(self):
+    def on_avr_change(self, attr):
         print("[Event] AVR attribute changed", file=sys.stderr)
         self.updatePluginValues()
         
@@ -160,9 +160,6 @@ class AvrListener(object):
     def __init__(self, eh, denon):
         self.eh = eh
         self.denon = denon
-
-    def reset(self):
-        pass
 
     def __call__(self):
         threading.Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
