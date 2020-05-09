@@ -5,14 +5,6 @@ from .synctools import PluginInterface, EventHandler
 from .config import config
 
 
-class PulseEventHandler(EventHandler):
-
-    def on_connect(self):
-        super(PulseEventHandler,self).on_connect()
-        if self.plugin.pulse_is_playing():
-            with self.denon.ifConnected: self.denon.poweron()
-
-
 class AbstractPulse(object):
     def __init__(self): self.pulse = pulsectl.Pulse("Freenon")
     
@@ -20,6 +12,18 @@ class AbstractPulse(object):
         return len(self.pulse.sink_input_list()) > 0
     
     
+class PulseEventHandler(EventHandler,AbstractPulse):
+
+    def __init__(self, *args, **xargs):
+        EventHandler.__init__(self, *args, **xargs)
+        AbstractPulse.__init__(self)
+        
+    def on_connect(self):
+        super(PulseEventHandler,self).on_connect()
+        if self.pulse_is_playing():
+            with self.denon.ifConnected: self.denon.poweron()
+
+
 class PulsePluginRelative(AbstractPulse,PluginInterface):
     sink = 0
 
