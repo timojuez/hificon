@@ -62,6 +62,7 @@ class DenonFeature(AbstractDenonFeature):
                 new = self_.decodeVal(param)
                 denon.__dict__[self_._name] = new
                 return self_._name, old, new
+        return None, None, None
         
 
 class DenonFeature_Volume(DenonFeature):
