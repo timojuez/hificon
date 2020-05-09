@@ -108,44 +108,10 @@ class DenonFeature_Power(DenonFeature):
 class DenonFeature_Muted(DenonFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
+
     
     
-    
-class DenonMethodsMixin(object):
-    """ Mapping of commands into python methods """
-
-    maxvol = DenonFeature_Maxvol()
-    volume = DenonFeature_Volume()
-    muted = DenonFeature_Muted()
-    is_running = DenonFeature_Power()
-
-    def poweron(self,force=False):
-        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
-            return 0
-        self.is_running = True
-        time.sleep(3) #TODO
-        return 1
-
-    def connected(self):
-        try: self.connect()
-        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror): return False
-        else: return True
-    
-    def wait_for_connection(self):
-        while not self.connected(): time.sleep(3)
-        
-    def poweron_wait(self):
-        """ wait for connection and power on """
-        self.wait_for_connection()
-        return self.poweron()
-
-    def poweroff(self, force=False):
-        if not force and not config.getboolean("AVR","control_power_off"): return 0
-        self.is_running = False
-        return 1
-        
-
-class Denon(DenonMethodsMixin):
+class BasicDenon(object):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
     @host is the AVR's hostname or IP.
@@ -216,6 +182,40 @@ class Denon(DenonMethodsMixin):
             r = self._read(5)
             if r: self._received.append(r)
 
+
+class Denon(BasicDenon):
+    """ Mapping of commands into python methods """
+
+    maxvol = DenonFeature_Maxvol()
+    volume = DenonFeature_Volume()
+    muted = DenonFeature_Muted()
+    is_running = DenonFeature_Power()
+
+    def poweron(self,force=False):
+        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
+            return 0
+        self.is_running = True
+        time.sleep(3) #TODO
+        return 1
+
+    def connected(self):
+        try: self.connect()
+        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror): return False
+        else: return True
+    
+    def wait_for_connection(self):
+        while not self.connected(): time.sleep(3)
+        
+    def poweron_wait(self):
+        """ wait for connection and power on """
+        self.wait_for_connection()
+        return self.poweron()
+
+    def poweroff(self, force=False):
+        if not force and not config.getboolean("AVR","control_power_off"): return 0
+        self.is_running = False
+        return 1
+        
     def consume(self, cmd):
         return DenonFeature.consume(self, cmd)
         
@@ -234,7 +234,7 @@ class CLI(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        denon = Denon(self.args.host, verbose=self.args.verbose)
+        denon = BasicDenon(self.args.host, verbose=self.args.verbose)
         for cmd in self.args.command:
             r = denon(cmd)
             if r and not self.args.verbose: print(r)
