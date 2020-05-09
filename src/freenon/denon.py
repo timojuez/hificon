@@ -34,7 +34,7 @@ class DenonFeature(AbstractDenonFeature):
         if denon is None: return self
         try: return denon.__dict__[self._name]
         except KeyError:
-            denon.__dict__[self._name] = denon("%s?"%self.function)
+            new = self.consume(denon, denon("%s?"%self.function))
             return denon.__dict__[self._name]
         
     def __set__(self, denon, value):
@@ -48,19 +48,27 @@ class DenonFeature(AbstractDenonFeature):
         self_._name = name
         self.features.append((cls, self_))
     
+    def consume(self, denon, cmd):
+        """
+        Update property according to @cmd
+        @denon property owner
+        """
+        if not cmd.startswith(self.function): 
+            raise Exception("Cannot handle `%s`."%cmd)
+        param = cmd[len(self.function):]
+        denon.__dict__[self._name] = self.decodeVal(param)
+        return denon.__dict__[self._name]
+        
     @classmethod
     def update(self, denon, cmd):
         """
         Update attributes in object @denon using message @cmd from AVR
         @returns: (attrib name, old value, new value)
         """
-        func = cmd[0:2]
-        param = cmd[2:]
         for cls, self_ in self.features:
-            if self_.function == func and cls==denon.__class__:
-                old = denon.__dict__[self_._name]
-                new = self_.decodeVal(param)
-                denon.__dict__[self_._name] = new
+            if cmd.startswith(self_.function): #FIXME make sure self_ belongs to instance "denon"
+                old = denon.__dict__.get(self_._name)
+                new = self_.consume(denon, cmd)
                 return self_._name, old, new
         return None, None, None
         
