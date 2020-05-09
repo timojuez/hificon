@@ -115,11 +115,15 @@ class Denon(DenonMethodsMixin):
         self.connect()
 
     def connect(self):
-        self.telnet = Telnet(self.host,23,timeout=2)
+        self._telnet = Telnet(self.host,23,timeout=2)
         
     def _send(self, cmd):
-        self.telnet.write(("%s\n"%cmd).encode("ascii"))
-
+        self._telnet.write(("%s\n"%cmd).encode("ascii"))
+        
+    def _read(self, timeout=None):
+        try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
+        except socket.timeout: return None
+        
     def __call__(self, cmd, ignoreMvmax=True):
         """ 
         Send command to AVR
@@ -141,7 +145,7 @@ class Denon(DenonMethodsMixin):
                     self._received.remove(r)
                     return _return(r)
             for i in range(15):
-                r = self.telnet.read_until(b"\r",timeout=2).strip().decode()
+                r = self._read(2)
                 if not r: return r # timeout
                 if condition(r): return _return(r)
                 else: self._received.append(r)
@@ -155,7 +159,7 @@ class Denon(DenonMethodsMixin):
             try:
                 if self._received: return self._received.pop(0)
             finally: self.lock.release()
-            r = self.telnet.read_until(b'\r',timeout=100).strip().decode()
+            r = self._read(5)
             if r: self._received.append(r)
         
 
