@@ -116,6 +116,9 @@ class Denon(DenonMethodsMixin):
 
     def connect(self):
         self.telnet = Telnet(self.host,23,timeout=2)
+        
+    def _send(self, cmd):
+        self.telnet.write(("%s\n"%cmd).encode("ascii"))
 
     def __call__(self, cmd, ignoreMvmax=True):
         """ 
@@ -131,7 +134,7 @@ class Denon(DenonMethodsMixin):
         try:
             if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
             pos_received = len(self._received)
-            self.telnet.write(("%s\n"%cmd).encode("ascii"))
+            self._send(cmd)
             if "?" not in cmd: return
             for r in self._received[pos_received:]:
                 if condition(r): 
@@ -178,7 +181,7 @@ class CLI(object):
             while True:
                 try: cmd = input().strip()
                 except KeyboardInterrupt: break
-                denon.telnet.write(("%s\n"%cmd).encode("ascii"))
+                denon._send(cmd)
             
 
 main = lambda:CLI()()
