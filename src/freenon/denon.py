@@ -10,10 +10,6 @@ try: from .setup import DenonDiscoverer
 except ImportError: pass
 
 
-def roundVolume(vol):
-    return .5*round(vol/.5)
-
-
 class AbstractDenonFeature(object):
     function = ""
     translation = {}
@@ -83,11 +79,15 @@ class DenonFeature_Maxvol(DenonFeature):
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
 
+    @staticmethod
+    def _roundVolume(vol):
+        return .5*round(vol/.5)
+
     def decodeVal(self, val):
         return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
-        vol = roundVolume(val)
+        vol = self._roundVolume(val)
         return "%03d"%(vol*10)
         
         

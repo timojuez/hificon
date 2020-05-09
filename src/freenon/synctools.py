@@ -1,7 +1,7 @@
 import threading, time, signal, sys
 from datetime import timedelta, datetime
 from gi.repository import GLib, Gio
-from .denon import Denon, roundVolume
+from .denon import Denon, DenonFeature_Volume
 #from .config import config
 
 
@@ -66,7 +66,7 @@ class EventHandler(object):
     @threadlock(updateLock)
     def updateAvrValues(self):
         pluginmuted = self.plugin.getMuted()
-        pluginvol = roundVolume(self.plugin.getVolume())
+        pluginvol = DenonFeature_Volume._roundVolume(self.plugin.getVolume())
         with self.denon.ifConnected: 
             if self.denon.muted != pluginmuted: self.denon.muted = pluginmuted
             if not pluginmuted and self.denon.volume != pluginvol: self.denon.volume = pluginvol
