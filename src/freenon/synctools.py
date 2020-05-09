@@ -24,7 +24,7 @@ class IfConnected(object):
     def __enter__(self): pass
 
     def __exit__(self, type, value, traceback):
-        if type not in (EOFError,): return False # TODO: +error by Telnet.write()?
+        if type not in (EOFError,): return False
         self.el.on_connection_lost()
         sys.stderr.write("[Warning] dropping call\n")
         self.el.denon.wait_for_connection()
@@ -72,13 +72,11 @@ class EventHandler(object):
             if not pluginmuted and self.denon.volume != pluginvol: self.denon.volume = pluginvol
     
     @threadlock(updateLock)
-    def updatePluginValues(self, denonReset=True):
+    def updatePluginValues(self):
         """ Set plugin volume and mute according to AVR """
-        if denonReset: self.denon.reset()
-        with self.denon.ifConnected: 
-            avr_muted = self.denon.muted
-            self.plugin.update_muted(avr_muted)
-            if not avr_muted: self.plugin.update_volume(self.denon.volume)
+        avr_muted = self.denon.muted
+        self.plugin.update_muted(avr_muted)
+        if not avr_muted: self.plugin.update_volume(self.denon.volume)
 
     def denon_connect(self):
         self.denon.wait_for_connection()
@@ -107,7 +105,7 @@ class EventHandler(object):
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         print("[Event] connected to %s"%self.denon.host, file=sys.stderr)
-        if self.denon.running(): self.updatePluginValues()
+        if self.denon.is_running: self.updatePluginValues()
         
     def on_connection_lost(self):
         print("[Event] connection lost", file=sys.stderr)
@@ -172,13 +170,17 @@ class AvrListener(object):
     def loop(self):
         while True:
             with self.denon.ifConnected:
-                self._checkAttributes()
+                cmd = self.denon.read()
+                attrib, old, new = self.denon.parse(cmd)
+                if attrib and old != new: self._on_avr_change(attrib,new)
 
-    def _checkAttributes(self):
-            r = self.denon.read()
-            if r.startswith("MVMAX"): pass
-            elif r[0:2] in ("MU","MV"): self.eh.on_avr_change()
-            elif r == 'PWON': self.eh.on_avr_poweron()
-            elif r == 'PWSTANDBY': self.eh.on_avr_poweroff()
+    def _on_avr_change(self, attrib, value):
+        func = {
+            "is_running": 
+                lambda attrib:{True:self.eh.on_avr_poweron, False:self.eh.on_avr_poweroff}[attrib](),
+            "muted": self.eh.on_avr_change,
+            "volume": self.eh.on_avr_change
+        }.get(attrib)
+        if func: func(value)
 
 

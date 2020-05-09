@@ -12,38 +12,91 @@ except ImportError: pass
 
 def roundVolume(vol):
     return .5*round(vol/.5)
+
+
+class AbstractDenonFeature(object):
+    function = ""
+    translation = {}
     
+    def decodeVal(self, val):
+        return self.translation[val]
+        
+    def encodeVal(self, val):
+        return {val:key for key,val in self.translation.items()}[val]
+
+
+class DenonFeature(AbstractDenonFeature):        
+    features = []
+
+    #def __init__(self): self.features= []
     
-class Lazy_property(object): # deprecated por synctools.AvrListener
-    """ like property() but caches the response of getter """
-
-    storage = dict()
-
-    def __init__(self, fget, fset):
-        self.fget = fget
-        self.fset = fset
-
-    def __get__(self, obj, type=None):
-        if self in self.storage: return self.storage[self]
-        val = self.storage[self] = self.fget(obj)
-        return val
-
-    def __set__(self, obj, value):
-        value = self.fset(obj,value)
-        self.storage[self] = value
-
+    def __get__(self, denon, cls):
+        if denon is None: return self
+        try: return denon.__dict__[self._name]
+        except KeyError:
+            denon.__dict__[self._name] = denon("%s?"%self.function)
+            return denon.__dict__[self._name]
+        
+    def __set__(self, denon, value):
+        denon.__dict__[self._name] = value
+        cmd = "%s%s"%(self.function, self.encodeVal(value))
+        denon(cmd)
+    
+    def __set_name__(self, cls, name):
+        self._name = name
+        self_ = self.__class__() # does not react on __get__
+        self_._name = name
+        self.features.append((cls, self_))
+    
     @classmethod
-    def reset(self):
-        self.storage.clear()
+    def update(self, denon, cmd):
+        """
+        Update attributes in object @denon using message @cmd from AVR
+        @returns: (attrib name, old value, new value)
+        """
+        func = cmd[0:2]
+        param = cmd[2:]
+        for cls, self_ in self.features:
+            if self_.function == func and cls==denon.__class__:
+                old = denon.__dict__[self_._name]
+                new = self_.decodeVal(param)
+                denon.__dict__[self_._name] = new
+                return self_._name, old, new
+        
 
+class DenonFeature_Volume(DenonFeature):
+    function = "MV"
+
+    def decodeVal(self, val):
+        return int(val[2:].ljust(3,"0"))/10
+        
+    def encodeVal(self, val):
+        vol = roundVolume(val)
+        return "%03d"%(vol*10)
+        
+        
+class DenonFeature_Power(DenonFeature):
+    function = "PW"
+    translation = {"ON":True,"STANDBY":False}
+    
+    
+class DenonFeature_Muted(DenonFeature):
+    function = "MU"
+    translation = {"ON":True,"OFF":False}
+    
+    
     
 class DenonMethodsMixin(object):
     """ Mapping of commands into python methods """
 
+    volume = DenonFeature_Volume()
+    muted = DenonFeature_Muted()
+    is_running = DenonFeature_Power()
+
     def poweron(self,force=False):
-        if not force and not config.getboolean("AVR","control_power_on") or self("PW?") == 'PWON':
+        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
             return 0
-        self("PWON")
+        self.is_running = True
         time.sleep(3) #TODO
         return 1
 
@@ -62,40 +115,9 @@ class DenonMethodsMixin(object):
 
     def poweroff(self, force=False):
         if not force and not config.getboolean("AVR","control_power_off"): return 0
-        self("PWSTANDBY")
+        self.is_running = False
         return 1
         
-    def getVolume(self):
-        val = self("MV?")
-        if not val: return None
-        return int(val[2:].ljust(3,"0"))/10
-
-    def setVolume(self, vol):
-        vol = roundVolume(vol)
-        self("MV%03d"%(vol*10))
-        return vol
-        
-    volume = Lazy_property(getVolume,setVolume)
-    
-    def getMuted(self):
-        return {"MUON":True, "MUOFF":False, None:None}[self("MU?")]
-
-    def setMuted(self, mute):
-        self("MUON" if mute else "MUOFF")
-        return mute
-
-    muted = Lazy_property(getMuted,setMuted)
-    
-    def reset(self):
-        """ resets lazy properties' cache """
-        Lazy_property.reset()
-        
-    def running(self):
-        """ return True if power is on """
-        return {"PWON":True, "PWSTANDBY":False, None:None}[self("PW?")]
-    
-    is_running = Lazy_property(running,None)
-    
 
 class Denon(DenonMethodsMixin):
     """
@@ -143,7 +165,7 @@ class Denon(DenonMethodsMixin):
         try:
             pos_received = len(self._received)
             cmd = self._send(cmd)
-            for r in self._received[pos_received:]:
+            for r in self._received[pos_received:]: # FIXME: try more often
                 if condition(r): 
                     self._received.remove(r)
                     return _return(r)
@@ -164,7 +186,30 @@ class Denon(DenonMethodsMixin):
             finally: self.lock.release()
             r = self._read(5)
             if r: self._received.append(r)
+
+    def parse(self, cmd):
+        return DenonFeature.update(self, cmd)
+        translation = dict(map(lambda e:(e[1],(e[0],e[2])),[
+            #Denon.attr,    func,   parse_parameter(parameter)
+            ("muted",       "MU",   lambda e:{"ON":True,"OFF":False}[e]),
+            ("is_running",  "PW",   lambda e:{"ON":True,"STANDBY":False}[e]),
+            ("volume",      "MV",   lambda e:None),
+        ]))
         
+        func = cmd[0:2]
+        param = cmd[2:]
+        for attrib in DenonFeature.features():
+            if attrib.func != function: continue
+            attrib
+        
+        if func not in translation: return None, None, None
+        attrib, parse = translation[func]
+        if callable(parse): value = parse(attrib)
+        else: newval = parse[attrib]
+        oldval = getattr(self.denon, attrib, None)
+        setattr(self.denon, attrib, newval)
+        return attrib, oldval, newval
+
 
 class CLI(object):
     
