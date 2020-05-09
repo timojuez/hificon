@@ -171,7 +171,7 @@ class AvrListener(object):
         while True:
             with self.denon.ifConnected:
                 cmd = self.denon.read()
-                attrib, old, new = self.denon.parse(cmd)
+                attrib, old, new = self.denon.update(cmd)
                 if attrib and old != new: self._on_avr_change(attrib,new)
 
     def _on_avr_change(self, attrib, value):

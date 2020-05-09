@@ -191,28 +191,8 @@ class Denon(DenonMethodsMixin):
             r = self._read(5)
             if r: self._received.append(r)
 
-    def parse(self, cmd):
+    def update(self, cmd):
         return DenonFeature.update(self, cmd)
-        translation = dict(map(lambda e:(e[1],(e[0],e[2])),[
-            #Denon.attr,    func,   parse_parameter(parameter)
-            ("muted",       "MU",   lambda e:{"ON":True,"OFF":False}[e]),
-            ("is_running",  "PW",   lambda e:{"ON":True,"STANDBY":False}[e]),
-            ("volume",      "MV",   lambda e:None),
-        ]))
-        
-        func = cmd[0:2]
-        param = cmd[2:]
-        for attrib in DenonFeature.features():
-            if attrib.func != function: continue
-            attrib
-        
-        if func not in translation: return None, None, None
-        attrib, parse = translation[func]
-        if callable(parse): value = parse(attrib)
-        else: newval = parse[attrib]
-        oldval = getattr(self.denon, attrib, None)
-        setattr(self.denon, attrib, newval)
-        return attrib, oldval, newval
 
 
 class CLI(object):
