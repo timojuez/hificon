@@ -118,7 +118,9 @@ class Denon(DenonMethodsMixin):
         self._telnet = Telnet(self.host,23,timeout=2)
         
     def _send(self, cmd):
+        cmd = cmd.upper()
         self._telnet.write(("%s\n"%cmd).encode("ascii"))
+        return cmd
         
     def _read(self, timeout=None):
         try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
@@ -128,6 +130,9 @@ class Denon(DenonMethodsMixin):
         """ 
         Send command to AVR
         """
+        if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
+        if "?" not in cmd: return self._send(cmd)
+
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)
             return r
@@ -136,10 +141,8 @@ class Denon(DenonMethodsMixin):
 
         self.lock.acquire()
         try:
-            if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
             pos_received = len(self._received)
-            self._send(cmd)
-            if "?" not in cmd: return
+            cmd = self._send(cmd)
             for r in self._received[pos_received:]:
                 if condition(r): 
                     self._received.remove(r)
