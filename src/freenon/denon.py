@@ -77,7 +77,7 @@ class DenonFeature_Volume(DenonFeature):
     function = "MV"
 
     def decodeVal(self, val):
-        return int(val[2:].ljust(3,"0"))/10
+        return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
         vol = roundVolume(val)
