@@ -27,7 +27,6 @@ class EventHandler(Denon):
         threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
-        AvrListener(self, self.denon)()
 
     def loop(self):
         try:
@@ -54,7 +53,7 @@ class EventHandler(Denon):
     def on_startup(self):
         """ program start """
         print("[Event] Startup", file=sys.stderr)
-        self.denon_connect()
+        self.connect(-1)
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
