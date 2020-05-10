@@ -3,52 +3,32 @@ import argparse, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
-from .synctools import PluginInterface, EventHandler
+from .synctools import EventHandler
 try: 
     from .pulse import PulseListener, pulsectl
     from .pulse import PulseEventHandler as EventHandler
 except ImportError: PulseListener = object
 
 
-VOLUME_MAX = 60
 VOLUME_DIFF = 3
 
 
-class MyEventHandler(EventHandler):
+class Tray(EventHandler):
 
     def on_connect(self):
-        self.updatePluginValues()
         self.plugin.show()
         super(MyEventHandler,self).on_connect()
 
     def on_connection_lost(self):
         super(MyEventHandler,self).on_connection_lost()
         self.plugin.hide()
-
-
-class FreenonPluginMixin(PluginInterface):
-    volume = 0
         
-    def getVolume(self):
-        return self.volume
-        
-    def getMuted(self):
-        return self.volume == 0
-        
-    def update_volume(self, volume):
-        print(volume, file=sys.stderr)
-        self.volume = volume
+    def on_avr_change(self, *args, **xargs):
+        super(FreenonPluginMixin, self).on_avr_change(*args,**xargs)
         self.updateIcon()
-        
-    def update_muted(self, muted):
-        if muted:
-            self.volume = 0
-            self.updateIcon()
             
-            
-class Tray(FreenonPluginMixin):
-
-    def __init__(self):
+    def __init__(self,*args,**xargs):
+        super(Tray,self).__init__(*args,**xargs)
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
@@ -65,24 +45,29 @@ class Tray(FreenonPluginMixin):
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         def do():
-            self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(self.volume,self.eh.denon.host))
-            if self.volume == 0: 
+            self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.denon.host))
+            if muted:
                 self.icon.set_from_icon_name("audio-volume-muted")
             else:
-                icon_idx = int(round(float(self.volume)/VOLUME_MAX*(len(icons)-1)))
+                icon_idx = int(round(float(volume)/maxvol*(len(icons)-1)))
                 self.icon.set_from_icon_name(icons[icon_idx])
-        GLib.idle_add(do)
+        try:
+            volume = self.denon.volume
+            muted = self.denon.muted
+            maxvol = self.denon.maxvol
+        except ConnectionError: pass
+        else: GLib.idle_add(do)
     
     def on_scroll(self, icon, event):
-        if event.direction == Gdk.ScrollDirection.UP:
-            volume = min(self.volume+VOLUME_DIFF,VOLUME_MAX)
-            self.update_volume(volume)
-            self.eh.on_plugin_change()
-        elif event.direction == Gdk.ScrollDirection.DOWN:
-            volume = max(0,self.volume-VOLUME_DIFF)
-            self.update_volume(volume)
-            self.eh.on_plugin_change()
-
+        try:
+            if event.direction == Gdk.ScrollDirection.UP:
+                volume = min(self.volume+VOLUME_DIFF,self.denon.maxvol)
+            elif event.direction == Gdk.ScrollDirection.DOWN:
+                volume = max(0,self.volume-VOLUME_DIFF)
+            self.denon.volume = volume
+        except ConnectionError: pass
+        else: self.updateIcon()
+        
 
 class PulseSinkInputListener(PulseListener):
     def _on_pulse_sink_event(self): pass
@@ -96,11 +81,9 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        tray = Tray()
-        eh = MyEventHandler(tray, verbose=self.args.verbose)
-        tray.eh = eh
+        tray = Tray(verbose=self.args.verbose)
         if "pulsectl" in globals(): PulseSinkInputListener(eh)()
-        eh.loop()
+        tray.loop()
         
 
 main = lambda:Main()()    
