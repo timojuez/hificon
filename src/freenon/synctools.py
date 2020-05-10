@@ -54,6 +54,7 @@ class EventHandler(object):
     def __init__(self, plugin, verbose=False):
         self.plugin = plugin
         self.denon = Denon(verbose=verbose) # TODO: may raise on connect()
+        self.denon.register_callback(self.on_avr_change)
         self.denon.ifConnected = IfConnected(self)
         threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
@@ -132,6 +133,11 @@ class EventHandler(object):
         
     def on_avr_poweroff(self):
         print("[Event] AVR power off", file=sys.stderr)
+
+    def on_avr_change(self, attrib, value):
+        print("[Event] AVR change", file=sys.stderr)
+        func = self.update_actions.get(attrib)
+        if func: func(value)
         
 
 class DBusListener(object):
