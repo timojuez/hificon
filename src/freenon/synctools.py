@@ -162,24 +162,3 @@ class DBusListener(object):
             self.el.on_resume()
 
 
-class AvrListener(object):
-        
-    def __init__(self, eh, denon):
-        self.eh = eh
-        self.denon = denon
-
-    def __call__(self):
-        threading.Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
-        
-    def loop(self):
-        while True:
-            with self.denon.ifConnected:
-                cmd = self.denon.read()
-                attrib, old, new = self.denon.consume(cmd)
-                if attrib and old != new: self._on_avr_change(attrib,new)
-
-    def _on_avr_change(self, attrib, value):
-        func = self.eh.update_actions.get(attrib)
-        if func: func(value)
-
-

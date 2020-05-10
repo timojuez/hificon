@@ -201,6 +201,26 @@ class Denon(BasicDenon):
     volume = DenonFeature_Volume()
     muted = DenonFeature_Muted()
     is_running = DenonFeature_Power()
+    
+    def __init__(self, *args, **xargs):
+        super(Denon,self).__init__(*args,**xargs)
+        self._on_change = []
+        threading.Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+        
+    def register_callback(self, callback):
+        """
+        Register notifier function when attributes have changed
+        @callback callable: lambda attrib, new_val
+        """
+        self._on_change.append(callback)
+
+    def mainloop(self):
+        while True:
+            with self.ifConnected:
+                cmd = self.read()
+                attrib, old, new = DenonFeature.consume(self, cmd)
+                if attrib and old != new: 
+                    for cb in self._on_change: cb(attrib,new)
 
     def poweron(self,force=False): # TODO: check denon.source
         if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
@@ -226,9 +246,6 @@ class Denon(BasicDenon):
         if not force and not config.getboolean("AVR","control_power_off"): return 0
         self.is_running = False
         return 1
-        
-    def consume(self, cmd):
-        return DenonFeature.consume(self, cmd)
         
     def poll_all(self):
         DenonFeature.poll_all(self)
