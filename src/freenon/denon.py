@@ -191,7 +191,7 @@ class Denon(BasicDenon):
     muted = DenonFeature_Muted()
     is_running = DenonFeature_Power()
 
-    def poweron(self,force=False):
+    def poweron(self,force=False): # TODO: check denon.source
         if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
             return 0
         self.is_running = True
