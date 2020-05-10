@@ -134,11 +134,24 @@ class BasicDenon(object):
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
         self._received = []
         self.lock = Lock()
-        self.connect()
+        self.connected = False
+        #self.connect()
 
-    def connect(self):
-        self._telnet = Telnet(self.host,23,timeout=2)
-        
+    def connect(self, tries=1):
+        """
+        @tries int: -1 for infinite
+        """
+        self.connected = False
+        while tries:
+            if tries > 0: tries -= 1
+            try: self._telnet = Telnet(self.host,23,timeout=2)
+            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
+                if tries == 0: raise
+            else:
+                self.connected = True
+                return True
+            time.sleep(3)
+    
     def _send(self, cmd):
         cmd = cmd.upper()
         self._telnet.write(("%s\n"%cmd).encode("ascii"))
@@ -228,19 +241,6 @@ class Denon(BasicDenon):
         self.is_running = True
         time.sleep(3) #TODO
         return 1
-
-    def connected(self):
-        try: self.connect()
-        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror): return False
-        else: return True
-    
-    def wait_for_connection(self):
-        while not self.connected(): time.sleep(3)
-        
-    def poweron_wait(self):
-        """ wait for connection and power on """
-        self.wait_for_connection()
-        return self.poweron()
 
     def poweroff(self, force=False):
         if not force and not config.getboolean("AVR","control_power_off"): return 0

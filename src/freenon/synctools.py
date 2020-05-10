@@ -22,14 +22,14 @@ class IfConnected(object):
     def __init__(self, event_listener):
         self.el = event_listener
         
-    def __enter__(self): pass
+    def __enter__(self): pass # connect?
 
     def __exit__(self, type, value, traceback):
         if type not in (EOFError,): return False
         self.el.on_connection_lost()
         sys.stderr.write("[Warning] dropping call\n")
-        self.el.denon.wait_for_connection()
-        self.el.on_connect()
+        self.el.denon_connect()
+        # TODO raise custom exception
         return True
 
 """
@@ -44,7 +44,6 @@ def threadlock(lock):
     return decorator
 """
 
-    
 class EventHandler(object):
     """
     Event handler that keeps up to date the plugin data such as the volume
@@ -84,7 +83,7 @@ class EventHandler(object):
             if not pluginmuted: self.denon.volume = self.plugin.getVolume()
     
     def denon_connect(self):
-        self.denon.wait_for_connection()
+        self.denon.connect(-1)
         self.on_connect()
 
     def on_startup(self):
