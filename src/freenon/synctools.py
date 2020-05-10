@@ -11,6 +11,7 @@ class PluginInterface(object):
     def getMuted(self): pass #return False
     def update_volume(self, volume): pass
     def update_muted(self, muted): pass
+    def update_maxvol(self, maxvol): pass
         
         
 class IfConnected(object):
@@ -68,9 +69,9 @@ class EventHandler(object):
         return {
             "is_running": 
                 lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
-            "muted": self.eh.on_avr_change,
-            "volume": self.eh.on_avr_change,
-            "maxvol": self.eh.on_avr_change,
+            "muted": self.plugin.update_muted,
+            "volume": self.plugin.update_volume,
+            "maxvol": self.plugin.update_maxvol,
         }
             
     @threadlock(updateLock)
@@ -125,10 +126,6 @@ class EventHandler(object):
     def on_plugin_change(self):
         print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
-        
-    def on_avr_change(self, value):
-        print("[Event] AVR attribute changed", file=sys.stderr)
-        self.updatePluginValues()
         
     def on_avr_poweron(self):
         print("[Event] AVR power on", file=sys.stderr)
