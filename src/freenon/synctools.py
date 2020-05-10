@@ -32,7 +32,7 @@ class IfConnected(object):
         self.el.on_connect()
         return True
 
-
+"""
 updateLock = threading.Lock()
 def threadlock(lock):
     def decorator(func):
@@ -42,7 +42,8 @@ def threadlock(lock):
             finally: lock.release()
         return f
     return decorator
-    
+"""
+
     
 class EventHandler(object):
     """
@@ -74,14 +75,14 @@ class EventHandler(object):
             "maxvol": self.plugin.update_maxvol,
         }
             
-    @threadlock(updateLock)
+    #@threadlock(updateLock)
     def updateAvrValues(self):
         pluginmuted = self.plugin.getMuted()
         with self.denon.ifConnected:
             self.denon.muted = pluginmuted
             if not pluginmuted: self.denon.volume = self.plugin.getVolume()
     
-    @threadlock(updateLock)
+    #@threadlock(updateLock)
     def updatePluginValues(self):
         for attr, func in self.update_actions.items():
             value = getattr(self.denon, attr)
