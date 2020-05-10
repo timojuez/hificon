@@ -63,6 +63,16 @@ class EventHandler(object):
             while True: time.sleep(1000)
         except KeyboardInterrupt: pass
     
+    @property
+    def update_actions(self):
+        return {
+            "is_running": 
+                lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
+            "muted": self.eh.on_avr_change,
+            "volume": self.eh.on_avr_change,
+            "maxvol": self.eh.on_avr_change,
+        }
+            
     @threadlock(updateLock)
     def updateAvrValues(self):
         pluginmuted = self.plugin.getMuted()
@@ -116,7 +126,7 @@ class EventHandler(object):
         print("[Event] Plugin change", file=sys.stderr)
         self.updateAvrValues()
         
-    def on_avr_change(self, attr):
+    def on_avr_change(self, value):
         print("[Event] AVR attribute changed", file=sys.stderr)
         self.updatePluginValues()
         
@@ -174,13 +184,7 @@ class AvrListener(object):
                 if attrib and old != new: self._on_avr_change(attrib,new)
 
     def _on_avr_change(self, attrib, value):
-        func = {
-            "is_running": 
-                lambda attrib:{True:self.eh.on_avr_poweron, False:self.eh.on_avr_poweroff}[attrib](),
-            "muted": self.eh.on_avr_change,
-            "volume": self.eh.on_avr_change,
-            "maxvol": self.eh.on_avr_change,
-        }.get(attrib)
+        func = self.eh.update_actions.get(attrib)
         if func: func(value)
 
 
