@@ -5,14 +5,6 @@ from .denon import Denon
 #from .config import config
 
 
-class PluginInterface(object):
-    
-    def getVolume(self): pass #return 50
-    def getMuted(self): pass #return False
-    def update_volume(self, volume): pass
-    def update_muted(self, muted): pass
-    def update_maxvol(self, maxvol): pass
-        
         
 class EventHandler(Denon):
     """
@@ -20,10 +12,9 @@ class EventHandler(Denon):
     and controls the AVR's power state.
     """
     
-    def __init__(self, plugin, verbose=False):
-        self.plugin = plugin
+    def __init__(self, verbose=False):
         super(EventHandler,self).__init__(verbose=verbose)
-        self.denon = self
+        self.denon = self # TODO
         threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
@@ -38,9 +29,6 @@ class EventHandler(Denon):
         return {
             "is_running": 
                 lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
-            "muted": self.plugin.update_muted,
-            "volume": self.plugin.update_volume,
-            "maxvol": self.plugin.update_maxvol,
         }
 
     def on_startup(self):
@@ -73,15 +61,12 @@ class EventHandler(Denon):
                 for attr, func in self.update_actions.items():
                     value = getattr(self.denon, attr)
                     func(value)
+                    self.on_avr_change(attr,value)
         except ConnectionError: pass
             
     def on_connection_lost(self):
         print("[Event] connection lost", file=sys.stderr)
         super(EventHandler,self).on_connection_lost()
-    
-    def on_plugin_change(self):
-        print("[Event] Plugin change", file=sys.stderr)
-        self.updateAvrValues()
         
     def on_avr_poweron(self):
         print("[Event] AVR power on", file=sys.stderr)
