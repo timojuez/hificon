@@ -83,11 +83,9 @@ class EventHandler(object):
     
     @threadlock(updateLock)
     def updatePluginValues(self):
-        """ Set plugin volume and mute according to AVR """
-        avr_muted = self.denon.muted
-        self.plugin.update_muted(avr_muted)
-        if avr_muted == False: self.plugin.update_volume(self.denon.volume)
-        self.plugin.update_maxvol(self.denon.maxvol)
+        for attr, func in self.update_actions.items():
+            value = getattr(self.denon, attr)
+            func(value)
 
     def denon_connect(self):
         self.denon.wait_for_connection()
