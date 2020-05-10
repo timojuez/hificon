@@ -76,14 +76,6 @@ class DenonFeature(AbstractDenonFeature):
             self_._poll()
             
 
-class DenonFeature_Maxvol(DenonFeature):
-    function="MVMAX"
-    
-    _poll = lambda *args:None
-    def decodeVal(self, val): pass # TODO
-    def encodeVal(self, val): pass
-    
-
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
@@ -100,6 +92,19 @@ class DenonFeature_Volume(DenonFeature):
         return "%03d"%(vol*10)
         
         
+class DenonFeature_Maxvol(DenonFeature_Volume):
+    function="MVMAX "
+    
+    def _poll(self, denon):
+        cmd = denon("MV?", ret=self.function)
+        if cmd: return self._consume(denon, cmd)
+        denon.__dict__[self_._name] = 98
+        return denon.__dict__.get(self_._name)
+        
+    def encodeVal(self, val):
+        raise RuntimeError("Cannot set MVMAX!")
+        
+
 class DenonFeature_Power(DenonFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
@@ -140,17 +145,20 @@ class BasicDenon(object):
         try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
         
-    def __call__(self, cmd):
+    def __call__(self, cmd, ret=None):
         """ 
         Send command to AVR
+        @cmd str: function[?|param]
+        @ret str: return received line that starts with @ret, default: function
         """
         if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
-        if "?" not in cmd: return self._send(cmd)
+        if "?" not in cmd and not ret: return self._send(cmd)
 
+        ret = ret or cmd.replace("?","")
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)
             return r
-        condition = lambda r: r.startswith(cmd.replace("?",""))
+        condition = lambda r: r.startswith(ret)
 
         self.lock.acquire()
         try:

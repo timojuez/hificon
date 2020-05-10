@@ -77,6 +77,7 @@ class EventHandler(object):
         avr_muted = self.denon.muted
         self.plugin.update_muted(avr_muted)
         if avr_muted == False: self.plugin.update_volume(self.denon.volume)
+        self.plugin.update_maxvol(self.denon.maxvol)
 
     def denon_connect(self):
         self.denon.wait_for_connection()
@@ -177,7 +178,8 @@ class AvrListener(object):
             "is_running": 
                 lambda attrib:{True:self.eh.on_avr_poweron, False:self.eh.on_avr_poweroff}[attrib](),
             "muted": self.eh.on_avr_change,
-            "volume": self.eh.on_avr_change
+            "volume": self.eh.on_avr_change,
+            "maxvol": self.eh.on_avr_change,
         }.get(attrib)
         if func: func(value)
 
