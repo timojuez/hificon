@@ -31,6 +31,8 @@ class DenonFeature(AbstractDenonFeature):
     
     def __get__(self, denon, cls):
         if denon is None: return self
+        if not denon.connected: 
+            raise ConnectionError("Variable `%s` is not available when AVR is disconnected."%self._name)
         try: return denon.__dict__[self._name]
         except KeyError: return self._poll(denon)
         
@@ -118,7 +120,7 @@ class DenonFeature_Muted(DenonFeature):
     translation = {"ON":True,"OFF":False}
 
     
-    
+
 class BasicDenon(object):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
@@ -134,32 +136,24 @@ class BasicDenon(object):
         if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
         self._received = []
         self.lock = Lock()
+        self.connecting_lock = Lock()
         self.connected = False
         #self.connect()
 
-    def connect(self, tries=1):
-        """
-        @tries int: -1 for infinite
-        """
-        self.connected = False
-        while tries:
-            if tries > 0: tries -= 1
-            try: self._telnet = Telnet(self.host,23,timeout=2)
-            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
-                if tries == 0: raise
-            else:
-                self.connected = True
-                return True
-            time.sleep(3)
-    
     def _send(self, cmd):
         cmd = cmd.upper()
-        self._telnet.write(("%s\n"%cmd).encode("ascii"))
+        try: self._telnet.write(("%s\n"%cmd).encode("ascii"))
+        except (OSError, EOFError) as e:
+            self.on_connection_lost()
+            raise BrokenPipeError(e)
         return cmd
         
     def _read(self, timeout=None):
         try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
+        except EOFError as e:
+            self.on_connection_lost()
+            raise BrokenPipeError(e)
         
     def __call__(self, cmd, ret=None):
         """ 
@@ -206,6 +200,30 @@ class BasicDenon(object):
             r = self._read(5)
             if r: self._received.append(r)
 
+    def connect(self, tries=1):
+        """
+        @tries int: -1 for infinite
+        """
+        while tries:
+            if tries > 0: tries -= 1
+            try: self._telnet = Telnet(self.host,23,timeout=2)
+            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
+                if tries == 0: raise
+            else:
+                return self.on_connect()
+            time.sleep(3)
+    
+    def on_connect(self):
+        print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
+        self.connected = True
+        
+    def on_connection_lost(self):
+        print("[%s] connection lost"%self.__class__.__name__, file=sys.stderr)
+        self.connected = False
+        if not self.connecting_lock.acquire(blocking=False): return
+        try: Thread(target=self.connect, args=(-1,), name="reconnecting", daemon=True).start()
+        finally: self.connecting_lock.release()
+        
 
 class Denon(BasicDenon):
     """ Mapping of commands into python methods """
