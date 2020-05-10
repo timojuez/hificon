@@ -35,6 +35,7 @@ class DenonFeature(AbstractDenonFeature):
         except KeyError: return self._poll(denon)
         
     def __set__(self, denon, value):
+        if denon.__dict__.get(self_._name) == value: return
         denon.__dict__[self._name] = value
         cmd = "%s%s"%(self.function, self.encodeVal(value))
         denon(cmd)
@@ -80,6 +81,9 @@ class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
     
+    def __set__(self, denon, value):
+        super(DenonFeature_Volume,self).__set__(denon, self._roundVolume(value))
+        
     @staticmethod
     def _roundVolume(vol):
         return .5*round(vol/.5)
@@ -88,8 +92,7 @@ class DenonFeature_Volume(DenonFeature):
         return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
-        vol = self._roundVolume(val)
-        return "%03d"%(vol*10)
+        return "%03d"%(val*10)
         
         
 class DenonFeature_Maxvol(DenonFeature_Volume):
