@@ -26,9 +26,6 @@ class DenonFeature(AbstractDenonFeature):
 
     #def __init__(self): self.features= []
     
-    def _poll(self, denon):
-        return self._consume(denon, denon("%s?"%self.function))
-    
     def __get__(self, denon, cls):
         if denon is None: return self
         if not denon.connected: 
@@ -39,14 +36,20 @@ class DenonFeature(AbstractDenonFeature):
     def __set__(self, denon, value):
         if denon.__dict__.get(self_._name) == value: return
         denon.__dict__[self._name] = value
-        cmd = "%s%s"%(self.function, self.encodeVal(value))
-        denon(cmd)
-    
+        self._send(denon)
+
     def __set_name__(self, cls, name):
         self._name = name
         self_ = self.__class__() # does not react on __get__
         self_._name = name
         self.features.append((cls, self_))
+    
+    def _poll(self, denon):
+        return self._consume(denon, denon("%s?"%self.function))
+    
+    def _send(self, denon):
+        cmd = "%s%s"%(self.function, self.encodeVal(denon.__dict__[self._name]))
+        denon(cmd)
     
     def _consume(self, denon, cmd):
         """
@@ -76,7 +79,12 @@ class DenonFeature(AbstractDenonFeature):
     def poll_all(self, denon):
         """ refresh all DenonFeature attributes """
         for cls, self_ in self.features:
-            self_._poll()
+            self_._poll(denon)
+            
+    @classmethod
+    def resend_all(self, denon):
+        for cls, self_ in self.features:
+            self._send(denon)
             
 
 class DenonFeature_Volume(DenonFeature):
@@ -261,6 +269,9 @@ class Denon(BasicDenon):
         
     def poll_all(self):
         DenonFeature.poll_all(self)
+        
+    def resend_all(self):
+        DenonFeature.resend_all(self)
 
 
 class CLI(object):
