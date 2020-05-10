@@ -69,10 +69,6 @@ class Tray(EventHandler):
         else: self.updateIcon()
         
 
-class PulseSinkInputListener(PulseListener):
-    def _on_pulse_sink_event(self): pass
-    
-
 class Main(object):
     
     def __init__(self):
@@ -82,7 +78,7 @@ class Main(object):
         
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
-        if "pulsectl" in globals(): PulseSinkInputListener(eh)()
+        if "pulsectl" in globals(): PulseListener(tray)()
         tray.loop()
         
 
