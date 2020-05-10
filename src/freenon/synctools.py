@@ -83,12 +83,6 @@ class EventHandler(object):
             self.denon.muted = pluginmuted
             if not pluginmuted: self.denon.volume = self.plugin.getVolume()
     
-    #@threadlock(updateLock)
-    def updatePluginValues(self):
-        for attr, func in self.update_actions.items():
-            value = getattr(self.denon, attr)
-            func(value)
-
     def denon_connect(self):
         self.denon.wait_for_connection()
         self.on_connect()
@@ -116,9 +110,13 @@ class EventHandler(object):
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         print("[Event] connected to %s"%self.denon.host, file=sys.stderr)
-        self.denon.poll_all()
-        if self.denon.is_running: self.updatePluginValues()
-        
+        with self.denon.ifConnected: 
+            self.denon.poll_all() # better asynchronous and return
+            if self.denon.is_running: 
+                for attr, func in self.update_actions.items():
+                    value = getattr(self.denon, attr)
+                    func(value)
+            
     def on_connection_lost(self):
         print("[Event] connection lost", file=sys.stderr)
     
