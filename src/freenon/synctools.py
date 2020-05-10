@@ -42,13 +42,6 @@ class EventHandler(Denon):
             "volume": self.plugin.update_volume,
             "maxvol": self.plugin.update_maxvol,
         }
-            
-    def updateAvrValues(self):
-        pluginmuted = self.plugin.getMuted()
-        try:
-            self.denon.muted = pluginmuted
-            if not pluginmuted: self.denon.volume = self.plugin.getVolume()
-        except ConnectionError: pass
 
     def on_startup(self):
         """ program start """
@@ -93,7 +86,7 @@ class EventHandler(Denon):
     def on_avr_poweron(self):
         print("[Event] AVR power on", file=sys.stderr)
         time.sleep(3) #TODO
-        self.updateAvrValues()
+        self.denon.resend_all() # TODO: maybe do not set vol if muted? care about which attibutes are being sent?
         
     def on_avr_poweroff(self):
         print("[Event] AVR power off", file=sys.stderr)
