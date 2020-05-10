@@ -217,7 +217,7 @@ class Denon(BasicDenon):
     
     def __init__(self, *args, **xargs):
         super(Denon,self).__init__(*args,**xargs)
-        threading.Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def on_avr_change(self, attrib, new_val):
         pass
