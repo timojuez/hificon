@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse, pulsectl
 from threading import Timer, Thread
-from .synctools import PluginInterface, EventHandler
+from .synctools import EventHandler
 from .config import config
 
 
@@ -22,44 +22,6 @@ class PulseEventHandler(EventHandler,AbstractPulse):
         super(PulseEventHandler,self).on_connect()
         if self.pulse_is_playing():
             with self.denon.ifConnected: self.denon.poweron()
-
-
-class PulsePluginRelative(AbstractPulse,PluginInterface):
-    sink = 0
-
-    def __init__(self):
-        super(PulsePluginRelative,self).__init__()
-        self.maxvol = config.getint("Pulse","maxvol")
-    
-    def getVolume(self):
-        """ Set AVR volume and mute according to Pulse """
-        sink = self.pulse.sink_list()[self.sink]
-        volume = sink.volume.value_flat*self.maxvol
-        return volume
-        
-    def getMuted(self):
-        sink = self.pulse.sink_list()[self.sink]
-        return bool(sink.mute)
-        
-    def update_volume(self, volume):
-        pulsevol = self.pulse.sink_list()[self.sink].volume.value_flat
-        self.maxvol = min(98,max(volume/max(0.01,pulsevol),10))
-        print("[Pulse] 100%% := %02d"%self.maxvol)
-    
-    def update_muted(self, muted):
-        self.pulse.mute(self.pulse.sink_list()[self.sink],muted)
-
-
-class PulsePluginAbsolute(PulsePluginRelative):
-
-    def update_volume(self, volume):
-        if volume > self.maxvol: 
-            self.maxvol = volume
-            print("[Pulse] 100%% := %02d"%self.maxvol)
-        volume = volume/self.maxvol
-        self.pulse.volume_set_all_chans(
-            self.pulse.sink_list()[self.sink], volume)
-        print("[Pulse] setting volume to %0.2f"%volume)
 
 
 class PulseListener(AbstractPulse):
@@ -93,13 +55,14 @@ class PulseListener(AbstractPulse):
 
     def _on_pulse_sink_event(self):
         if self.ev.t == pulsectl.PulseEventTypeEnum.change:
-            self.el.on_plugin_change()
+            pass
 
     def _on_pulse_sink_input_event(self):
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
             print("[Pulse] start playing")
             if hasattr(self,"poweroff"): self.poweroff.cancel()
-            with self.el.denon.ifConnected: self.el.denon.poweron()
+            try: self.el.denon.poweron()
+            except ConnectionError: pass
         elif pulsectl.PulseEventTypeEnum.remove and not self.pulse_is_playing():
             print("[Pulse] stopped")
             self.start_poweroff_timeout()
@@ -113,24 +76,7 @@ class PulseListener(AbstractPulse):
     
     def on_idle(self):
         print("[Pulse] idling")
-        with self.el.denon.ifConnected: self.el.denon.poweroff()
+        try: self.el.denon.poweroff()
+        except ConnectionError: pass
         
     
-class Main(object):
-    
-    def __init__(self):
-        parser = argparse.ArgumentParser(description='Sync pulseaudio to Denon AVR')
-        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
-        self.args = parser.parse_args()
-        
-    def __call__(self):
-        PulsePlugin = PulsePluginAbsolute if config.getboolean("Pulse","absolute") else \
-            PulsePluginRelative
-        eh = PulseEventHandler(PulsePlugin(), verbose=self.args.verbose)
-        PulseListener(eh).loop()
-
-
-main = lambda:Main()()    
-if __name__ == "__main__":
-    main()
-

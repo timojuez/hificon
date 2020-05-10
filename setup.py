@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='freenon',
-      version='0.8.0a',
+      version='1.0.0a',
       description='Network AVR Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
@@ -21,7 +21,6 @@ setup(name='freenon',
       include_package_data=True,
       entry_points={'console_scripts': [
         'freenon_cmd = freenon.denon:main',
-        'freenon_pulse = freenon.pulse:main [gnudesktop]',
         'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main [gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
         'freenon_key_event_handler = freenon.key_binding.key_event_handler:main [gnudesktop]',
