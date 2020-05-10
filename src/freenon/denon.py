@@ -32,7 +32,7 @@ class DenonFeature(AbstractDenonFeature):
     def __get__(self, denon, cls):
         if denon is None: return self
         try: return denon.__dict__[self._name]
-        except KeyError: return self.poll(denon)
+        except KeyError: return self._poll(denon)
         
     def __set__(self, denon, value):
         denon.__dict__[self._name] = value
