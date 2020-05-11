@@ -34,7 +34,7 @@ class DenonFeature(AbstractDenonFeature):
         except KeyError: return self._poll(denon)
         
     def __set__(self, denon, value):
-        if denon.__dict__.get(self_._name) == value: return
+        if denon.__dict__.get(self._name) == value: return
         denon.__dict__[self._name] = value
         self._send(denon)
 
@@ -84,12 +84,13 @@ class DenonFeature(AbstractDenonFeature):
     @classmethod
     def resend_all(self, denon):
         for cls, self_ in self.features:
-            self._send(denon)
+            self_._send(denon)
             
 
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
+    # FIXME: on _poll MVMAX may be returned
     
     def __set__(self, denon, value):
         super(DenonFeature_Volume,self).__set__(denon, self._roundVolume(value))
@@ -116,6 +117,8 @@ class DenonFeature_Maxvol(DenonFeature_Volume):
         
     def encodeVal(self, val):
         raise RuntimeError("Cannot set MVMAX!")
+        
+    def _send(self, denon): pass
         
 
 class DenonFeature_Power(DenonFeature):
