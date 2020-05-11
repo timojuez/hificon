@@ -28,10 +28,10 @@ class Tray(EventHandler):
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
-        super(Tray,self).__init__(*args,**xargs)
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
+        super(Tray,self).__init__(*args,**xargs)
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
         #loop.run()
