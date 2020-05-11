@@ -21,7 +21,8 @@ class PulseEventHandler(EventHandler,AbstractPulse):
     def on_connect(self):
         super(PulseEventHandler,self).on_connect()
         if self.pulse_is_playing():
-            with self.denon.ifConnected: self.denon.poweron()
+            try: self.denon.poweron()
+            except ConnectionError: pass
 
 
 class PulseListener(AbstractPulse):
