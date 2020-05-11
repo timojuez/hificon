@@ -59,7 +59,7 @@ class DenonFeature(AbstractDenonFeature):
         @denon property owner
         """
         if not cmd.startswith(self.function): 
-            raise Exception("Cannot handle `%s`."%cmd)
+            raise ValueError("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
         old = denon.__dict__.get(self._name)
         denon.__dict__[self._name] = self.decodeVal(param)
@@ -71,25 +71,6 @@ class DenonFeature(AbstractDenonFeature):
             if not issubclass(denon.__class__,cls): continue
             yield self_
     
-    @classmethod
-    def consume(self, denon, cmd):
-        """
-        Update attributes in object @denon using message @cmd from AVR
-        @returns: (attrib name, old value, new value)
-        """
-        for self_ in self._get_features(denon):
-            if cmd.startswith(self_.function):
-                old = denon.__dict__.get(self_._name)
-                new = self_._consume(denon, cmd)
-                return self_._name, old, new
-        return None, None, None
-    
-    @classmethod
-    def poll_all(self, denon):
-        """ refresh all DenonFeature attributes """
-        for self_ in self._get_features(denon):
-            self_._poll(denon)
-            
     @classmethod
     def resend_all(self, denon):
         for self_ in self._get_features(denon):
@@ -270,8 +251,11 @@ class Denon(BasicDenon):
                 cmd = self.read()
             except ConnectionError: time.sleep(2)
             else:
-                attrib, old, new = DenonFeature.consume(self, cmd)
-                if attrib and old != new: self.on_avr_change(attrib,new)
+                for attrib,f in self.features.items():
+                    try: old, new = f._consume(self, cmd)
+                    except ValueError: continue
+                    else: 
+                        if old != new: self.on_avr_change(attrib,new)
 
     def poweron(self,force=False): # TODO: check denon.source
         if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
@@ -285,11 +269,12 @@ class Denon(BasicDenon):
         self.is_running = False
         return 1
         
-    def poll_all(self):
-        DenonFeature.poll_all(self)
-        
     def resend_all(self):
         DenonFeature.resend_all(self)
+    
+    @property
+    def features(self):
+        return {f._name:f for f in DenonFeature._get_features(self)}
 
 
 class CLI(object):
