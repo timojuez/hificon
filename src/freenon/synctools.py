@@ -13,8 +13,8 @@ class EventHandler(Denon):
     """
     
     def __init__(self, verbose=False):
-        super(EventHandler,self).__init__(verbose=verbose)
         self.denon = self # TODO
+        super(EventHandler,self).__init__(verbose=verbose)
         threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
         threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
