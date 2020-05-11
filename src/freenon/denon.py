@@ -46,6 +46,9 @@ class DenonFeature(AbstractDenonFeature):
         self_._name = name
         self.features.append((cls, self_))
     
+    def _isset(self, denon):
+        return self._name in denon.__dict__
+        
     def _poll(self, denon):
         return self._consume(denon, denon("%s?"%self.function))
     
