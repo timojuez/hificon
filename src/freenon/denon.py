@@ -31,7 +31,9 @@ class DenonFeature(AbstractDenonFeature):
         if not denon.connected: 
             raise ConnectionError("Variable `%s` is not available when AVR is disconnected."%self._name)
         try: return denon.__dict__[self._name]
-        except KeyError: return self._poll(denon)
+        except KeyError: 
+            self._poll(denon)
+            return denon.__dict__[self._name]
         
     def __set__(self, denon, value):
         if denon.__dict__.get(self._name) == value: return
@@ -59,8 +61,9 @@ class DenonFeature(AbstractDenonFeature):
         if not cmd.startswith(self.function): 
             raise Exception("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
+        old = denon.__dict__.get(self._name)
         denon.__dict__[self._name] = self.decodeVal(param)
-        return denon.__dict__[self._name]
+        return old, denon.__dict__[self._name]
     
     @classmethod
     def _get_features(self, denon):
