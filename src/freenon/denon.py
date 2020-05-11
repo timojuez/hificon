@@ -229,7 +229,7 @@ class BasicDenon(object):
             time.sleep(3)
     
     def on_connect(self):
-        print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
+        if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
         
     def on_connection_lost(self):
