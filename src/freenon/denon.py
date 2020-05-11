@@ -61,15 +61,21 @@ class DenonFeature(AbstractDenonFeature):
         param = cmd[len(self.function):]
         denon.__dict__[self._name] = self.decodeVal(param)
         return denon.__dict__[self._name]
-        
+    
+    @classmethod
+    def _get_features(self, denon):
+        for cls, self_ in self.features:
+            if not issubclass(denon.__class__,cls): continue
+            yield self_
+    
     @classmethod
     def consume(self, denon, cmd):
         """
         Update attributes in object @denon using message @cmd from AVR
         @returns: (attrib name, old value, new value)
         """
-        for cls, self_ in self.features:
-            if cmd.startswith(self_.function) and issubclass(denon.__class__,cls):
+        for self_ in self._get_features(denon):
+            if cmd.startswith(self_.function):
                 old = denon.__dict__.get(self_._name)
                 new = self_._consume(denon, cmd)
                 return self_._name, old, new
@@ -78,12 +84,12 @@ class DenonFeature(AbstractDenonFeature):
     @classmethod
     def poll_all(self, denon):
         """ refresh all DenonFeature attributes """
-        for cls, self_ in self.features:
+        for self_ in self._get_features(denon):
             self_._poll(denon)
             
     @classmethod
     def resend_all(self, denon):
-        for cls, self_ in self.features:
+        for self_ in self._get_features(denon):
             self_._send(denon)
             
 
