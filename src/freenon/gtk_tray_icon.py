@@ -16,15 +16,15 @@ VOLUME_DIFF = 3
 class Tray(EventHandler):
 
     def on_connect(self):
-        self.plugin.show()
-        super(MyEventHandler,self).on_connect()
+        self.show()
+        super(Tray,self).on_connect()
 
     def on_connection_lost(self):
-        super(MyEventHandler,self).on_connection_lost()
-        self.plugin.hide()
+        super(Tray,self).on_connection_lost()
+        self.hide()
         
     def on_avr_change(self, *args, **xargs):
-        super(FreenonPluginMixin, self).on_avr_change(*args,**xargs)
+        super(Tray, self).on_avr_change(*args,**xargs)
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
