@@ -34,8 +34,7 @@ class EventHandler(Denon):
     def on_startup(self):
         """ program start """
         print("[Event] Startup", file=sys.stderr)
-        if self.denon.connected: self.on_connect()
-        else: self.denon.connect(-1)
+        if not self.denon.connected: self.denon.connect(-1)
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
