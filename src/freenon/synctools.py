@@ -34,7 +34,8 @@ class EventHandler(Denon):
     def on_startup(self):
         """ program start """
         print("[Event] Startup", file=sys.stderr)
-        self.connect(-1)
+        if self.denon.connected: self.on_connect()
+        else: self.denon.connect(-1)
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
@@ -56,12 +57,12 @@ class EventHandler(Denon):
         """ Execute when connected e.g. after connection aborted """
         super(EventHandler,self).on_connect()
         try: 
-            self.denon.poll_all() # better asynchronous and return
-            if self.denon.is_running:
-                for attr, func in self.update_actions.items():
-                    value = getattr(self.denon, attr)
-                    func(value)
-                    self.on_avr_change(attr,value)
+            #self.denon.poll_all() # TODO: better asynchronous and return
+            self.denon.features["is_running"]._poll(self.denon)
+            for attr, f in self.denon.features.items():
+                    if not f._isset(self.denon) or self.denon.is_running: 
+                        old, new = f._poll(self.denon)
+                        if old != new: self.on_avr_change(attr,new)
         except ConnectionError: pass
             
     def on_connection_lost(self):
