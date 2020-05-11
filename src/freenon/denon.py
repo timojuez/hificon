@@ -257,8 +257,10 @@ class Denon(BasicDenon):
         
     def mainloop(self):
         while True:
-            with self.ifConnected:
+            try:
                 cmd = self.read()
+            except ConnectionError: time.sleep(2)
+            else:
                 attrib, old, new = DenonFeature.consume(self, cmd)
                 if attrib and old != new: self.on_avr_change(attrib,new)
 
