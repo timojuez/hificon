@@ -143,7 +143,7 @@ class BasicDenon(object):
         self.connecting_lock = Lock()
         self.connected = False
         try: self.connect()
-        except: pass
+        except OSError: pass
 
     def _send(self, cmd):
         cmd = cmd.upper()
