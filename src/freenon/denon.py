@@ -173,6 +173,7 @@ class BasicDenon(object):
         @cmd str: function[?|param]
         @ret str: return received line that starts with @ret, default: function
         """
+        cmd = cmd.upper()
         if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
         if "?" not in cmd and not ret: return self._send(cmd)
 
@@ -194,9 +195,11 @@ class BasicDenon(object):
                         return _return(r)
                 pos_received = pos_received_new
                 r = self._read(2)
-                if not r and i>5: # timeout #TODO
-                    sys.stderr.write("(timeout) ")
-                    break
+                if not r:
+                    if i>5: # timeout #TODO
+                        sys.stderr.write("(timeout) ")
+                        break
+                    continue
                 if condition(r): return _return(r)
                 else: self._received.append(r)
             sys.stderr.write("WARNING: Got no answer for `%s`.\n"%cmd)
