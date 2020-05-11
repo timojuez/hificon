@@ -15,8 +15,8 @@ class AbstractPulse(object):
 class PulseEventHandler(EventHandler,AbstractPulse):
 
     def __init__(self, *args, **xargs):
-        EventHandler.__init__(self, *args, **xargs)
         AbstractPulse.__init__(self)
+        EventHandler.__init__(self, *args, **xargs)
         
     def on_connect(self):
         super(PulseEventHandler,self).on_connect()
