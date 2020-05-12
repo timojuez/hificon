@@ -21,72 +21,53 @@ class AbstractDenonFeature(object):
         return {val:key for key,val in self.translation.items()}[val]
 
 
-class DenonFeature(AbstractDenonFeature):        
-    features = []
+class DenonFeature(AbstractDenonFeature):
 
-    #def __init__(self): self.features= []
-    
-    def __get__(self, denon, cls):
-        if denon is None: return self
-        if not denon.connected: 
-            raise ConnectionError("Variable `%s` is not available when AVR is disconnected."%self._name)
-        try: return denon.__dict__[self._name]
-        except KeyError: 
-            self._poll(denon)
-            return denon.__dict__[self._name]
-        
-    def __set__(self, denon, value):
-        if denon.__dict__.get(self._name) == value: return
-        denon.__dict__[self._name] = value
-        self._send(denon)
+    def __init__(self, denon, name):
+        self.denon = denon
 
-    def __set_name__(self, cls, name):
-        self._name = name
-        self_ = self.__class__() # does not react on __get__
-        self_._name = name
-        self.features.append((cls, self_))
-    
-    def _isset(self, denon):
-        return self._name in denon.__dict__
+    def get(self):
+        if not self.denon.connected: 
+            raise ConnectionError("`%s` is not available when AVR is disconnected."%self.__class__.__name__)
+        try: return self._val
+        except AttributeError:
+            self._poll()
+            return self._val
         
-    def _poll(self, denon):
-        return self._consume(denon, denon("%s?"%self.function))
+    def set(self, value):
+        if getattr(self, "_val", None) == value: return
+        self._val = value
+        self._send()
+
+    def _isset(self):
+        return hasattr(self,'_val')
+        
+    def _poll(self):
+        return self._consume(self.denon("%s?"%self.function))
     
-    def _send(self, denon):
-        cmd = "%s%s"%(self.function, self.encodeVal(denon.__dict__[self._name]))
-        denon(cmd)
+    def _send(self):
+        cmd = "%s%s"%(self.function, self.encodeVal(self._val))
+        self.denon(cmd)
     
-    def _consume(self, denon, cmd):
+    def _consume(self, cmd):
         """
         Update property according to @cmd
-        @denon property owner
         """
         if not cmd.startswith(self.function): 
             raise ValueError("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
-        old = denon.__dict__.get(self._name)
-        denon.__dict__[self._name] = self.decodeVal(param)
-        return old, denon.__dict__[self._name]
+        old = getattr(self,'_val',None)
+        self._val = self.decodeVal(param)
+        return old, self._val
     
-    @classmethod
-    def _get_features(self, denon):
-        for cls, self_ in self.features:
-            if not issubclass(denon.__class__,cls): continue
-            yield self_
-    
-    @classmethod
-    def resend_all(self, denon):
-        for self_ in self._get_features(denon):
-            self_._send(denon)
-            
 
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
     # FIXME: on _poll MVMAX may be returned
     
-    def __set__(self, denon, value):
-        super(DenonFeature_Volume,self).__set__(denon, self._roundVolume(value))
+    def set(self, value):
+        super(DenonFeature_Volume,self).set(self._roundVolume(value))
         
     @staticmethod
     def _roundVolume(vol):
@@ -102,16 +83,17 @@ class DenonFeature_Volume(DenonFeature):
 class DenonFeature_Maxvol(DenonFeature_Volume):
     function="MVMAX "
     
-    def _poll(self, denon):
-        cmd = denon("MV?", ret=self.function)
-        if cmd: return self._consume(denon, cmd)
-        denon.__dict__[self_._name] = 98
-        return denon.__dict__.get(self_._name)
+    def _poll(self):
+        cmd = self.denon("MV?", ret=self.function)
+        if cmd: return self._consume(cmd)
+        old = getattr(self,'_val',None)
+        self._val = 98
+        return old, self._val
         
     def encodeVal(self, val):
         raise RuntimeError("Cannot set MVMAX!")
         
-    def _send(self, denon): pass
+    def _send(self): pass
         
 
 class DenonFeature_Power(DenonFeature):
@@ -123,7 +105,24 @@ class DenonFeature_Muted(DenonFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
 
+
+
+class DenonWithFeatures(object):
+    maxvol = DenonFeature_Maxvol
+    volume = DenonFeature_Volume
+    muted = DenonFeature_Muted
+    is_running = DenonFeature_Power
     
+    features = {}
+    
+    def __init__(self):
+        for name, Feature in self.__class__.__dict__.items():
+            if issubclass(Feature,DenonFeature):
+                f = Feature(self, name)
+                self.__dict__[name] = property(f.get, f.set)
+                self.features[name] = f
+                
+
 
 class BasicDenon(object):
     """
@@ -132,6 +131,7 @@ class BasicDenon(object):
     """
 
     def __init__(self, host=None, verbose=False):
+        super(BasicDenon).__init__()
         self.verbose = verbose
         self.host = host or config["AVR"].get("Host") or \
             "DenonDiscoverer" in globals() and DenonDiscoverer().denon
@@ -233,14 +233,9 @@ class BasicDenon(object):
         finally: self.connecting_lock.release()
         
 
-class Denon(BasicDenon):
+class Denon(BasicDenon,DenonWithFeatures):
     """ Mapping of commands into python methods """
 
-    maxvol = DenonFeature_Maxvol()
-    volume = DenonFeature_Volume()
-    muted = DenonFeature_Muted()
-    is_running = DenonFeature_Power()
-    
     def __init__(self, *args, **xargs):
         super(Denon,self).__init__(*args,**xargs)
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
@@ -272,13 +267,6 @@ class Denon(BasicDenon):
         self.is_running = False
         return 1
         
-    def resend_all(self):
-        DenonFeature.resend_all(self)
-    
-    @property
-    def features(self):
-        return {f._name:f for f in DenonFeature._get_features(self)}
-
 
 class CLI(object):
     
