@@ -301,8 +301,9 @@ class CLI(object):
             Thread(target=reader,name="Reader",daemon=True).start()
             while True:
                 try: cmd = input().strip()
-                except KeyboardInterrupt: break
-                denon._send(cmd)
+                except (KeyboardInterrupt, EOFError): break
+                cmd = denon._send(cmd)
+                #print("\r[sent] %s"%cmd)
             
 
 main = lambda:CLI()()
