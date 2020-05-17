@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import os,time,argparse,json
+import os,time,argparse,json,subprocess
 from filelock import FileLock
 from .volume_changer import VolumeChanger
 
@@ -24,32 +24,44 @@ class Main(VolumeChanger):
         self.lock = FileLock("%s.lock"%PIDFILE)
 
     def __call__(self):
-        func = self.press if self.args.pressed else self.releasePoll
+        func = self.pressed if self.args.pressed else self.releasePoll
         func(self.args.up)
     
-    def press(self, button):
+    def pressed(self, button):
         with self.lock:
             if self.load():
                 self.release(None)
             with open(PIDFILE,"x") as fp:
                 json.dump(dict(pid=os.getpid(), button=button),fp)
-        self.set_button(button)
-        self.start()
-
+        self.press(button)
+        while True: time.sleep(1)
+        
+    def wait_for_button_release(self, button):
+        """ 
+        Wait until button @button has been released.
+        button int: Mouse button to wait for
+        """
+        while True:
+            time.sleep(1)
+            r = subprocess.call(
+                "for id in $(xinput list --id-only); do xinput --query-state $id 2>/dev/null; done|grep 'button\[%s\]'|grep down >/dev/null;"%button,
+                shell=True)
+            if r != 0: break
+        
     def load(self):
         try:
             with open(PIDFILE) as fp:
                 d = json.load(fp)
         except (FileNotFoundError, json.decoder.JSONDecodeError): return False
         self.pid = d["pid"]
-        self.set_button(d["button"])
+        self.button = d["button"]
         return True
     
-    def stop(self):
+    def _stop(self):
         os.remove(PIDFILE)
         try: os.kill(self.pid,9)
         except ProcessLookupError: pass
-        super(Main,self).stop()
+        super(Main,self)._stop()
         return True
     
     def releasePoll(self, button):

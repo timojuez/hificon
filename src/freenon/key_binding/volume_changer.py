@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import time
-from threading import Thread
+from threading import Thread, Lock
 from ..denon import Denon
 from ..config import config
 
@@ -12,20 +12,39 @@ class VolumeChanger(object):
     """ 
     Class for managing volume up/down while hot key pressed
     when both hot keys are being pressed, last one counts
+    
+    Example 1:
+        button1=True
+        button2=False
+        press(button1)
+        release(button1) #stops
+    Example 2:
+        press(button2)
+        press(button1)
+        release(button2) #skips
+        release(button1) #stops
     """
 
     def __init__(self):
+        self.thread = None
+        self.lock = Lock()
         self.denon = Denon()
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
-
-    def set_button(self, button):
-        """ set or change currently pressed hot key before or while start() is running """
-        self.button = button
         
-    def start(self):
+    def press(self, button):
+        """ start sending volume events to AVR """
+        self.lock.acquire()
+        try:
+            self.button = button
+            if self.thread is None:
+                self.thread = Thread(target=self._loop,daemon=True)
+                self.thread.start()
+        finally: self.lock.release()
+        
+    def _loop(self):
         """ listen for keys and stop when all released. Start in extra process or thread """
-        while True:
+        for _ in range(60): # max increase 60 steps for security
             b = self.button
             if b is None: break
             self.denon(BUTTON2CMD[b])
@@ -34,10 +53,13 @@ class VolumeChanger(object):
     def release(self, button):
         """ button released """
         if button is not None and self.button != button: return
-        self.stop()
+        self._stop()
         
-    def stop(self):
+    def _stop(self):
         self.button = None
+        if self.thread: 
+            self.thread.join()
+            self.thread = None
         Thread(target=self.denon.poweron, args=(True,), name="poweron", daemon=False).start()
         
         
