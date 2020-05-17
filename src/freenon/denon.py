@@ -237,7 +237,8 @@ class Denon(BasicDenon,DenonWithFeatures):
     """ Mapping of commands into python methods """
 
     def __init__(self, *args, **xargs):
-        super(Denon,self).__init__(*args,**xargs)
+        BasicDenon.__init__(self,*args,**xargs)
+        DenonWithFeatures.__init__(self)
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def on_avr_change(self, attrib, new_val):
@@ -250,7 +251,7 @@ class Denon(BasicDenon,DenonWithFeatures):
             except ConnectionError: time.sleep(2)
             else:
                 for attrib,f in self.features.items():
-                    try: old, new = f._consume(self, cmd)
+                    try: old, new = f._consume(cmd)
                     except ValueError: continue
                     else: 
                         if old != new: self.on_avr_change(attrib,new)
