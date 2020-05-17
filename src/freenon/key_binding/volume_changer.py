@@ -38,7 +38,7 @@ class VolumeChanger(object):
         try:
             self.button = button
             if self.thread is None:
-                self.thread = Thread(target=self._loop,daemon=True)
+                self.thread = Thread(target=self._loop,name="VolumeChanger",daemon=True)
                 self.thread.start()
         finally: self.lock.release()
         
