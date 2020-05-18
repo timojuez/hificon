@@ -174,11 +174,11 @@ class BasicDenon(object):
         if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
         if "?" not in cmd and not ret: return self._send(cmd)
 
-        ret = ret or cmd.replace("?","")
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)
             return r
-        condition = lambda r: r.startswith(ret)
+        ret = ret or cmd.replace("?","")
+        condition = ret if callable(ret) else lambda r: r.startswith(ret)
 
         self.lock.acquire()
         try:
