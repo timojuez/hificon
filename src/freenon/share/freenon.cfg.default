@@ -14,3 +14,7 @@ poweroff_timeout = 10
 # Send volume up/down event to AVR each @interval milliseconds while key is pressed
 interval = 30
 
+[MouseBinding]
+vol_up = button9
+vol_down = button8
+

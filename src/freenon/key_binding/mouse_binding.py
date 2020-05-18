@@ -3,10 +3,11 @@
 
 from pynput.mouse import Listener, Button, Controller
 from .volume_changer import VolumeChanger
+from ..config import config
 
 
-VOLUP = Button.button9
-VOLDOWN = Button.button8
+VOLUP = getattr(Button,config["MouseBinding"]["vol_up"])
+VOLDOWN = getattr(Button,config["MouseBinding"]["vol_down"])
 
 
 class Main(VolumeChanger):
