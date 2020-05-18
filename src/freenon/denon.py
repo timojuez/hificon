@@ -36,8 +36,8 @@ class DenonFeature(AbstractDenonFeature):
         
     def set(self, value):
         if getattr(self, "_val", None) == value: return
-        self._val = value
-        self._send()
+        #self._val = value
+        self._send(value)
 
     def _isset(self):
         return hasattr(self,'_val')
@@ -45,8 +45,9 @@ class DenonFeature(AbstractDenonFeature):
     def _poll(self):
         return self._consume(self.denon("%s?"%self.function))
     
-    def _send(self):
-        cmd = "%s%s"%(self.function, self.encodeVal(self._val))
+    def _send(self, value=None):
+        if value is None: value = self._val
+        cmd = "%s%s"%(self.function, self.encodeVal(value))
         self.denon(cmd)
     
     def _consume(self, cmd):
