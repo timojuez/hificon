@@ -64,6 +64,7 @@ class Tray(EventHandler):
                 volume = min(self.volume+VOLUME_DIFF,self.denon.maxvol)
             elif event.direction == Gdk.ScrollDirection.DOWN:
                 volume = max(0,self.volume-VOLUME_DIFF)
+            else: return
             self.denon.volume = volume
         except ConnectionError: pass
         else: self.updateIcon()
