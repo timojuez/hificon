@@ -28,6 +28,7 @@ class Tray(EventHandler):
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
+        self._volume = None
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
@@ -65,6 +66,8 @@ class Tray(EventHandler):
             elif event.direction == Gdk.ScrollDirection.DOWN:
                 volume = max(0,self.volume-VOLUME_DIFF)
             else: return
+            if self._volume == volume: return
+            self._volume = volume
             self.denon.volume = volume
         except ConnectionError: pass
         else: self.updateIcon()
