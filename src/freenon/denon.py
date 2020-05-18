@@ -111,28 +111,30 @@ class DenonFeature_Muted(DenonFeature):
     translation = {"ON":True,"OFF":False}
 
 
-class DenonWithFeatures(object):
+class DenonWithFeatures(type):
     features = dict(
         maxvol = DenonFeature_Maxvol,
         volume = DenonFeature_Volume,
         muted = DenonFeature_Muted,
         is_running = DenonFeature_Power,
     )
+    
+    def __new__(self,name,bases,dct):
+        dct.update({
+            k:property(
+                lambda self,k=k:self.features[k].get(),
+                lambda self,val,k=k:self.features[k].set(val),
+            )
+            for k,v in self.features.items()
+        })
 
-    def __new__(cls):
-        cls = super().__new__(cls)
-        for k,v in cls.features.items():
-            setattr(cls, k, property(
-                lambda self:self.features[k].get(),
-                lambda self,val:self.features[k].set(val),
-            ))
-        return cls
-
-    def __init__(self):
-        super().__init__()
-        self.__dict__["features"] = {k:v(self,k) for k,v in self.__class__.features.items()}
-
-
+        def init(obj,*args,_init=dct.get("__init__"),**xargs):
+            obj.features = {k:v(obj,k) for k,v in self.features.items()}
+            if _init: _init(obj,*args,**xargs)
+        dct["__init__"] = init
+        return super().__new__(self,name,bases,dct)
+    
+    
 class BasicDenon(object):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
@@ -242,12 +244,11 @@ class BasicDenon(object):
         finally: self.connecting_lock.release()
         
 
-class Denon(BasicDenon,DenonWithFeatures):
+class Denon(BasicDenon, metaclass=DenonWithFeatures):
     """ Mapping of commands into python methods """
 
     def __init__(self, *args, **xargs):
-        BasicDenon.__init__(self,*args,**xargs)
-        DenonWithFeatures.__init__(self)
+        super().__init__(*args,**xargs)
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def on_avr_change(self, attrib, new_val):
