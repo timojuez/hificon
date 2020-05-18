@@ -106,22 +106,26 @@ class DenonFeature_Muted(DenonFeature):
     translation = {"ON":True,"OFF":False}
 
 
-
 class DenonWithFeatures(object):
-    maxvol = DenonFeature_Maxvol
-    volume = DenonFeature_Volume
-    muted = DenonFeature_Muted
-    is_running = DenonFeature_Power
-    
-    features = {}
-    
+    features = dict(
+        maxvol = DenonFeature_Maxvol,
+        volume = DenonFeature_Volume,
+        muted = DenonFeature_Muted,
+        is_running = DenonFeature_Power,
+    )
+
+    def __new__(cls):
+        cls = super().__new__(cls)
+        for k,v in cls.features.items():
+            setattr(cls, k, property(
+                lambda self:self.features[k].get(),
+                lambda self,val:self.features[k].set(val),
+            ))
+        return cls
+
     def __init__(self):
-        for name, Feature in self.__class__.__dict__.items():
-            if issubclass(Feature,DenonFeature):
-                f = Feature(self, name)
-                self.__dict__[name] = property(f.get, f.set)
-                self.features[name] = f
-                
+        super().__init__()
+        self.__dict__["features"] = {k:v(self,k) for k,v in self.__class__.features.items()}
 
 
 class BasicDenon(object):
