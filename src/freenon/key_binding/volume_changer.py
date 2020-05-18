@@ -53,7 +53,7 @@ class VolumeChanger(object):
     def release(self, button):
         """ button released """
         if button is not None and self.button != button: return
-        self._stop()
+        return self._stop()
         
     def _stop(self):
         self.button = None

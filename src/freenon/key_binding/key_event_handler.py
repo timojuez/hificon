@@ -28,11 +28,15 @@ class Main(VolumeChanger):
         func(self.args.up)
     
     def pressed(self, button):
-        with self.lock:
-            if self.load():
-                self.release(None)
-            with open(PIDFILE,"x") as fp:
-                json.dump(dict(pid=os.getpid(), button=button),fp)
+        for i in range(60,0,-1):
+            if i == 1: raise RuntimeError(
+                "[press] Previous instance not terminated correctly.")
+            with self.lock:
+                if not self.load():
+                    with open(PIDFILE,"x") as fp:
+                        json.dump(dict(pid=os.getpid(), button=button),fp)
+                    break
+            time.sleep(0.05)
         self.press(button)
         while True: time.sleep(1)
         
@@ -60,17 +64,17 @@ class Main(VolumeChanger):
     def _stop(self):
         os.remove(PIDFILE)
         try: os.kill(self.pid,9)
-        except ProcessLookupError: pass
+        except ProcessLookupError: return False
         super(Main,self)._stop()
         return True
     
     def releasePoll(self, button):
-        with self.lock:
-            for i in range(3):
-                if self.load():
-                    self.release(button)
+        for i in range(70,0,-1):
+            if i == 1: raise RuntimeError("[release] Could not terminate instance.")
+            with self.lock:
+                if self.load() and self.release(button):
                     break
-                time.sleep(0.05)
+            time.sleep(0.05)
 
 
 main = lambda:Main()()
