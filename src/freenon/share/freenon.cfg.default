@@ -15,6 +15,7 @@ poweroff_timeout = 10
 interval = 30
 
 [MouseBinding]
+# freenon_mouse_binding options
 vol_up = button9
 vol_down = button8
 
