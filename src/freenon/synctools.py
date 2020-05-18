@@ -70,10 +70,6 @@ class EventHandler(Denon):
         
     def on_avr_poweron(self):
         print("[Event] AVR power on", file=sys.stderr)
-        time.sleep(3) #TODO
-        # TODO: maybe do not set vol if muted? care about which attibutes are being sent?
-        for attr, f in self.denon.features.items():
-            f._send()
         
     def on_avr_poweroff(self):
         print("[Event] AVR power off", file=sys.stderr)
