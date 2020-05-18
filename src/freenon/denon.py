@@ -64,7 +64,11 @@ class DenonFeature(AbstractDenonFeature):
 class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
-    # FIXME: on _poll MVMAX may be returned
+    
+    def _poll(self):
+        # TODO: maybe switch to asynchronous and remove this function
+        return self._consume(self.denon("MV?",ret=lambda s:
+            s.startswith("MV") and s[2] != "M"))
     
     def set(self, value):
         super(DenonFeature_Volume,self).set(self._roundVolume(value))
