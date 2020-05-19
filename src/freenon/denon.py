@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import sys, time, argparse, socket
-from threading import Lock, Thread
+from threading import Lock, Thread, Timer
 from telnetlib import Telnet
 from .event_handling import EventHandler
 from .config import config
@@ -231,6 +231,22 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         func = self.update_actions.get(attrib)
         if func: func(value)
 
+    def on_start_playing(self):
+        if hasattr(self,"poweroff"): self.poweroff.cancel()
+        try: self.el.denon.poweron()
+        except ConnectionError: pass
+
+    def on_stop_playing(self):
+        try: timeout = config.getfloat("Pulse","poweroff_timeout")*60
+        except ValueError: return
+        if not timeout: return
+        self.poweroff = Timer(timeout,self.on_sound_idle)
+        self.poweroff.start()
+    
+    def on_sound_idle(self):
+        try: self.el.denon.poweroff()
+        except ConnectionError: pass
+    
 
 def echo_call(name, func):
     def call(self,*args,**xargs):
