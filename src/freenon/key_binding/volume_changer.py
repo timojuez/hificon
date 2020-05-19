@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from threading import Thread, Lock
-from ..denon import Denon
+from ..denon import BasicDenon as Denon
 from ..config import config
 
 
