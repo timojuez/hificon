@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='freenon',
-      version='1.0.0a',
+      version='1.1.0a',
       description='Network AVR Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
