@@ -169,7 +169,7 @@ class AsyncDenon(BasicDenon):
                         if old != new: self.on_avr_change(attrib,new)
 
 
-class DenonWithEvents(AsyncDenon,SystemEvents):
+class DenonWithEvents(SystemEvents,AsyncDenon):
     """
     Event handler that keeps up to date the plugin data such as the volume
     and controls the AVR's power state.
