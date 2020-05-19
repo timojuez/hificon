@@ -2,22 +2,36 @@ import threading, time, signal, sys
 from datetime import timedelta, datetime
 from gi.repository import GLib, Gio
 from .denon import Denon
-#from .config import config
 
 
+def call_sequence(*functions):
+    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
+
+
+class _EventHandler(object):
+    def __init__(self):
+        threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
+        signal.signal(signal.SIGTERM, self.on_shutdown)
+        threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
         
-class EventHandler(Denon):
+    def on_startup(self): pass
+    def on_shutdown(self): pass
+    def on_suspend(self): pass
+    def on_resume(self): pass
+
+
+class DenonWithEvents(Denon,_EventHandler):
     """
     Event handler that keeps up to date the plugin data such as the volume
     and controls the AVR's power state.
     """
     
-    def __init__(self, verbose=False):
-        self.denon = self # TODO
-        super(EventHandler,self).__init__(verbose=verbose)
-        threading.Thread(target=self.on_startup, name="on_startup", daemon=True).start()
-        signal.signal(signal.SIGTERM, self.on_shutdown)
-        threading.Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
+    def __init__(self, verbose=False, **callbacks):
+        self.denon = self
+        for name, callback in callbacks.items():
+            setattr(self, name, call_sequence(getattr(self,name), callback))
+        Denon.__init__(self,verbose=verbose)
+        _EventHandler.__init__(self)
 
     def loop(self):
         try:
@@ -31,25 +45,17 @@ class EventHandler(Denon):
                 lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
         }
 
-    def on_startup(self):
-        """ program start """
-        print("[Event] Startup", file=sys.stderr)
-        if not self.denon.connected: self.denon.connect(-1)
-        
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        print("[Event] Shutdown", file=sys.stderr)
         try: self.denon.poweroff()
         except ConnectionError: pass
         
     def on_suspend(self):
-        print("[Event] Suspend", file=sys.stderr)
         try: self.denon.poweroff()
         except ConnectionError: pass
     
     def on_resume(self):
         """ Is being executed after resume from suspension """
-        print("[Event] Resume", file=sys.stderr)
         self.on_connection_lost()
         
     def on_connect(self):
@@ -65,21 +71,29 @@ class EventHandler(Denon):
         except ConnectionError: pass
             
     def on_connection_lost(self):
-        print("[Event] connection lost", file=sys.stderr)
         super(EventHandler,self).on_connection_lost()
         
     def on_avr_poweron(self):
-        print("[Event] AVR power on", file=sys.stderr)
+        pass
         
     def on_avr_poweroff(self):
-        print("[Event] AVR power off", file=sys.stderr)
+        pass
 
     def on_avr_change(self, attrib, value):
-        print("[Event] AVR change", file=sys.stderr)
         super(EventHandler,self).on_avr_change(attrib, value)
         func = self.update_actions.get(attrib)
         if func: func(value)
-        
+
+def echo_call(name, func):
+    def call(self,*args,**xargs):
+        print("[%s] %s"%(self.__class__.__name__,name), file=sys.stderr) 
+        return func(self,*args,**xargs)
+    return call
+for k in dir(DenonWithEvents):
+    if k.startswith("on_"): setattr(DenonWithEvents,k,echo_call(k,getattr(DenonWithEvents,k)))
+
+
+EventHandler = DenonWithEvents        
 
 class DBusListener(object):
     """

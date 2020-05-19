@@ -13,18 +13,15 @@ except ImportError: PulseListener = object
 VOLUME_DIFF = 3
 
 
-class Tray(EventHandler):
+class Tray(object):
 
     def on_connect(self):
         self.show()
-        super(Tray,self).on_connect()
 
     def on_connection_lost(self):
-        super(Tray,self).on_connection_lost()
         self.hide()
         
     def on_avr_change(self, *args, **xargs):
-        super(Tray, self).on_avr_change(*args,**xargs)
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
@@ -32,7 +29,11 @@ class Tray(EventHandler):
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
-        super(Tray,self).__init__(*args,**xargs)
+        self.denon = EventHandler(*args,
+            on_connect=self.on_connect,
+            on_connection_lost=self.on_connection_lost,
+            on_avr_change=self.on_avr_change,
+            **xargs)
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -62,9 +63,9 @@ class Tray(EventHandler):
     def on_scroll(self, icon, event):
         try:
             if event.direction == Gdk.ScrollDirection.UP:
-                volume = min(self.volume+VOLUME_DIFF,self.denon.maxvol)
+                volume = min(self.denon.volume+VOLUME_DIFF,self.denon.maxvol)
             elif event.direction == Gdk.ScrollDirection.DOWN:
-                volume = max(0,self.volume-VOLUME_DIFF)
+                volume = max(0,self.denon.volume-VOLUME_DIFF)
             else: return
             if self._volume == volume: return
             self._volume = volume
@@ -83,7 +84,7 @@ class Main(object):
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
         if "pulsectl" in globals(): PulseListener(tray)()
-        tray.loop()
+        tray.denon.loop()
         
 
 main = lambda:Main()()    
