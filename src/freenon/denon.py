@@ -153,21 +153,26 @@ class BasicDenon(object):
         self.lock = Lock()
         self.connecting_lock = Lock()
         self.connected = False
-        try: self.connect()
-        except OSError: pass
+        #try: self.connect()
+        #except OSError: pass
+        self.connect_async()
 
     def _send(self, cmd):
         cmd = cmd.upper()
-        try: self._telnet.write(("%s\n"%cmd).encode("ascii"))
-        except (OSError, EOFError) as e:
+        try:
+            assert(self.connected)
+            self._telnet.write(("%s\n"%cmd).encode("ascii"))
+        except (OSError, EOFError, AssertionError) as e:
             self.on_connection_lost()
             raise BrokenPipeError(e)
         return cmd
         
     def _read(self, timeout=None):
-        try: return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
+        try:
+            assert(self.connected)
+            return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
-        except EOFError as e:
+        except (EOFError, AssertionError) as e:
             self.on_connection_lost()
             raise BrokenPipeError(e)
         
@@ -223,15 +228,22 @@ class BasicDenon(object):
         """
         @tries int: -1 for infinite
         """
-        while tries:
-            if tries > 0: tries -= 1
-            try: self._telnet = Telnet(self.host,23,timeout=2)
-            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
-                if tries == 0: raise
-            else:
-                return self.on_connect()
-            time.sleep(3)
+        self.connecting_lock.acquire() #blocking=False
+        try:
+            if self.connected: return
+            while tries:
+                if tries > 0: tries -= 1
+                try: self._telnet = Telnet(self.host,23,timeout=2)
+                except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
+                    if tries == 0: raise
+                else:
+                    return self.on_connect()
+                time.sleep(3)
+        finally: self.connecting_lock.release()
     
+    def connect_async(self):
+        Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
+        
     def on_connect(self):
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
@@ -239,10 +251,8 @@ class BasicDenon(object):
     def on_connection_lost(self):
         print("[%s] connection lost"%self.__class__.__name__, file=sys.stderr)
         self.connected = False
-        if not self.connecting_lock.acquire(blocking=False): return
-        try: Thread(target=self.connect, args=(-1,), name="reconnecting", daemon=True).start()
-        finally: self.connecting_lock.release()
-        
+        self.connect_async()
+    
 
 class Denon(BasicDenon, metaclass=DenonWithFeatures):
     """ Mapping of commands into python methods """
@@ -291,6 +301,7 @@ class CLI(object):
         
     def __call__(self):
         denon = BasicDenon(self.args.host, verbose=self.args.verbose)
+        denon.connect()
         for cmd in self.args.command:
             r = denon(cmd)
             if r and not self.args.verbose: print(r)
