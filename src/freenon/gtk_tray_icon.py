@@ -30,6 +30,7 @@ class Tray(object):
             on_connection_lost=self.on_connection_lost,
             on_avr_change=self.on_avr_change,
             **xargs)
+        self.denon.loop()
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -79,7 +80,6 @@ class Main(object):
         
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
-        tray.denon.loop()
         
 
 main = lambda:Main()()    
