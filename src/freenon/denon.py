@@ -130,7 +130,7 @@ class BasicDenon(object):
         self.connect_async()
     
 
-class Denon(BasicDenon, metaclass=DenonWithFeatures):
+class AsyncDenon(BasicDenon, metaclass=DenonWithFeatures):
     """ Mapping of commands into python methods """
 
     def __init__(self, *args, **xargs):
@@ -164,6 +164,87 @@ class Denon(BasicDenon, metaclass=DenonWithFeatures):
         self.is_running = False
         return 1
         
+
+def call_sequence(*functions):
+    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
+
+
+class DenonWithEvents(AsyncDenon,EventHandler):
+    """
+    Event handler that keeps up to date the plugin data such as the volume
+    and controls the AVR's power state.
+    """
+    
+    def __init__(self, verbose=False, **callbacks):
+        self.denon = self
+        for name, callback in callbacks.items():
+            setattr(self, name, call_sequence(getattr(self,name), callback))
+        Denon.__init__(self,verbose=verbose)
+        _EventHandler.__init__(self)
+
+    def loop(self):
+        try:
+            while True: time.sleep(1000)
+        except KeyboardInterrupt: pass
+    
+    @property
+    def update_actions(self):
+        return {
+            "is_running": 
+                lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
+        }
+
+    def on_shutdown(self, sig, frame):
+        """ when shutting down computer """
+        try: self.denon.poweroff()
+        except ConnectionError: pass
+        
+    def on_suspend(self):
+        try: self.denon.poweroff()
+        except ConnectionError: pass
+    
+    def on_resume(self):
+        """ Is being executed after resume from suspension """
+        self.on_connection_lost()
+        
+    def on_connect(self):
+        """ Execute when connected e.g. after connection aborted """
+        super(EventHandler,self).on_connect()
+        try: 
+            #self.denon.poll_all() # TODO: better asynchronous and return
+            self.denon.features["is_running"]._poll()
+            for attr, f in self.denon.features.items():
+                    if not f._isset() or self.denon.is_running: 
+                        old, new = f._poll()
+                        if old != new: self.on_avr_change(attr,new)
+        except ConnectionError: pass
+            
+    def on_connection_lost(self):
+        super(EventHandler,self).on_connection_lost()
+        
+    def on_avr_poweron(self):
+        pass
+        
+    def on_avr_poweroff(self):
+        pass
+
+    def on_avr_change(self, attrib, value):
+        super(EventHandler,self).on_avr_change(attrib, value)
+        func = self.update_actions.get(attrib)
+        if func: func(value)
+
+
+def echo_call(name, func):
+    def call(self,*args,**xargs):
+        print("[%s] %s"%(self.__class__.__name__,name), file=sys.stderr) 
+        return func(self,*args,**xargs)
+    return call
+for k in dir(DenonWithEvents):
+    if k.startswith("on_"): setattr(DenonWithEvents,k,echo_call(k,getattr(DenonWithEvents,k)))
+
+
+Denon=DenonWithEvents
+
 
 class CLI(object):
     
