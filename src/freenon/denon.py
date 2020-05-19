@@ -12,14 +12,20 @@ try: from .setup import DenonDiscoverer
 except ImportError: pass
 
 
+def call_sequence(*functions):
+    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
+
+
 class BasicDenon(object):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
     @host is the AVR's hostname or IP.
     """
 
-    def __init__(self, host=None, verbose=False):
+    def __init__(self, host=None, verbose=False, **callbacks):
         self.verbose = verbose
+        for name, callback in callbacks.items():
+            setattr(self, name, call_sequence(getattr(self,name), callback))
         self.host = host or config["AVR"].get("Host") or \
             "DenonDiscoverer" in globals() and DenonDiscoverer().denon
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
@@ -165,21 +171,15 @@ class AsyncDenon(BasicDenon, metaclass=DenonWithFeatures):
         return 1
         
 
-def call_sequence(*functions):
-    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
-
-
 class DenonWithEvents(AsyncDenon,EventHandler):
     """
     Event handler that keeps up to date the plugin data such as the volume
     and controls the AVR's power state.
     """
     
-    def __init__(self, verbose=False, **callbacks):
+    def __init__(self, *args, **xargs):
         self.denon = self
-        for name, callback in callbacks.items():
-            setattr(self, name, call_sequence(getattr(self,name), callback))
-        AsyncDenon.__init__(self,verbose=verbose)
+        AsyncDenon.__init__(self,*args,**xargs)
         EventHandler.__init__(self)
 
     def loop(self):
