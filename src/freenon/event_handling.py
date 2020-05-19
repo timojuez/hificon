@@ -99,13 +99,10 @@ class PulseListener(AbstractPulse):
 
     def _on_pulse_sink_input_event(self):
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
-            self.on_start_playing()
+            self.el.on_start_playing()
         elif pulsectl.PulseEventTypeEnum.remove and not self.pulse_is_playing():
-            self.on_stop_playing()
+            self.el.on_stop_playing()
 
-    def on_start_playing(self): pass
-    def on_stop_playing(self): pass
-    
 
 try: import pulsectl
 except ImportError: EventHandler = CommonEventHandler
