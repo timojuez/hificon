@@ -178,7 +178,6 @@ class DenonWithEvents(AsyncDenon,EventHandler):
     """
     
     def __init__(self, *args, **xargs):
-        self.denon = self
         AsyncDenon.__init__(self,*args,**xargs)
         EventHandler.__init__(self)
 
@@ -196,11 +195,11 @@ class DenonWithEvents(AsyncDenon,EventHandler):
 
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        try: self.denon.poweroff()
+        try: self.poweroff()
         except ConnectionError: pass
         
     def on_suspend(self):
-        try: self.denon.poweroff()
+        try: self.poweroff()
         except ConnectionError: pass
     
     def on_resume(self):
@@ -211,10 +210,10 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         """ Execute when connected e.g. after connection aborted """
         super().on_connect()
         try: 
-            #self.denon.poll_all() # TODO: better asynchronous and return
-            self.denon.features["is_running"]._poll()
-            for attr, f in self.denon.features.items():
-                    if not f._isset() or self.denon.is_running: 
+            #self.poll_all() # TODO: better asynchronous and return
+            self.features["is_running"]._poll()
+            for attr, f in self.features.items():
+                    if not f._isset() or self.is_running: 
                         old, new = f._poll()
                         if old != new: self.on_avr_change(attr,new)
         except ConnectionError: pass
