@@ -3,7 +3,7 @@ from threading import Thread
 from gi.repository import GLib, Gio
 
 
-class CommonEventHandler(object):
+class CommonSystemEvents(object):
     def __init__(self):
         Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
@@ -50,15 +50,15 @@ class AbstractPulse(object):
         return len(self.pulse.sink_input_list()) > 0
     
     
-class PulseEventHandler(CommonEventHandler,AbstractPulse):
+class PulseSystemEvents(CommonSystemEvents,AbstractPulse):
 
     def __init__(self, *args, **xargs):
         AbstractPulse.__init__(self)
-        CommonEventHandler.__init__(self, *args, **xargs)
+        CommonSystemEvents.__init__(self, *args, **xargs)
         PulseListener(self)()
         
     def on_connect(self):
-        super(PulseEventHandler,self).on_connect()
+        super(PulseSystemEvents,self).on_connect()
         if self.pulse_is_playing():
             try: self.denon.poweron()
             except ConnectionError: pass
@@ -108,7 +108,7 @@ class PulseListener(AbstractPulse):
 
 
 try: import pulsectl
-except ImportError: EventHandler = CommonEventHandler
-else: EventHandler = PulseEventHandler
+except ImportError: SystemEvents = CommonSystemEvents
+else: SystemEvents = PulseSystemEvents
 
 
