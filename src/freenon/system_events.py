@@ -59,9 +59,7 @@ class PulseSystemEvents(CommonSystemEvents,AbstractPulse):
         
     def on_connect(self):
         super(PulseSystemEvents,self).on_connect()
-        if self.pulse_is_playing():
-            try: self.denon.poweron()
-            except ConnectionError: pass
+        if self.pulse_is_playing(): self.on_start_playing()
 
     def on_start_playing(self): pass
     def on_stop_playing(self): pass
