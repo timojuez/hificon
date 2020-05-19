@@ -4,10 +4,6 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from .synctools import EventHandler
-try: 
-    from .pulse import PulseListener, pulsectl
-    from .pulse import PulseEventHandler as EventHandler
-except ImportError: PulseListener = object
 
 
 VOLUME_DIFF = 3
@@ -83,7 +79,6 @@ class Main(object):
         
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
-        if "pulsectl" in globals(): PulseListener(tray)()
         tray.denon.loop()
         
 
