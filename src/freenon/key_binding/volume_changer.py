@@ -47,7 +47,8 @@ class VolumeChanger(object):
         for _ in range(60): # max increase 60 steps for security
             b = self.button
             if b is None: break
-            self.denon(BUTTON2CMD[b])
+            try: self.denon(BUTTON2CMD[b])
+            except ConnectionError: pass
             time.sleep(self.interval)
 
     def release(self, button):
@@ -60,6 +61,9 @@ class VolumeChanger(object):
         if self.thread: 
             self.thread.join()
             self.thread = None
-        Thread(target=self.denon.poweron, args=(True,), name="poweron", daemon=False).start()
-        
+        Thread(target=self._poweron, name="poweron", daemon=False).start()
+    
+    def _poweron(self):
+        try: self.denon.poweron(True)
+        except ConnectionError: pass
         
