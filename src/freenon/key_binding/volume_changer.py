@@ -29,6 +29,7 @@ class VolumeChanger(object):
         self.thread = None
         self.lock = Lock()
         self.denon = Denon()
+        self.denon.connect()
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
         
