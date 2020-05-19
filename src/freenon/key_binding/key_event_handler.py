@@ -5,6 +5,21 @@ import os,time,argparse,json,subprocess
 from filelock import FileLock
 from .volume_changer import VolumeChanger
 
+"""
+TODO: 
+    make daemon like mouse_binding
+        on_press(button):
+            count += 1
+            if count == 0: return stop()
+            VolumeChanger.press(button)
+        on_release:
+            count -= 1
+            if count == 0: stop()
+        listen for signal or listen on socket
+    this file:
+        on_event: connect to daemon and on_press() / on_release()
+"""
+
 
 PIDFILE="/tmp/freenon_key_pid.json"
 
