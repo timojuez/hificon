@@ -16,7 +16,7 @@ def call_sequence(*functions):
     return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
 
 
-class BasicDenon(object):
+class BasicDenon(object, metaclass=DenonWithFeatures):
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
     @host is the AVR's hostname or IP.
@@ -37,7 +37,6 @@ class BasicDenon(object):
         self.connected = False
         #try: self.connect()
         #except OSError: pass
-        self.connect_async()
 
     def _send(self, cmd):
         cmd = cmd.upper()
@@ -134,13 +133,25 @@ class BasicDenon(object):
         print("[%s] connection lost"%self.__class__.__name__, file=sys.stderr)
         self.connected = False
         self.connect_async()
-    
 
-class AsyncDenon(BasicDenon, metaclass=DenonWithFeatures):
-    """ Mapping of commands into python methods """
+    def poweron(self,force=False): # TODO: check denon.source
+        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
+            return 0
+        self.is_running = True
+        time.sleep(3) #TODO
+        return 1
+
+    def poweroff(self, force=False):
+        if not force and not config.getboolean("AVR","control_power_off"): return 0
+        self.is_running = False
+        return 1
+        
+
+class AsyncDenon(BasicDenon):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
+        self.connect_async()
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def on_avr_change(self, attrib, new_val):
@@ -158,18 +169,6 @@ class AsyncDenon(BasicDenon, metaclass=DenonWithFeatures):
                     else: 
                         if old != new: self.on_avr_change(attrib,new)
 
-    def poweron(self,force=False): # TODO: check denon.source
-        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
-            return 0
-        self.is_running = True
-        time.sleep(3) #TODO
-        return 1
-
-    def poweroff(self, force=False):
-        if not force and not config.getboolean("AVR","control_power_off"): return 0
-        self.is_running = False
-        return 1
-        
 
 class DenonWithEvents(AsyncDenon,EventHandler):
     """
