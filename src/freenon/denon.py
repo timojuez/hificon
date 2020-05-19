@@ -232,23 +232,23 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         if func: func(value)
 
     def on_start_playing(self):
-        if hasattr(self,"poweroff"): self.poweroff.cancel()
-        try: self.el.denon.poweron()
+        if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
+        try: self.poweron()
         except ConnectionError: pass
 
     def on_stop_playing(self):
         try: timeout = config.getfloat("Pulse","poweroff_timeout")*60
         except ValueError: return
         if not timeout: return
-        self.poweroff = Timer(timeout,self.on_sound_idle)
-        self.poweroff.start()
+        self._timer_poweroff = Timer(timeout,self.on_sound_idle)
+        self._timer_poweroff.start()
     
     def on_sound_idle(self):
-        try: self.el.denon.poweroff()
+        try: self.poweroff()
         except ConnectionError: pass
     
 
-def echo_call(name, func):
+def echo_call(name, func): # TODO: move to metaclass
     def call(self,*args,**xargs):
         print("[%s] %s"%(self.__class__.__name__,name), file=sys.stderr) 
         return func(self,*args,**xargs)
