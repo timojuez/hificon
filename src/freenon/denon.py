@@ -4,6 +4,7 @@
 import sys, time, argparse, socket
 from threading import Lock, Thread
 from telnetlib import Telnet
+from .event_handling import EventHandler
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import DenonWithFeatures
