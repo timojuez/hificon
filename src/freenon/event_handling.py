@@ -63,6 +63,9 @@ class PulseEventHandler(CommonEventHandler,AbstractPulse):
             try: self.denon.poweron()
             except ConnectionError: pass
 
+    def on_start_playing(self): pass
+    def on_stop_playing(self): pass
+
 
 class PulseListener(AbstractPulse):
     """ Listen for pulseaudio change events """
