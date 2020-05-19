@@ -44,7 +44,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures):
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
         except (OSError, EOFError, AssertionError) as e:
-            self.on_connection_lost()
+            self.on_disconnected()
             raise BrokenPipeError(e)
         return cmd
         
@@ -54,7 +54,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures):
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
         except (EOFError, AssertionError) as e:
-            self.on_connection_lost()
+            self.on_disconnected()
             raise BrokenPipeError(e)
         
     def __call__(self, cmd, ret=None):
@@ -129,8 +129,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures):
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
         
-    def on_connection_lost(self):
-        print("[%s] connection lost"%self.__class__.__name__, file=sys.stderr)
+    def on_disconnected(self):
         self.connected = False
         self.connect_async()
 
@@ -203,7 +202,7 @@ class DenonWithEvents(AsyncDenon,EventHandler):
     
     def on_resume(self):
         """ Is being executed after resume from suspension """
-        self.on_connection_lost()
+        self.on_disconnected()
         
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
@@ -217,8 +216,8 @@ class DenonWithEvents(AsyncDenon,EventHandler):
                         if old != new: self.on_avr_change(attr,new)
         except ConnectionError: pass
             
-    def on_connection_lost(self):
-        super().on_connection_lost()
+    def on_disconnected(self):
+        super().on_disconnected()
         
     def on_avr_poweron(self):
         pass

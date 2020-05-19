@@ -14,7 +14,7 @@ class Tray(object):
     def on_connect(self):
         self.show()
 
-    def on_connection_lost(self):
+    def on_disconnected(self):
         self.hide()
         
     def on_avr_change(self, *args, **xargs):
@@ -27,7 +27,7 @@ class Tray(object):
         self.icon.set_visible(False)
         self.denon = Denon(*args,
             on_connect=self.on_connect,
-            on_connection_lost=self.on_connection_lost,
+            on_disconnected=self.on_disconnected,
             on_avr_change=self.on_avr_change,
             **xargs)
         self.denon.loop()
