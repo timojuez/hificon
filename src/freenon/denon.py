@@ -4,7 +4,7 @@
 import sys, time, argparse, socket
 from threading import Lock, Thread, Timer
 from telnetlib import Telnet
-from .event_handling import EventHandler
+from .system_events import SystemEvents
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import DenonWithFeatures
@@ -169,7 +169,7 @@ class AsyncDenon(BasicDenon):
                         if old != new: self.on_avr_change(attrib,new)
 
 
-class DenonWithEvents(AsyncDenon,EventHandler):
+class DenonWithEvents(AsyncDenon,SystemEvents):
     """
     Event handler that keeps up to date the plugin data such as the volume
     and controls the AVR's power state.
@@ -177,7 +177,7 @@ class DenonWithEvents(AsyncDenon,EventHandler):
     
     def __init__(self, *args, **xargs):
         AsyncDenon.__init__(self,*args,**xargs)
-        EventHandler.__init__(self)
+        SystemEvents.__init__(self)
 
     def loop(self):
         try:
