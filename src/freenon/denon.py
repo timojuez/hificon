@@ -19,7 +19,6 @@ class BasicDenon(object):
     """
 
     def __init__(self, host=None, verbose=False):
-        super(BasicDenon).__init__()
         self.verbose = verbose
         self.host = host or config["AVR"].get("Host") or \
             "DenonDiscoverer" in globals() and DenonDiscoverer().denon
@@ -180,8 +179,8 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         self.denon = self
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))
-        Denon.__init__(self,verbose=verbose)
-        _EventHandler.__init__(self)
+        AsyncDenon.__init__(self,verbose=verbose)
+        EventHandler.__init__(self)
 
     def loop(self):
         try:
@@ -210,7 +209,7 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
-        super(EventHandler,self).on_connect()
+        super().on_connect()
         try: 
             #self.denon.poll_all() # TODO: better asynchronous and return
             self.denon.features["is_running"]._poll()
@@ -221,7 +220,7 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         except ConnectionError: pass
             
     def on_connection_lost(self):
-        super(EventHandler,self).on_connection_lost()
+        super().on_connection_lost()
         
     def on_avr_poweron(self):
         pass
@@ -230,7 +229,7 @@ class DenonWithEvents(AsyncDenon,EventHandler):
         pass
 
     def on_avr_change(self, attrib, value):
-        super(EventHandler,self).on_avr_change(attrib, value)
+        super().on_avr_change(attrib, value)
         func = self.update_actions.get(attrib)
         if func: func(value)
 
