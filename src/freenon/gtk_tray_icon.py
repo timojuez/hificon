@@ -3,7 +3,7 @@ import argparse, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
-from .synctools import EventHandler
+from .denon import Denon
 
 
 VOLUME_DIFF = 3
@@ -25,7 +25,7 @@ class Tray(object):
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
-        self.denon = EventHandler(*args,
+        self.denon = Denon(*args,
             on_connect=self.on_connect,
             on_connection_lost=self.on_connection_lost,
             on_avr_change=self.on_avr_change,
