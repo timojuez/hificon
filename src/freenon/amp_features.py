@@ -113,6 +113,10 @@ class DenonFeature_Muted(DenonFeature):
     translation = {"ON":True,"OFF":False}
 
 
+class DenonFeature_Source(DenonFeature):
+    function = "SI"
+    
+
 class DenonWithFeatures(type):
     features = dict(
         maxvol = DenonFeature_Maxvol,
