@@ -1,6 +1,7 @@
 class AbstractDenonFeature(object):
     function = ""
     translation = {}
+    default_value = None
     
     def decodeVal(self, val):
         return self.translation.get(val,val)
@@ -41,7 +42,9 @@ class DenonFeature(AbstractDenonFeature):
         return hasattr(self,'_val')
         
     def poll(self):
-        return self.consume(self.denon("%s?"%self.function))
+        try: cmd = self.denon("%s?"%self.function)
+        except RuntimeError: return self.store(self.default_value)
+        else: return self.consume(cmd)
     
     def send(self, value=None):
         if value is None: value = self._val
@@ -55,9 +58,12 @@ class DenonFeature(AbstractDenonFeature):
         if not cmd.startswith(self.function): 
             raise ValueError("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
+        return self.store(self.decodeVal(param))
+        
+    def store(self, value):
         old = getattr(self,'_val',None)
-        self._val = self.decodeVal(param)
-        self.on_change(old, self._val)
+        self._val = value
+        if self._val != old: self.on_change(old, self._val)
         return old, self._val
     
 
