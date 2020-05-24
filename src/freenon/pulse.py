@@ -32,7 +32,6 @@ class Pulse(ConnectedPulse):
     def __init__(self, event_listener):
         self.is_playing = False
         self._events = event_listener
-        self.pulse = self
         super().__init__("Freenon")
 
     def _is_playing(self):
@@ -44,18 +43,18 @@ class Pulse(ConnectedPulse):
     def on_connected(self):
         # Pulseaudio connected
         super().on_connected()
-        try: self.is_playing = self.pulse._is_playing()
+        try: self.is_playing = self._is_playing()
         except pulsectl.pulsectl.PulseDisconnected: return self.connect_pulse() 
         Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
         
     def loop(self):
         try:
-            #self.pulse.event_mask_set('all')
-            self.pulse.event_mask_set(pulsectl.PulseEventMaskEnum.sink,
+            #self.event_mask_set('all')
+            self.event_mask_set(pulsectl.PulseEventMaskEnum.sink,
                 pulsectl.PulseEventMaskEnum.sink_input)
-            self.pulse.event_callback_set(self._callback)
+            self.event_callback_set(self._callback)
             while True:
-                self.pulse.event_listen()
+                self.event_listen()
                 if self.ev.facility == pulsectl.PulseEventFacilityEnum.sink:
                     self._on_pulse_sink_event()
                 elif self.ev.facility == pulsectl.PulseEventFacilityEnum.sink_input:
@@ -73,7 +72,7 @@ class Pulse(ConnectedPulse):
             pass
 
     def _on_pulse_sink_input_event(self):
-        self.is_playing = self.pulse._is_playing()
+        self.is_playing = self._is_playing()
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
             self._events.on_start_playing()
         elif self.ev.t == pulsectl.PulseEventTypeEnum.remove and not self.is_playing:
