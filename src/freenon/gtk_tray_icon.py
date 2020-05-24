@@ -3,7 +3,7 @@ import argparse, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
-from .denon import Denon
+from .amp import Denon
 
 
 VOLUME_DIFF = 3

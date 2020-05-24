@@ -20,7 +20,7 @@ setup(name='freenon',
       },
       include_package_data=True,
       entry_points={'console_scripts': [
-        'freenon_cmd = freenon.denon:main',
+        'freenon_cmd = freenon.amp:main',
         'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main [gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
         'freenon_key_event_handler = freenon.key_binding.key_event_handler:main [gnudesktop]',

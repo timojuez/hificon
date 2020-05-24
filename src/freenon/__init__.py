@@ -1,2 +1,2 @@
-from .denon import *
+from .amp import *
 
