@@ -3,10 +3,10 @@ class AbstractDenonFeature(object):
     translation = {}
     
     def decodeVal(self, val):
-        return self.translation[val]
+        return self.translation.get(val,val)
         
     def encodeVal(self, val):
-        return {val:key for key,val in self.translation.items()}[val]
+        return {val:key for key,val in self.translation.items()}.get(val,val)
         
     def on_change(self, old, new): pass
 
