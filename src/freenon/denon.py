@@ -16,7 +16,7 @@ def call_sequence(*functions):
     return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
 
 
-class BasicDenon(object, metaclass=DenonWithFeatures):
+class BasicDenon(object, metaclass=DenonWithFeatures): # TODO rename Denon to Amp / Amplifier
     """
     This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
     @host is the AVR's hostname or IP.
@@ -77,7 +77,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures):
         try:
             pos_received = len(self._received)
             cmd = self._send(cmd)
-            for i in range(15):
+            for i in range(25):
                 pos_received_new = len(self._received)
                 for r in self._received[pos_received:pos_received_new]:
                     if condition(r): 
@@ -92,7 +92,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures):
                     continue
                 if condition(r): return _return(r)
                 else: self._received.append(r)
-            sys.stderr.write("WARNING: Got no answer for `%s`.\n"%cmd)
+            raise RuntimeError("WARNING: Got no answer for `%s`.\n"%cmd)
         finally: self.lock.release()
         
     def read(self):
