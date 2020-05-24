@@ -1,4 +1,4 @@
-class AbstractDenonFeature(object):
+class AbstractFeature(object):
     function = "" #AVR function command
     function_call = property(lambda self: "%s?"%self.function)
     function_ret = property(lambda self: self.function) # TODO: maybe switch to asynchronous and remove this function
@@ -7,7 +7,7 @@ class AbstractDenonFeature(object):
     def on_change(self, old, new): pass
 
 
-class DenonFeature(AbstractDenonFeature):
+class Feature(AbstractFeature):
     # alternatives:
     #    move all features to denon.__init__() -setter
     #    no __get__ but __str__ and __int__ and __bool__ -setter
@@ -67,7 +67,7 @@ class DenonFeature(AbstractDenonFeature):
         else: return cmd.startswith(self.function_ret)
         
         
-class DiscreteDenonFeature(DenonFeature):
+class NominalFeature(Feature):
     translation = {} #return_string to value
 
     def decodeVal(self, val):
@@ -77,7 +77,7 @@ class DiscreteDenonFeature(DenonFeature):
         return {val:key for key,val in self.translation.items()}.get(val,val)
         
 
-class DenonFeature_Float(DenonFeature):
+class FloatFeature(Feature):
 
     def set(self, value):
         super().set(self._roundVolume(value))
@@ -93,14 +93,14 @@ class DenonFeature_Float(DenonFeature):
         return "%03d"%(val*10)
         
 
-class DenonFeature_Volume(DenonFeature_Float):
+class Feature_Volume(FloatFeature):
     function = "MV"
     function_ret = lambda self,s: s.startswith("MV") and s[2] != "M"
     
     # TODO: value may be relative?
 
     
-class DenonFeature_Maxvol(DenonFeature_Float):
+class Feature_Maxvol(FloatFeature):
     function="MVMAX "
     function_call="MV?"
     default_value = 98
@@ -111,7 +111,7 @@ class DenonFeature_Maxvol(DenonFeature_Float):
     def send(self): pass
         
 
-class DenonFeature_Power(DiscreteDenonFeature):
+class Feature_Power(NominalFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
@@ -119,26 +119,26 @@ class DenonFeature_Power(DiscreteDenonFeature):
         return {True:self.denon.on_avr_poweron, False:self.denon.on_avr_poweroff}[new]()
     
     
-class DenonFeature_Muted(DiscreteDenonFeature):
+class Feature_Muted(NominalFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
 
 
-class DenonFeature_Source(DiscreteDenonFeature):
+class Feature_Source(NominalFeature):
     function = "SI"
     
     
-class DenonFeature_SubwooferLevel(DenonFeature_Float):
+class Feature_SubwooferLevel(FloatFeature):
     function = "CVSW "
     function_call = "CV?"
     
 
 class DenonWithFeatures(type):
     features = dict(
-        maxvol = DenonFeature_Maxvol,
-        volume = DenonFeature_Volume,
-        muted = DenonFeature_Muted,
-        is_running = DenonFeature_Power,
+        maxvol = Feature_Maxvol,
+        volume = Feature_Volume,
+        muted = Feature_Muted,
+        is_running = Feature_Power,
     )
     
     def __new__(self,name,bases,dct):
