@@ -275,7 +275,7 @@ class CLI(object):
         for cmd in self.args.command:
             r = denon(cmd)
             if r and not self.args.verbose: print(r)
-        if self.args.follow:
+        if self.args.follow or len(self.args.command) == 0:
             def reader():
                 while True: print("%s"%denon.read())
             Thread(target=reader,name="Reader",daemon=True).start()
