@@ -19,12 +19,12 @@ class PulseSystemEvents(CommonSystemEvents):
 
     def __init__(self, *args, **xargs):
         CommonSystemEvents.__init__(self, *args, **xargs)
-        self.pl = Pulse(self)
+        self.pulse = Pulse(self)
         
     def on_connect(self):
         # AVR connected
         super(PulseSystemEvents,self).on_connect()
-        if self.pl.connected and self.pl.pulse_is_playing: self.on_start_playing()
+        if self.pulse.connected and self.pulse.is_playing: self.on_start_playing()
 
     def on_start_playing(self): pass
     def on_stop_playing(self): pass

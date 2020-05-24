@@ -27,21 +27,24 @@ class ConnectedPulse(pulsectl.Pulse):
     
     
 class Pulse(ConnectedPulse):
-    """ Listen for pulseaudio change events """
+    """ PulseListener: Listen for pulseaudio change events """
     
-    def __init__(self, el):
-        self.pulse_is_playing = False
-        self.el = el
+    def __init__(self, event_listener):
+        self.is_playing = False
+        self._events = event_listener
         self.pulse = self
         super().__init__("Freenon")
 
-    def is_playing(self):
-        return len(self.sink_input_list()) > 0
+    def _is_playing(self):
+        try: return len(self.sink_input_list()) > 0
+        except:
+            if not self.connected: raise pulsectl.pulsectl.PulseDisconnected()
+            raise
     
     def on_connected(self):
         # Pulseaudio connected
         super().on_connected()
-        try: self.pulse_is_playing = self.pulse.is_playing()
+        try: self.is_playing = self.pulse._is_playing()
         except pulsectl.pulsectl.PulseDisconnected: return self.connect_pulse() 
         Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
         
@@ -70,9 +73,9 @@ class Pulse(ConnectedPulse):
             pass
 
     def _on_pulse_sink_input_event(self):
-        self.pulse_is_playing = self.pulse.is_playing()
+        self.is_playing = self.pulse._is_playing()
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
-            self.el.on_start_playing()
-        elif self.ev.t == pulsectl.PulseEventTypeEnum.remove and not self.pulse_is_playing:
-            self.el.on_stop_playing()
+            self._events.on_start_playing()
+        elif self.ev.t == pulsectl.PulseEventTypeEnum.remove and not self.is_playing:
+            self._events.on_stop_playing()
 
