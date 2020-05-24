@@ -3,12 +3,11 @@
 control_power_on = yes
 # Switch the AVR off on suspend/shutdown
 control_power_off = yes
+# Delay in minutes to power off AVR after last output stopped (float or "no")
+poweroff_timeout = 10
 
 # Host = 1.2.3.4
 
-[Pulse]
-# Delay in minutes to power off AVR after last output stopped (float or "no")
-poweroff_timeout = 10
 
 [KeyEventHandling]
 # Send volume up/down event to AVR each @interval milliseconds while key is pressed

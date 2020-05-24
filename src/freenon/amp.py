@@ -222,7 +222,7 @@ class DenonWithEvents(SystemEvents,AsyncDenon):
         except ConnectionError: pass
 
     def on_stop_playing(self):
-        try: timeout = config.getfloat("Pulse","poweroff_timeout")*60
+        try: timeout = config.getfloat("AVR","poweroff_timeout")*60
         except ValueError: return
         if not timeout: return
         self._timer_poweroff = Timer(timeout,self.on_sound_idle)
