@@ -151,6 +151,9 @@ class AsyncDenon(BasicDenon):
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
         self.connect_async()
+        
+    def on_connect(self):
+        super().on_connect()
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def on_avr_change(self, attrib, new_val):
@@ -160,7 +163,7 @@ class AsyncDenon(BasicDenon):
         while True:
             try:
                 cmd = self.read()
-            except ConnectionError: time.sleep(2)
+            except ConnectionError: return
             else:
                 for attrib,f in self.features.items():
                     try: old, new = f._consume(cmd)
