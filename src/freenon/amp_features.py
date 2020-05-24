@@ -93,6 +93,8 @@ class FloatFeature(Feature):
         return "%03d"%(val*10)
         
 
+######### Features implementation:
+
 class Feature_Volume(FloatFeature):
     function = "MV"
     function_ret = lambda self,s: s.startswith("MV") and s[2] != "M"
@@ -128,7 +130,7 @@ class Feature_Source(NominalFeature):
     function = "SI"
     
     
-class Feature_SubwooferLevel(FloatFeature):
+class Feature_SubwooferVolume(FloatFeature):
     function = "CVSW "
     function_call = "CV?"
     
@@ -139,6 +141,8 @@ class DenonWithFeatures(type):
         volume = Feature_Volume,
         muted = Feature_Muted,
         is_running = Feature_Power,
+        source = Feature_Source,
+        sub_volume = Feature_SubwooferVolume,
     )
     
     def __new__(self,name,bases,dct):
