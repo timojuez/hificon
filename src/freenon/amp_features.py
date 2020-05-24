@@ -1,7 +1,9 @@
 class AbstractDenonFeature(object):
-    function = ""
-    translation = {}
-    default_value = None
+    function = "" #AVR function command
+    function_call = property(lambda self: "%s?"%self.function)
+    function_ret = property(lambda self: self.function) # TODO: maybe switch to asynchronous and remove this function
+    translation = {} #return_string to value
+    default_value = None #if no response
     
     def decodeVal(self, val):
         return self.translation.get(val,val)
@@ -42,7 +44,7 @@ class DenonFeature(AbstractDenonFeature):
         return hasattr(self,'_val')
         
     def poll(self):
-        try: cmd = self.denon("%s?"%self.function)
+        try: cmd = self.denon(self.function_call, ret=self.function_ret)
         except RuntimeError: return self.store(self.default_value)
         else: return self.consume(cmd)
     
@@ -55,7 +57,7 @@ class DenonFeature(AbstractDenonFeature):
         """
         Update property according to @cmd
         """
-        if not cmd.startswith(self.function): 
+        if not self.matches(cmd):
             raise ValueError("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
         return self.store(self.decodeVal(param))
@@ -65,19 +67,17 @@ class DenonFeature(AbstractDenonFeature):
         self._val = value
         if self._val != old: self.on_change(old, self._val)
         return old, self._val
-    
+        
+    def matches(self, cmd):
+        """ return True if cmd shall be consumed with this class """
+        if callable(self.function_ret): return self.function_ret(cmd)
+        else: return cmd.startswith(self.function_ret)
+        
+        
+class DenonFeature_Float(DenonFeature):
 
-class DenonFeature_Volume(DenonFeature):
-    function = "MV"
-    # TODO: value may be relative?
-    
-    def poll(self):
-        # TODO: maybe switch to asynchronous and remove this function
-        return self.consume(self.denon("MV?",ret=lambda s:
-            s.startswith("MV") and s[2] != "M"))
-    
     def set(self, value):
-        super(DenonFeature_Volume,self).set(self._roundVolume(value))
+        super().set(self._roundVolume(value))
         
     @staticmethod
     def _roundVolume(vol):
@@ -89,18 +89,20 @@ class DenonFeature_Volume(DenonFeature):
     def encodeVal(self, val):
         return "%03d"%(val*10)
         
-        
-class DenonFeature_Maxvol(DenonFeature_Volume):
-    function="MVMAX "
+
+class DenonFeature_Volume(DenonFeature_Float):
+    function = "MV"
+    function_ret = lambda self,s: s.startswith("MV") and s[2] != "M"
     
-    def poll(self):
-        cmd = self.denon("MV?", ret=self.function)
-        if cmd: return self.consume(cmd)
-        old = getattr(self,'_val',None)
-        self._val = 98
-        return old, self._val
-        
-    def encodeVal(self, val):
+    # TODO: value may be relative?
+
+    
+class DenonFeature_Maxvol(DenonFeature_Float):
+    function="MVMAX "
+    function_call="MV?"
+    default_value = 98
+
+    def set(self, val):
         raise RuntimeError("Cannot set MVMAX!")
         
     def send(self): pass
@@ -121,6 +123,11 @@ class DenonFeature_Muted(DenonFeature):
 
 class DenonFeature_Source(DenonFeature):
     function = "SI"
+    
+    
+class DenonFeature_Subwoofer(DenonFeature):
+    function = "CVSW "
+    function_call = "CV?"
     
 
 class DenonWithFeatures(type):
