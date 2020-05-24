@@ -4,9 +4,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from .amp import Denon
-
-
-VOLUME_DIFF = 3
+from .config import config
 
 
 class Tray(object):
@@ -22,6 +20,7 @@ class Tray(object):
             
     def __init__(self,*args,**xargs):
         self._volume = None
+        self.scroll_delta = config.getfloat("Tray","scroll_delta")
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
@@ -60,9 +59,9 @@ class Tray(object):
     def on_scroll(self, icon, event):
         try:
             if event.direction == Gdk.ScrollDirection.UP:
-                volume = min(self.denon.volume+VOLUME_DIFF,self.denon.maxvol)
+                volume = min(self.denon.volume+self.scroll_delta,self.denon.maxvol)
             elif event.direction == Gdk.ScrollDirection.DOWN:
-                volume = max(0,self.denon.volume-VOLUME_DIFF)
+                volume = max(0,self.denon.volume-self.scroll_delta)
             else: return
             if self._volume == volume: return
             self._volume = volume
