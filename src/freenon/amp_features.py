@@ -79,9 +79,6 @@ class NominalFeature(Feature):
 
 class FloatFeature(Feature):
 
-    def set(self, value):
-        super().set(self._roundVolume(value))
-        
     @staticmethod
     def _roundVolume(vol):
         return .5*round(vol/.5)
@@ -90,7 +87,7 @@ class FloatFeature(Feature):
         return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
-        return "%03d"%(val*10)
+        return "%03d"%(self._roundVolume(val)*10)
         
 
 ######### Features implementation:
