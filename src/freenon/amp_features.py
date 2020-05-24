@@ -90,16 +90,16 @@ class FloatFeature(Feature):
         return "%03d"%(self._roundVolume(val)*10)
         
 
-######### Features implementation:
+######### Features implementation (see Denon CLI protocol)
 
-class Feature_Volume(FloatFeature):
+class Denon_Volume(FloatFeature):
     function = "MV"
     function_ret = lambda self,s: s.startswith("MV") and s[2] != "M"
     
     # TODO: value may be relative?
 
     
-class Feature_Maxvol(FloatFeature):
+class Denon_Maxvol(FloatFeature):
     function="MVMAX "
     function_call="MV?"
     default_value = 98
@@ -110,7 +110,7 @@ class Feature_Maxvol(FloatFeature):
     def send(self): pass
         
 
-class Feature_Power(NominalFeature):
+class Denon_Power(NominalFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
@@ -118,43 +118,40 @@ class Feature_Power(NominalFeature):
         return {True:self.denon.on_avr_poweron, False:self.denon.on_avr_poweroff}[new]()
     
     
-class Feature_Muted(NominalFeature):
+class Denon_Muted(NominalFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
 
 
-class Feature_Source(NominalFeature):
+class Denon_Source(NominalFeature):
     function = "SI"
     
     
-class Feature_SubwooferVolume(FloatFeature):
+class Denon_SubwooferVolume(FloatFeature):
     function = "CVSW "
     function_call = "CV?"
     
 
-class DenonWithFeatures(type):
-    features = dict(
-        maxvol = Feature_Maxvol,
-        volume = Feature_Volume,
-        muted = Feature_Muted,
-        is_running = Feature_Power,
-        source = Feature_Source,
-        sub_volume = Feature_SubwooferVolume,
-    )
-    
-    def __new__(self,name,bases,dct):
-        dct.update({
-            k:property(
-                lambda self,k=k:self.features[k].get(),
-                lambda self,val,k=k:self.features[k].set(val),
-            )
-            for k,v in self.features.items()
-        })
+def make_class(**features):
+    def __init__(self,*args,**xargs):
+        self.features = {k:v(self,k) for k,v in features.items()}
+        #super(self.__class__,self).__init__(*args,**xargs)
+    dict_ = dict(__init__=__init__)
+    dict_.update({
+        k:property(
+            lambda self,k=k:self.features[k].get(),
+            lambda self,val,k=k:self.features[k].set(val),
+        )
+        for k,v in features.items()
+    })
+    return type("DenonMixin", (object,), dict_)
 
-        def init(obj,*args,_init=dct.get("__init__"),**xargs):
-            obj.features = {k:v(obj,k) for k,v in self.features.items()}
-            if _init: _init(obj,*args,**xargs)
-        dct["__init__"] = init
-        return super().__new__(self,name,bases,dct)
-    
-    
+DenonMixin = make_class(
+        maxvol = Denon_Maxvol,
+        volume = Denon_Volume,
+        muted = Denon_Muted,
+        is_running = Denon_Power,
+        source = Denon_Source,
+        sub_volume = Denon_SubwooferVolume,
+)
+

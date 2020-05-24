@@ -7,7 +7,7 @@ from telnetlib import Telnet
 from .system_events import SystemEvents
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import DenonWithFeatures
+from .amp_features import DenonMixin
 try: from .setup import DenonDiscoverer
 except ImportError: pass
 
@@ -16,13 +16,14 @@ def call_sequence(*functions):
     return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
 
 
-class BasicDenon(object, metaclass=DenonWithFeatures): # TODO rename Denon to Amp / Amplifier
+class BasicAmp(object):
     """
-    This class connects to the Denon AVR via LAN and executes commands (see Denon CLI protocol)
+    This class connects to the AVR via LAN and executes commands
     @host is the AVR's hostname or IP.
     """
 
     def __init__(self, host=None, verbose=False, **callbacks):
+        super().__init__()
         self.verbose = verbose
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))
@@ -64,7 +65,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures): # TODO rename Denon to Am
         @ret str: return received line that starts with @ret, default: function
         """
         cmd = cmd.upper()
-        if self.verbose: print("[Denon cli] %s"%cmd, file=sys.stderr)
+        if self.verbose: print("[Freenon cli] %s"%cmd, file=sys.stderr)
         if "?" not in cmd and not ret: return self._send(cmd)
 
         def _return(r):
@@ -146,7 +147,7 @@ class BasicDenon(object, metaclass=DenonWithFeatures): # TODO rename Denon to Am
         return 1
         
 
-class AsyncDenon(BasicDenon):
+class AsyncAmp(BasicAmp):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
@@ -173,14 +174,14 @@ class AsyncDenon(BasicDenon):
     def on_avr_poweroff(self): pass
 
 
-class DenonWithEvents(SystemEvents,AsyncDenon):
+class AmpWithEvents(SystemEvents,AsyncAmp):
     """
     Event handler that keeps up to date the plugin data such as the volume
     and controls the AVR's power state.
     """
     
     def __init__(self, *args, **xargs):
-        AsyncDenon.__init__(self,*args,**xargs)
+        AsyncAmp.__init__(self,*args,**xargs)
         SystemEvents.__init__(self)
 
     def loop(self):
@@ -238,37 +239,38 @@ def echo_call(name, func): # TODO: move to metaclass
         print("[%s] %s"%(self.__class__.__name__,name), file=sys.stderr) 
         return func(self,*args,**xargs)
     return call
-for k in dir(DenonWithEvents):
-    if k.startswith("on_"): setattr(DenonWithEvents,k,echo_call(k,getattr(DenonWithEvents,k)))
+for k in dir(AmpWithEvents):
+    if k.startswith("on_"): setattr(AmpWithEvents,k,echo_call(k,getattr(AmpWithEvents,k)))
 
 
-Denon=DenonWithEvents
+class Denon(AmpWithEvents, DenonMixin): pass
+class BasicDenon(BasicAmp, DenonMixin): pass
 
 
 class CLI(object):
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Controller for Denon AVR - CLI')
-        parser.add_argument("command", nargs="*", type=str, help='Denon command')
+        parser.add_argument("command", nargs="*", type=str, help='CLI command')
         parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
         parser.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
-        denon = BasicDenon(self.args.host, verbose=self.args.verbose)
-        denon.connect()
+        amp = BasicDenon(self.args.host, verbose=self.args.verbose)
+        amp.connect()
         for cmd in self.args.command:
-            r = denon(cmd)
+            r = amp(cmd)
             if r and not self.args.verbose: print(r)
         if self.args.follow or len(self.args.command) == 0:
             def reader():
-                while True: print("%s"%denon.read())
+                while True: print("%s"%amp.read())
             Thread(target=reader,name="Reader",daemon=True).start()
             while True:
                 try: cmd = input().strip()
                 except (KeyboardInterrupt, EOFError): break
-                cmd = denon._send(cmd)
+                cmd = amp._send(cmd)
                 #print("\r[sent] %s"%cmd)
             
 
