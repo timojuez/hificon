@@ -163,7 +163,7 @@ class AsyncDenon(BasicDenon):
             except ConnectionError: return
             else:
                 for attrib,f in self.features.items():
-                    try: old, new = f._consume(cmd)
+                    try: old, new = f.consume(cmd)
                     except ValueError: continue
                     else: 
                         if old != new: self.on_avr_change(attrib,new)
@@ -206,10 +206,10 @@ class DenonWithEvents(SystemEvents,AsyncDenon):
         super().on_connect()
         try: 
             #self.poll_all() # TODO: better asynchronous and return
-            self.features["is_running"]._poll()
+            self.features["is_running"].poll()
             for attr, f in self.features.items():
-                    if not f._isset() or self.is_running: 
-                        old, new = f._poll()
+                    if not f.isset() or self.is_running: 
+                        old, new = f.poll()
                         if old != new: self.on_avr_change(attr,new)
         except ConnectionError: pass
             

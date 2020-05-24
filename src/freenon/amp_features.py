@@ -29,26 +29,26 @@ class DenonFeature(AbstractDenonFeature):
             raise ConnectionError("`%s` is not available when AVR is disconnected."%self.__class__.__name__)
         try: return self._val
         except AttributeError:
-            self._poll()
+            self.poll()
             return self._val
         
     def set(self, value):
         if getattr(self, "_val", None) == value: return
         #self._val = value
-        self._send(value)
+        self.send(value)
 
-    def _isset(self):
+    def isset(self):
         return hasattr(self,'_val')
         
-    def _poll(self):
-        return self._consume(self.denon("%s?"%self.function))
+    def poll(self):
+        return self.consume(self.denon("%s?"%self.function))
     
-    def _send(self, value=None):
+    def send(self, value=None):
         if value is None: value = self._val
         cmd = "%s%s"%(self.function, self.encodeVal(value))
         self.denon(cmd)
     
-    def _consume(self, cmd):
+    def consume(self, cmd):
         """
         Update property according to @cmd
         """
@@ -65,9 +65,9 @@ class DenonFeature_Volume(DenonFeature):
     function = "MV"
     # TODO: value may be relative?
     
-    def _poll(self):
+    def poll(self):
         # TODO: maybe switch to asynchronous and remove this function
-        return self._consume(self.denon("MV?",ret=lambda s:
+        return self.consume(self.denon("MV?",ret=lambda s:
             s.startswith("MV") and s[2] != "M"))
     
     def set(self, value):
@@ -87,9 +87,9 @@ class DenonFeature_Volume(DenonFeature):
 class DenonFeature_Maxvol(DenonFeature_Volume):
     function="MVMAX "
     
-    def _poll(self):
+    def poll(self):
         cmd = self.denon("MV?", ret=self.function)
-        if cmd: return self._consume(cmd)
+        if cmd: return self.consume(cmd)
         old = getattr(self,'_val',None)
         self._val = 98
         return old, self._val
@@ -97,7 +97,7 @@ class DenonFeature_Maxvol(DenonFeature_Volume):
     def encodeVal(self, val):
         raise RuntimeError("Cannot set MVMAX!")
         
-    def _send(self): pass
+    def send(self): pass
         
 
 class DenonFeature_Power(DenonFeature):
