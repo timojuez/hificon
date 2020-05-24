@@ -156,9 +156,6 @@ class AsyncDenon(BasicDenon):
         super().on_connect()
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
-    def on_avr_change(self, attrib, new_val):
-        pass
-        
     def mainloop(self):
         while True:
             try:
@@ -170,6 +167,10 @@ class AsyncDenon(BasicDenon):
                     except ValueError: continue
                     else: 
                         if old != new: self.on_avr_change(attrib,new)
+
+    def on_avr_change(self, attrib, new_val): pass
+    def on_avr_poweron(self): pass
+    def on_avr_poweroff(self): pass
 
 
 class DenonWithEvents(SystemEvents,AsyncDenon):
@@ -186,13 +187,6 @@ class DenonWithEvents(SystemEvents,AsyncDenon):
         try:
             while True: time.sleep(1000)
         except KeyboardInterrupt: pass
-    
-    @property
-    def update_actions(self):
-        return {
-            "is_running": 
-                lambda value:{True:self.on_avr_poweron, False:self.on_avr_poweroff}[value](),
-        }
 
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
@@ -222,17 +216,6 @@ class DenonWithEvents(SystemEvents,AsyncDenon):
     def on_disconnected(self):
         super().on_disconnected()
         
-    def on_avr_poweron(self):
-        pass
-        
-    def on_avr_poweroff(self):
-        pass
-
-    def on_avr_change(self, attrib, value):
-        super().on_avr_change(attrib, value)
-        func = self.update_actions.get(attrib)
-        if func: func(value)
-
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
         try: self.poweron()

@@ -7,6 +7,8 @@ class AbstractDenonFeature(object):
         
     def encodeVal(self, val):
         return {val:key for key,val in self.translation.items()}[val]
+        
+    def on_change(self, old, new): pass
 
 
 class DenonFeature(AbstractDenonFeature):
@@ -55,6 +57,7 @@ class DenonFeature(AbstractDenonFeature):
         param = cmd[len(self.function):]
         old = getattr(self,'_val',None)
         self._val = self.decodeVal(param)
+        self.on_change(old, self._val)
         return old, self._val
     
 
@@ -100,6 +103,9 @@ class DenonFeature_Maxvol(DenonFeature_Volume):
 class DenonFeature_Power(DenonFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
+    
+    def on_change(self, old, new):
+        return {True:self.denon.on_avr_poweron, False:self.denon.on_avr_poweroff}[new]()
     
     
 class DenonFeature_Muted(DenonFeature):
