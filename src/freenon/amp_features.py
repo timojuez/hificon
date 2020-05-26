@@ -3,6 +3,9 @@ class AbstractFeature(object):
     function_call = property(lambda self: "%s?"%self.function)
     default_value = None #if no response
     
+    def matches(self, cmd): raise NotImplementedError()
+    def consume(self, cmd): raise NotImplementedError()
+    def send(self, value=None): raise NotImplementedError()
     def on_change(self, old, new): pass
 
 
@@ -16,11 +19,11 @@ class Feature(AbstractFeature):
     #    Denon.feature is object with __getattr__ -no autocomplete
     # poll, send, consume zu Denon verschieben?
 
-    def __init__(self, denon, name):
-        self.denon = denon
+    def __init__(self, amp, name):
+        self.amp = amp
 
     def get(self):
-        if not self.denon.connected: 
+        if not self.amp.connected: 
             raise ConnectionError("`%s` is not available when AVR is disconnected."%self.__class__.__name__)
         try: return self._val
         except AttributeError:
@@ -38,14 +41,23 @@ class Feature(AbstractFeature):
     def unset(self): self.__dict__.pop("_val",None)
         
     def poll(self):
-        try: cmd = self.denon(self.function_call, ret=self.matches)
+        try: cmd = self.amp(self.function_call, ret=self.matches)
         except RuntimeError: return self.store(self.default_value)
         else: return self.consume(cmd)
-    
+        
+    def store(self, value):
+        old = getattr(self,'_val',None)
+        self._val = value
+        if self._val != old: self.on_change(old, self._val)
+        return old, self._val
+
+
+class DenonFeature(Feature):
+
     def send(self, value=None):
         if value is None: value = self._val
         cmd = "%s%s"%(self.function, self.encodeVal(value))
-        self.denon(cmd)
+        self.amp(cmd)
     
     def consume(self, cmd):
         """
@@ -56,19 +68,13 @@ class Feature(AbstractFeature):
         param = cmd[len(self.function):]
         return self.store(self.decodeVal(param))
         
-    def store(self, value):
-        old = getattr(self,'_val',None)
-        self._val = value
-        if self._val != old: self.on_change(old, self._val)
-        return old, self._val
-        
     def matches(self, cmd):
         """ return True if cmd shall be consumed with this class """
         # TODO: maybe switch to asynchronous and remove this function
         return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
     
         
-class NominalFeature(Feature):
+class NominalFeature(DenonFeature):
     translation = {} #return_string to value
 
     def decodeVal(self, val):
@@ -78,7 +84,7 @@ class NominalFeature(Feature):
         return {val:key for key,val in self.translation.items()}.get(val,val)
         
 
-class FloatFeature(Feature):
+class FloatFeature(DenonFeature):
 
     @staticmethod
     def _roundVolume(vol):
@@ -114,7 +120,7 @@ class Denon_Power(NominalFeature):
     translation = {"ON":True,"STANDBY":False}
     
     def on_change(self, old, new):
-        return {True:self.denon.on_avr_poweron, False:self.denon.on_avr_poweroff}[new]()
+        return {True:self.amp.on_avr_poweron, False:self.amp.on_avr_poweroff}[new]()
     
     
 class Denon_Muted(NominalFeature):
