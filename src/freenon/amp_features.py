@@ -52,6 +52,27 @@ class Feature(AbstractFeature):
         return old, self._val
 
 
+def make_amp_mixin(**features):
+    def __init__(self,*args,**xargs):
+        self.features = {k:v(self,k) for k,v in features.items()}
+        super(cls, self).__init__(*args,**xargs)
+    
+    def on_connect(self):
+        for f in self.features.values(): f.unset()
+        super(cls, self).on_connect()
+        
+    dict_ = dict(__init__=__init__, on_connect=on_connect)
+    dict_.update({
+        k:property(
+            lambda self,k=k:self.features[k].get(),
+            lambda self,val,k=k:self.features[k].set(val),
+        )
+        for k,v in features.items()
+    })
+    cls = type("AmpFeatures", (object,), dict_)
+    return cls
+
+
 class DenonFeature(Feature):
 
     def send(self, value=None):
@@ -137,27 +158,7 @@ class Denon_SubwooferVolume(FloatFeature):
     function_call = "CV?"
     
 
-def make_class(**features):
-    def __init__(self,*args,**xargs):
-        self.features = {k:v(self,k) for k,v in features.items()}
-        super(cls, self).__init__(*args,**xargs)
-    
-    def on_connect(self):
-        for f in self.features.values(): f.unset()
-        super(cls, self).on_connect()
-        
-    dict_ = dict(__init__=__init__, on_connect=on_connect)
-    dict_.update({
-        k:property(
-            lambda self,k=k:self.features[k].get(),
-            lambda self,val,k=k:self.features[k].set(val),
-        )
-        for k,v in features.items()
-    })
-    cls = type("DenonMixin", (object,), dict_)
-    return cls
-
-DenonMixin = make_class(
+DenonMixin = make_amp_mixin(
         maxvol = Denon_Maxvol,
         volume = Denon_Volume,
         muted = Denon_Muted,
