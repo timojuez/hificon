@@ -19,7 +19,7 @@ class PulseSystemEvents(CommonSystemEvents):
 
     def __init__(self, *args, **xargs):
         CommonSystemEvents.__init__(self, *args, **xargs)
-        self.pulse = Pulse(self)
+        self.pulse = PulseListener(self)
         
     def on_connect(self):
         # AVR connected
@@ -58,7 +58,7 @@ class DBusListener(object):
             self.el.on_resume()
 
 
-try: from .pulse import Pulse
+try: from .pulse import PulseListener
 except ImportError: SystemEvents = CommonSystemEvents
 else: SystemEvents = PulseSystemEvents
 

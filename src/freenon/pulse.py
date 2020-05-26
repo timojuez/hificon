@@ -26,8 +26,8 @@ class ConnectedPulse(pulsectl.Pulse):
         print("[%s] Connected to Pulseaudio."%self.__class__.__name__, file=sys.stderr)
     
     
-class Pulse(ConnectedPulse):
-    """ PulseListener: Listen for pulseaudio change events """
+class PulseListener(ConnectedPulse):
+    """ Listen for pulseaudio change events """
     
     def __init__(self, event_listener):
         self.is_playing = False
@@ -77,4 +77,7 @@ class Pulse(ConnectedPulse):
             self._events.on_start_playing()
         elif self.ev.t == pulsectl.PulseEventTypeEnum.remove and not self.is_playing:
             self._events.on_stop_playing()
+
+
+PulseListener.__name__ = "Pulse" # workaround for pulsectl
 
