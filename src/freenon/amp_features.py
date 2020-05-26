@@ -140,7 +140,7 @@ def make_class(**features):
         super(cls, self).__init__(*args,**xargs)
     
     def on_connect(self):
-        for f in self.features: f.unset()
+        for f in self.features.values(): f.unset()
         super(cls, self).on_connect()
         
     dict_ = dict(__init__=__init__, on_connect=on_connect)
