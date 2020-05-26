@@ -27,12 +27,12 @@ Install the requirements:
 `sudo apt-get install python3-dev python3-pip nmap net-tools python3-gi`
 
 Cloning this repository in the current directory and installing via pip:
-`$ git clone https://github.com/timojuez/denonavr.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,gnu_desktop] && rm -R ./freenon && freenon_setup --keys`
+`$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,gnu_desktop] && rm -R ./freenon && freenon_setup --keys`
 
 ### Proprietary OS
 On Mac/Windows, download and install nmap and Python3 with Pip and PyGObject.
 Then execute:
-`$ git clone https://github.com/timojuez/denonavr.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,nongnu_desktop] && rm -R ./freenon && freenon_setup`
+`$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,nongnu_desktop] && rm -R ./freenon && freenon_setup`
 
 To connect the extra mouse buttons, start `freenon_mouse_binding`. You may want to add the command to autostart.
 
