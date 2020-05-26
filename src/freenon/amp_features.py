@@ -1,8 +1,11 @@
 class AbstractFeature(object):
     function = "" #AVR function command
     function_call = property(lambda self: "%s?"%self.function)
-    function_ret = property(lambda self: self.function) # TODO: maybe switch to asynchronous and remove this function
     default_value = None #if no response
+    
+    def function_ret(self, cmd):
+        # TODO: maybe switch to asynchronous and remove this function
+        return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
     
     def on_change(self, old, new): pass
 
@@ -96,8 +99,6 @@ class FloatFeature(Feature):
 
 class Denon_Volume(FloatFeature):
     function = "MV"
-    function_ret = lambda self,s: s.startswith("MV") and s[2] != "M"
-    
     # TODO: value may be relative?
 
     
