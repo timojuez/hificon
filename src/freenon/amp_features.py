@@ -3,10 +3,6 @@ class AbstractFeature(object):
     function_call = property(lambda self: "%s?"%self.function)
     default_value = None #if no response
     
-    def function_ret(self, cmd):
-        # TODO: maybe switch to asynchronous and remove this function
-        return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
-    
     def on_change(self, old, new): pass
 
 
@@ -42,7 +38,7 @@ class Feature(AbstractFeature):
     def unset(self): self.__dict__.pop("_val",None)
         
     def poll(self):
-        try: cmd = self.denon(self.function_call, ret=self.function_ret)
+        try: cmd = self.denon(self.function_call, ret=self.matches)
         except RuntimeError: return self.store(self.default_value)
         else: return self.consume(cmd)
     
@@ -68,9 +64,9 @@ class Feature(AbstractFeature):
         
     def matches(self, cmd):
         """ return True if cmd shall be consumed with this class """
-        if callable(self.function_ret): return self.function_ret(cmd)
-        else: return cmd.startswith(self.function_ret)
-        
+        # TODO: maybe switch to asynchronous and remove this function
+        return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
+    
         
 class NominalFeature(Feature):
     translation = {} #return_string to value
