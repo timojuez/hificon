@@ -67,7 +67,7 @@ See the ./examples/*.sh.
 It is possible to create a customised controller that keeps your own program synchronised with the AVR. Its dependency is freenon[gi] and optionally freenon[autosetup] and pulsectl.
 See ./examples/custom_app.py
 
-If your development only relies on sending commands to the AVR, you need the class freenon.denon.Denon. Your requirement is purely the freenon package and optionally freenon[autosetup].
+If your development only relies on sending commands to the AVR, you need the class freenon.BasicDenon. Your requirement is purely the freenon package and optionally freenon[autosetup].
 
 
 ## Limitations
