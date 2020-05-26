@@ -243,8 +243,8 @@ for k in dir(AmpWithEvents):
     if k.startswith("on_"): setattr(AmpWithEvents,k,echo_call(k,getattr(AmpWithEvents,k)))
 
 
-class Denon(AmpWithEvents, DenonMixin): pass
-class BasicDenon(BasicAmp, DenonMixin): pass
+class Denon(DenonMixin, AmpWithEvents): pass
+class BasicDenon(DenonMixin, BasicAmp): pass
 
 
 class CLI(object):

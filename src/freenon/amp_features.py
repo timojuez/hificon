@@ -36,6 +36,8 @@ class Feature(AbstractFeature):
     def isset(self):
         return hasattr(self,'_val')
         
+    def unset(self): self.__dict__.pop("_val",None)
+        
     def poll(self):
         try: cmd = self.denon(self.function_call, ret=self.function_ret)
         except RuntimeError: return self.store(self.default_value)
@@ -135,8 +137,13 @@ class Denon_SubwooferVolume(FloatFeature):
 def make_class(**features):
     def __init__(self,*args,**xargs):
         self.features = {k:v(self,k) for k,v in features.items()}
-        #super(self.__class__,self).__init__(*args,**xargs)
-    dict_ = dict(__init__=__init__)
+        super(cls, self).__init__(*args,**xargs)
+    
+    def on_connect(self):
+        for f in self.features: f.unset()
+        super(cls, self).on_connect()
+        
+    dict_ = dict(__init__=__init__, on_connect=on_connect)
     dict_.update({
         k:property(
             lambda self,k=k:self.features[k].get(),
@@ -144,7 +151,8 @@ def make_class(**features):
         )
         for k,v in features.items()
     })
-    return type("DenonMixin", (object,), dict_)
+    cls = type("DenonMixin", (object,), dict_)
+    return cls
 
 DenonMixin = make_class(
         maxvol = Denon_Maxvol,
