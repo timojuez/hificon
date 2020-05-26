@@ -1,6 +1,5 @@
 class AbstractFeature(object):
-    function = "" #AVR function command
-    function_call = property(lambda self: "%s?"%self.function)
+    function_call = None
     default_value = None #if no response
     
     def matches(self, cmd): raise NotImplementedError()
@@ -74,6 +73,8 @@ def make_amp_mixin(**features):
 
 
 class DenonFeature(Feature):
+    function = "" #AVR function command
+    function_call = property(lambda self: "%s?"%self.function)
 
     def send(self, value=None):
         if value is None: value = self._val
