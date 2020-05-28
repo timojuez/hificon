@@ -4,11 +4,11 @@ from threading import Thread
 
 class ConnectedPulse(pulsectl.Pulse):
 
-    def __init__(self,*args,**xargs):
+    def __init__(self,*args,connect=True,**xargs):
         super().__init__(*args,connect=False,**xargs)
-        self.connect_pulse()
+        if connect: self.connect_async()
 
-    def connect_pulse(self):
+    def connect_async(self):
         def connect():
             self.connect()
             self.on_connected()
@@ -29,13 +29,24 @@ class ConnectedPulse(pulsectl.Pulse):
 class PulseListener(ConnectedPulse):
     """ Listen for pulseaudio change events """
     
-    def __init__(self, event_listener):
-        self.is_playing = False
+    def __init__(self, event_listener, *args, **xargs):
         self._events = event_listener
-        super().__init__("Freenon")
+        self._sink_input_list = []
+        self._sink_input_ignore = []
+        super().__init__("Freenon",*args,**xargs)
 
-    def _is_playing(self):
-        try: return len(self.sink_input_list()) > 0
+    def reset_sink_list(self):
+        """  is_playing() will only consider inputs that are being started from now on """
+        try: self._sink_input_ignore = self.sink_input_list()
+        except: self._sink_input_ignore = []
+    
+    @property
+    def is_playing(self):
+        comparable = lambda l: set(map(lambda e:e.proplist["application.process.id"], l))
+        return len(comparable(self._sink_input_list).difference(comparable(self._sink_input_ignore))) > 0
+
+    def _update_sinks(self):
+        try: self._sink_input_list = self.sink_input_list()
         except:
             if not self.connected: raise pulsectl.pulsectl.PulseDisconnected()
             raise
@@ -43,8 +54,9 @@ class PulseListener(ConnectedPulse):
     def on_connected(self):
         # Pulseaudio connected
         super().on_connected()
-        try: self.is_playing = self._is_playing()
+        try: self._update_sinks()
         except pulsectl.pulsectl.PulseDisconnected: return self.connect_pulse() 
+        self._events.on_pulse_connected()
         Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
         
     def loop(self):
@@ -72,7 +84,7 @@ class PulseListener(ConnectedPulse):
             pass
 
     def _on_pulse_sink_input_event(self):
-        self.is_playing = self._is_playing()
+        self._update_sinks()
         if self.ev.t == pulsectl.PulseEventTypeEnum.new:
             self._events.on_start_playing()
         elif self.ev.t == pulsectl.PulseEventTypeEnum.remove and not self.is_playing:
