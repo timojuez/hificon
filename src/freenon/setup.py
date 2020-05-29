@@ -10,7 +10,7 @@ class Main(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Freenon Setup Tool')
         discover = parser.add_mutually_exclusive_group()
-        discover.add_argument('--discover', default=True, action="store_true", help='Include AVR discovering (default)')
+        discover.add_argument('--discover', default=True, action="store_true", help='Include Denon AVR discovering (default)')
         discover.add_argument('--no-discover', dest="discover", action="store_false")
 
         keys = parser.add_mutually_exclusive_group()

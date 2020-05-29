@@ -43,7 +43,7 @@ Ggf remove the lines after ## FREENON in ~/.xbindkeysrc and restart xbindkeys.
 
 
 ### Configuration
-See configuration options in ~/.freenon.cfg and src/denon/freenon.cfg.default.
+See configuration options in ~/.freenon.cfg and src/freenon/freenon.cfg.default.
 
 
 ## Usage
@@ -64,13 +64,19 @@ See the ./examples/*.sh.
 
 
 ## Development
+
+### Support for other AVR brands
+It should be possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See denon.py as an example. See also "protocol" parameter in config and in freenon_cmd.
+
+### Custom AVR control software
 It is possible to create a customised controller that keeps your own program synchronised with the AVR. Its dependency is freenon[gi] and optionally freenon[autosetup] and pulsectl.
 See ./examples/custom_app.py
 
-If your development only relies on sending commands to the AVR, you need the class freenon.BasicDenon. Your requirement is purely the freenon package and optionally freenon[autosetup].
+If your development only relies on sending commands to the AVR, you need the class freenon.Amp(cls="BasicAmp"). Your requirement is purely the freenon package and optionally freenon[autosetup].
 
 
 ## Limitations
+- Currently only Denon protocol devices are being supported.
 - If you do not have a nameserver in your LAN or freenon_setup cannot find your Denon device, set the host IP manually in the config file.
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
