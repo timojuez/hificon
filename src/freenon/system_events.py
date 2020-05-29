@@ -27,10 +27,6 @@ class PulseSystemEvents(CommonSystemEvents):
         super(PulseSystemEvents,self).on_connect()
         if self.pulse.connected and self.pulse.is_playing: self.on_start_playing()
 
-    def on_avr_poweroff(self):
-        super().on_avr_poweroff()
-        self.pulse.reset_sink_list()
-    
     def on_pulse_connected(self): self.pulse.reset_sink_list()
 
     def on_start_playing(self): pass
