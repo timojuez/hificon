@@ -3,7 +3,7 @@ import argparse, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
-from .amp import Denon
+from . import Amp
 from .config import config
 
 
@@ -24,12 +24,12 @@ class Tray(object):
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)
-        self.denon = Denon(*args,
+        self.amp = Amp(*args,
             on_connect=self.on_connect,
             on_disconnected=self.on_disconnected,
             on_avr_change=self.on_avr_change,
             **xargs)
-        self.denon.loop()
+        self.amp.loop()
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -43,29 +43,29 @@ class Tray(object):
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         def do():
-            self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.denon.host))
+            self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.host))
             if muted:
                 self.icon.set_from_icon_name("audio-volume-muted")
             else:
                 icon_idx = int(round(float(volume)/maxvol*(len(icons)-1)))
                 self.icon.set_from_icon_name(icons[icon_idx])
         try:
-            volume = self.denon.volume
-            muted = self.denon.muted
-            maxvol = self.denon.maxvol
+            volume = self.amp.volume
+            muted = self.amp.muted
+            maxvol = self.amp.maxvol
         except ConnectionError: pass
         else: GLib.idle_add(do)
     
     def on_scroll(self, icon, event):
         try:
             if event.direction == Gdk.ScrollDirection.UP:
-                volume = min(self.denon.volume+self.scroll_delta,self.denon.maxvol)
+                volume = min(self.amp.volume+self.scroll_delta,self.amp.maxvol)
             elif event.direction == Gdk.ScrollDirection.DOWN:
-                volume = max(0,self.denon.volume-self.scroll_delta)
+                volume = max(0,self.amp.volume-self.scroll_delta)
             else: return
             if self._volume == volume: return
             self._volume = volume
-            self.denon.volume = volume
+            self.amp.volume = volume
         except ConnectionError: pass
         else: self.updateIcon()
         

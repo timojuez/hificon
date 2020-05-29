@@ -5,6 +5,7 @@ control_power_on = yes
 control_power_off = yes
 # Delay in minutes to power off AVR after last output stopped (float or "no")
 poweroff_timeout = 10
+protocol = Denon
 
 # Host = 1.2.3.4
 

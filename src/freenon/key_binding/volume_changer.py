@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 from threading import Thread, Lock
-from ..amp import BasicDenon as Denon
+from .. import Amp
 from ..config import config
 
 
@@ -28,8 +28,8 @@ class VolumeChanger(object):
     def __init__(self):
         self.thread = None
         self.lock = Lock()
-        self.denon = Denon()
-        self.denon.connect()
+        self.amp = Amp(cls="BasicAmp")
+        self.amp.connect()
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
         
@@ -48,7 +48,7 @@ class VolumeChanger(object):
         for _ in range(60): # max increase 60 steps for security
             b = self.button
             if b is None: break
-            try: self.denon(BUTTON2CMD[b])
+            try: self.amp(BUTTON2CMD[b])
             except ConnectionError: pass
             time.sleep(self.interval)
 
@@ -65,6 +65,6 @@ class VolumeChanger(object):
         Thread(target=self._poweron, name="poweron", daemon=False).start()
     
     def _poweron(self):
-        try: self.denon.poweron(True)
+        try: self.amp.poweron(True)
         except ConnectionError: pass
         

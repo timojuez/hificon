@@ -1,15 +1,10 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
-
-import sys, time, argparse, socket
+import sys, time, socket
 from threading import Lock, Thread, Timer
 from telnetlib import Telnet
 from .system_events import SystemEvents
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import DenonMixin
-try: from .setup import DenonDiscoverer
-except ImportError: pass
+from .amp_features import Feature
 
 
 def call_sequence(*functions):
@@ -21,17 +16,16 @@ class BasicAmp(object):
     This class connects to the AVR via LAN and executes commands
     @host is the AVR's hostname or IP.
     """
+    protocol = "Undefined"
 
     def __init__(self, host=None, verbose=False, **callbacks):
         super().__init__()
         self.verbose = verbose
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))
-        self.host = host or config["AVR"].get("Host") or \
-            "DenonDiscoverer" in globals() and DenonDiscoverer().denon
+        self.host = host or config["AVR"].get("Host")
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
-        if verbose: sys.stderr.write('AVR "%s"\n'%self.host)
         self._received = []
         self.lock = Lock()
         self.connecting_lock = Lock()
@@ -40,14 +34,12 @@ class BasicAmp(object):
         #except OSError: pass
 
     def _send(self, cmd):
-        cmd = cmd.upper()
         try:
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
         except (OSError, EOFError, AssertionError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
-        return cmd
         
     def _read(self, timeout=None):
         try:
@@ -58,21 +50,13 @@ class BasicAmp(object):
             self.on_disconnected()
             raise BrokenPipeError(e)
         
-    def __call__(self, cmd, ret=None):
-        """ 
-        Send command to AVR
-        @cmd str: function[?|param]
-        @ret str: return received line that starts with @ret, default: function
-        """
-        cmd = cmd.upper()
-        if self.verbose: print("[Freenon cli] %s"%cmd, file=sys.stderr)
-        if "?" not in cmd and not ret: return self._send(cmd)
-
+    def __call__(self, cmd, matches=None):
+        """ send command to AVR """
+        if self.verbose: print("Freenon@%s:%s $ %s"%(self.host,self.protocol,cmd), file=sys.stderr)
+        if not matches: return self._send(cmd)
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)
             return r
-        ret = ret or cmd.replace("?","")
-        condition = ret if callable(ret) else lambda r: r.startswith(ret)
 
         self.lock.acquire()
         try:
@@ -81,7 +65,7 @@ class BasicAmp(object):
             for i in range(25):
                 pos_received_new = len(self._received)
                 for r in self._received[pos_received:pos_received_new]:
-                    if condition(r): 
+                    if matches(r): 
                         self._received.remove(r)
                         return _return(r)
                 pos_received = pos_received_new
@@ -91,11 +75,11 @@ class BasicAmp(object):
                         sys.stderr.write("(timeout) ")
                         break
                     continue
-                if condition(r): return _return(r)
+                if matches(r): return _return(r)
                 else: self._received.append(r)
             raise RuntimeError("WARNING: Got no answer for `%s`.\n"%cmd)
         finally: self.lock.release()
-        
+
     def read(self):
         """ Wait until a message has been received from AVR and return it """
         while True:
@@ -145,7 +129,11 @@ class BasicAmp(object):
         if not force and not config.getboolean("AVR","control_power_off"): return 0
         self.is_running = False
         return 1
-        
+
+    def on_avr_change(self, attrib, new_val): pass
+    def on_avr_poweron(self): pass
+    def on_avr_poweroff(self): pass
+
 
 class AsyncAmp(BasicAmp):
 
@@ -168,10 +156,6 @@ class AsyncAmp(BasicAmp):
                     except ValueError: continue
                     else: 
                         if old != new: self.on_avr_change(attrib,new)
-
-    def on_avr_change(self, attrib, new_val): pass
-    def on_avr_poweron(self): pass
-    def on_avr_poweroff(self): pass
 
 
 class AmpWithEvents(SystemEvents,AsyncAmp):
@@ -243,38 +227,38 @@ for k in dir(AmpWithEvents):
     if k.startswith("on_"): setattr(AmpWithEvents,k,echo_call(k,getattr(AmpWithEvents,k)))
 
 
-class Denon(DenonMixin, AmpWithEvents): pass
-class BasicDenon(DenonMixin, BasicAmp): pass
-
-
-class CLI(object):
+def make_amp_mixin(**features):
+    """
+    Make a class where all attributes are getters and setters for amp properties
+    args: class_attribute_name=MyFeature
+        where MyFeature inherits from Feature
+    """
     
-    def __init__(self):
-        parser = argparse.ArgumentParser(description='Controller for Denon AVR - CLI')
-        parser.add_argument("command", nargs="*", type=str, help='CLI command')
-        parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
-        parser.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
-        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
-        self.args = parser.parse_args()
+    def __init__(self,*args,**xargs):
+        self.features = {k:v(self,k) for k,v in features.items()}
+        super(cls, self).__init__(*args,**xargs)
+    
+    def on_connect(self):
+        for f in self.features.values(): f.unset()
+        super(cls, self).on_connect()
         
-    def __call__(self):
-        amp = BasicDenon(self.args.host, verbose=self.args.verbose)
-        amp.connect()
-        for cmd in self.args.command:
-            r = amp(cmd)
-            if r and not self.args.verbose: print(r)
-        if self.args.follow or len(self.args.command) == 0:
-            def reader():
-                while True: print("%s"%amp.read())
-            Thread(target=reader,name="Reader",daemon=True).start()
-            while True:
-                try: cmd = input().strip()
-                except (KeyboardInterrupt, EOFError): break
-                cmd = amp._send(cmd)
-                #print("\r[sent] %s"%cmd)
-            
+    dict_ = dict(__init__=__init__, on_connect=on_connect)
+    dict_.update({
+        k:property(
+            lambda self,k=k:self.features[k].get(),
+            lambda self,val,k=k:self.features[k].set(val),
+        )
+        for k,v in features.items()
+    })
+    cls = type("AmpFeatures", (object,), dict_)
+    return cls
 
-main = lambda:CLI()()
-if __name__ == "__main__":
-    main()
+
+def make_basic_amp(**features):
+    return type("Amp", (make_amp_mixin(**features),BasicAmp), dict())
+
+
+def make_amp(**features):
+    return type("Amp", (make_amp_mixin(**features),AmpWithEvents), dict())
+
 
