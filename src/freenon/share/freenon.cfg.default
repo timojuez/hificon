@@ -23,5 +23,5 @@ vol_up = button9
 vol_down = button8
 
 [Tray]
-scroll_delta = 3.0
+scroll_delta = 2.0
 
