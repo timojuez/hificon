@@ -10,6 +10,13 @@ from .amp_features import Feature
 def call_sequence(*functions):
     return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
 
+def log_call(func):
+    """ object function decorator """
+    def call(self,*args,**xargs):
+        print("[%s] %s"%(self.__class__.__name__, func.__name__), file=sys.stderr)
+        return func(self,*args,**xargs)
+    return call
+
 
 class BasicAmp(object):
     """
@@ -109,11 +116,13 @@ class BasicAmp(object):
     def connect_async(self):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
+    @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
         
+    @log_call
     def on_disconnected(self):
         self.connected = False
         self.connect_async()
@@ -130,8 +139,11 @@ class BasicAmp(object):
             or config.get("AVR","source") and self.source != config.get("AVR","source")): return
         self.is_running = False
 
+    @log_call
     def on_avr_change(self, attrib, new_val): pass
+    @log_call
     def on_avr_poweron(self): pass
+    @log_call
     def on_avr_poweroff(self): pass
 
 
@@ -173,24 +185,29 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
             while True: time.sleep(1000)
         except KeyboardInterrupt: pass
 
+    @log_call
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
         try: self.poweroff()
         except ConnectionError: pass
         
+    @log_call
     def on_suspend(self):
         try: self.poweroff()
         except ConnectionError: pass
     
+    @log_call
     def on_resume(self):
         """ Is being executed after resume from suspension """
         self.on_disconnected()
         
+    @log_call
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
         try: self.poweron()
         except ConnectionError: pass
 
+    @log_call
     def on_stop_playing(self):
         try: timeout = config.getfloat("AVR","poweroff_timeout")*60
         except ValueError: return
@@ -198,19 +215,11 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
         self._timer_poweroff = Timer(timeout,self.on_sound_idle)
         self._timer_poweroff.start()
     
+    @log_call
     def on_sound_idle(self):
         try: self.poweroff()
         except ConnectionError: pass
     
-
-def echo_call(name, func): # TODO: move to metaclass
-    def call(self,*args,**xargs):
-        print("[%s] %s"%(self.__class__.__name__,name), file=sys.stderr) 
-        return func(self,*args,**xargs)
-    return call
-for k in dir(AmpWithEvents):
-    if k.startswith("on_"): setattr(AmpWithEvents,k,echo_call(k,getattr(AmpWithEvents,k)))
-
 
 def make_amp_mixin(**features):
     """
