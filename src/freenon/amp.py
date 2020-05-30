@@ -116,7 +116,6 @@ class BasicAmp(object):
     def connect_async(self):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
-    @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
@@ -153,6 +152,7 @@ class AsyncAmp(BasicAmp):
         super().__init__(*args,connect=False,**xargs)
         self.connect_async()
         
+    @log_call
     def on_connect(self):
         super().on_connect()
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
