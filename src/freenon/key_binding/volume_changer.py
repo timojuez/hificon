@@ -1,11 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
-from threading import Thread, Lock
+from threading import Thread
 from .. import Amp
 from ..config import config
-
-
-BUTTON2CMD = {True:"MVUP", False:"MVDOWN"}
 
 
 class VolumeChanger(object):
@@ -24,46 +21,48 @@ class VolumeChanger(object):
         release(button2) #skips
         release(button1) #stops
     """
+    keys_pressed = 0
 
-    def __init__(self):
-        self.thread = None
-        self.lock = Lock()
-        self.amp = Amp(cls="BasicAmp")
+    def __init__(self, on_volume_change=None):
+        if on_volume_change: self.on_volume_change = on_volume_change
+        self.amp = Amp(on_avr_change=self.on_avr_change, verbose=True)#(cls="BasicAmp")
+        self.amp.connect() #FIXME
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
+        self._volume = None
         
     def press(self, button):
         """ start sending volume events to AVR """
-        self.lock.acquire()
-        try:
-            self.button = button
-            if self.thread is None:
-                self.thread = Thread(target=self._loop,name="VolumeChanger",daemon=True)
-                self.thread.start()
-        finally: self.lock.release()
+        self.keys_pressed += 1
+        if self.keys_pressed <= 0: return
+        self.button = button
+        self.fire_volume()
         
-    def _loop(self):
-        """ listen for keys and stop when all released. Start in extra process or thread """
-        for _ in range(60): # max increase 60 steps for security
-            b = self.button
-            if b is None: break
-            try: self.amp(BUTTON2CMD[b])
-            except ConnectionError: pass
-            time.sleep(self.interval)
+    def on_avr_change(self, attr, value):
+        if attr != "volume": return
+        self.on_volume_change(value)
+        self.fire_volume()
+        
+    def fire_volume(self):
+        if self.keys_pressed == 0: return
+        for _ in range(100):
+            try: self.amp.volume += config.getfloat("KeyEventHandling","step")*(int(self.button)*2-1)
+            except ConnectionError: time.sleep(20)
+            else: break
 
     def release(self, button):
         """ button released """
-        if button is not None and self.button != button: return
+        self.keys_pressed -= 1
+        if self.keys_pressed != 0 and button is not None and self.button != button: return
         return self._stop()
         
     def _stop(self):
         self.button = None
-        if self.thread: 
-            self.thread.join()
-            self.thread = None
         Thread(target=self._poweron, name="poweron", daemon=False).start()
     
     def _poweron(self):
         try: self.amp.poweron(True)
         except ConnectionError: pass
         
+    def on_volume_change(self, volume): pass
+    
