@@ -51,8 +51,8 @@ class Tray(object):
                 icon_idx = int(round(float(volume)/maxvol*(len(icons)-1)))
                 self.icon.set_from_icon_name(icons[icon_idx])
         try:
-            volume = self.amp.volume
             muted = self.amp.muted
+            volume = 0 if muted else self.amp.volume
             maxvol = self.amp.maxvol
         except ConnectionError: pass
         else: GLib.idle_add(do)
