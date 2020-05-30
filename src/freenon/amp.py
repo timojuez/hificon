@@ -110,6 +110,7 @@ class BasicAmp(object):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
     def on_connect(self):
+        """ Execute when connected e.g. after connection aborted """
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
         
@@ -184,21 +185,6 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
     def on_resume(self):
         """ Is being executed after resume from suspension """
         self.on_disconnected()
-        
-    def on_connect(self):
-        """ Execute when connected e.g. after connection aborted """
-        super().on_connect()
-        try: 
-            #self.poll_all() # TODO: better asynchronous and return
-            self.features["is_running"].poll()
-            for attr, f in self.features.items():
-                    if not f.isset() or self.is_running: 
-                        old, new = f.poll()
-                        if old != new: self.on_avr_change(attr,new)
-        except ConnectionError: pass
-            
-    def on_disconnected(self):
-        super().on_disconnected()
         
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()

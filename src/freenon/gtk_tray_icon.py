@@ -10,6 +10,7 @@ from .config import config
 class Tray(object):
 
     def on_connect(self):
+        self.updateIcon()
         self.show()
 
     def on_disconnected(self):
