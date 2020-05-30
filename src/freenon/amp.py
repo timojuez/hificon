@@ -118,17 +118,17 @@ class BasicAmp(object):
         self.connected = False
         self.connect_async()
 
-    def poweron(self,force=False): # TODO: check denon.source
+    def poweron(self,force=False):
         if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
-            return 0
+            return
         self.is_running = True
         time.sleep(3) #TODO
-        return 1
+        if config.get("AVR","source"): self.source = config.get("AVR","source")
 
     def poweroff(self, force=False):
-        if not force and not config.getboolean("AVR","control_power_off"): return 0
+        if not force and (not config.getboolean("AVR","control_power_off") 
+            or config.get("AVR","source") and self.source != config.get("AVR","source")): return
         self.is_running = False
-        return 1
 
     def on_avr_change(self, attrib, new_val): pass
     def on_avr_poweron(self): pass

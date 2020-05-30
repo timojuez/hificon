@@ -7,6 +7,8 @@ control_power_off = yes
 poweroff_timeout = 10
 # module that implements the protocol
 protocol = .denon
+# AVR input source that this program controls. Important for power control. Empty means "all"
+source = 
 
 # Host = 1.2.3.4
 

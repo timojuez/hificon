@@ -16,14 +16,28 @@ class Main(object):
         keys = parser.add_mutually_exclusive_group()
         keys.add_argument('--keys', default=False, action="store_true", help='Setup Xorg mouse and keyboard volume keys binding for current user')
         keys.add_argument('--no-keys', dest="keys", action="store_false", help='(default)')
+
+        source_setup = parser.add_mutually_exclusive_group()
+        source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon AVR source setting to computer (default)')
+        source_setup.add_argument('--no-source-setup', dest="discover", action="store_false")
         
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
         if self.args.discover: DenonDiscoverer()
+        if self.args.source_setup: source_setup()
         if self.args.keys: setup_xorg_key_binding()
         
+
+def source_setup():
+    from .denon import BasicAmp
+    input("On your AVR, select the input source that you want to control with this program and press ENTER.")
+    amp = BasicAmp()
+    amp.connect()
+    config["AVR"]["source"] = amp.source
+    config.save()
+    
 
 def setup_xorg_key_binding():
     if not os.path.exists(os.path.expanduser("~/.xbindkeysrc")):
