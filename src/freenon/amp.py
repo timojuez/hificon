@@ -241,8 +241,10 @@ def make_amp_mixin(**features):
     def on_connect(self):
         for f in self.features.values(): f.unset()
         super(cls, self).on_connect()
-        
+    
     dict_ = dict(__init__=__init__, on_connect=on_connect)
+    try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
+    except: pass
     dict_.update({
         k:property(
             lambda self,k=k:self.features[k].get(),
