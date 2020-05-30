@@ -19,7 +19,6 @@ class CLI(object):
         
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
-        amp.connect()
         for cmd in self.args.command:
             r = amp(cmd)
             if r and not self.args.verbose: print(r)
