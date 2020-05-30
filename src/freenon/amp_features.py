@@ -18,7 +18,7 @@ class Feature(AbstractFeature):
     #    Denon.feature is object with __getattr__ -no autocomplete
     # poll, send, consume zu Denon verschieben?
 
-    def __init__(self, amp, name):
+    def __init__(self, amp):
         self.amp = amp
 
     def get(self):

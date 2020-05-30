@@ -229,7 +229,7 @@ def _make_amp_mixin(**features):
     """
     
     def __init__(self,*args,**xargs):
-        self.features = {k:v(self,k) for k,v in features.items()}
+        self.features = {k:v(self) for k,v in features.items()}
         super(cls, self).__init__(*args,**xargs)
     
     def on_connect(self):
