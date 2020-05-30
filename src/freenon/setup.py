@@ -34,7 +34,6 @@ def source_setup():
     from .denon import BasicAmp
     input("On your AVR, select the input source that you want to control with this program and press ENTER.")
     amp = BasicAmp()
-    amp.connect()
     config["AVR"]["source"] = amp.source
     config.save()
     

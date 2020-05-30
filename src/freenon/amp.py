@@ -18,7 +18,7 @@ class BasicAmp(object):
     """
     protocol = "Undefined"
 
-    def __init__(self, host=None, verbose=False, **callbacks):
+    def __init__(self, host=None, connect=True, verbose=False, **callbacks):
         super().__init__()
         self.verbose = verbose
         for name, callback in callbacks.items():
@@ -30,8 +30,7 @@ class BasicAmp(object):
         self.lock = Lock()
         self.connecting_lock = Lock()
         self.connected = False
-        #try: self.connect()
-        #except OSError: pass
+        if connect: self.connect()
 
     def _send(self, cmd):
         try:
@@ -138,7 +137,7 @@ class BasicAmp(object):
 class AsyncAmp(BasicAmp):
 
     def __init__(self, *args, **xargs):
-        super().__init__(*args,**xargs)
+        super().__init__(*args,connect=False,**xargs)
         self.connect_async()
         
     def on_connect(self):
