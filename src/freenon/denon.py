@@ -109,7 +109,9 @@ class Abstract_denon(object):
         @matches callable: return received line where matches(line) is True
         """
         cmd = cmd.upper()
-        if "?" in cmd and not matches: matches = lambda r: r.startswith(cmd.replace("?",""))
+        if "?" in cmd and not matches:
+            function = cmd.replace("?","")
+            return type(function,(NominalFeature,),dict(function=function))(self).get()
         return super().__call__(cmd,matches)
         
     def _send(self, cmd):
