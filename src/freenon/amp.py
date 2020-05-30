@@ -221,7 +221,7 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
         except ConnectionError: pass
     
 
-def make_amp_mixin(**features):
+def _make_amp_mixin(**features):
     """
     Make a class where all attributes are getters and setters for amp properties
     args: class_attribute_name=MyFeature
@@ -251,10 +251,10 @@ def make_amp_mixin(**features):
 
 
 def make_basic_amp(**features):
-    return type("Amp", (make_amp_mixin(**features),BasicAmp), dict())
+    return type("Amp", (_make_amp_mixin(**features),BasicAmp), dict())
 
 
 def make_amp(**features):
-    return type("Amp", (make_amp_mixin(**features),AmpWithEvents), dict())
+    return type("Amp", (_make_amp_mixin(**features),AmpWithEvents), dict())
 
 
