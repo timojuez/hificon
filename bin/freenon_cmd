@@ -9,13 +9,13 @@ from freenon import Amp
 class CLI(object):
     
     def __init__(self):
-        parser = argparse.ArgumentParser(description='Controller for Network AVR - CLI')
+        parser = argparse.ArgumentParser(description='Controller for Network Amp - CLI')
         parser.add_argument("command", nargs="*", type=str, help='CLI command')
-        parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
-        parser.add_argument('--protocol', type=str, default=None, help='AVR protocol')
+        parser.add_argument('--host', type=str, default=None, help='Amp IP or hostname')
+        parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
-        group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
+        group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor amp messages')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         

@@ -4,7 +4,7 @@ from distutils.core import setup
 
 setup(name='freenon',
       version='1.2.0a',
-      description='Network AVR Controlling Software',
+      description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
       url='',

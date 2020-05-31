@@ -20,8 +20,8 @@ def log_call(func):
 
 class BasicAmp(object):
     """
-    This class connects to the AVR via LAN and executes commands
-    @host is the AVR's hostname or IP.
+    This class connects to the amp via LAN and executes commands
+    @host is the amp's hostname or IP.
     """
     protocol = "Undefined"
 
@@ -30,7 +30,7 @@ class BasicAmp(object):
         self.verbose = verbose
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))
-        self.host = host or config["AVR"].get("Host")
+        self.host = host or config["Amp"].get("Host")
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         self._received = []
@@ -57,7 +57,7 @@ class BasicAmp(object):
             raise BrokenPipeError(e)
         
     def __call__(self, cmd, matches=None):
-        """ send command to AVR """
+        """ send command to amp """
         if self.verbose: print("Freenon@%s:%s $ %s"%(self.host,self.protocol,cmd), file=sys.stderr)
         if not matches: return self._send(cmd)
         def _return(r):
@@ -87,7 +87,7 @@ class BasicAmp(object):
         finally: self.lock.release()
 
     def read(self):
-        """ Wait until a message has been received from AVR and return it """
+        """ Wait until a message has been received from amp and return it """
         while True:
             self.lock.acquire()
             try:
@@ -127,23 +127,23 @@ class BasicAmp(object):
         self.connect_async()
 
     def poweron(self,force=False):
-        if not force and not config.getboolean("AVR","control_power_on") or self.is_running:
+        if not force and not config.getboolean("Amp","control_power_on") or self.is_running:
             return
         self.is_running = True
         time.sleep(3) #TODO
-        if config.get("AVR","source"): self.source = config.get("AVR","source")
+        if config.get("Amp","source"): self.source = config.get("Amp","source")
 
     def poweroff(self, force=False):
-        if not force and (not config.getboolean("AVR","control_power_off") 
-            or config.get("AVR","source") and self.source != config.get("AVR","source")): return
+        if not force and (not config.getboolean("Amp","control_power_off") 
+            or config.get("Amp","source") and self.source != config.get("Amp","source")): return
         self.is_running = False
 
     @log_call
-    def on_avr_change(self, attrib, new_val): pass
+    def on_change(self, attrib, new_val): pass
     @log_call
-    def on_avr_poweron(self): pass
+    def on_poweron(self): pass
     @log_call
-    def on_avr_poweroff(self): pass
+    def on_poweroff(self): pass
 
 
 class AsyncAmp(BasicAmp):
@@ -167,13 +167,13 @@ class AsyncAmp(BasicAmp):
                     try: old, new = f.consume(cmd)
                     except ValueError: continue
                     else: 
-                        if old != new: self.on_avr_change(attrib,new)
+                        if old != new: self.on_change(attrib,new)
 
 
 class AmpWithEvents(SystemEvents,AsyncAmp):
     """
     Event handler that keeps up to date the plugin data such as the volume
-    and controls the AVR's power state.
+    and controls the amp's power state.
     """
     
     def __init__(self, *args, **xargs):
@@ -209,7 +209,7 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
 
     @log_call
     def on_stop_playing(self):
-        try: timeout = config.getfloat("AVR","poweroff_timeout")*60
+        try: timeout = config.getfloat("Amp","poweroff_timeout")*60
         except ValueError: return
         if not timeout: return
         self._timer_poweroff = Timer(timeout,self.on_sound_idle)

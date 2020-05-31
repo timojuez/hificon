@@ -2,7 +2,7 @@
 from freenon import Amp
 
 
-def on_avr_change(attr, value):
+def on_amp_change(attr, value):
     print("Changed %s to %s."%(attr,value))
 
 def volume_prompt():
@@ -12,5 +12,5 @@ def volume_prompt():
         amp.volume = float(newvol)
 
 if __name__ == "__main__":
-    amp = Amp(on_avr_change=on_avr_change, on_connect=volume_prompt)
+    amp = Amp(on_change=on_amp_change, on_connect=volume_prompt)
     amp.loop()

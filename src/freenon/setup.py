@@ -10,7 +10,7 @@ class Main(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Freenon Setup Tool')
         discover = parser.add_mutually_exclusive_group()
-        discover.add_argument('--discover', default=True, action="store_true", help='Include Denon AVR discovering (default)')
+        discover.add_argument('--discover', default=True, action="store_true", help='Include Denon amp discovering (default)')
         discover.add_argument('--no-discover', dest="discover", action="store_false")
 
         keys = parser.add_mutually_exclusive_group()
@@ -18,7 +18,7 @@ class Main(object):
         keys.add_argument('--no-keys', dest="keys", action="store_false", help='(default)')
 
         source_setup = parser.add_mutually_exclusive_group()
-        source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon AVR source setting to computer (default)')
+        source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon amp source setting to computer (default)')
         source_setup.add_argument('--no-source-setup', dest="discover", action="store_false")
         
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
@@ -32,10 +32,10 @@ class Main(object):
 
 def source_setup():
     from .denon import BasicAmp
-    input("On your AVR, select the input source that you want to control with this program and press ENTER.")
+    input("On your amp, select the input source that you want to control with this program and press ENTER.")
     source = BasicAmp().source
     print("Registered input source `%s`."%source)
-    config["AVR"]["source"] = source
+    config["Amp"]["source"] = source
     config.save()
     
 
@@ -50,7 +50,7 @@ def setup_xorg_key_binding():
 
 class DenonDiscoverer(object):
     """
-    Search local network for Denon AVR
+    Search local network for Denon amp
     """
 
     def __init__(self):
@@ -58,10 +58,10 @@ class DenonDiscoverer(object):
             if host.lower().startswith("denon"):
                 print("Found '%s'."%host)
                 self.denon = host
-                config["AVR"]["Host"] = host
+                config["Amp"]["Host"] = host
                 config.save()
                 return
-        raise Exception("No Denon AVR found in local network. Check if AVR is connected or"
+        raise Exception("No Denon amp found in local network. Check if amp is connected or"
             " set IP manually.")
         
 

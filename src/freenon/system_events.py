@@ -23,7 +23,7 @@ class PulseSystemEvents(CommonSystemEvents):
         self.pulse.connect_async()
         
     def on_connect(self):
-        # AVR connected
+        # Amp connected
         super(PulseSystemEvents,self).on_connect()
         if self.pulse.connected and self.pulse.is_playing: self.on_start_playing()
 

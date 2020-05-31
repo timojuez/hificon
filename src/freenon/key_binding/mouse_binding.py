@@ -22,7 +22,7 @@ class Main(VolumeChanger):
             self.release(button)
             
     def __call__(self):
-        print("WARNING: Mouse events that control the AVR are not being suppressed to other programs.")
+        print("WARNING: Mouse events that control the amp are not being suppressed to other programs.")
         with Listener(on_click=self.on_click, suppress=False) as listener: #bug: suppress=True kills X
             listener.join()
 

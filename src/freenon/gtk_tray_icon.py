@@ -16,7 +16,7 @@ class Tray(object):
     def on_disconnected(self):
         self.hide()
         
-    def on_avr_change(self, *args, **xargs):
+    def on_amp_change(self, *args, **xargs):
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
@@ -28,7 +28,7 @@ class Tray(object):
         self.amp = Amp(*args,
             on_connect=self.on_connect,
             on_disconnected=self.on_disconnected,
-            on_avr_change=self.on_avr_change,
+            on_change=self.on_amp_change,
             **xargs)
         self.amp.loop()
         # no loop. EventHandler does it
@@ -74,7 +74,7 @@ class Tray(object):
 class Main(object):
     
     def __init__(self):
-        parser = argparse.ArgumentParser(description='AVR tray icon')
+        parser = argparse.ArgumentParser(description='Freenon tray icon')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         

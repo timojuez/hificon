@@ -31,11 +31,11 @@ class BasicVolumeChanger(object):
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
         self._firing = False
-        self.amp = Amp(on_avr_change=self.on_amp_change,on_connect=self.on_amp_connect)#(cls="BasicAmp")
+        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect)#(cls="BasicAmp")
         self.amp.connect() #FIXME
         
     def press(self, button):
-        """ start sending volume events to AVR """
+        """ start sending volume events to amp """
         self.keys_pressed += 1
         if self.keys_pressed <= 0: return
         self.button = button

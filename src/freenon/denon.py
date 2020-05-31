@@ -3,7 +3,7 @@ from .amp import Feature, make_amp, make_basic_amp
 
 
 class DenonFeature(Feature):
-    function = "" #AVR function command
+    function = "" #Amp function command
     function_call = property(lambda self: "%s?"%self.function)
 
     def send(self, value=None):
@@ -73,7 +73,7 @@ class Denon_Power(NominalFeature):
     translation = {"ON":True,"STANDBY":False}
     
     def on_change(self, old, new):
-        return {True:self.amp.on_avr_poweron, False:self.amp.on_avr_poweroff}[new]()
+        return {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]()
     
     
 class Denon_Muted(NominalFeature):
@@ -105,7 +105,7 @@ class Abstract_denon(object):
         
     def __call__(self, cmd, matches=None):
         """ 
-        Send command to AVR
+        Send command to amp
         @cmd str: function[?|param]
         @matches callable: return received line where matches(line) is True
         """

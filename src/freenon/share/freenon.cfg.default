@@ -1,13 +1,13 @@
-[AVR]
-# Switch the AVR on when starting/resuming
+[Amp]
+# Switch the Amp on when starting/resuming
 control_power_on = yes
-# Switch the AVR off on suspend/shutdown
+# Switch the Amp off on suspend/shutdown
 control_power_off = yes
-# Delay in minutes to power off AVR after last output stopped (float or "no")
+# Delay in minutes to power off Amp after last output stopped (float or "no")
 poweroff_timeout = 10
 # module that implements the protocol
 protocol = .denon
-# AVR input source that this program controls. Important for power control. Empty means "all"
+# Amp input source that this program controls. Important for power control. Empty means "all"
 source = 
 
 # Host = 1.2.3.4

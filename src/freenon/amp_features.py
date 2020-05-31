@@ -23,7 +23,7 @@ class Feature(AbstractFeature):
 
     def get(self):
         if not self.amp.connected: 
-            raise ConnectionError("`%s` is not available when AVR is disconnected."%self.__class__.__name__)
+            raise ConnectionError("`%s` is not available when amp is disconnected."%self.__class__.__name__)
         try: return self._val
         except AttributeError:
             self.poll()

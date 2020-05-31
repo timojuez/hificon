@@ -4,11 +4,11 @@ from .config import config
 
 
 def Amp(*args, protocol=None, cls="Amp", **xargs):
-    protocol = protocol or config.get("AVR","protocol")
+    protocol = protocol or config.get("Amp","protocol")
     try:
         module = importlib.import_module(protocol, __name__)
     except ImportError:
-        raise RuntimeError("AVR protocol `%s` not found."%protocol)
+        raise RuntimeError("Amp protocol `%s` not found."%protocol)
     Amp_ = getattr(module, cls)
     return Amp_(*args,**xargs)
     
