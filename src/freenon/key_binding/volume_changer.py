@@ -28,11 +28,11 @@ class BasicVolumeChanger(object):
 
     def __init__(self, on_volume_change=None):
         if on_volume_change: self.on_volume_change = on_volume_change
-        self.amp = Amp(on_avr_change=self.on_avr_change)#(cls="BasicAmp")
-        self.amp.connect() #FIXME
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
         self._firing = False
+        self.amp = Amp(on_avr_change=self.on_amp_change,on_connect=self.on_amp_connect)#(cls="BasicAmp")
+        self.amp.connect() #FIXME
         
     def press(self, button):
         """ start sending volume events to AVR """
@@ -40,8 +40,14 @@ class BasicVolumeChanger(object):
         if self.keys_pressed <= 0: return
         self.button = button
         self.fire_volume()
+    
+    def on_amp_connect(self):
+        try: # preload values
+            self.amp.muted
+            self.amp.volume
+        except e: print(repr(e), file=sys.stderr)
         
-    def on_avr_change(self, attr, value):
+    def on_amp_change(self, attr, value):
         if attr != "volume": return
         self.on_volume_change(value, by_bound_keys=self._firing)
         self._firing = False
@@ -85,14 +91,20 @@ class NotificationMixin(object):
         self._notification.set_hint("y",GLib.Variant.new_int32(100))
         #self._notification.set_location(50,100)
         super().__init__(*args,**xargs)
+        
+    def press(self,*args,**xargs):
+        self.notify()
+        super().press(*args,**xargs)
 
     def on_volume_change(self, volume, by_bound_keys):
         if not by_bound_keys and not config.getboolean("KeyEventHandling","always_notify"): return
-        try: volume = 0 if self.amp.muted else volume
-        except ConnectionError: pass
-        else:
-            self._notification.update("Volume: %s"%volume,self.amp.host)
-            self._notification.show()
+        self.notify()
+        
+    def notify(self):
+        try: volume = 0 if self.amp.muted else self.amp.volume
+        except ConnectionError: self._notification.update("No connection.",self.amp.host)
+        else: self._notification.update("Volume: %s"%volume,self.amp.host)
+        self._notification.show()
 
 
 class VolumeChanger(NotificationMixin, BasicVolumeChanger): pass
