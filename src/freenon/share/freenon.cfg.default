@@ -14,8 +14,7 @@ source =
 
 
 [KeyEventHandling]
-# Send volume up/down event to AVR each @interval milliseconds while key is pressed
-interval = 30
+# volume steps while key is pressed
 step = 1.0
 
 [MouseBinding]

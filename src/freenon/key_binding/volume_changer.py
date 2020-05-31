@@ -27,7 +27,6 @@ class VolumeChanger(object):
         if on_volume_change: self.on_volume_change = on_volume_change
         self.amp = Amp(on_avr_change=self.on_avr_change, verbose=True)#(cls="BasicAmp")
         self.amp.connect() #FIXME
-        self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.button = None
         self._volume = None
         
