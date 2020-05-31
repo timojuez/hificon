@@ -41,6 +41,7 @@ class VolumeChanger(object):
     def on_avr_change(self, attr, value):
         if attr != "volume": return
         self.on_volume_change(value)
+        if self.interval: time.sleep(self.interval)
         self.fire_volume()
         
     def fire_volume(self):
