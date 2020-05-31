@@ -19,19 +19,23 @@ class CLI(object):
         
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
-        for cmd in self.args.command:
-            r = amp(cmd)
-            if r and not self.args.verbose: print(r)
         if self.args.follow or len(self.args.command) == 0:
             def reader():
                 while True: print("%s"%amp.read())
             Thread(target=reader,name="Reader",daemon=True).start()
+            for cmd in self.args.command:
+                print(cmd)
+                amp._send(cmd)
             while True:
                 try: cmd = input().strip()
                 except (KeyboardInterrupt, EOFError): break
                 cmd = amp._send(cmd)
                 #print("\r[sent] %s"%cmd)
-            
+            return
+        for cmd in self.args.command:
+            r = amp(cmd)
+            if r and not self.args.verbose: print(r)
+        
 
 main = lambda:CLI()()
 if __name__ == "__main__":
