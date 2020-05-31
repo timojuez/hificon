@@ -13,7 +13,9 @@ class CLI(object):
         parser.add_argument("command", nargs="*", type=str, help='CLI command')
         parser.add_argument('--host', type=str, default=None, help='AVR IP or hostname')
         parser.add_argument('--protocol', type=str, default=None, help='AVR protocol')
-        parser.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
+        group = parser.add_mutually_exclusive_group(required=False)
+        group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
+        group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor AVR messages')
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
@@ -33,7 +35,8 @@ class CLI(object):
                 #print("\r[sent] %s"%cmd)
             return
         for cmd in self.args.command:
-            r = amp(cmd)
+            matches = lambda cmd:cmd.startswith(self.args.ret) if self.args.ret else None
+            r = amp(cmd,matches=matches)
             if r and not self.args.verbose: print(r)
         
 
