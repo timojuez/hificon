@@ -5,7 +5,7 @@ if [ "$(freenon_cmd PW?)" != "PWON" ]; then
 fi
 
 # Switch Bass Mode
-if [ "$(freenon_cmd "PSFRONT?")" != "PSFRONT SPA" ]; then
+if [ "$(freenon_cmd --return PSFRONT "PSFRONT?")" != "PSFRONT SPA" ]; then
     freenon_cmd 'MNMEN OFF' 'MNMEN ON' MNCUP MNCUP MNCUP MNCUP MNCUP MNCUP MNCUP MNCDN MNCDN MNCDN MNENT MNCDN MNENT MNCDN MNCDN MNCDN MNCDN MNCDN MNENT MNENT MNCRT MNENT 
     sleep 2
     freenon_cmd 'MNMEN OFF'
