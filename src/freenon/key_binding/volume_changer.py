@@ -25,7 +25,7 @@ class VolumeChanger(object):
 
     def __init__(self, on_volume_change=None):
         if on_volume_change: self.on_volume_change = on_volume_change
-        self.amp = Amp(on_avr_change=self.on_avr_change, verbose=True)#(cls="BasicAmp")
+        self.amp = Amp(on_avr_change=self.on_avr_change)#(cls="BasicAmp")
         self.amp.connect() #FIXME
         self.button = None
         self._volume = None
@@ -52,11 +52,10 @@ class VolumeChanger(object):
     def release(self, button):
         """ button released """
         self.keys_pressed -= 1
-        if self.keys_pressed != 0 and button is not None and self.button != button: return
+        if self.keys_pressed != 0: return
         return self._stop()
         
     def _stop(self):
-        self.button = None
         Thread(target=self._poweron, name="poweron", daemon=False).start()
     
     def _poweron(self):

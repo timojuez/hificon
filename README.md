@@ -29,6 +29,8 @@ Install the requirements:
 Cloning this repository in the current directory and installing via pip:
 `$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,gnu_desktop] && rm -R ./freenon && freenon_setup --keys`
 
+For the mouse key volume binding to work, run `freenon_key_binding_service` on system startup.
+
 ### Proprietary OS
 On Mac/Windows, download and install nmap and Python3 with Pip and PyGObject.
 Then execute:
