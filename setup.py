@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='freenon',
-      version='1.2.0a',
+      version='1.3.0a',
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
