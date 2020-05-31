@@ -18,6 +18,11 @@ source =
 interval = 30
 # volume steps while key is pressed
 step = 1.0
+# on screen notification timeout in seconds
+notification_timeout = 2000
+# "yes" or "no": also notify when volume is being changed on the amp
+always_notify = no
+
 
 [MouseBinding]
 # freenon_mouse_binding options
