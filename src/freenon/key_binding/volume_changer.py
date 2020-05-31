@@ -29,9 +29,10 @@ class BasicVolumeChanger(object):
     def __init__(self, on_volume_change=None):
         if on_volume_change: self.on_volume_change = on_volume_change
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
+        self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
-        self._firing = False
-        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect)#(cls="BasicAmp")
+        self._last_set = None
+        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect)
         self.amp.connect() #FIXME
         
     def press(self, button):
@@ -49,28 +50,29 @@ class BasicVolumeChanger(object):
         
     def on_amp_change(self, attr, value):
         if attr != "volume": return
-        self.on_volume_change(value, by_bound_keys=self._firing)
-        self._firing = False
+        self.on_volume_change(value, by_bound_keys = value==self._last_set)
+        if value != self._last_set: return
+        self._last_set = None
         if self.keys_pressed <= 0: return
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
         
     def fire_volume(self):
         for _ in range(100):
-            self._firing = True
-            try: self.amp.volume += config.getfloat("KeyEventHandling","step")*(int(self.button)*2-1)
+            if self.keys_pressed <= 0: return
+            try:
+                self._last_set = self.amp.volume + self.step*(int(self.button)*2-1)
+                self.amp.volume = self._last_set
             except ConnectionError:
-                self._firing = False
+                self._last_set = None
                 time.sleep(20)
             else: break
 
     def release(self, button):
         """ button released """
         self.keys_pressed -= 1
-        if self.keys_pressed != 0: return
-        return self._stop()
-        
-    def _stop(self):
+        if not (self.keys_pressed <= 0): self.button = not button
+        self.fire_volume()
         Thread(target=self._poweron, name="poweron", daemon=False).start()
     
     def _poweron(self):
