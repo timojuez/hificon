@@ -3,7 +3,7 @@
 from distutils.core import setup
 
 setup(name='freenon',
-      version='1.3.0a',
+      version='1.3.1a',
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
@@ -20,11 +20,10 @@ setup(name='freenon',
       },
       include_package_data=True,
       entry_points={'console_scripts': [
-        'freenon_gtk_tray_icon = freenon.gtk_tray_icon:main [gi]',
+        'freenon_gtk = freenon.freenon_gtk:main [gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
         'freenon_key_event_handler = freenon.key_binding.key_event_handler:main',
-        'freenon_key_binding_service = freenon.key_binding.service:main [gi]',
-        'freenon_mouse_binding = freenon.key_binding.mouse_binding:main [nongnu]',
+        'freenon_mouse_binding = freenon.key_binding.mouse_binding:main [nongnu_desktop]',
       ]},
       scripts=["bin/freenon_cmd"],
 )

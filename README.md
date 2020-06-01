@@ -16,7 +16,7 @@
 **For mouse and keyboard volume key support**
 - Xserver, macOS or Windows
 
-**For the tray icon**
+**For the GUI**
 - GTK
 
 
@@ -28,8 +28,6 @@ Install the requirements:
 
 Cloning this repository in the current directory and installing via pip:
 `$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,gnu_desktop] && rm -R ./freenon && freenon_setup --keys`
-
-For the mouse key volume binding to work, run `freenon_key_binding_service` on system startup.
 
 ### Proprietary OS
 On Mac/Windows, download and install nmap and Python3 with Pip and PyGObject.
@@ -52,9 +50,9 @@ See configuration options in ~/.freenon.cfg and src/freenon/freenon.cfg.default.
 
 Note that this program is still in development and therefore try it with all sound output stopped.
 
-### Gtk Tray Icon
-This lets you control the volume by scrolling over a tray icon.
-`freenon_gtk_tray_icon`
+### Graphical Main Application
+This creates a tray icon with a scrolling feature and runs the service for key binding.
+`freenon_gtk`
 You may want to add the command to autostart.
 
 
