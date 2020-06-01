@@ -35,7 +35,7 @@ class CLI(object):
                 #print("\r[sent] %s"%cmd)
             return
         for cmd in self.args.command:
-            matches = lambda cmd:cmd.startswith(self.args.ret) if self.args.ret else None
+            matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
             r = amp(cmd,matches=matches)
             if r and not self.args.verbose: print(r)
         
