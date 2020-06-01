@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import argparse
-from .service import send
+from freenon.key_binding.service import send
 
 
 def main():

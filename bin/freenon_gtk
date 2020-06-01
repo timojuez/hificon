@@ -3,9 +3,9 @@ import argparse, sys
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
-from . import Amp
-from .key_binding.service import VolumeService
-from .config import config
+from freenon import Amp
+from freenon.key_binding.service import VolumeService
+from freenon.config import config
 
 
 class Tray(object):

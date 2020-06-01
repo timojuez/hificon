@@ -19,12 +19,14 @@ setup(name='freenon',
         "nongnu_desktop": ["PyGObject","pycairo","pynput"],
       },
       include_package_data=True,
+      """
       entry_points={'console_scripts': [
         'freenon_gtk = freenon.freenon_gtk:main [gi]',
         'freenon_setup = freenon.setup:main [autosetup]',
         'freenon_key_event_handler = freenon.key_binding.key_event_handler:main',
         'freenon_mouse_binding = freenon.key_binding.mouse_binding:main [nongnu_desktop]',
       ]},
-      scripts=["bin/freenon_cmd"],
+      """
+      scripts=map(lambda e:"bin/%s"%e, os.listdir("bin")),
 )
 
