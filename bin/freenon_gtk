@@ -61,9 +61,9 @@ class Tray(object):
     def on_scroll(self, icon, event):
         try:
             if event.direction == Gdk.ScrollDirection.UP:
-                volume = min(self.amp.volume+self.scroll_delta,self.amp.maxvol)
+                volume = self.amp.volume+self.scroll_delta
             elif event.direction == Gdk.ScrollDirection.DOWN:
-                volume = max(0,self.amp.volume-self.scroll_delta)
+                volume = self.amp.volume-self.scroll_delta
             else: return
             if self._volume == volume: return
             self._volume = volume

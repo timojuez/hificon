@@ -54,7 +54,8 @@ class FloatFeature(DenonFeature):
 class Denon_Volume(FloatFeature):
     function = "MV"
     # TODO: value may be relative?
-    # FIXME: limit boundaries (value<0)
+    def set(self, value):
+        super().set(min(max(0,value),self.amp.maxvol))
 
     
 class Denon_Maxvol(FloatFeature):
