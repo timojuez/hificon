@@ -47,7 +47,7 @@ class BasicVolumeChanger(object):
         try: # preload values
             self.amp.muted
             self.amp.volume
-        except e: print(repr(e), file=sys.stderr)
+        except ConnectionError as e: print(repr(e), file=sys.stderr)
         
     def on_amp_change(self, attr, value):
         if attr != "volume": return
