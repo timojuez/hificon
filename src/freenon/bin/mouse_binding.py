@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*- 
 
 from pynput.mouse import Listener, Button, Controller
-from freenon.key_binding import send
-from freenon.config import config
+from ..key_binding import send
+from ..config import config
 
 
 VOLUP = getattr(Button,config["MouseBinding"]["vol_up"])

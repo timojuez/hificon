@@ -3,7 +3,7 @@
 
 import argparse
 from threading import Thread
-from freenon import Amp
+from .. import Amp
 
 
 class CLI(object):

@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil
-from freenon.config import config
+from ..config import config
 
 
 class Main(object):
