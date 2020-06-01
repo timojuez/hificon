@@ -1,7 +1,7 @@
 import sys, time, socket
 from threading import Lock, Thread, Timer
 from telnetlib import Telnet
-from .system_events import SystemEvents
+from .util.system_events import SystemEvents
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import Feature
