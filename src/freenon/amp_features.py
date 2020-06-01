@@ -41,7 +41,9 @@ class Feature(AbstractFeature):
         
     def poll(self):
         try: cmd = self.amp(self.function_call, matches=self.matches)
-        except RuntimeError: return self.store(self.default_value)
+        except ConnectionError as e:
+            if self.default_value: return self.store(self.default_value)
+            raise
         else: return self.consume(cmd)
         
     def store(self, value):
