@@ -22,7 +22,7 @@ class JsonService(object):
         self.sel.register(sock, selectors.EVENT_READ, self.accept)
 
     def __call__(self):
-        Thread(target=service.mainloop, name=self.__class__.__name__, daemon=True).start()
+        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
         
     def mainloop(self):
         while True:
