@@ -9,7 +9,7 @@ class DenonFeature(Feature):
     def send(self, value=None):
         if value is None: value = self._val
         cmd = "%s%s"%(self.function, self.encodeVal(value))
-        self.amp(cmd)
+        self.amp(cmd) # TODO: add matches= for synchronous call?
     
     def consume(self, cmd):
         """
