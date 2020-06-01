@@ -4,9 +4,9 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Notify
 import time, sys
 from threading import Thread
-from .. import Amp
-from ..util.json_service import JsonService, send
-from ..config import config
+from . import Amp
+from .util.json_service import JsonService, send
+from .config import config
 
 
 class BasicVolumeChanger(object):
