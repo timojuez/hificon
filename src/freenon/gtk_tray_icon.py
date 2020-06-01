@@ -4,6 +4,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from . import Amp
+from .key_binding.service import VolumeService
 from .config import config
 
 
@@ -30,7 +31,7 @@ class Tray(object):
             on_disconnected=self.on_disconnected,
             on_change=self.on_amp_change,
             **xargs)
-        self.amp.loop()
+        #self.amp.loop()
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -80,6 +81,8 @@ class Main(object):
         
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
+        VolumeService(verbose=self.args.verbose)()
+        tray.amp.loop()
         
 
 main = lambda:Main()()    
