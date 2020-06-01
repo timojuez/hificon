@@ -1,5 +1,5 @@
 # Freenon Network Amp Controlling Software
-### Control your Denon amp's power and master volume with your Ubuntu laptop or similar
+### Denon De Luxe: Control your Denon amp's power and master volume with your Ubuntu laptop or similar
 
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
@@ -14,7 +14,7 @@
 - Pulseaudio
 
 **For mouse and keyboard volume key support**
-- Xserver, macOS or Windows
+- Any platform
 
 **For the GUI**
 - GTK
