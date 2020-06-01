@@ -26,13 +26,13 @@ class BasicVolumeChanger(object):
     """
     keys_pressed = 0
 
-    def __init__(self, on_volume_change=None):
+    def __init__(self, on_volume_change=None, verbose=False):
         if on_volume_change: self.on_volume_change = on_volume_change
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
         self._last_set = None
-        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect)
+        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect,verbose=verbose)
         self.amp.connect() #FIXME
         
     def press(self, button):

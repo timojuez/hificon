@@ -8,9 +8,9 @@ from .volume_changer import VolumeChanger
 
 class VolumeService(JsonService):
 
-    def __init__(self):
+    def __init__(self, **xargs):
         print("Key Binding Service")
-        self.vc = VolumeChanger()
+        self.vc = VolumeChanger(**xargs)
         super().__init__()
         
     def on_read(self, data):
