@@ -4,7 +4,7 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import GLib, Gtk, Gdk
 from freenon import Amp
-from freenon.key_binding.service import VolumeService
+from freenon.key_binding import VolumeService
 from freenon.config import config
 
 
