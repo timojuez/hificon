@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 from pynput.mouse import Listener, Button, Controller
-from .volume_changer import VolumeChanger
+from .service import send
 from ..config import config
 
 
@@ -10,16 +10,14 @@ VOLUP = getattr(Button,config["MouseBinding"]["vol_up"])
 VOLDOWN = getattr(Button,config["MouseBinding"]["vol_down"])
 
 
-class Main(VolumeChanger):
+class Main(object):
 
     def on_click(self, x, y, button, pressed):
         if button not in (VOLUP, VOLDOWN):
             return
         button = button == VOLUP # to bool
-        if pressed:
-            self.press(button)
-        else:
-            self.release(button)
+        func = {True:"press",False:"release"}[pressed]
+        send(dict(button=button, func=func))
             
     def __call__(self):
         print("WARNING: Mouse events that control the amp are not being suppressed to other programs.")
