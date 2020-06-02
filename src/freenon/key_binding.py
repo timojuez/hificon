@@ -5,8 +5,10 @@ from gi.repository import GLib, Notify
 import time, sys
 from threading import Thread
 from . import Amp
-from .util.json_service import JsonService, send
+from .util import json_service
 from .config import config
+
+ipc_port = config.getint("KeyEventHandling","ipc_port")
 
 
 class BasicVolumeChanger(object):
@@ -113,18 +115,21 @@ class NotificationMixin(object):
 class VolumeChanger(NotificationMixin, BasicVolumeChanger): pass
 
 
-class VolumeService(JsonService):
+class VolumeService(json_service.JsonService):
 
     def __init__(self, **xargs):
         print("Key Binding Service")
         self.vc = VolumeChanger(**xargs)
-        super().__init__()
+        super().__init__(port=ipc_port)
         
     def on_read(self, data):
         if data["func"] not in ("press","release") or not isinstance(data["button"],bool):
             return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
         getattr(self.vc, data["func"])(data["button"])
         
+
+send = lambda e: json_service.send(x, port=ipc_port)
+    
 
 def main():
     VolumeService().mainloop()

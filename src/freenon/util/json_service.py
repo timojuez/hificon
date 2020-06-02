@@ -7,12 +7,12 @@ import selectors, socket, json, sys
 from threading import Thread
 
 
-PORT=1234 # TODO
+PORT=654321
 
 
 class JsonService(object):
 
-    def __init__(self, host="localhost", port=PORT):
+    def __init__(self, host="127.0.0.1", port=PORT):
         print("[%s] start"%self.__class__.__name__, file=sys.stderr)
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
