@@ -24,8 +24,8 @@ setup(name='freenon',
         'freenon_cmd = freenon.bin.cmd:main',
         'freenon_gtk = freenon.bin.gtk:main [gi]',
         'freenon_setup = freenon.bin.setup:main [autosetup]',
-        'freenon_key_event_handler = freenon.bin.key_event_handler:main',
         'freenon_mouse_binding = freenon.bin.mouse_binding:main [nongnu_desktop]',
       ]},
+      scripts={'src/freenon/bin/freenon_key_event_handler'},
 )
 
