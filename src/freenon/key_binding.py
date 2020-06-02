@@ -64,7 +64,7 @@ class BasicVolumeChanger(object):
         for _ in range(100):
             if self.keys_pressed <= 0: return
             try:
-                self._last_set = self.amp.volume + self.step*(int(self.button)*2-1)
+                self._last_set = max(0,min(self.amp.maxvol,self.amp.volume + self.step*(int(self.button)*2-1)))
                 self.amp.volume = self._last_set
             except ConnectionError:
                 self._last_set = None
