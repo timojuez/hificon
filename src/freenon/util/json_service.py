@@ -42,7 +42,7 @@ class JsonService(object):
             try:
                 d = json.loads(data.decode())
                 print("[%s] Received %s"%(self.__class__.__name__,d), file=sys.stderr)
-            except e: print(repr(e))
+            except Exception as e: print(repr(e))
             else: self.on_read(d)
         else:
             self.sel.unregister(conn)

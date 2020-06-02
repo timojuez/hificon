@@ -81,7 +81,8 @@ class Main(object):
         
     def __call__(self):
         tray = Tray(verbose=self.args.verbose)
-        VolumeService(verbose=self.args.verbose)()
+        try: VolumeService(verbose=self.args.verbose)()
+        except OSError as e: print("[WARNING] VolumeService failed: %s"%repr(e))
         tray.amp.loop()
         
 
