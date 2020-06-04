@@ -29,13 +29,11 @@ notify_events = all_implemented
 notification_timeout = 2000
 # "yes" or "no": also notify when volume is being changed on the amp
 always_notify_volume = no
+tray_scroll_delta = 2.0
 
 
 [MouseBinding]
 # freenon_mouse_binding options
 vol_up = button9
 vol_down = button8
-
-[Tray]
-scroll_delta = 2.0
 

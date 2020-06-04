@@ -22,7 +22,7 @@ class Tray(object):
             
     def __init__(self,*args,**xargs):
         self._volume = None
-        self.scroll_delta = config.getfloat("Tray","scroll_delta")
+        self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
         self.icon = Gtk.StatusIcon()
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_visible(False)

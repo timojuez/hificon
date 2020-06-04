@@ -37,7 +37,6 @@ class BasicVolumeChanger(object):
         self.button = None
         self._last_set = None
         self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect,verbose=verbose)
-        self.amp.connect() #FIXME
         
     def press(self, button):
         """ start sending volume events to amp """
