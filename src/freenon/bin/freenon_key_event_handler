@@ -8,7 +8,7 @@ function error() {
     exit 1
 }
 
-port=$(cat ~/.freenon.cfg | grep ipc_port | tr -dc '0-9')
+port=$(cat ~/.freenon.cfg | grep ipc_port | grep -v -e '#' -e ';' | tr -dc '0-9')
 
 if [ "$1" == "--up" ]; then button=true; elif [ "$1" == "--down" ]; then button=false; else error; fi
 if [ "$2" == "--pressed" ]; then func=press; elif [ "$2" == "--released" ]; then func=release; else error; fi
