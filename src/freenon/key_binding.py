@@ -113,6 +113,7 @@ class NotificationMixin(object):
         except (AttributeError, KeyError): name = attr
         if attr not in self._notifications: self._notifications[attr] = self._createNotification()
         n = self._notifications[attr]
+        if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
         if val is not None: n.update("%s: %s"%(name, val),self.amp.host)
         n.show()
 
