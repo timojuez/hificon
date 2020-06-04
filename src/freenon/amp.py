@@ -163,11 +163,15 @@ class AsyncAmp(BasicAmp):
                 cmd = self.read()
             except ConnectionError: return
             else:
+                # receiving
+                consumed = []
                 for attrib,f in self.features.items():
                     try: old, new = f.consume(cmd)
                     except ValueError: continue
-                    else: 
-                        if old != new: self.on_change(attrib,new)
+                    else: consumed.append((attrib,old,new))
+                if not consumed: self.on_change(None, cmd)
+                for attrib,old,new in consumed:
+                    if old != new: self.on_change(attrib,new)
 
 
 class AmpWithEvents(SystemEvents,AsyncAmp):
