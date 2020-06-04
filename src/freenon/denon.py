@@ -51,14 +51,14 @@ class FloatFeature(DenonFeature):
 
 ######### Features implementation (see Denon CLI protocol)
 
-class Denon_Volume(FloatFeature):
+class Volume(FloatFeature):
     function = "MV"
     # TODO: value may be relative?
     def set(self, value):
         super().set(min(max(0,value),self.amp.maxvol))
 
     
-class Denon_Maxvol(FloatFeature):
+class Maxvol(FloatFeature):
     function="MVMAX "
     function_call="MV?"
     default_value = 98
@@ -69,7 +69,7 @@ class Denon_Maxvol(FloatFeature):
     def send(self): pass
         
 
-class Denon_Power(NominalFeature):
+class Power(NominalFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
@@ -77,27 +77,28 @@ class Denon_Power(NominalFeature):
         return {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]()
     
     
-class Denon_Muted(NominalFeature):
+class Muted(NominalFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
 
 
-class Denon_Source(NominalFeature):
+class Source(NominalFeature):
     function = "SI"
     
     
-class Denon_SubwooferVolume(FloatFeature):
+class SubwooferVolume(FloatFeature):
+    name = "Subwoofer Volume"
     function = "CVSW "
     function_call = "CV?"
     
 
 features = dict(
-        maxvol = Denon_Maxvol,
-        volume = Denon_Volume,
-        muted = Denon_Muted,
-        is_running = Denon_Power,
-        source = Denon_Source,
-        sub_volume = Denon_SubwooferVolume,
+        maxvol = Maxvol,
+        volume = Volume,
+        muted = Muted,
+        is_running = Power,
+        source = Source,
+        sub_volume = SubwooferVolume,
 )
 
 

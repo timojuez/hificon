@@ -20,6 +20,8 @@ class Feature(AbstractFeature):
 
     def __init__(self, amp):
         self.amp = amp
+        
+    name = property(lambda self:self.__class__.__name__)
 
     def get(self):
         if not self.amp.connected: 
