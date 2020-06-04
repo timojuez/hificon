@@ -47,7 +47,6 @@ class BasicVolumeChanger(object):
     
     def on_amp_connect(self):
         try: # preload values
-            self.amp.muted
             self.amp.volume
         except ConnectionError as e: print(repr(e), file=sys.stderr)
         
@@ -81,8 +80,6 @@ class BasicVolumeChanger(object):
         try: self.amp.poweron(True)
         except ConnectionError: pass
         
-    def on_volume_change(self, volume, by_bound_keys): pass
-
 
 class NotificationMixin(object):
 
@@ -96,6 +93,7 @@ class NotificationMixin(object):
         notification.set_hint("x",GLib.Variant.new_int32(50))
         notification.set_hint("y",GLib.Variant.new_int32(100))
         notification.set_timeout(config.getint("GUI","notification_timeout"))
+        notification.update("Connecting ...",self.amp.host)
         return notification
         
     def press(self,*args,**xargs):
