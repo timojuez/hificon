@@ -1,30 +1,28 @@
 import signal
 from threading import Thread
-from gi.repository import GLib, Gio
 
 
-class CommonSystemEvents(object):
-    def __init__(self):
+class SignalMixin(object):
+
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
         Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_shutdown)
-        Thread(target=DBusListener(self), name="DBusListener", daemon=True).start()
         
     def on_startup(self): pass
     def on_shutdown(self): pass
-    def on_suspend(self): pass
-    def on_resume(self): pass
 
 
-class PulseSystemEvents(CommonSystemEvents):
+class PulseMixin(object):
 
     def __init__(self, *args, **xargs):
-        CommonSystemEvents.__init__(self, *args, **xargs)
+        super().__init__(*args, **xargs)
         self.pulse = PulseListener(self, connect=False, consider_old_sinks=False)
         self.pulse.connect_async()
         
     def on_connect(self):
         # Amp connected
-        super(PulseSystemEvents,self).on_connect()
+        super().on_connect()
         if self.pulse.connected and self.pulse.is_playing: self.on_start_playing()
 
     def on_pulse_connected(self): pass
@@ -32,15 +30,16 @@ class PulseSystemEvents(CommonSystemEvents):
     def on_stop_playing(self): pass
 
 
-class DBusListener(object):
+class DBusMixin(object):
     """
     Connects to system bus and fire events, e.g. on shutdown and suspend
     """
     
-    def __init__(self, event_listener):
-        self.el = event_listener
+    def __init__(self, *args, **xargs):
+        super().__init__(*args,**xargs)
+        Thread(target=self._dbusListener, name="DBusListener", daemon=True).start()
 
-    def __call__(self):
+    def _dbusListener(self):
         system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
         system_bus.signal_subscribe('org.freedesktop.login1',
             'org.freedesktop.login1.Manager',
@@ -48,19 +47,31 @@ class DBusListener(object):
             '/org/freedesktop/login1',
             None,
             Gio.DBusSignalFlags.NONE,
-            self.onLoginmanagerEvent,
+            self._onLoginmanagerEvent,
             None)
         loop = GLib.MainLoop()
         loop.run()
         
-    def onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
+    def _onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
         if parameters[0]:
-            self.el.on_suspend() 
+            self.on_suspend() 
         else: 
-            self.el.on_resume()
+            self.on_resume()
 
+    def on_suspend(self): pass
+    def on_resume(self): pass
+
+
+
+inheritance = (SignalMixin,)
 
 try: from .pulse import PulseListener
-except ImportError: SystemEvents = CommonSystemEvents
-else: SystemEvents = PulseSystemEvents
+except ImportError: pass
+else: inheritance += (PulseMixin,)
+
+try: from gi.repository import GLib, Gio
+except ImportError: pass
+else: inheritance += (DBusMixin,)
+
+class SystemEvents(*inheritance): pass
 
