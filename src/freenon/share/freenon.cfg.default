@@ -20,10 +20,15 @@ ipc_port = 63248
 interval = 30
 # volume steps while key is pressed
 step = 1.0
+
+
+[GUI]
+# values: "all", "all_implemented", "" or list of attributes separated by ", "
+notify_events = all_implemented
 # on screen notification timeout in seconds
 notification_timeout = 2000
 # "yes" or "no": also notify when volume is being changed on the amp
-always_notify = no
+always_notify_volume = no
 
 
 [MouseBinding]

@@ -30,6 +30,7 @@ class BasicVolumeChanger(object):
     keys_pressed = 0
 
     def __init__(self, on_volume_change=None, verbose=False):
+        super().__init__()
         if on_volume_change: self.on_volume_change = on_volume_change
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
@@ -52,8 +53,7 @@ class BasicVolumeChanger(object):
         except ConnectionError as e: print(repr(e), file=sys.stderr)
         
     def on_amp_change(self, attr, value):
-        if attr != "volume": return
-        self.on_volume_change(value, by_bound_keys = value==self._last_set)
+        super().on_amp_change(attr, value, by_bound_keys = value==self._last_set)
         if value != self._last_set: return
         self._last_set = None
         if self.keys_pressed <= 0: return
@@ -89,30 +89,38 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         Notify.init("Freenon")
-        self._notification = Notify.Notification()
-        self._notification.set_urgency(2)
-        self._notification.set_timeout(config.getint("KeyEventHandling","notification_timeout"))
-        self._notification.set_hint("x",GLib.Variant.new_int32(50))
-        self._notification.set_hint("y",GLib.Variant.new_int32(100))
-        #self._notification.set_location(50,100)
-        super().__init__(*args,**xargs)
+        self._notifications = {}
+        
+    def _createNotification(self):
+        notification = Notify.Notification()
+        notification.set_urgency(2)
+        notification.set_hint("x",GLib.Variant.new_int32(50))
+        notification.set_hint("y",GLib.Variant.new_int32(100))
+        notification.set_timeout(config.getint("GUI","notification_timeout"))
+        return notification
         
     def press(self,*args,**xargs):
-        self.notify()
+        self.notify("volume")
         super().press(*args,**xargs)
 
-    def on_volume_change(self, volume, by_bound_keys):
-        if not by_bound_keys and not config.getboolean("KeyEventHandling","always_notify"): return
-        self.notify()
+    def on_amp_change(self, attr, value, by_bound_keys=False):
+        if (attr != "volume" or by_bound_keys or config.getboolean("GUI","always_notify_volume")) and (
+                config.get("GUI","notify_events") == "all"
+                or config.get("GUI","notify_events") == "all_implemented" and attr
+                or attr in config.get("GUI","notify_events").split(", ")):
+            self.notify(attr,value)
         
-    def notify(self):
-        try: volume = 0 if self.amp.muted else self.amp.volume
-        except ConnectionError: self._notification.update("No connection.",self.amp.host)
-        else: self._notification.update("Volume: %s"%volume,self.amp.host)
-        self._notification.show()
+    def notify(self, attr, val=None):
+        if attr == "maxvol": return
+        try: name = self.amp.features[attr].name
+        except (AttributeError, KeyError): name = attr
+        if attr not in self._notifications: self._notifications[attr] = self._createNotification()
+        n = self._notifications[attr]
+        if val is not None: n.update("%s: %s"%(name, val),self.amp.host)
+        n.show()
 
 
-class VolumeChanger(NotificationMixin, BasicVolumeChanger): pass
+class VolumeChanger(BasicVolumeChanger, NotificationMixin): pass
 
 
 class VolumeService(json_service.JsonService):
