@@ -40,6 +40,7 @@ class BasicVolumeChanger(object):
         
     def press(self, button):
         """ start sending volume events to amp """
+        super().press(button)
         self.keys_pressed += 1
         if self.keys_pressed <= 0: return
         self.button = button
@@ -98,7 +99,6 @@ class NotificationMixin(object):
         
     def press(self,*args,**xargs):
         self.notify("volume")
-        super().press(*args,**xargs)
 
     def on_amp_change(self, attr, value, by_bound_keys=False):
         if (attr != "volume" or by_bound_keys or config.getboolean("GUI","always_notify_volume")) and (
@@ -131,7 +131,7 @@ class VolumeService(json_service.JsonService):
     def on_read(self, data):
         if data["func"] not in ("press","release") or not isinstance(data["button"],bool):
             return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
-        getattr(self.vc, data["func"])(data["button"])
+        Thread(name="VolumeServiceAction",target=getattr(self.vc, data["func"]),args=(data["button"],), daemon=True).start()
         
 
 send = lambda e: json_service.send(x, port=ipc_port)
