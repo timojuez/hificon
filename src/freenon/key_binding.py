@@ -129,9 +129,14 @@ class VolumeService(json_service.JsonService):
         super().__init__(port=ipc_port)
         
     def on_read(self, data):
-        if data["func"] not in ("press","release") or not isinstance(data["button"],bool):
+        try:
+            assert(data["func"] in ("press","release"))
+            assert(isinstance(data["kwargs"]["button"],bool))
+            func = getattr(self.vc, data["func"])
+            kwargs = data["kwargs"]
+        except:
             return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
-        Thread(name="VolumeServiceAction",target=getattr(self.vc, data["func"]),args=(data["button"],), daemon=True).start()
+        Thread(name="VolumeServiceAction",target=func,kwargs=kwargs,daemon=True).start()
         
 
 send = lambda e: json_service.send(e, port=ipc_port)

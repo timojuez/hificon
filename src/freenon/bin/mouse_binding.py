@@ -17,7 +17,7 @@ class Main(object):
             return
         button = button == VOLUP # to bool
         func = {True:"press",False:"release"}[pressed]
-        send(dict(button=button, func=func))
+        send(dict(kwargs=dict(button=button), func=func))
             
     def __call__(self):
         print("WARNING: Mouse events that control the amp are not being suppressed to other programs.")
