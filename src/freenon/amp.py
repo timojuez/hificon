@@ -106,7 +106,7 @@ class BasicAmp(object):
             while tries:
                 if tries > 0: tries -= 1
                 try: self._telnet = Telnet(self.host,23,timeout=2)
-                except (ConnectionError, socket.timeout, socket.gaierror, socket.herror):
+                except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
                     if tries == 0: raise
                 else:
                     return self.on_connect()
@@ -117,7 +117,7 @@ class BasicAmp(object):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
     def disconnect(self):
-        self._telnet.close()
+        if self.connected: self._telnet.close()
         self.connected = False
         
     def on_connect(self):
