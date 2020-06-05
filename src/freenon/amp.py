@@ -116,6 +116,10 @@ class BasicAmp(object):
     def connect_async(self):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
+    def disconnect(self):
+        self._telnet.close()
+        self.connected = False
+        
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
@@ -190,11 +194,13 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
         """ when shutting down computer """
         try: self.poweroff()
         except ConnectionError: pass
+        self.disconnect()
         
     @log_call
     def on_suspend(self):
         try: self.poweroff()
         except ConnectionError: pass
+        self.disconnect()
     
     @log_call
     def on_resume(self):
