@@ -134,7 +134,7 @@ class VolumeService(json_service.JsonService):
         Thread(name="VolumeServiceAction",target=getattr(self.vc, data["func"]),args=(data["button"],), daemon=True).start()
         
 
-send = lambda e: json_service.send(x, port=ipc_port)
+send = lambda e: json_service.send(e, port=ipc_port)
     
 
 def main():
