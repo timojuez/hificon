@@ -27,7 +27,10 @@ class ConnectedPulse(pulsectl.Pulse):
     
     
 class PulseListener(ConnectedPulse):
-    """ Listen for pulseaudio change events """
+    """ 
+    Listen for pulseaudio change events
+    call event_listener.on_start_playing and event_listener.on_stop_playing according to pulse.
+    """
     
     def __init__(self, event_listener, consider_old_sinks=True, *args, **xargs):
         """
@@ -91,6 +94,7 @@ class PulseListener(ConnectedPulse):
         elif self.ev.t == pulsectl.PulseEventTypeEnum.remove:
             removed = old.difference(new)
             self._sink_input_set = new
+            if not self.is_playing.intersection(removed): return
             self.is_playing.difference_update(removed)
             if not self.is_playing: self._events.on_stop_playing()
 
