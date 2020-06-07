@@ -101,8 +101,7 @@ class NotificationMixin(object):
         self.notify("volume")
 
     def on_amp_change(self, attr, value, by_bound_keys=False):
-        if (attr != "volume" or by_bound_keys or config.getboolean("GUI","always_notify_volume")) and (
-                config.get("GUI","notify_events") == "all"
+        if (    config.get("GUI","notify_events") == "all"
                 or config.get("GUI","notify_events") == "all_implemented" and attr
                 or attr in config.get("GUI","notify_events").split(", ")):
             self.notify(attr,value)
