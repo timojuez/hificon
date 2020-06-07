@@ -12,5 +12,7 @@ def volume_prompt():
         amp.volume = float(newvol)
 
 if __name__ == "__main__":
-    amp = Amp(on_change=on_amp_change, on_connect=volume_prompt)
-    amp.loop()
+    amp = Amp()
+    amp.bind(on_change=on_amp_change, on_connect=volume_prompt)
+    amp.mainloop()
+

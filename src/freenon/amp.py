@@ -127,6 +127,7 @@ class BasicAmp(object):
         if self.connected: self._telnet.close()
         self.connected = False
         
+    @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
@@ -161,18 +162,18 @@ class AsyncAmp(BasicAmp):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,connect=False,**xargs)
-        self.connect_async()
         
-    @log_call
-    def on_connect(self):
-        super().on_connect()
-        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+    def mainloop(self, blocking=True):
+        if blocking: return self._mainloop()
+        else: Thread(target=self._mainloop, name=self.__class__.__name__, daemon=True).start()
 
-    def mainloop(self):
+    def _mainloop(self):
         while True:
             try:
                 cmd = self.read()
-            except ConnectionError: return
+            except ConnectionError:
+                self.connect(-1)
+                continue
             else:
                 # receiving
                 consumed = []

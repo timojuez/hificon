@@ -85,7 +85,7 @@ class Main(object):
         tray = Tray(amp)
         try: VolumeService(amp)()
         except OSError as e: print("[WARNING] VolumeService failed: %s"%repr(e))
-        tray.amp.loop()
+        amp.mainloop()
         
 
 main = lambda:Main()()    

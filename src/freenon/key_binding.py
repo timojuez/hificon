@@ -137,7 +137,10 @@ send = lambda e: json_service.send(e, port=ipc_port)
     
 
 def main():
-    VolumeService(Amp()).mainloop()
+    amp = Amp()
+    vs = VolumeService(amp)
+    amp.mainloop(blocking=False)
+    vs.mainloop()
     
 if __name__ == "__main__":
     main()
