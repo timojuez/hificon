@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys
+import argparse, sys, math
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
@@ -50,10 +50,10 @@ class Tray(object):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         def do():
             #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.host))
-            if muted:
+            if muted or volume == 0:
                 self.icon.set_icon_full("audio-volume-muted","muted")
             else:
-                icon_idx = int(round(float(volume)/maxvol*(len(icons)-1)))
+                icon_idx = math.ceil(volume/maxvol *len(icons))-1
                 self.icon.set_icon_full(icons[icon_idx],str(volume))
         try:
             muted = self.amp.muted
