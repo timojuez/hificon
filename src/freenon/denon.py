@@ -4,7 +4,7 @@ from .amp import Feature, make_amp, make_basic_amp
 
 class DenonFeature(Feature):
     function = "" #Amp function command
-    function_call = property(lambda self: "%s?"%self.function)
+    call = property(lambda self: "%s?"%self.function)
 
     def send(self, value=None):
         if value is None: value = self._val
@@ -60,7 +60,7 @@ class Volume(FloatFeature):
     
 class Maxvol(FloatFeature):
     function="MVMAX "
-    function_call="MV?"
+    call="MV?"
     default_value = 98
 
     def set(self, val):
@@ -89,7 +89,7 @@ class Source(NominalFeature):
 class SubwooferVolume(FloatFeature):
     name = "Subwoofer Volume"
     function = "CVSW "
-    function_call = "CV?"
+    call = "CV?"
     
 
 features = dict(

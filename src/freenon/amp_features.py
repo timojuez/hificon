@@ -1,5 +1,5 @@
 class AbstractFeature(object):
-    function_call = None
+    call = None
     default_value = None #if no response
     
     def matches(self, cmd): raise NotImplementedError()
@@ -43,7 +43,7 @@ class Feature(AbstractFeature):
     def unset(self): self.__dict__.pop("_val",None)
         
     def poll(self):
-        try: cmd = self.amp(self.function_call, matches=self.matches)
+        try: cmd = self.amp(self.call, matches=self.matches)
         except TimeoutError as e:
             if self.default_value: return self.store(self.default_value)
             raise
