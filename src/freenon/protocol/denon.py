@@ -1,5 +1,5 @@
 import sys
-from .amp import Feature, make_amp, make_basic_amp
+from ..amp import Feature, make_amp, make_basic_amp
 
 
 class DenonFeature(Feature):
