@@ -28,8 +28,7 @@ class BasicAmp(object):
     def __init__(self, host=None, connect=True, verbose=False, **callbacks):
         super().__init__()
         self.verbose = verbose
-        for name, callback in callbacks.items():
-            setattr(self, name, call_sequence(getattr(self,name), callback))
+        self.bind(**callbacks)
         self.host = host or config["Amp"].get("Host")
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
@@ -39,6 +38,14 @@ class BasicAmp(object):
         self.connected = False
         if connect: self.connect()
 
+    def bind(self, **callbacks):
+        """
+        bind(event=function)
+        Register callback on @event. Event can be any function in Amp
+        """
+        for name, callback in callbacks.items():
+            setattr(self, name, call_sequence(getattr(self,name), callback))
+        
     def _send(self, cmd):
         try:
             assert(self.connected)
