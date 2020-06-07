@@ -31,9 +31,9 @@ class Main(object):
         
 
 def source_setup():
-    from .denon import BasicAmp
+    from .. import Amp
     input("On your amp, select the input source that you want to control with this program and press ENTER.")
-    source = BasicAmp().source
+    source = Amp(protocol=".denon", cls="BasicAmp").source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
     config.save()
