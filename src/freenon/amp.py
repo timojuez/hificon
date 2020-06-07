@@ -83,7 +83,7 @@ class BasicAmp(object):
                     continue
                 if matches(r): return _return(r)
                 else: self._received.append(r)
-            raise BrokenPipeError("WARNING: Got no answer for `%s`.\n"%cmd)
+            raise TimeoutError("WARNING: Got no answer for `%s`.\n"%cmd)
         finally: self.lock.release()
 
     def read(self):

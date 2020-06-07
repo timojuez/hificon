@@ -44,7 +44,7 @@ class Feature(AbstractFeature):
         
     def poll(self):
         try: cmd = self.amp(self.function_call, matches=self.matches)
-        except ConnectionError as e:
+        except TimeoutError as e:
             if self.default_value: return self.store(self.default_value)
             raise
         else: 
