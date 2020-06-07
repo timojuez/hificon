@@ -96,7 +96,7 @@ features = dict(
         maxvol = Maxvol,
         volume = Volume,
         muted = Muted,
-        is_running = Power,
+        power = Power,
         source = Source,
         sub_volume = SubwooferVolume,
 )

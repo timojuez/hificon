@@ -131,16 +131,16 @@ class BasicAmp(object):
         self.connect_async()
 
     def poweron(self,force=False):
-        if not force and not config.getboolean("Amp","control_power_on") or self.is_running:
+        if not force and not config.getboolean("Amp","control_power_on") or self.power:
             return
-        self.is_running = True
+        self.power = True
         time.sleep(3) #TODO
         if config.get("Amp","source"): self.source = config.get("Amp","source")
 
     def poweroff(self, force=False):
         if not force and (not config.getboolean("Amp","control_power_off") 
             or config.get("Amp","source") and self.source != config.get("Amp","source")): return
-        self.is_running = False
+        self.power = False
 
     @log_call
     def on_change(self, attrib, new_val): pass
