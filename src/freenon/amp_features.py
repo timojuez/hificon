@@ -32,8 +32,9 @@ class Feature(AbstractFeature):
             return self._val
         
     def set(self, value):
-        if getattr(self, "_val", None) == value: return
-        #self._val = value
+        if value is None: raise ValueError("Value may not be None.")
+        if getattr(self,'_block_on_set',None) == value: return
+        self._block_on_set = value
         self.send(value)
 
     def isset(self):
@@ -46,7 +47,10 @@ class Feature(AbstractFeature):
         except ConnectionError as e:
             if self.default_value: return self.store(self.default_value)
             raise
-        else: return self.consume(cmd)
+        else: 
+            c = self.consume(cmd)
+            self._block_on_set = self._val
+            return c
         
     def store(self, value):
         old = getattr(self,'_val',None)

@@ -24,7 +24,6 @@ class Tray(object):
         self.updateIcon()
             
     def __init__(self,*args,**xargs):
-        self._volume = None
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
         self.icon = AppIndicator.Indicator.new("Freenon","Freenon",
             AppIndicator.IndicatorCategory.HARDWARE)
@@ -69,8 +68,6 @@ class Tray(object):
             elif direction == Gdk.ScrollDirection.DOWN:
                 volume = self.amp.volume-self.scroll_delta*steps
             else: return
-            if self._volume == volume: return
-            self._volume = volume
             self.amp.volume = volume
         except ConnectionError: pass
         else: self.updateIcon()

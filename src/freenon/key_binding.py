@@ -35,7 +35,6 @@ class BasicVolumeChanger(object):
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
-        self._last_set = None
         self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect,verbose=verbose)
         
     def press(self, button):
@@ -52,9 +51,7 @@ class BasicVolumeChanger(object):
         except ConnectionError as e: print(repr(e), file=sys.stderr)
         
     def on_amp_change(self, attr, value):
-        super().on_amp_change(attr, value, by_bound_keys = value==self._last_set)
-        if value != self._last_set: return
-        self._last_set = None
+        super().on_amp_change(attr, value)
         if self.keys_pressed <= 0: return
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
@@ -62,12 +59,8 @@ class BasicVolumeChanger(object):
     def fire_volume(self):
         for _ in range(100):
             if self.keys_pressed <= 0: return
-            try:
-                self._last_set = max(0,min(self.amp.maxvol,self.amp.volume + self.step*(int(self.button)*2-1)))
-                self.amp.volume = self._last_set
-            except ConnectionError:
-                self._last_set = None
-                time.sleep(20)
+            try: self.amp.volume += self.step*(int(self.button)*2-1)
+            except ConnectionError: time.sleep(20)
             else: break
 
     def release(self, button):
@@ -85,6 +78,7 @@ class BasicVolumeChanger(object):
 class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
+        self._notify_events = config.get("GUI","notify_events")
         Notify.init("Freenon")
         self._notifications = {}
         
@@ -100,10 +94,10 @@ class NotificationMixin(object):
     def press(self,*args,**xargs):
         self.notify("volume")
 
-    def on_amp_change(self, attr, value, by_bound_keys=False):
-        if (    config.get("GUI","notify_events") == "all"
-                or config.get("GUI","notify_events") == "all_implemented" and attr
-                or attr in config.get("GUI","notify_events").split(", ")):
+    def on_amp_change(self, attr, value):
+        if (    self._notify_events == "all"
+                or self._notify_events == "all_implemented" and attr
+                or attr in self._notify_events.split(", ")):
             self.notify(attr,value)
         
     def notify(self, attr, val=None):
