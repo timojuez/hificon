@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import gi
 gi.require_version('Gtk', '3.0')
+gi.require_version('Notify', '0.7')
 from gi.repository import GLib, Notify
 import time, sys
 from threading import Thread
@@ -11,7 +12,7 @@ from .config import config
 ipc_port = config.getint("KeyEventHandling","ipc_port")
 
 
-class BasicVolumeChanger(object):
+class VolumeChangerMixin(object):
     """ 
     Class for managing volume up/down while hot key pressed
     when both hot keys are being pressed, last one counts
@@ -29,13 +30,13 @@ class BasicVolumeChanger(object):
     """
     keys_pressed = 0
 
-    def __init__(self, on_volume_change=None, verbose=False):
-        super().__init__()
-        if on_volume_change: self.on_volume_change = on_volume_change
+    def __init__(self, amp, *args, **xargs):
+        super().__init__(*args, **xargs)
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
-        self.amp = Amp(on_change=self.on_amp_change,on_connect=self.on_amp_connect,verbose=verbose)
+        self.amp = amp
+        self.amp.bind(on_change=self.on_amp_change, on_connect=self.on_amp_connect)
         
     def press(self, button):
         """ start sending volume events to amp """
@@ -75,9 +76,9 @@ class BasicVolumeChanger(object):
         except ConnectionError: pass
         
 
-class NotificationMixin(object):
+class Notifier(object):
 
-    def __init__(self,*args,**xargs):
+    def __init__(self):
         self._notify_events = config.get("GUI","notify_events")
         Notify.init("Freenon")
         self._notifications = {}
@@ -111,14 +112,14 @@ class NotificationMixin(object):
         n.show()
 
 
-class VolumeChanger(BasicVolumeChanger, NotificationMixin): pass
+class VolumeChanger(VolumeChangerMixin, Notifier): pass
 
 
 class VolumeService(json_service.JsonService):
 
-    def __init__(self, **xargs):
+    def __init__(self, *args, **xargs):
         print("Key Binding Service")
-        self.vc = VolumeChanger(**xargs)
+        self.vc = VolumeChanger(*args, **xargs)
         super().__init__(port=ipc_port)
         
     def on_read(self, data):
@@ -136,7 +137,7 @@ send = lambda e: json_service.send(e, port=ipc_port)
     
 
 def main():
-    VolumeService().mainloop()
+    VolumeService(Amp()).mainloop()
     
 if __name__ == "__main__":
     main()

@@ -3,7 +3,6 @@ import argparse, sys, math
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
-gi.require_version('Notify', '0.7')
 from gi.repository import GLib, Gtk, Gdk
 from gi.repository import AppIndicator3 as AppIndicator
 from .. import Amp
@@ -23,17 +22,18 @@ class Tray(object):
     def on_amp_change(self, *args, **xargs):
         self.updateIcon()
             
-    def __init__(self,*args,**xargs):
+    def __init__(self, amp):
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
         self.icon = AppIndicator.Indicator.new("Freenon","Freenon",
             AppIndicator.IndicatorCategory.HARDWARE)
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_status(AppIndicator.IndicatorStatus.PASSIVE)
-        self.amp = Amp(*args,
+        self.amp = amp
+        amp.bind(
             on_connect=self.on_connect,
             on_disconnected=self.on_disconnected,
             on_change=self.on_amp_change,
-            **xargs)
+        )
         #self.amp.loop()
         # no loop. EventHandler does it
         #loop = GLib.MainLoop(None)
@@ -81,8 +81,9 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        tray = Tray(verbose=self.args.verbose)
-        try: VolumeService(verbose=self.args.verbose)()
+        amp = Amp(verbose=self.args.verbose)
+        tray = Tray(amp)
+        try: VolumeService(amp)()
         except OSError as e: print("[WARNING] VolumeService failed: %s"%repr(e))
         tray.amp.loop()
         
