@@ -85,8 +85,8 @@ class NotificationMixin(object):
     def _createNotification(self):
         notification = Notify.Notification()
         notification.set_urgency(2)
-        notification.set_hint("x",GLib.Variant.new_int32(50))
-        notification.set_hint("y",GLib.Variant.new_int32(100))
+        #notification.set_hint("x",GLib.Variant.new_int32(50))
+        #notification.set_hint("y",GLib.Variant.new_int32(100))
         notification.set_timeout(config.getint("GUI","notification_timeout"))
         notification.update("Connecting ...",self.amp.host)
         return notification
