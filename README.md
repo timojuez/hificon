@@ -1,9 +1,20 @@
 # Freenon Network Amp Controlling Software
 ### Denon De Luxe: Control your Denon amp's power and master volume with your Ubuntu laptop or similar
 
+## Features
+- Volume tray icon
+- Mouse and keyboard volume key support
+- Graphical amplifier notifications overlay
+- Automatic amplifier detection
+- Automatic power control
+	- Switching the amplifier on when sound starts playing
+	- Switching the amplifier off when sound stops or computer shuts down/suspends
+- Uses the amp's telnet interface
+
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - Python 3 and Pip
+- GTK
 
 **For automatic freenon_setup:**
 - Private nameserver on LAN
@@ -15,9 +26,6 @@
 
 **For mouse and keyboard volume key support**
 - Any platform
-
-**For the GUI**
-- GTK
 
 
 ## Install
@@ -43,7 +51,7 @@ Ggf remove the lines after ## FREENON in ~/.xbindkeysrc and restart xbindkeys.
 
 
 ### Configuration
-See configuration options in ~/.freenon.cfg and src/freenon/freenon.cfg.default.
+See configuration options in ~/.freenon.cfg and src/freenon/share/freenon.cfg.default.
 
 
 ## Usage
@@ -51,7 +59,7 @@ See configuration options in ~/.freenon.cfg and src/freenon/freenon.cfg.default.
 Note that this program is still in development and therefore try it with all sound output stopped.
 
 ### Graphical Main Application
-This creates a tray icon with a scrolling feature and runs the service for key binding.
+Start the main application:
 `freenon_gtk`
 You may want to add the command to autostart.
 
