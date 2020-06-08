@@ -1,8 +1,18 @@
-import signal
+import signal, time
 from threading import Thread
 
 
-class SignalMixin(object):
+class _Abstract(object):
+
+    def mainloop(self,*args,**xargs):
+        if hasattr(super(),"mainloop"): return super().mainloop(*args,**xargs)
+        else:
+            try:
+                while True: time.sleep(1000)
+            except KeyboardInterrupt: pass
+
+
+class SignalMixin(_Abstract):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
@@ -13,7 +23,7 @@ class SignalMixin(object):
     def on_shutdown(self): pass
 
 
-class PulseMixin(object):
+class PulseMixin(_Abstract):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -30,16 +40,12 @@ class PulseMixin(object):
     def on_stop_playing(self): pass
 
 
-class DBusMixin(object):
+class DBusMixin(_Abstract):
     """
     Connects to system bus and fire events, e.g. on shutdown and suspend
     """
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args,**xargs)
-        Thread(target=self._dbusListener, name="DBusListener", daemon=True).start()
 
-    def _dbusListener(self):
+    def mainloop(self,*args,**xargs):
         system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
         system_bus.signal_subscribe('org.freedesktop.login1',
             'org.freedesktop.login1.Manager',
@@ -49,8 +55,8 @@ class DBusMixin(object):
             Gio.DBusSignalFlags.NONE,
             self._onLoginmanagerEvent,
             None)
-        loop = GLib.MainLoop()
-        loop.run()
+        Thread(target=GLib.MainLoop().run, name="GLib.MainLoop", daemon=True).start()
+        super().mainloop(*args,**xargs)
         
     def _onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
         if parameters[0]:
