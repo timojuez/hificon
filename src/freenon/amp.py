@@ -193,11 +193,6 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
     and controls the amp's power state.
     """
     
-    def loop(self):
-        try:
-            while True: time.sleep(1000)
-        except KeyboardInterrupt: pass
-
     @log_call
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
