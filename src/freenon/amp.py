@@ -59,7 +59,7 @@ class BasicAmp(object):
             assert(self.connected)
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
-        except (EOFError, AssertionError) as e:
+        except (OSError, EOFError, AssertionError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
         
@@ -124,8 +124,9 @@ class BasicAmp(object):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
     def disconnect(self):
-        if self.connected: self._telnet.close()
         self.connected = False
+        try: self._telnet.close()
+        except AttributeError: pass
         
     @log_call
     def on_connect(self):
