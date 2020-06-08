@@ -34,8 +34,7 @@ class Tray(object):
             on_disconnected=self.on_disconnected,
             on_change=self.on_amp_change,
         )
-        #self.amp.loop()
-        # no loop. EventHandler does it
+        # GLib.MainLoop is included in Amp.mainloop
         #loop = GLib.MainLoop(None)
         #loop.run()
     
