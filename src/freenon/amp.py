@@ -245,8 +245,12 @@ def _make_amp_mixin(**features):
     def on_connect(self):
         for f in self.features.values(): f.unset()
         super(cls, self).on_connect()
+        
+    def on_change(self,*args,**xargs):
+        for f in self.features.values(): f.__dict__.pop("_block_on_set",None)
+        super(cls, self).on_change(*args,**xargs)
     
-    dict_ = dict(__init__=__init__, on_connect=on_connect)
+    dict_ = dict(__init__=__init__, on_connect=on_connect, on_change=on_change)
     try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
     except: pass
     dict_.update({
