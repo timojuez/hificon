@@ -274,7 +274,7 @@ def _make_amp_mixin(**features):
     dict_ = dict()
     try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
     except: pass
-    dict_ = ({
+    dict_.update({
         k:property(
             lambda self,k=k:self.features[k].get(),
             lambda self,val,k=k:self._set_feature_value(k,val)
