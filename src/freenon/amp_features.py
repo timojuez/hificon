@@ -32,8 +32,7 @@ class Feature(AbstractFeature):
             return self._val
         
     def set(self, value):
-        if value is None: raise ValueError("Value may not be None.")
-        if getattr(self,'_block_on_set',None) == value: return
+        if hasattr(self,'_block_on_set') and getattr(self,'_block_on_set') == value: return
         self._block_on_set = value
         self.send(value)
 
@@ -51,7 +50,9 @@ class Feature(AbstractFeature):
             c = self.consume(cmd)
             self._block_on_set = self._val
             return c
-        
+    
+    def resend(self): return self.send(self._val)
+    
     def store(self, value):
         old = getattr(self,'_val',None)
         self._val = value

@@ -6,8 +6,7 @@ class DenonFeature(Feature):
     function = "" #Amp function command
     call = property(lambda self: "%s?"%self.function)
 
-    def send(self, value=None):
-        if value is None: value = self._val
+    def send(self, value):
         cmd = "%s%s"%(self.function, self.encodeVal(value))
         self.amp(cmd) # TODO: add matches= for synchronous call?
     
