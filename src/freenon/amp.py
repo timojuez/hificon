@@ -238,29 +238,50 @@ def _make_amp_mixin(**features):
         where MyFeature inherits from Feature
     """
     
-    def __init__(self,*args,**xargs):
-        self.features = {k:v(self) for k,v in features.items()}
-        super(cls, self).__init__(*args,**xargs)
-    
-    def on_connect(self):
-        for f in self.features.values(): f.unset()
-        super(cls, self).on_connect()
+    class AmpMixin(object):
+        """ apply @features to Amp """
+
+        def __init__(self,*args,**xargs):
+            self.features = {k:v(self) for k,v in features.items()}
+            super().__init__(*args,**xargs)
         
-    def on_change(self,*args,**xargs):
-        for f in self.features.values(): f.__dict__.pop("_block_on_set",None)
-        super(cls, self).on_change(*args,**xargs)
-    
-    dict_ = dict(__init__=__init__, on_connect=on_connect, on_change=on_change)
+        def on_connect(self):
+            for f in self.features.values(): f.unset()
+            super().on_connect()
+        
+        def _set_feature_value(self, name, value):
+            self.features[name].set(value)
+        
+
+    class SendOnceMixin(object):
+        """ prevent the same values from being sent to the amp in a row """
+
+        def __init__(self,*args,**xargs):
+            self._block_on_set = {}
+            super().__init__(*args,**xargs)
+            
+        def _set_feature_value(self, name, value):
+            if name in self._block_on_set and self._block_on_set[name] == value:
+                return
+            self._block_on_set[name] = value
+            super()._set_feature_value(name,value)
+            
+        def on_change(self,*args,**xargs):
+            self._block_on_set.clear() # unblock values after amp switches on
+            super().on_change(*args,**xargs)
+        
+        
+    dict_ = dict()
     try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
     except: pass
-    dict_.update({
+    dict_ = ({
         k:property(
             lambda self,k=k:self.features[k].get(),
-            lambda self,val,k=k:self.features[k].set(val),
+            lambda self,val,k=k:self._set_feature_value(k,val)
         )
         for k,v in features.items()
     })
-    cls = type("AmpFeatures", (object,), dict_)
+    cls = type("AmpFeatures", (SendOnceMixin,AmpMixin), dict_)
     return cls
 
 

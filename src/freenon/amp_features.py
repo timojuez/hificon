@@ -31,13 +31,9 @@ class Feature(AbstractFeature):
             self.poll()
             return self._val
         
-    def set(self, value):
-        if hasattr(self,'_block_on_set') and getattr(self,'_block_on_set') == value: return
-        self._block_on_set = value
-        self.send(value)
+    def set(self, value): self.send(value)
 
-    def isset(self):
-        return hasattr(self,'_val')
+    def isset(self): return hasattr(self,'_val')
         
     def unset(self): self.__dict__.pop("_val",None)
         
