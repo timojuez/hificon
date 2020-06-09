@@ -9,14 +9,7 @@ class AbstractFeature(object):
 
 
 class Feature(AbstractFeature):
-    # alternatives:
-    #    move all features to denon.__init__() -setter
-    #    no __get__ but __str__ and __int__ and __bool__ -setter
-
-    #    catch with __getattribute__ in Denon.feature -doppelung von objekten in .features wegen __get__ -wegen klassenvariable: alle funktionen brauchen instanz als arg
-    #    stay with __get__ and switch to class attribute, no instance attribute -only one avr possible +comfort
-    #    Denon.feature is object with __getattr__ -no autocomplete
-    # poll, send, consume zu Denon verschieben?
+    """ An attribute of the amplifier """
 
     def __init__(self, amp):
         self.amp = amp
