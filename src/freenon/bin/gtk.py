@@ -19,8 +19,8 @@ class Tray(object):
     def on_disconnected(self):
         self.hide()
         
-    def on_amp_change(self, *args, **xargs):
-        self.updateIcon()
+    def on_amp_change(self, attr, value):
+        if attr in ("volume","muted","maxvol"): self.updateIcon()
             
     def __init__(self, amp):
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
@@ -34,6 +34,8 @@ class Tray(object):
             on_disconnected=self.on_disconnected,
             on_change=self.on_amp_change,
         )
+        self.vs = VolumeService(amp)
+        self.vs()
         # GLib.MainLoop is included in Amp.mainloop
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -61,6 +63,9 @@ class Tray(object):
         else: GLib.idle_add(do)
     
     def on_scroll(self, icon, steps, direction):
+        try: volume = self.amp.volume
+        except ConnectionError: volume = None
+        self.vs.vc.notify("volume",volume)
         try:
             if direction == Gdk.ScrollDirection.UP:
                 volume = self.amp.volume+self.scroll_delta*steps
@@ -69,7 +74,6 @@ class Tray(object):
             else: return
             self.amp.volume = volume
         except ConnectionError: pass
-        else: self.updateIcon()
         
 
 class Main(object):
@@ -82,8 +86,6 @@ class Main(object):
     def __call__(self):
         amp = Amp(verbose=self.args.verbose)
         tray = Tray(amp)
-        try: VolumeService(amp)()
-        except OSError as e: print("[WARNING] VolumeService failed: %s"%repr(e))
         amp.mainloop()
         
 
