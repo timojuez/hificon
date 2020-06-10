@@ -50,7 +50,7 @@ class BasicAmp(object):
         try:
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
-        except (OSError, EOFError, AssertionError) as e:
+        except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
         
@@ -59,7 +59,7 @@ class BasicAmp(object):
             assert(self.connected)
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
-        except (OSError, EOFError, AssertionError) as e:
+        except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
         
