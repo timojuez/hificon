@@ -4,7 +4,7 @@ import os
 from distutils.core import setup
 
 setup(name='freenon',
-      version='1.4.0a',
+      version='1.4.1a',
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
