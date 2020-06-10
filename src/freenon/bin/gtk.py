@@ -3,39 +3,81 @@ import argparse, sys, math
 import gi
 gi.require_version('Gtk', '3.0')
 gi.require_version('AppIndicator3', '0.1')
-from gi.repository import GLib, Gtk, Gdk
+gi.require_version('Notify', '0.7')
+from gi.repository import GLib, Gtk, Gdk, Notify
 from gi.repository import AppIndicator3 as AppIndicator
 from .. import Amp
-from ..key_binding import VolumeService
+from ..key_binding import RemoteControlService, VolumeChanger, _AmpEvents
 from ..config import config
 
 
-class Tray(object):
+class NotificationMixin(object):
+
+    def __init__(self,*args,**xargs):
+        self._notify_events = config.get("GUI","notify_events")
+        Notify.init("Freenon")
+        self._notifications = {}
+        super().__init__(*args,**xargs)
+        
+    def _createNotification(self):
+        notification = Notify.Notification()
+        notification.set_urgency(2)
+        #notification.set_hint("x",GLib.Variant.new_int32(50))
+        #notification.set_hint("y",GLib.Variant.new_int32(100))
+        notification.set_timeout(config.getint("GUI","notification_timeout"))
+        notification.update("Connecting ...",self.amp.host)
+        return notification
+        
+    def notify(self, attr, val=None):
+        if attr == "maxvol": return
+        try: name = self.amp.features[attr].name
+        except (AttributeError, KeyError): name = attr
+        if attr not in self._notifications: self._notifications[attr] = self._createNotification()
+        n = self._notifications[attr]
+        if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
+        if val is not None: n.update("%s: %s"%(name, val),self.amp.host)
+        n.show()
+
+    def press(self,*args,**xargs):
+        self.notify("volume")
+        super().press(*args,**xargs)
+
+    def on_amp_change(self, attr, value):
+        if (    self._notify_events == "all"
+                or self._notify_events == "all_implemented" and attr
+                or attr in self._notify_events.split(", ")):
+            self.notify(attr,value)
+        super().on_amp_change(attr,value)
+
+    def on_scroll(self, *args, **xargs):
+        try: volume = self.amp.volume
+        except ConnectionError: volume = None
+        self.notify("volume",volume)
+        super().on_scroll(*args,**xargs)
+        
+
+class Tray(_AmpEvents):
 
     def on_connect(self):
+        super().on_connect()
         self.updateIcon()
         self.show()
 
     def on_disconnected(self):
         self.hide()
+        super().on_disconnected()
         
     def on_amp_change(self, attr, value):
+        super().on_amp_change(attr,value)
         if attr in ("volume","muted","maxvol"): self.updateIcon()
             
-    def __init__(self, amp):
+    def __init__(self, *args, **xargs):
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
         self.icon = AppIndicator.Indicator.new("Freenon","Freenon",
             AppIndicator.IndicatorCategory.HARDWARE)
         self.icon.connect("scroll-event",self.on_scroll)
         self.icon.set_status(AppIndicator.IndicatorStatus.PASSIVE)
-        self.amp = amp
-        amp.bind(
-            on_connect=self.on_connect,
-            on_disconnected=self.on_disconnected,
-            on_change=self.on_amp_change,
-        )
-        self.vs = VolumeService(amp)
-        self.vs()
+        super().__init__(*args,**xargs)
         # GLib.MainLoop is included in Amp.mainloop
         #loop = GLib.MainLoop(None)
         #loop.run()
@@ -63,9 +105,6 @@ class Tray(object):
         else: GLib.idle_add(do)
     
     def on_scroll(self, icon, steps, direction):
-        try: volume = self.amp.volume
-        except ConnectionError: volume = None
-        self.vs.vc.notify("volume",volume)
         try:
             if direction == Gdk.ScrollDirection.UP:
                 volume = self.amp.volume+self.scroll_delta*steps
@@ -76,20 +115,20 @@ class Tray(object):
         except ConnectionError: pass
         
 
-class Main(object):
+class Main(NotificationMixin, VolumeChanger, Tray): pass
+
+
+def main():    
+    parser = argparse.ArgumentParser(description='Freenon tray icon')
+    parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
+    args = parser.parse_args()
     
-    def __init__(self):
-        parser = argparse.ArgumentParser(description='Freenon tray icon')
-        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
-        self.args = parser.parse_args()
-        
-    def __call__(self):
-        amp = Amp(verbose=self.args.verbose)
-        tray = Tray(amp)
-        amp.mainloop()
+    amp = Amp(verbose=args.verbose)
+    program = Main(amp)
+    RemoteControlService(program)()
+    amp.mainloop()
         
 
-main = lambda:Main()()    
 if __name__ == "__main__":
     main()
 
