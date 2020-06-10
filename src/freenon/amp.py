@@ -238,7 +238,7 @@ def _make_amp_mixin(**features):
         where MyFeature inherits from Feature
     """
     
-    class AmpMixin(object):
+    class FeatureMixin(object):
         """ apply @features to Amp """
 
         def __init__(self,*args,**xargs):
@@ -272,7 +272,7 @@ def _make_amp_mixin(**features):
         
         
     dict_ = dict()
-    try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
+    try: dict_["protocol"] = sys._getframe(3).f_globals['__name__']
     except: pass
     dict_.update({
         k:property(
@@ -281,15 +281,17 @@ def _make_amp_mixin(**features):
         )
         for k,v in features.items()
     })
-    cls = type("AmpFeatures", (SendOnceMixin,AmpMixin), dict_)
+    cls = type("AmpFeatures", (SendOnceMixin,FeatureMixin), dict_)
     return cls
 
 
-def make_basic_amp(**features):
-    return type("Amp", (_make_amp_mixin(**features),BasicAmp), dict())
+def _make_amp(features, base_cls=object):
+    for name in features.keys(): 
+        if hasattr(base_cls,name):
+            raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
+    return type("Amp", (_make_amp_mixin(**features),base_cls), dict())
+    
 
-
-def make_amp(**features):
-    return type("Amp", (_make_amp_mixin(**features),AmpWithEvents), dict())
-
+def make_basic_amp(**features): return _make_amp(features, BasicAmp)
+def make_amp(**features): return _make_amp(features, AmpWithEvents)
 
