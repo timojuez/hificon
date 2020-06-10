@@ -14,7 +14,6 @@
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - Python 3 and Pip
-- GTK
 
 **For automatic freenon_setup:**
 - Private nameserver on LAN
@@ -77,7 +76,7 @@ See the ./examples/*.sh.
 It should be possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See denon.py as an example. See also "protocol" parameter in config and in freenon_cmd.
 
 ### Custom amp control software
-It is possible to create a customised controller that keeps your own program synchronised with the amp. Its dependency is freenon[gi] and optionally freenon[autosetup] and pulsectl.
+It is possible to create a customised controller that keeps your own program synchronised with the amp.
 See ./examples/custom_app.py
 
 If your development only relies on sending commands to the amp, you need the class freenon.Amp(cls="BasicAmp"). Your requirement is purely the freenon package and optionally freenon[autosetup].

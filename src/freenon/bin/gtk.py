@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
 import argparse, sys, math
-import gi
-gi.require_version('Gtk', '3.0')
-gi.require_version('AppIndicator3', '0.1')
-gi.require_version('Notify', '0.7')
-from gi.repository import GLib, Gtk, Gdk, Notify
-from gi.repository import AppIndicator3 as AppIndicator
+from threading import Thread
+try:
+    import gi
+    gi.require_version('Gtk', '3.0')
+    gi.require_version('Notify', '0.7')
+    from gi.repository import Gtk, Gdk, Notify
+except ImportError as e: print(repr(e), file=sys.stderr)
+import pystray
+from PIL import Image
 from .. import Amp
 from ..key_binding import RemoteControlService, VolumeChanger, _AmpEvents
 from ..config import config
@@ -22,8 +25,6 @@ class NotificationMixin(object):
     def _createNotification(self):
         notification = Notify.Notification()
         notification.set_urgency(2)
-        #notification.set_hint("x",GLib.Variant.new_int32(50))
-        #notification.set_hint("y",GLib.Variant.new_int32(100))
         notification.set_timeout(config.getint("GUI","notification_timeout"))
         notification.update("Connecting ...",self.amp.host)
         return notification
@@ -55,16 +56,27 @@ class NotificationMixin(object):
         self.notify("volume",volume)
         super().on_scroll(*args,**xargs)
         
+icon_theme = Gtk.IconTheme.get_default()
+class Icon(pystray.Icon):
+    
+    def connect(self,*args,**xargs):
+        try: return self._appindicator.connect(*args,**xargs)
+        except AttributeError: pass
+        
+    def set_icon_full(self,name,help):
+        self.icon = Image.open(icon_theme.lookup_icon(name,48,0).get_filename())
+        
 
 class Tray(_AmpEvents):
+
+    def mainloop(self): self.icon.run(setup=lambda _:None)
 
     def on_connect(self):
         super().on_connect()
         self.updateIcon()
-        self.show()
 
     def on_disconnected(self):
-        self.hide()
+        self.icon.visible = False
         super().on_disconnected()
         
     def on_amp_change(self, attr, value):
@@ -73,36 +85,25 @@ class Tray(_AmpEvents):
             
     def __init__(self, *args, **xargs):
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
-        self.icon = AppIndicator.Indicator.new("Freenon","Freenon",
-            AppIndicator.IndicatorCategory.HARDWARE)
+        self.icon = Icon("Freenon")
         self.icon.connect("scroll-event",self.on_scroll)
-        self.icon.set_status(AppIndicator.IndicatorStatus.PASSIVE)
         super().__init__(*args,**xargs)
-        # GLib.MainLoop is included in Amp.mainloop
-        #loop = GLib.MainLoop(None)
-        #loop.run()
-    
-    def show(self):
-        GLib.idle_add(lambda:self.icon.set_status(AppIndicator.IndicatorStatus.ACTIVE))
-        
-    def hide(self):
-        GLib.idle_add(lambda:self.icon.set_status(AppIndicator.IndicatorStatus.PASSIVE))
     
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-        def do():
+        try:
+            muted = self.amp.muted
+            volume = 0 if muted else self.amp.volume
+            maxvol = self.amp.maxvol
+        except ConnectionError: pass
+        else: 
             #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.host))
             if muted or volume == 0:
                 self.icon.set_icon_full("audio-volume-muted","muted")
             else:
                 icon_idx = math.ceil(volume/maxvol *len(icons))-1
                 self.icon.set_icon_full(icons[icon_idx],str(volume))
-        try:
-            muted = self.amp.muted
-            volume = 0 if muted else self.amp.volume
-            maxvol = self.amp.maxvol
-        except ConnectionError: pass
-        else: GLib.idle_add(do)
+            self.icon.visible = True
     
     def on_scroll(self, icon, steps, direction):
         try:
@@ -125,8 +126,9 @@ def main():
     
     amp = Amp(verbose=args.verbose)
     program = Main(amp)
+    Thread(name="Amp",target=amp.mainloop,daemon=True).start()
     RemoteControlService(program)()
-    amp.mainloop()
+    program.mainloop()
         
 
 if __name__ == "__main__":
