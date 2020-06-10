@@ -86,34 +86,9 @@ class VolumeChanger(_AmpEvents):
         
 
 
-class RemoteControlService(json_service.JsonService):
-    """ 
-    Opens a service on a port and executes calls on @obj when received 
-    message schema: {"func": property_of_obj, "kwargs": {}}
-    """
-
-    def __init__(self, obj):
-        self._obj = obj
-        super().__init__(port=ipc_port)
-        
-    def on_read(self, data):
-        try:
-            assert(data["func"] in ("press","release"))
-            assert(isinstance(data["kwargs"]["button"],bool))
-            func = getattr(self._obj, data["func"])
-            kwargs = data["kwargs"]
-        except:
-            return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
-        Thread(name="VolumeServiceAction",target=func,kwargs=kwargs,daemon=True).start()
-        
+def RemoteControlService(*args,**xargs):
+    return json_service.RemoteControlService(*args,port=ipc_port,func_whitelist=("press","release"),**xargs)
+    
 
 send = lambda e: json_service.send(e, port=ipc_port)
     
-
-def main():
-    amp = Amp()
-    vs = VolumeService(amp)
-    amp.mainloop(blocking=False)
-    vs.mainloop()
-
-

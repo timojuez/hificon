@@ -11,6 +11,9 @@ PORT=654321
 
 
 class JsonService(object):
+    """
+    A service communicating with Json objects. Call mainloop() after init.
+    """
 
     def __init__(self, host="127.0.0.1", port=PORT):
         print("[%s] start"%self.__class__.__name__, file=sys.stderr)
@@ -49,7 +52,29 @@ class JsonService(object):
             conn.close()
 
     def on_read(self, data): pass
-    
+
+
+class RemoteControlService(JsonService):
+    """ 
+    Opens a service on a port and executes calls on @obj when received 
+    message schema: {"func": property_of_obj, "kwargs": {}}
+    """
+
+    def __init__(self, obj, func_whitelist=None, *args, **xargs):
+        self._obj = obj
+        self._func_whitelist = func_whitelist
+        super().__init__(*args,**xargs)
+        
+    def on_read(self, data):
+        try:
+            if self._func_whitelist: assert(data["func"] in self._func_whitelist)
+            #assert(isinstance(data["kwargs"]["button"],bool))
+            func = getattr(self._obj, data["func"])
+            kwargs = data["kwargs"]
+        except:
+            return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
+        Thread(name="VolumeServiceAction",target=func,kwargs=kwargs,daemon=True).start()
+            
 
 def send(obj, port=PORT):
     sock = socket.socket()
