@@ -39,8 +39,9 @@ Cloning this repository in the current directory and installing via pip:
 ### Proprietary OS
 On Mac/Windows, download and install nmap and Python3 with Pip and PyGObject.
 Then execute:
-`$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,nongnu_desktop] && rm -R ./freenon && freenon_setup`
+`$ git clone https://github.com/timojuez/freenon.git freenon && pip3 install --user wheel && pip3 install --user ./freenon/[autosetup,nongnu_desktop] && rm -R ./freenon && freenon_setup --no-discover`
 
+Add the amp's IP address as "Host = [IP]" to .freenon.cfg in your user directory.
 To connect the extra mouse buttons, start `freenon_mouse_binding`. You may want to add the command to autostart.
 
 ### Uninstall

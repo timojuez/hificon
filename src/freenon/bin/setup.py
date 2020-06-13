@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil, socket
+import subprocess, sys, ipaddress, os, argparse, pkgutil, socket
+try: import nmap
+except ImportError: pass
+try: import netifaces
+except ImportError: pass
 from ..config import config, FILE
 
 
