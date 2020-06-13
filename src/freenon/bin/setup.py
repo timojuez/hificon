@@ -19,11 +19,11 @@ class Main(object):
 
         source_setup = parser.add_mutually_exclusive_group()
         source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon amp source setting to computer (default)')
-        source_setup.add_argument('--no-source-setup', dest="discover", action="store_false")
+        source_setup.add_argument('--no-source-setup', dest="source_setup", action="store_false")
         
         port = parser.add_mutually_exclusive_group()
         port.add_argument('--set-port', default=True, action="store_true", help='Set a port for inter process communication (default)')
-        port.add_argument('--no-set-port', dest="discover", action="store_false")
+        port.add_argument('--no-set-port', dest="set_port", action="store_false")
         
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
