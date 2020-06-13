@@ -16,7 +16,7 @@ class JsonService(object):
     """
 
     def __init__(self, host="127.0.0.1", port=PORT):
-        print("[%s] start"%self.__class__.__name__, file=sys.stderr)
+        print("[%s] Listening on port %d"%(self.__class__.__name__,port), file=sys.stderr)
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
         sock.bind((host, port))
@@ -73,7 +73,8 @@ class RemoteControlService(JsonService):
             kwargs = data["kwargs"]
         except:
             return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
-        Thread(name="VolumeServiceAction",target=func,kwargs=kwargs,daemon=True).start()
+        Thread(name=self._obj.__class__.__name__, target=func,kwargs=kwargs, 
+            daemon=True).start()
             
 
 def send(obj, port=PORT):
