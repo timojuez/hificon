@@ -14,20 +14,20 @@ class Main(object):
     def __init__(self):
         parser = argparse.ArgumentParser(description='Freenon Setup Tool')
         discover = parser.add_mutually_exclusive_group()
-        discover.add_argument('--discover', default=True, action="store_true", help='Include Denon amp discovering (default)')
-        discover.add_argument('--no-discover', dest="discover", action="store_false")
+        discover.add_argument('--discover', dest="nothing", action="store_false", help='Include Denon amp discovery (default)')
+        discover.add_argument('--no-discover', default=DenonDiscoverer, dest="discover", action="store_false")
 
         keys = parser.add_mutually_exclusive_group()
-        keys.add_argument('--keys', default=False, action="store_true", help='Setup Xorg mouse and keyboard volume keys binding for current user')
-        keys.add_argument('--no-keys', dest="keys", action="store_false", help='(default)')
+        keys.add_argument('--keys', default=False, action="store_const", const=setup_xorg_key_binding, help='Setup Xorg mouse and keyboard volume keys binding for current user')
+        keys.add_argument('--no-keys', action="store_false", help='(default)')
 
-        source_setup = parser.add_mutually_exclusive_group()
-        source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon amp source setting to computer (default)')
-        source_setup.add_argument('--no-source-setup', dest="source_setup", action="store_false")
+        source = parser.add_mutually_exclusive_group()
+        source.add_argument('--source-setup', dest="nothing", action="store_false", help='Connect Denon amp source setting to computer (default)')
+        source.add_argument('--no-source-setup', default=source_setup, dest="source_setup", action="store_false")
         
         port = parser.add_mutually_exclusive_group()
-        port.add_argument('--set-port', default=True, action="store_true", help='Set a port for inter process communication (default)')
-        port.add_argument('--no-set-port', dest="set_port", action="store_false")
+        port.add_argument('--set-port', dest="nothing", action="store_false", help='Set a port for inter process communication (default)')
+        port.add_argument('--no-set-port', default=set_port, dest="set_port", action="store_false")
         
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
@@ -36,10 +36,11 @@ class Main(object):
         if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/n] "%FILE) != "y": return
         config.clear_sections()
         config.read([FILE])
-        if self.args.set_port: set_port()
-        if self.args.discover: DenonDiscoverer()
-        if self.args.source_setup: source_setup()
-        if self.args.keys: setup_xorg_key_binding()
+        for arg, func in filter(lambda e: callable(e[1]), self.args._get_kwargs()):
+            try: func()
+            except Exception as e:
+                print("Exception in %s: %s"%(arg,repr(e)))
+            print()
         config.save()
         print("done. The service needs to be (re)started.")
         
@@ -50,7 +51,6 @@ def set_port():
     port = sock.getsockname()[1]
     config["KeyEventHandling"]["ipc_port"] = str(port)
     print("Set port %d"%port)
-    print()
     
 
 def source_setup():
@@ -59,7 +59,6 @@ def source_setup():
     source = Amp(protocol=".denon", cls="BasicAmp").source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
-    print()
     
 
 def setup_xorg_key_binding():
@@ -71,7 +70,6 @@ def setup_xorg_key_binding():
         fp.write("\n%s"%content)
     os.system("xbindkeys --poll-rc")
     print("Written to %s."%xbindkeysrc)
-    print()
     
 
 class DenonDiscoverer(object):
@@ -85,7 +83,6 @@ class DenonDiscoverer(object):
                 print("Found '%s'."%host)
                 self.denon = host
                 config["Amp"]["Host"] = host
-                print()
                 return
         raise Exception("No Denon amp found in local network. Check if amp is connected or"
             " set IP manually.")
