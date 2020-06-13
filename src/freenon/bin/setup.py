@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil, socket
-from ..config import config
+from ..config import config, FILE
 
 
 class Main(object):
@@ -29,10 +29,14 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
+        if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/n] "%FILE) != "y": return
+        config.clear_sections()
+        config.read([FILE])
         if self.args.set_port: set_port()
         if self.args.discover: DenonDiscoverer()
         if self.args.source_setup: source_setup()
         if self.args.keys: setup_xorg_key_binding()
+        config.save()
         print("done. The service needs to be (re)started.")
         
 
@@ -41,7 +45,6 @@ def set_port():
     sock.bind(('127.0.0.1', 0))
     port = sock.getsockname()[1]
     config["KeyEventHandling"]["ipc_port"] = str(port)
-    config.save()
     
 
 def source_setup():
@@ -50,7 +53,6 @@ def source_setup():
     source = Amp(protocol=".denon", cls="BasicAmp").source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
-    config.save()
     
 
 def setup_xorg_key_binding():
@@ -73,7 +75,6 @@ class DenonDiscoverer(object):
                 print("Found '%s'."%host)
                 self.denon = host
                 config["Amp"]["Host"] = host
-                config.save()
                 return
         raise Exception("No Denon amp found in local network. Check if amp is connected or"
             " set IP manually.")

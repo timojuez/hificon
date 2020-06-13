@@ -7,6 +7,9 @@ FILE=os.path.expanduser("~/.freenon.cfg")
 
 class MyConfigParser(configparser.ConfigParser):
     
+    def clear_sections(self):
+        for s in self.sections(): self[s].clear()
+    
     def save(self):
         with open(FILE,"w") as f:
             self.write(f)
