@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil
+import subprocess, sys, netifaces, ipaddress, nmap, os, argparse, pkgutil, socket
 from ..config import config
 
 
@@ -21,14 +21,28 @@ class Main(object):
         source_setup.add_argument('--source-setup', default=True, action="store_true", help='Connect Denon amp source setting to computer (default)')
         source_setup.add_argument('--no-source-setup', dest="discover", action="store_false")
         
+        port = parser.add_mutually_exclusive_group()
+        port.add_argument('--set-port', default=True, action="store_true", help='Set a port for inter process communication (default)')
+        port.add_argument('--no-set-port', dest="discover", action="store_false")
+        
         parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
+        if self.args.set_port: set_port()
         if self.args.discover: DenonDiscoverer()
         if self.args.source_setup: source_setup()
         if self.args.keys: setup_xorg_key_binding()
+        print("done. The service needs to be (re)started.")
         
+
+def set_port():
+    sock = socket.socket()
+    sock.bind(('127.0.0.1', 0))
+    port = sock.getsockname()[1]
+    config["KeyEventHandling"]["ipc_port"] = str(port)
+    config.save()
+    
 
 def source_setup():
     from .. import Amp

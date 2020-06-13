@@ -87,6 +87,7 @@ class VolumeChanger(_AmpEvents):
 
 
 def RemoteControlService(*args,**xargs):
+    if ipc_port < 0: return
     return json_service.RemoteControlService(*args,port=ipc_port,func_whitelist=("press","release"),**xargs)
     
 
