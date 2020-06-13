@@ -45,6 +45,8 @@ def set_port():
     sock.bind(('127.0.0.1', 0))
     port = sock.getsockname()[1]
     config["KeyEventHandling"]["ipc_port"] = str(port)
+    print("Set port %d"%port)
+    print()
     
 
 def source_setup():
@@ -53,15 +55,19 @@ def source_setup():
     source = Amp(protocol=".denon", cls="BasicAmp").source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
+    print()
     
 
 def setup_xorg_key_binding():
-    if not os.path.exists(os.path.expanduser("~/.xbindkeysrc")):
-        os.system("xbindkeys -d > ~/.xbindkeysrc")
-    content = pkgutil.get_data(__name__,"share/xbindkeysrc").decode()
-    with open(os.path.expanduser("~/.xbindkeysrc"),"a+") as fp:
+    xbindkeysrc = os.path.expanduser("~/.xbindkeysrc")
+    if not os.path.exists(xbindkeysrc):
+        os.system("xbindkeys -d > %s"%xbindkeysrc)
+    content = pkgutil.get_data(__name__,"../share/xbindkeysrc").decode()
+    with open(xbindkeysrc,"a+") as fp:
         fp.write("\n%s"%content)
     os.system("xbindkeys --poll-rc")
+    print("Written to %s."%xbindkeysrc)
+    print()
     
 
 class DenonDiscoverer(object):
@@ -75,6 +81,7 @@ class DenonDiscoverer(object):
                 print("Found '%s'."%host)
                 self.denon = host
                 config["Amp"]["Host"] = host
+                print()
                 return
         raise Exception("No Denon amp found in local network. Check if amp is connected or"
             " set IP manually.")
