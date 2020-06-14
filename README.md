@@ -1,15 +1,20 @@
-# Freenon Network Amp Controlling Software
-### Denon De Luxe: Control your Denon amp's power and master volume with your Ubuntu laptop or similar
+# HiFiCon Network Amp Controlling Software
+### Free High Freedelity for Your Computer
 
 ## Features
-- Volume tray icon
+- Denon De Luxe: Control your Denon amp's power and master volume with your laptop
+- Hifi Icon: Volume control tray icon
 - Mouse and keyboard volume key support
-- Graphical amplifier notifications overlay
+- Amplifier notifications screen overlay
 - Automatic amplifier detection
 - Automatic power control
 	- Switching the amplifier on when sound starts playing
 	- Switching the amplifier off when sound stops or computer shuts down/suspends
-- Uses the amp's telnet interface
+- Hifi shell programming: Send custom commands to the amp
+- Compatibility: Uses only the amp's telnet interface
+- Platform independent
+- Want to use your home cinema AVR zone 2 output in your computer room? No problem
+
 
 ## Requirements
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
