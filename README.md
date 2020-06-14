@@ -25,7 +25,6 @@ Optional:
 **For automatic amplifier discovery:**
 - Private nameserver on LAN
 - nmap and net-tools
-- GNU or Unix
 
 **For automatic power control:**
 - SystemD
@@ -39,17 +38,19 @@ Optional:
 
 ### Ubuntu and other GNU OS
 Install the requirements:
+
 `sudo apt-get install python3-dev python3-pip nmap net-tools python3-gi`
 
 Cloning this repository in the current directory and installing via pip:
+
 `$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[autosetup,gnu_desktop] && rm -R ./hificon && hificon_setup --keys`
 
 ### Proprietary OS
-On Mac/Windows, download and install nmap and Python3 with Pip and PyGObject.
+On Mac/Windows, download and install Python3 with Pip.
 Then execute:
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[autosetup,nongnu_desktop] && rm -R ./hificon && hificon_setup --no-discover`
 
-Add the amp's IP address as "Host = [IP]" to .hificon.cfg in your user directory.
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[autosetup,nongnu_desktop] && rm -R ./hificon && hificon_setup`
+
 To connect the extra mouse buttons, start `hificon_mouse_binding`. You may want to add the command to autostart.
 
 ### Uninstall
@@ -69,11 +70,13 @@ Note that this program is still in development and therefore try it with all sou
 ### Graphical Main Application
 Start the main application:
 `hificon`
+
 You may want to add the command to autostart.
 
 
 ### CLI and shortcuts
 Plain commands can be sent to the amp
+
 `hifi_sh [command]`
 
 See the ./examples/*.sh.
@@ -93,7 +96,7 @@ If your development only relies on sending commands to the amp, you need the cla
 
 ## Limitations
 - Currently only Denon protocol devices are being supported.
-- If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, set the host IP manually in the config file.
+- If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, add the amp's IP address as "Host = [IP]" to .hificon.cfg in your user directory.
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 
