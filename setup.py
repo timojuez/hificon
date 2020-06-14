@@ -1,17 +1,18 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import os
 from distutils.core import setup
+from src import PKG_NAME
 
-setup(name='hificon',
+
+setup(name=PKG_NAME,
       version='1.5.3a',
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
       url='',
       license='GNU General Public License v3 or later (GPLv3+)',
-      packages=['hificon'],
-      package_dir={"hificon": "src"},
+      packages=[PKG_NAME],
+      package_dir={PKG_NAME: "src"},
       install_requires=["argparse"],
       extras_require={
         "autosetup": ["python-nmap", "netifaces"],
@@ -20,11 +21,11 @@ setup(name='hificon',
       },
       include_package_data=True,
       entry_points={'console_scripts': [
-        'hifi_sh = hificon.bin.cmd:main',
-        'hificon = hificon.bin.gtk:main',
-        'hificon_setup = hificon.bin.setup:main [autosetup]',
-        'hificon_mouse_binding = hificon.bin.mouse_binding:main [nongnu_desktop]',
+        'hifi_sh = %s.bin.cmd:main'%PKG_NAME,
+        'hificon = %s.bin.gtk:main'%PKG_NAME,
+        'hificon_setup = %s.bin.setup:main [autosetup]'%PKG_NAME,
+        'hificon_mouse_binding = %s.bin.mouse_binding:main [nongnu_desktop]'%PKG_NAME,
       ]},
-      scripts={'src/freenon/bin/hificon_key_event_handler'},
+      scripts={'src/bin/hificon_key_event_handler'},
 )
 

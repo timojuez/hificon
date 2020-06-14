@@ -9,7 +9,7 @@ try:
 except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
-from .. import Amp
+from .. import Amp, NAME
 from ..key_binding import RemoteControlService, VolumeChanger, _AmpEvents
 from ..config import config
 
@@ -18,7 +18,7 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         self._notify_events = config.get("GUI","notify_events")
-        Notify.init("Freenon")
+        Notify.init(NAME)
         self._notifications = {}
         super().__init__(*args,**xargs)
         
@@ -85,7 +85,7 @@ class Tray(_AmpEvents):
             
     def __init__(self, *args, **xargs):
         self.scroll_delta = config.getfloat("GUI","tray_scroll_delta")
-        self.icon = Icon("Freenon")
+        self.icon = Icon(NAME)
         self.icon.connect("scroll-event",self.on_scroll)
         super().__init__(*args,**xargs)
     
@@ -120,7 +120,7 @@ class Main(NotificationMixin, VolumeChanger, Tray): pass
 
 
 def main():    
-    parser = argparse.ArgumentParser(description='Freenon tray icon')
+    parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
     parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
     args = parser.parse_args()
     

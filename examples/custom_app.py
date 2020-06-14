@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-from freenon import Amp
+from hificon import Amp
 
 
 def on_amp_change(attr, value):

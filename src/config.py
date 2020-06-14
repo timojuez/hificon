@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*- 
 
 import os, configparser, pkgutil
+from . import PKG_NAME
 
-FILE=os.path.expanduser("~/.freenon.cfg")
+FILE=os.path.expanduser("~/.%s.cfg"%PKG_NAME)
 
 
 class MyConfigParser(configparser.ConfigParser):
@@ -16,7 +17,7 @@ class MyConfigParser(configparser.ConfigParser):
 
 
 config = MyConfigParser()
-default = pkgutil.get_data(__name__,"share/freenon.cfg.default").decode()
+default = pkgutil.get_data(__name__,"share/hificon.cfg.default").decode()
 config.read_string(default)
 config.read([
     FILE

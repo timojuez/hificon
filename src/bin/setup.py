@@ -7,12 +7,13 @@ except ImportError: pass
 try: import netifaces
 except ImportError: pass
 from ..config import config, FILE
+from .. import NAME
 
 
 class Main(object):
 
     def __init__(self):
-        parser = argparse.ArgumentParser(description='Freenon Setup Tool')
+        parser = argparse.ArgumentParser(description='%s Setup Tool'%NAME)
         discover = parser.add_mutually_exclusive_group()
         discover.add_argument('--discover', dest="nothing", action="store_false", help='Include Denon amp discovery (default)')
         discover.add_argument('--no-discover', default=DenonDiscoverer, dest="discover", action="store_false")

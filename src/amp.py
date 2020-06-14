@@ -5,6 +5,7 @@ from .util.system_events import SystemEvents
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import Feature
+from . import NAME
 
 
 def call_sequence(*functions):
@@ -65,7 +66,7 @@ class BasicAmp(object):
         
     def __call__(self, cmd, matches=None):
         """ send command to amp """
-        if self.verbose: print("Freenon@%s:%s $ %s"%(self.host,self.protocol,cmd), file=sys.stderr)
+        if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         if not matches: return self._send(cmd)
         def _return(r):
             if self.verbose: print(r, file=sys.stderr)

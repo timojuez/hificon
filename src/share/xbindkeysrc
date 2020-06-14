@@ -1,24 +1,24 @@
-## FREENON SETTINGS
+## HIFICON SETTINGS
 
-"freenon_key_event_handler --down --pressed"
+"hificon_key_event_handler --down --pressed"
   b:8
   
-"freenon_key_event_handler --down --released"
+"hificon_key_event_handler --down --released"
   b:8 + Release
     
-"freenon_key_event_handler --up --pressed"
+"hificon_key_event_handler --up --pressed"
   b:9
 
-"freenon_key_event_handler --up --released"
+"hificon_key_event_handler --up --released"
   b:9 + Release
 
-"freenon_cmd MVUP"
+"hifi_sh MVUP"
   XF86AudioRaiseVolume
 
-"freenon_cmd MVDOWN"
+"hifi_sh MVDOWN"
   XF86AudioLowerVolume
 
-"freenon_cmd MUON"
+"hifi_sh MUON"
   XF86AudioMute
 
 
