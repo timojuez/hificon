@@ -187,32 +187,25 @@ class AsyncAmp(BasicAmp):
                     if old != new: self.on_change(attrib,new)
 
 
-class AmpWithEvents(SystemEvents,AsyncAmp):
+class CommonAmpWithEvents(SystemEvents,AsyncAmp):
     """ Amp with system events listener """
     
     @log_call
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        try: self.poweroff()
-        except ConnectionError: pass
-        self.disconnect()
+        pass
         
     @log_call
-    def on_suspend(self):
-        try: self.poweroff()
-        except ConnectionError: pass
-        self.disconnect()
+    def on_suspend(self): pass
     
     @log_call
     def on_resume(self):
         """ Is being executed after resume computer from suspension """
-        self.on_disconnected()
+        pass
         
     @log_call
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
-        try: self.poweron()
-        except ConnectionError: pass
 
     @log_call
     def on_stop_playing(self):
@@ -223,7 +216,37 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
         self._timer_poweroff.start()
     
     @log_call
+    def on_sound_idle(self): pass
+    
+
+class AmpWithEvents(CommonAmpWithEvents):
+    # TODO: move to other module?
+    """ Amp implementing actions """
+    
+    def on_shutdown(self, sig, frame):
+        """ when shutting down computer """
+        super().on_shutdown(sig,frame)
+        try: self.poweroff()
+        except ConnectionError: pass
+        self.disconnect()
+        
+    def on_suspend(self):
+        super().on_suspend()
+        try: self.poweroff()
+        except ConnectionError: pass
+        self.disconnect()
+    
+    def on_resume(self):
+        super().on_resume()
+        self.on_disconnected()
+
+    def on_start_playing(self):
+        super().on_start_playing()
+        try: self.poweron()
+        except ConnectionError: pass
+
     def on_sound_idle(self):
+        super().on_sound_idle()
         try: self.poweroff()
         except ConnectionError: pass
     
