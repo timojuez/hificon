@@ -3,10 +3,10 @@
 
 ## Features
 - Denon De Luxe: Control your Denon amp's power and master volume with your laptop
-- Hifi Icon: Volume control tray icon
+- Hifi icon: Volume control tray icon
 - Mouse and keyboard volume key support
 - Amplifier notifications screen overlay
-- Automatic amplifier detection
+- Automatic amplifier discovery
 - Automatic power control
 	- Switching the amplifier on when sound starts playing
 	- Switching the amplifier off when sound stops or computer shuts down/suspends
@@ -20,9 +20,12 @@
 - Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
 - Python 3 and Pip
 
-**For automatic hificon_setup:**
+Optional:
+
+**For automatic amplifier discovery:**
 - Private nameserver on LAN
 - nmap and net-tools
+- GNU or Unix
 
 **For automatic power control:**
 - SystemD
