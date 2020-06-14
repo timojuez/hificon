@@ -31,7 +31,7 @@ tray_scroll_delta = 2.0
 
 
 [MouseBinding]
-# freenon_mouse_binding options
+# mouse_binding options
 vol_up = button9
 vol_down = button8
 
