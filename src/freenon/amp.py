@@ -188,10 +188,7 @@ class AsyncAmp(BasicAmp):
 
 
 class AmpWithEvents(SystemEvents,AsyncAmp):
-    """
-    Event handler that keeps up to date the plugin data such as the volume
-    and controls the amp's power state.
-    """
+    """ Amp with system events listener """
     
     @log_call
     def on_shutdown(self, sig, frame):
@@ -208,7 +205,7 @@ class AmpWithEvents(SystemEvents,AsyncAmp):
     
     @log_call
     def on_resume(self):
-        """ Is being executed after resume from suspension """
+        """ Is being executed after resume computer from suspension """
         self.on_disconnected()
         
     @log_call
