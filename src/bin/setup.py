@@ -69,8 +69,10 @@ def setup_xorg_key_binding():
     content = pkgutil.get_data(__name__,"../share/xbindkeysrc").decode()
     with open(xbindkeysrc,"a+") as fp:
         fp.write("\n%s"%content)
-    os.system("xbindkeys --poll-rc")
     print("Written to %s."%xbindkeysrc)
+    print("Restarting xbindkeys...")
+    os.system("killall xbindkeys")
+    os.system("xbindkeys")
     
 
 class DenonDiscoverer(object):
