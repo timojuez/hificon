@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys, math
+import argparse, sys, math, pkgutil, io
 from threading import Thread
 try:
     import gi
@@ -56,7 +56,7 @@ class NotificationMixin(object):
         self.notify("volume",volume)
         super().on_scroll(*args,**xargs)
         
-icon_theme = Gtk.IconTheme.get_default()
+
 class Icon(pystray.Icon):
     
     def connect(self,*args,**xargs):
@@ -64,7 +64,9 @@ class Icon(pystray.Icon):
         except AttributeError: pass
         
     def set_icon_full(self,name,help):
-        self.icon = Image.open(icon_theme.lookup_icon(name,48,0).get_filename())
+        image_data = pkgutil.get_data(
+            __name__,"../share/icons/24/%s-dark.png"%name)
+        self.icon = Image.open(io.BytesIO(image_data))
         
 
 class Tray(_AmpEvents):
