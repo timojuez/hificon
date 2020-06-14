@@ -20,7 +20,7 @@ class ConnectedPulse(pulsectl.Pulse):
         print("[%s] Connecting..."%self.__class__.__name__, file=sys.stderr)
         try: connect()
         except pulsectl.pulsectl.PulseError:
-            Thread(target=keep_reconnecting,daemon=True).start()
+            Thread(name="%s_connecting"%self.__class__.__name__,target=keep_reconnecting,daemon=True).start()
     
     def on_connected(self):
         print("[%s] Connected to Pulseaudio."%self.__class__.__name__, file=sys.stderr)
@@ -41,7 +41,7 @@ class PulseListener(ConnectedPulse):
         self._consider_old_sinks = consider_old_sinks
         self._sink_input_set = set()
         self.is_playing = set()
-        super().__init__("Freenon",*args,**xargs)
+        super().__init__("PulseListener_for_%s"%self._events.__class__.__name__,*args,**xargs)
 
     def sink_input_set(self):
         comparable = lambda l: set(map(lambda e:e.proplist["application.process.id"], l))
