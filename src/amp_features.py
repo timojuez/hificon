@@ -34,7 +34,7 @@ class Feature(AbstractFeature):
         try: cmd = self.amp(self.call, matches=self.matches)
         except TimeoutError as e:
             if self.default_value: return self.store(self.default_value)
-            raise
+            else: raise ConnectionError(e)
         else: 
             c = self.consume(cmd)
             self._block_on_set = self._val
