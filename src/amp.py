@@ -2,21 +2,11 @@ import sys, time, socket
 from threading import Lock, Thread, Timer
 from telnetlib import Telnet
 from .util.system_events import SystemEvents
+from .util import call_sequence, log_call
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import Feature
 from . import NAME
-
-
-def call_sequence(*functions):
-    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
-
-def log_call(func):
-    """ object function decorator """
-    def call(self,*args,**xargs):
-        print("[%s] %s"%(self.__class__.__name__, func.__name__), file=sys.stderr)
-        return func(self,*args,**xargs)
-    return call
 
 
 class BasicAmp(object):
