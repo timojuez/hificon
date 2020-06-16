@@ -9,12 +9,11 @@ from .amp_features import Feature
 from . import NAME
 
 
-class BasicAmp(object):
-    """
-    This class connects to the amp via LAN and executes commands
-    @host is the amp's hostname or IP.
-    """
+class AbstractAmp(object):
     protocol = "Undefined"
+    host = "Undefined"
+    features = {}
+    connected = False
 
     def __init__(self, host=None, connect=True, verbose=False, **callbacks):
         super().__init__()
@@ -23,10 +22,6 @@ class BasicAmp(object):
         self.host = host or config["Amp"].get("Host")
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
-        self._received = []
-        self.lock = Lock()
-        self.connecting_lock = Lock()
-        self.connected = False
         if connect: self.connect()
 
     def bind(self, **callbacks):
@@ -36,7 +31,63 @@ class BasicAmp(object):
         """
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))
+
+    def poweron(self, force=False):
+        try:
+            if not force and not config.getboolean("Amp","control_power_on") or self.power:
+                return
+            if config.get("Amp","source"): self.source = config.get("Amp","source")
+            self.power = True
+        except ConnectionError: pass
+
+    def poweroff(self, force=False):
+        try:
+            if not force and (not config.getboolean("Amp","control_power_off") 
+                or config.get("Amp","source") and self.source != config.get("Amp","source")): return
+            self.power = False
+        except ConnectionError: pass
+
+    def connect(self, tries=1): raise NotImplementedError()
+
+    def connect_async(self):
+        Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
+    def disconnect(self):
+        self.connected = False
+        
+    @log_call
+    def on_connect(self):
+        """ Execute when connected e.g. after connection aborted """
+        if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
+        self.connected = True
+        
+    @log_call
+    def on_disconnected(self):
+        self.connected = False
+        self.connect_async()
+
+    @log_call
+    def on_change(self, attrib, new_val): pass
+    @log_call
+    def on_poweron(self): pass
+    @log_call
+    def on_poweroff(self): pass
+
+    def mainloop(self): raise NotImplementedError()
+    
+
+class TelnetAmp(AbstractAmp):
+    """
+    This class connects to the amp via LAN and executes commands
+    @host is the amp's hostname or IP.
+    """
+
+    def __init__(self, *args, **xargs):
+        self._received = []
+        self.lock = Lock()
+        self.connecting_lock = Lock()
+        super().__init__(*args, **xargs)
+
     def _send(self, cmd):
         try:
             assert(self.connected)
@@ -54,8 +105,7 @@ class BasicAmp(object):
             self.on_disconnected()
             raise BrokenPipeError(e)
         
-    def __call__(self, cmd, matches=None):
-        """ send command to amp """
+    def query(self, cmd, matches=None):
         if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         if not matches: return self._send(cmd)
         def _return(r):
@@ -83,7 +133,9 @@ class BasicAmp(object):
                 else: self._received.append(r)
             raise TimeoutError("WARNING: Got no answer for `%s`.\n"%cmd)
         finally: self.lock.release()
-
+    
+    __call__ = query
+    
     def read(self):
         """ Wait until a message has been received from amp and return it """
         while True:
@@ -110,50 +162,17 @@ class BasicAmp(object):
                     return self.on_connect()
                 time.sleep(3)
         finally: self.connecting_lock.release()
-    
-    def connect_async(self):
-        Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
-        
+
     def disconnect(self):
-        self.connected = False
+        super().disconnect()
         try: self._telnet.close()
         except AttributeError: pass
-        
-    @log_call
-    def on_connect(self):
-        """ Execute when connected e.g. after connection aborted """
-        if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
-        self.connected = True
-        
-    @log_call
-    def on_disconnected(self):
-        self.connected = False
-        self.connect_async()
+    
 
-    def poweron(self,force=False):
-        try:
-            if not force and not config.getboolean("Amp","control_power_on") or self.power:
-                return
-            if config.get("Amp","source"): self.source = config.get("Amp","source")
-            self.power = True
-        except ConnectionError: pass
-
-    def poweroff(self, force=False):
-        try:
-            if not force and (not config.getboolean("Amp","control_power_off") 
-                or config.get("Amp","source") and self.source != config.get("Amp","source")): return
-            self.power = False
-        except ConnectionError: pass
-
-    @log_call
-    def on_change(self, attrib, new_val): pass
-    @log_call
-    def on_poweron(self): pass
-    @log_call
-    def on_poweroff(self): pass
+BasicAmp = TelnetAmp
 
 
-class AsyncAmp(BasicAmp):
+class AsyncAmp(TelnetAmp):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,connect=False,**xargs)
