@@ -143,9 +143,8 @@ class BasicAmp(object):
     def poweron(self,force=False):
         if not force and not config.getboolean("Amp","control_power_on") or self.power:
             return
-        self.power = True
-        time.sleep(3) #TODO
         if config.get("Amp","source"): self.source = config.get("Amp","source")
+        self.power = True
 
     def poweroff(self, force=False):
         if not force and (not config.getboolean("Amp","control_power_off") 
