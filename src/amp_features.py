@@ -4,9 +4,18 @@ class AbstractFeature(object):
     call = None
     default_value = None #if no response
     
-    def matches(self, cmd): raise NotImplementedError()
-    def consume(self, cmd): raise NotImplementedError()
-    def send(self, value=None): raise NotImplementedError()
+    def matches(self, cmd):
+        """ return True if cmd shall be parsed with this class """
+        raise NotImplementedError()
+        
+    def parse(self, cmd): # rename to decodeVal?
+        """ transform string @cmd to native value """
+        raise NotImplementedError()
+        
+    def send(self, value):
+        """ send @value to amp """
+        raise NotImplementedError()
+    
     def on_change(self, old, new): pass
 
 
@@ -51,6 +60,10 @@ class Feature(AbstractFeature):
     
     def resend(self): return self.send(self._val)
     
+    def consume(self, cmd):
+        """ parse and apply @cmd to this object """
+        return self.store(self.parse(cmd))
+        
     def store(self, value):
         old = getattr(self,'_val',None)
         self._val = value
@@ -61,7 +74,7 @@ class Feature(AbstractFeature):
 
 class RawFeature(Feature): # TODO: move to protocol.raw_telnet
     
-    def consume(self, cmd): return self.store(cmd)
+    def parse(self, cmd): return cmd
     def send(self, value): self.amp.send(value)
     def matches(self, cmd): return False
     

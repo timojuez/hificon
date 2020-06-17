@@ -8,18 +8,16 @@ class DenonFeature(Feature):
 
     def send(self, value):
         cmd = "%s%s"%(self.function, self.encodeVal(value))
-        self.amp(cmd) # TODO: add matches= for synchronous call?
+        self.amp.send(cmd) # TODO: add matches= for synchronous call?
     
-    def consume(self, cmd):
+    def parse(self, cmd):
         """
         Update property according to @cmd
         """
         param = cmd[len(self.function):]
-        return self.store(self.decodeVal(param))
+        return self.decodeVal(param)
         
     def matches(self, cmd):
-        """ return True if cmd shall be consumed with this class """
-        # TODO: maybe switch to asynchronous and remove this function
         return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
     
         
