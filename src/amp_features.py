@@ -29,6 +29,7 @@ class Feature(AbstractFeature):
         self.amp = amp
         amp.features[name] = self
         self._value_set_event = Event()
+        self._value_set_event.set()
         self._poll_lock = Lock()
         
     name = property(lambda self:self.__class__.__name__)
@@ -67,7 +68,10 @@ class Feature(AbstractFeature):
     def store(self, value):
         old = getattr(self,'_val',None)
         self._val = value
-        self._value_set_event.set()
+        if not self._value_set_event.is_set():
+            # call caused by poll(). Return False -> will not call amp.on_change
+            self._value_set_event.set()
+            return False
         if self._val != old: self.on_change(old, self._val)
         return old, self._val
 

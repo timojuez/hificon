@@ -165,9 +165,10 @@ class AsyncAmp(TelnetAmp):
                 if  not cmd: continue
                 self.on_receive_raw_data(cmd) # TODO: instead use minimalistic protocol.raw_telnet and listen on on_change(None, cmd)
                 if self.verbose: print(cmd, file=sys.stderr)
-                consumed = [(attrib,*f.consume(cmd)) for attrib,f in self.features.items() if f.matches(cmd)]
+                consumed = {attrib:f.consume(cmd) for attrib,f in self.features.items() if f.matches(cmd)}
                 if not consumed: self.on_change(None, cmd)
-                for attrib,old,new in consumed:
+                elif False in consumed.values(): continue
+                for attrib,(old,new) in consumed.items():
                     if old != new: self.on_change(attrib,new)
 
 
