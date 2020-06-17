@@ -30,6 +30,11 @@ class AbstractAmp(object):
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if connect: self.connect()
+        
+    def __enter__(self):
+        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+
+    def __exit__(self, type, value, tb): self.disconnect()
 
     def bind(self, **callbacks):
         """
@@ -151,10 +156,7 @@ class AsyncAmp(TelnetAmp):
     def on_receive_raw_data(self, data): pass
     
     def mainloop(self, blocking=True):
-        if blocking: return self._mainloop()
-        else: Thread(target=self._mainloop, name=self.__class__.__name__, daemon=True).start()
-    
-    def _mainloop(self):
+        if not blocking: return self.__enter__()
         while True:
             try: cmd = self.read(5)
             except ConnectionError: self.connect(-1)
