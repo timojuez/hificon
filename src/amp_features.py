@@ -36,9 +36,7 @@ class Feature(AbstractFeature):
             if self.default_value: return self.store(self.default_value)
             else: raise ConnectionError(e)
         else: 
-            c = self.consume(cmd)
-            self._block_on_set = self._val
-            return c
+            return self.consume(cmd)
     
     def resend(self): return self.send(self._val)
     
