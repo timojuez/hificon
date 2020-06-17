@@ -21,24 +21,24 @@ class CLI(object):
         
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
+        amp.connect()
         if self.args.follow or len(self.args.command) == 0:
-            def reader():
-                while True: print("%s"%amp.read())
-            Thread(target=reader,name="Reader",daemon=True).start()
+            amp.bind(on_receive_raw_data=self.receive)
             for cmd in self.args.command:
                 print(cmd)
-                amp._send(cmd)
+                amp.send(cmd)
             while True:
                 try: cmd = input().strip()
                 except (KeyboardInterrupt, EOFError): break
-                cmd = amp._send(cmd)
-                #print("\r[sent] %s"%cmd)
+                cmd = amp.send(cmd)
             return
         for cmd in self.args.command:
             matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
             r = amp(cmd,matches=matches)
             if r and not self.args.verbose: print(r)
         
+    def receive(self, data): print(data)
+    
 
 main = lambda:CLI()()
 if __name__ == "__main__":
