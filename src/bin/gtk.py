@@ -91,7 +91,10 @@ class Tray(_AmpEvents):
         self.icon.connect("scroll-event",self.on_scroll)
         super().__init__(*args,**xargs)
     
-    def updateIcon(self):
+    def updateIcon(self): 
+        Thread(name="update_icon",target=self._updateIcon,daemon=True).start()
+    
+    def _updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         try:
             muted = self.amp.muted

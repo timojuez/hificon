@@ -5,11 +5,18 @@ from .util.system_events import SystemEvents
 from .util import call_sequence, log_call
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import Feature
+from .amp_features import Feature, make_feature
 from . import NAME
 
 
 class AbstractAmp(object):
+    """
+    Abstract Amplifier Interface
+    Note: Event callbacks (on_connect, on_change) might be called in the mainloop
+        and delay further command processing. Use threads for not blocking the
+        mainloop.
+    """
+    
     protocol = "Undefined"
     host = "Undefined"
     features = {}
@@ -192,14 +199,14 @@ class AsyncAmp(TelnetAmp):
                 continue
             else:
                 # receiving
-                consumed = []
-                for attrib,f in self.features.items():
-                    try: old, new = f.consume(cmd)
-                    except ValueError: continue
-                    else: consumed.append((attrib,old,new))
+                if self.verbose: print(cmd, file=sys.stderr)
+                consumed = [(attrib,*f.consume(cmd)) for attrib,f in self.features.items() if f.matches(cmd)]
                 if not consumed: self.on_change(None, cmd)
                 for attrib,old,new in consumed:
                     if old != new: self.on_change(attrib,new)
+
+
+BasicAmp = AsyncAmp
 
 
 class CommonAmpWithEvents(SystemEvents,AsyncAmp):
@@ -277,7 +284,8 @@ def _make_amp_mixin(**features):
         """ apply @features to Amp """
 
         def __init__(self,*args,**xargs):
-            self.features = {k:v(self) for k,v in features.items()}
+            self.features = {}
+            for k,v in features.items(): v(self,k)
             super().__init__(*args,**xargs)
         
         def on_connect(self):
