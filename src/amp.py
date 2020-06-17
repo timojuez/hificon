@@ -93,7 +93,8 @@ class TelnetAmp(AbstractAmp):
         self.connecting_lock = Lock()
         super().__init__(*args, **xargs)
 
-    def _send(self, cmd):
+    def send(self, cmd):
+        if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         try:
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
@@ -101,7 +102,7 @@ class TelnetAmp(AbstractAmp):
             self.on_disconnected()
             raise BrokenPipeError(e)
         
-    def _read(self, timeout=None):
+    def read(self, timeout=None):
         try:
             assert(self.connected)
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
@@ -109,7 +110,7 @@ class TelnetAmp(AbstractAmp):
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
-        
+    
     def query(self, cmd, matches=None):
         """
         send @cmd to amp and return line where matches(line) is True
@@ -119,16 +120,6 @@ class TelnetAmp(AbstractAmp):
     
     __call__ = query
     
-    def read(self):
-        """ Wait until a message has been received from amp and return it """
-        while True:
-            self.lock.acquire()
-            try:
-                if self._received: return self._received.pop(0)
-            finally: self.lock.release()
-            r = self._read(5)
-            if r: self._received.append(r)
-
     def connect(self, tries=1):
         """
         @tries int: -1 for infinite
@@ -152,27 +143,25 @@ class TelnetAmp(AbstractAmp):
         except AttributeError: pass
     
 
-BasicAmp = TelnetAmp
-
-
 class AsyncAmp(TelnetAmp):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,connect=False,**xargs)
         
+    def on_receive_raw_data(self, data): pass
+    
     def mainloop(self, blocking=True):
         if blocking: return self._mainloop()
         else: Thread(target=self._mainloop, name=self.__class__.__name__, daemon=True).start()
-
+    
     def _mainloop(self):
         while True:
-            try:
-                cmd = self.read()
-            except ConnectionError:
-                self.connect(-1)
-                continue
+            try: cmd = self.read(5)
+            except ConnectionError: self.connect(-1)
             else:
                 # receiving
+                if  not cmd: continue
+                self.on_receive_raw_data(cmd) # TODO: instead use minimalistic protocol.raw_telnet and listen on on_change(None, cmd)
                 if self.verbose: print(cmd, file=sys.stderr)
                 consumed = [(attrib,*f.consume(cmd)) for attrib,f in self.features.items() if f.matches(cmd)]
                 if not consumed: self.on_change(None, cmd)

@@ -14,8 +14,6 @@ class DenonFeature(Feature):
         """
         Update property according to @cmd
         """
-        if not self.matches(cmd):
-            raise ValueError("Cannot handle `%s`."%cmd)
         param = cmd[len(self.function):]
         return self.store(self.decodeVal(param))
         
@@ -116,8 +114,8 @@ class Abstract_denon(object):
             return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self).get())
         return super().__call__(cmd,matches)
         
-    def _send(self, cmd):
-        super()._send(cmd.upper())
+    def send(self, cmd):
+        super().send(cmd.upper())
         
         
 class Amp(Abstract_denon, make_amp(**features)): pass
