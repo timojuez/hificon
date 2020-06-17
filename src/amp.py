@@ -90,8 +90,6 @@ class TelnetAmp(AbstractAmp):
     """
 
     def __init__(self, *args, **xargs):
-        self._received = []
-        self.lock = Lock()
         self.connecting_lock = Lock()
         super().__init__(*args, **xargs)
 
@@ -116,32 +114,8 @@ class TelnetAmp(AbstractAmp):
         """
         send @cmd to amp and return line where matches(line) is True
         """
-        if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
-        if not matches: return self._send(cmd)
-        def _return(r):
-            if self.verbose: print(r, file=sys.stderr)
-            return r
-
-        self.lock.acquire()
-        try:
-            pos_received = len(self._received)
-            cmd = self._send(cmd)
-            for i in range(25):
-                pos_received_new = len(self._received)
-                for r in self._received[pos_received:pos_received_new]:
-                    if matches(r): 
-                        self._received.remove(r)
-                        return _return(r)
-                pos_received = pos_received_new
-                r = self._read(2)
-                if not r:
-                    if i>5: # timeout #TODO
-                        sys.stderr.write("(timeout) ")
-                        break
-                elif matches(r): return _return(r)
-                else: self._received.append(r)
-            raise TimeoutError("WARNING: Got no answer for `%s`.\n"%cmd)
-        finally: self.lock.release()
+        if not matches: return self.send(cmd)
+        else: return make_feature(self,cmd,matches).get()
     
     __call__ = query
     
