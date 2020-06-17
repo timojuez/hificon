@@ -106,6 +106,9 @@ class TelnetAmp(AbstractAmp):
             raise BrokenPipeError(e)
         
     def query(self, cmd, matches=None):
+        """
+        send @cmd to amp and return line where matches(line) is True
+        """
         if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         if not matches: return self._send(cmd)
         def _return(r):
@@ -128,8 +131,7 @@ class TelnetAmp(AbstractAmp):
                     if i>5: # timeout #TODO
                         sys.stderr.write("(timeout) ")
                         break
-                    continue
-                if matches(r): return _return(r)
+                elif matches(r): return _return(r)
                 else: self._received.append(r)
             raise TimeoutError("WARNING: Got no answer for `%s`.\n"%cmd)
         finally: self.lock.release()
