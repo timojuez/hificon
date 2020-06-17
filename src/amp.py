@@ -138,7 +138,7 @@ class TelnetAmp(AbstractAmp):
                 except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
                     if tries == 0: raise
                 else:
-                    return self.on_connect()
+                    return Thread(name="on_connect",target=self.on_connect).start()
                 time.sleep(3)
         finally: self.connecting_lock.release()
 
@@ -166,10 +166,10 @@ class AsyncAmp(TelnetAmp):
                 self.on_receive_raw_data(cmd) # TODO: instead use minimalistic protocol.raw_telnet and listen on on_change(None, cmd)
                 if self.verbose: print(cmd, file=sys.stderr)
                 consumed = {attrib:f.consume(cmd) for attrib,f in self.features.items() if f.matches(cmd)}
-                if not consumed: self.on_change(None, cmd)
+                if not consumed: Thread(name="on_change",target=self.on_change,args=(None, cmd)).start()
                 elif False in consumed.values(): continue
                 for attrib,(old,new) in consumed.items():
-                    if old != new: self.on_change(attrib,new)
+                    if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
 
 
 BasicAmp = AsyncAmp
