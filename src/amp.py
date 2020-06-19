@@ -34,7 +34,9 @@ class AbstractAmp(object):
         if connect: self.connect()
         
     def __enter__(self):
+        self.connect()
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+        return self
 
     def __exit__(self, type, value, tb): self.disconnect()
 
