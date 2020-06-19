@@ -21,12 +21,11 @@ class CLI(object):
         
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
-        amp.connect()
-        amp.bind(on_disconnected=self.on_disconnected)
         with amp: self.start(amp)
         os._exit(0) # workaround for --return -v: otherwise after quitting, amp.mainloop tries to write to stderr
 
     def start(self, amp):
+        amp.bind(on_disconnected=self.on_disconnected)
         if self.args.follow or len(self.args.command) == 0:
             amp.bind(on_receive_raw_data=self.receive)
             for cmd in self.args.command:
