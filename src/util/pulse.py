@@ -4,8 +4,9 @@ from threading import Thread
 
 class ConnectedPulse(pulsectl.Pulse):
 
-    def __init__(self,*args,connect=True,**xargs):
+    def __init__(self,*args,connect=True,verbose=False,**xargs):
         super().__init__(*args,connect=False,**xargs)
+        self._verbose = verbose
         if connect: self.connect_async()
 
     def connect_async(self):
@@ -17,13 +18,13 @@ class ConnectedPulse(pulsectl.Pulse):
                 try: connect()
                 except pulsectl.pulsectl.PulseError: time.sleep(3)
                 else: break
-        print("[%s] Connecting..."%self.__class__.__name__, file=sys.stderr)
+        if self._verbose: print("[%s] Connecting..."%self.__class__.__name__, file=sys.stderr)
         try: connect()
         except pulsectl.pulsectl.PulseError:
             Thread(name="%s_connecting"%self.__class__.__name__,target=keep_reconnecting,daemon=True).start()
     
     def on_connected(self):
-        print("[%s] Connected to Pulseaudio."%self.__class__.__name__, file=sys.stderr)
+        if self._verbose: print("[%s] Connected to Pulseaudio."%self.__class__.__name__, file=sys.stderr)
     
     
 class PulseListener(ConnectedPulse):

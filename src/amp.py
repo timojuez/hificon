@@ -23,7 +23,7 @@ class AbstractAmp(object):
     features = {}
     connected = False
 
-    def __init__(self, host=None, name=None, verbose=False, **callbacks):
+    def __init__(self, host=None, name=None, verbose=0, **callbacks):
         super().__init__()
         self.verbose = verbose
         self.bind(**callbacks)
@@ -73,7 +73,7 @@ class AbstractAmp(object):
     @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
-        if self.verbose: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
+        if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         self.connected = True
         
     @log_call
@@ -102,7 +102,7 @@ class TelnetAmp(AbstractAmp):
         super().__init__(*args, **xargs)
 
     def send(self, cmd):
-        if self.verbose: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
+        if self.verbose > 3: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         try:
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
@@ -161,7 +161,7 @@ class TelnetAmp(AbstractAmp):
                 # receiving
                 if  not cmd: continue
                 self.on_receive_raw_data(cmd) # TODO: instead use minimalistic protocol.raw_telnet and listen on on_change(None, cmd)
-                if self.verbose: print(cmd, file=sys.stderr)
+                if self.verbose > 3: print(cmd, file=sys.stderr)
                 consumed = {attrib:f.consume(cmd) for attrib,f in self.features.items() if f.matches(cmd)}
                 if not consumed: Thread(name="on_change",target=self.on_change,args=(None, cmd)).start()
                 elif False in consumed.values(): continue

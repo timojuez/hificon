@@ -15,8 +15,10 @@ class JsonService(object):
     A service communicating with Json objects. Call mainloop() after init.
     """
 
-    def __init__(self, host="127.0.0.1", port=PORT):
-        print("[%s] Listening on port %d"%(self.__class__.__name__,port), file=sys.stderr)
+    def __init__(self, host="127.0.0.1", port=PORT, verbose=0):
+        self._verbose = verbose
+        if self._verbose > 0: print(
+            "[%s] Listening on port %d"%(self.__class__.__name__,port), file=sys.stderr)
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
         sock.bind((host, port))
@@ -44,7 +46,8 @@ class JsonService(object):
         if data:
             try:
                 d = json.loads(data.decode())
-                print("[%s] Received %s"%(self.__class__.__name__,d), file=sys.stderr)
+                if self._verbose > 1: print(
+                    "[%s] Received %s"%(self.__class__.__name__,d), file=sys.stderr)
             except Exception as e: print(repr(e))
             else: self.on_read(d)
         else:

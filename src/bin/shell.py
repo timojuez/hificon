@@ -16,7 +16,7 @@ class CLI(object):
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor amp messages')
-        parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
+        parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
         
     def __call__(self):
@@ -39,7 +39,7 @@ class CLI(object):
         for cmd in self.args.command:
             matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
             r = amp(cmd,matches=matches)
-            if r and not self.args.verbose: print(r)
+            if r: print(r)
         
     def receive(self, data): print(data)
     

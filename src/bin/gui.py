@@ -123,13 +123,13 @@ class Main(NotificationMixin, VolumeChanger, Tray): pass
 
 def main():    
     parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
-    parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     
-    amp = Amp(verbose=args.verbose)
+    amp = Amp(verbose=args.verbose+1)
     program = Main(amp)
     Thread(name="Amp",target=amp.mainloop,daemon=True).start()
-    RemoteControlService(program)()
+    RemoteControlService(program,verbose=args.verbose)()
     program.mainloop()
         
 
