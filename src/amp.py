@@ -62,24 +62,20 @@ class AbstractAmp(object):
             self.power = False
         except ConnectionError: pass
 
-    def connect(self, tries=1): raise NotImplementedError()
+    def connect(self, tries=1): self.connected = True
 
     def connect_async(self):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
-    def disconnect(self):
-        self.connected = False
+    def disconnect(self): self.connected = False
         
     @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
-        self.connected = True
         
     @log_call
-    def on_disconnected(self):
-        self.connected = False
-        self.connect_async()
+    def on_disconnected(self): self.connect_async()
 
     @log_call
     def on_change(self, attrib, new_val): pass
@@ -141,6 +137,7 @@ class TelnetAmp(AbstractAmp):
                 except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
                     if tries == 0: raise
                 else:
+                    super().connect()
                     return Thread(name="on_connect",target=self.on_connect).start()
                 time.sleep(3)
         finally: self.connecting_lock.release()
