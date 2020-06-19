@@ -26,7 +26,7 @@ class NotificationMixin(object):
         notification = Notify.Notification()
         notification.set_urgency(2)
         notification.set_timeout(config.getint("GUI","notification_timeout"))
-        notification.update("Connecting ...",self.amp.host)
+        notification.update("Connecting ...",self.amp.name)
         return notification
         
     def notify(self, attr, val=None):
@@ -36,7 +36,7 @@ class NotificationMixin(object):
         if attr not in self._notifications: self._notifications[attr] = self._createNotification()
         n = self._notifications[attr]
         if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
-        if val is not None: n.update("%s: %s"%(name, val),self.amp.host)
+        if val is not None: n.update("%s: %s"%(name, val),self.amp.name)
         n.show()
 
     def press(self,*args,**xargs):
@@ -99,7 +99,7 @@ class Tray(_AmpEvents):
             maxvol = self.amp.maxvol
         except ConnectionError: pass
         else: 
-            #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.host))
+            #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
             if muted or volume == 0:
                 self.icon.set_icon_full("audio-volume-muted","muted")
             else:

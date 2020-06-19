@@ -19,6 +19,7 @@ class AbstractAmp(object):
     
     protocol = "Undefined"
     host = "Undefined"
+    name = None
     features = {}
     connected = False
 
@@ -27,6 +28,7 @@ class AbstractAmp(object):
         self.verbose = verbose
         self.bind(**callbacks)
         self.host = host or config["Amp"].get("Host")
+        self.name = self.name or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if connect: self.connect()

@@ -57,10 +57,7 @@ class Maxvol(FloatFeature):
     function="MVMAX "
     call="MV?"
     default_value = 98
-
-    def set(self, val):
-        raise RuntimeError("Cannot set MVMAX!")
-        
+    def set(self, val): raise RuntimeError("Cannot set MVMAX!")
     def send(self): pass
         
 
@@ -80,6 +77,13 @@ class Muted(NominalFeature):
 class Source(NominalFeature):
     function = "SI"
     
+
+class Name(NominalFeature):
+    function = "NSFRN "
+    def matches(self, cmd): return cmd.startswith(self.function)
+    def set(self, val): raise RuntimeError("Cannot set value!")
+    def send(self): pass
+
     
 class SubwooferVolume(FloatFeature):
     name = "Subwoofer Volume"
@@ -94,12 +98,13 @@ features = dict(
         power = Power,
         source = Source,
         sub_volume = SubwooferVolume,
+        denon_name = Name,
 )
 
 
 class Abstract_denon(object):
     protocol = "Denon"
-        
+    
     def __call__(self, cmd, matches=None):
         """ 
         Send command to amp
@@ -111,6 +116,11 @@ class Abstract_denon(object):
             function = cmd.replace("?","")
             return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self).get())
         return super().__call__(cmd,matches)
+    
+    def on_connect(self):
+        super().on_connect()
+        try: self.name = self.denon_name
+        except Exception as e: print(repr(e))
         
     def send(self, cmd):
         super().send(cmd.upper())
