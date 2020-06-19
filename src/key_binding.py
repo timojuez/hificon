@@ -62,7 +62,7 @@ class VolumeChanger(_AmpEvents):
         
     def on_amp_change(self, attr, value):
         super().on_amp_change(attr, value)
-        if self.keys_pressed <= 0: return
+        if attr != "volume" or self.keys_pressed <= 0: return
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
         
