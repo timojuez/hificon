@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import argparse, os
+import argparse, os, sys
 from threading import Thread
 from .. import Amp
 
@@ -21,12 +21,12 @@ class CLI(object):
         
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
-        try:
-            with amp: self.start(amp)
-        finally: os._exit(0) # workaround for --return -v: otherwise after quitting, amp.mainloop tries to write to stderr
+        amp.connect()
+        amp.bind(on_disconnected=self.on_disconnected)
+        with amp: self.start(amp)
+        os._exit(0) # workaround for --return -v: otherwise after quitting, amp.mainloop tries to write to stderr
 
     def start(self, amp):
-        amp.connect()
         if self.args.follow or len(self.args.command) == 0:
             amp.bind(on_receive_raw_data=self.receive)
             for cmd in self.args.command:
@@ -44,6 +44,10 @@ class CLI(object):
         
     def receive(self, data): print(data)
     
+    def on_disconnected(self):
+        print("Connection lost", file=sys.stderr)
+        os._exit(1)
+        
 
 main = lambda:CLI()()
 if __name__ == "__main__":
