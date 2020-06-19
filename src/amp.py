@@ -23,15 +23,14 @@ class AbstractAmp(object):
     features = {}
     connected = False
 
-    def __init__(self, host=None, connect=True, verbose=False, **callbacks):
+    def __init__(self, host=None, name=None, verbose=False, **callbacks):
         super().__init__()
         self.verbose = verbose
         self.bind(**callbacks)
         self.host = host or config["Amp"].get("Host")
-        self.name = self.name or self.host
+        self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
-        if connect: self.connect()
         
     def __enter__(self):
         self.connect()
@@ -150,13 +149,7 @@ class TelnetAmp(AbstractAmp):
         super().disconnect()
         try: self._telnet.close()
         except AttributeError: pass
-    
 
-class AsyncAmp(TelnetAmp):
-
-    def __init__(self, *args, **xargs):
-        super().__init__(*args,connect=False,**xargs)
-        
     def on_receive_raw_data(self, data): pass
     
     def mainloop(self, blocking=True):
@@ -176,10 +169,10 @@ class AsyncAmp(TelnetAmp):
                     if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
 
 
-BasicAmp = AsyncAmp
+BasicAmp = TelnetAmp
 
 
-class CommonAmpWithEvents(SystemEvents,AsyncAmp):
+class CommonAmpWithEvents(SystemEvents,TelnetAmp):
     """ Amp with system events listener """
     
     @log_call

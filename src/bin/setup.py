@@ -88,6 +88,7 @@ def discover_denon():
                 except: name = host
             print("Found %s on %s."%(name, host))
             config["Amp"]["Host"] = host
+            config["Amp"]["Name"] = name
             return
     raise Exception("No Denon amp found in local network. Check if amp is connected or"
         " set IP manually.")

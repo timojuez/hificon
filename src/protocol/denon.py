@@ -117,11 +117,6 @@ class Abstract_denon(object):
             return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self).get())
         return super().__call__(cmd,matches)
     
-    def on_connect(self):
-        super().on_connect()
-        try: self.name = self.denon_name
-        except Exception as e: print(repr(e))
-        
     def send(self, cmd):
         super().send(cmd.upper())
         
