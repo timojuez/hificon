@@ -54,7 +54,7 @@ class PulseListener(ConnectedPulse):
         # Pulseaudio connected
         super().on_connected()
         try: self._sink_input_set = self.sink_input_set()
-        except pulsectl.pulsectl.PulseDisconnected: return self.connect_pulse()
+        except pulsectl.pulsectl.PulseDisconnected: return self.connect_async()
         if self._consider_old_sinks: self.is_playing = self._sink_input_set
         self._events.on_pulse_connected()
         Thread(target=self.loop, name=self.__class__.__name__, daemon=True).start()
@@ -72,7 +72,7 @@ class PulseListener(ConnectedPulse):
                 elif self.ev.facility == pulsectl.PulseEventFacilityEnum.sink_input:
                     self._on_pulse_sink_input_event()
         except KeyboardInterrupt: pass
-        except pulsectl.pulsectl.PulseDisconnected: self.connect_pulse()
+        except pulsectl.pulsectl.PulseDisconnected: self.connect_async()
         
     def _callback(self, ev):
         self.ev = ev
