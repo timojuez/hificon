@@ -16,7 +16,7 @@ class Main(object):
         parser = argparse.ArgumentParser(description='%s Setup Tool'%NAME)
         discover = parser.add_mutually_exclusive_group()
         discover.add_argument('--discover', dest="nothing", action="store_false", help='Include Denon amp discovery (default)')
-        discover.add_argument('--no-discover', default=DenonDiscoverer, dest="discover", action="store_false")
+        discover.add_argument('--no-discover', default=discover_denon, dest="discover", action="store_false")
 
         keys = parser.add_mutually_exclusive_group()
         keys.add_argument('--keys', default=False, action="store_const", const=setup_xorg_key_binding, help='Setup Xorg mouse and keyboard volume keys binding for current user')
@@ -57,7 +57,8 @@ def set_port():
 def source_setup():
     from .. import Amp
     input("On your amp, select the input source that you want to control with this program and press ENTER.")
-    source = Amp(protocol=".denon", cls="BasicAmp").source
+    with Amp(protocol=".denon", cls="BasicAmp") as amp:
+        source = amp.source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
     
@@ -75,20 +76,21 @@ def setup_xorg_key_binding():
     os.system("xbindkeys")
     
 
-class DenonDiscoverer(object):
+def discover_denon():
     """
     Search local network for Denon amp
     """
-
-    def __init__(self):
-        for host in PrivateNetwork().find_hosts():
-            if host.lower().startswith("denon"):
-                print("Found '%s'."%host)
-                self.denon = host
-                config["Amp"]["Host"] = host
-                return
-        raise Exception("No Denon amp found in local network. Check if amp is connected or"
-            " set IP manually.")
+    for host in PrivateNetwork().find_hosts():
+        if host.lower().startswith("denon"):
+            from .. import Amp
+            with Amp(protocol=".denon", cls="BasicAmp", host=host) as amp:
+                try: name = amp.denon_name
+                except: name = host
+            print("Found %s on %s."%(name, host))
+            config["Amp"]["Host"] = host
+            return
+    raise Exception("No Denon amp found in local network. Check if amp is connected or"
+        " set IP manually.")
         
 
 class PrivateNetwork(object):
