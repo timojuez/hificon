@@ -2,28 +2,13 @@
 import time, sys
 from threading import Thread
 from .util import json_service
+from .amp import AmpEvents
 from .config import config
 
 ipc_port = config.getint("Service","ipc_port")
 
 
-class _AmpEvents(object):
-    # TODO: move to .amp or __init__
-
-    def __init__(self,amp):
-        self.amp = amp
-        amp.bind(
-            on_connect=self.on_connect,
-            on_disconnected=self.on_disconnected,
-            on_change=self.on_amp_change,
-        )
-        
-    def on_connect(self): pass
-    def on_disconnected(self): pass
-    def on_amp_change(self,*args,**xargs): pass
-
-
-class VolumeChanger(_AmpEvents):
+class VolumeChanger(AmpEvents):
     """ 
     Class for managing volume up/down while hot key pressed
     when both hot keys are being pressed, last one counts
@@ -84,7 +69,6 @@ class VolumeChanger(_AmpEvents):
         try: self.amp.poweron(True)
         except ConnectionError: pass
         
-
 
 def RemoteControlService(*args,**xargs):
     if ipc_port < 0: return

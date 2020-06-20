@@ -206,6 +206,23 @@ class CommonAmpWithEvents(SystemEvents,TelnetAmp):
     def on_sound_idle(self): pass
     
 
+class AmpEvents(object):
+    """ Classes that inherit from this class will automatically have their functions bound
+    to amp """
+
+    def __new__(cls, amp):
+        events = filter((lambda attr:attr.startswith("on_")), dir(amp))
+        dct = {attr: lambda *args,**xargs:None for attr in events}
+        cls_events = type("Events_%s"%cls.__name__, (object,), dct)
+        cls_complete = type(cls.__name__,(cls,cls_events),{})
+        return super().__new__(cls_complete)
+        
+    def __init__(self, amp):
+        events = filter((lambda attr:attr.startswith("on_")), dir(amp))
+        self.amp = amp
+        for attr in events: amp.bind(**{attr:getattr(self,attr)})
+
+
 class AmpWithEvents(CommonAmpWithEvents):
     # TODO: move to other module?
     """ Amp implementing actions """
