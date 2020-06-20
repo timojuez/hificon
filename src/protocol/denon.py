@@ -1,5 +1,5 @@
 import sys
-from ..amp import Feature, make_amp, make_basic_amp
+from ..amp import Feature, TelnetAmp, make_amp, make_basic_amp
 
 
 class DenonFeature(Feature):
@@ -105,7 +105,7 @@ features = dict(
 class Abstract_denon(object):
     protocol = "Denon"
     
-    def __call__(self, cmd, matches=None):
+    def query(self, cmd, matches=None):
         """ 
         Send command to amp
         @cmd str: function[?|param]
@@ -121,6 +121,6 @@ class Abstract_denon(object):
         super().send(cmd.upper())
         
         
-class Amp(Abstract_denon, make_amp(**features)): pass
-class BasicAmp(Abstract_denon, make_basic_amp(**features)): pass
+class Amp(Abstract_denon, make_amp(**features), TelnetAmp): pass
+class BasicAmp(Abstract_denon, make_basic_amp(**features), TelnetAmp): pass
 

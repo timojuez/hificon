@@ -122,7 +122,7 @@ class TelnetAmp(AbstractAmp):
         if not matches: return self.send(cmd)
         else: return make_feature(self,cmd,matches).get()
     
-    __call__ = query
+    __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
     
     def connect(self, tries=1):
         """
@@ -166,11 +166,8 @@ class TelnetAmp(AbstractAmp):
                     if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
 
 
-BasicAmp = TelnetAmp
-
-
-class CommonAmpWithEvents(SystemEvents,TelnetAmp):
-    """ Amp with system events listener """
+class EventsMixin(SystemEvents):
+    """ Adds system events listener to amp """
     
     @log_call
     def on_shutdown(self, sig, frame):
@@ -223,9 +220,9 @@ class AmpEvents(object):
         for attr in events: amp.bind(**{attr:getattr(self,attr)})
 
 
-class AmpWithEvents(CommonAmpWithEvents):
+class DefaultActions(AmpEvents):
     # TODO: move to other module?
-    """ Amp implementing actions """
+    """ implementing actions """
     
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
@@ -317,6 +314,6 @@ def _make_amp(features, base_cls=object):
     return type("Amp", (_make_amp_mixin(**features),base_cls), dict())
     
 
-def make_basic_amp(**features): return _make_amp(features, BasicAmp)
-def make_amp(**features): return _make_amp(features, AmpWithEvents)
+def make_basic_amp(**features): return _make_amp(features)
+def make_amp(**features): return _make_amp(features, EventsMixin)
 

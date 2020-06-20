@@ -10,7 +10,7 @@ except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
 from .. import Amp, NAME
-from ..amp import AmpEvents
+from ..amp import DefaultActions
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
 
@@ -70,7 +70,7 @@ class Icon(pystray.Icon):
         self.icon = Image.open(io.BytesIO(image_data))
         
 
-class Tray(AmpEvents):
+class Tray(object):
 
     def mainloop(self): self.icon.run(setup=lambda _:None)
 
@@ -119,7 +119,7 @@ class Tray(AmpEvents):
         except ConnectionError: pass
         
 
-class Main(NotificationMixin, VolumeChanger, Tray): pass
+class Main(NotificationMixin, VolumeChanger, Tray, DefaultActions): pass
 
 
 def main():    
