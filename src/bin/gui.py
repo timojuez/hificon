@@ -44,12 +44,12 @@ class NotificationMixin(object):
         self.notify("volume")
         super().press(*args,**xargs)
 
-    def on_amp_change(self, attr, value):
+    def on_change(self, attr, value): # amp change
         if (    self._notify_events == "all"
                 or self._notify_events == "all_implemented" and attr
                 or attr in self._notify_events.split(", ")):
             self.notify(attr,value)
-        super().on_amp_change(attr,value)
+        super().on_change(attr,value)
 
     def on_scroll(self, *args, **xargs):
         try: volume = self.amp.volume
@@ -74,16 +74,16 @@ class Tray(object):
 
     def mainloop(self): self.icon.run(setup=lambda _:None)
 
-    def on_connect(self):
+    def on_connect(self): # amp connect
         super().on_connect()
         self.updateIcon()
 
-    def on_disconnected(self):
+    def on_disconnected(self): # amp disconnect
         self.icon.visible = False
         super().on_disconnected()
         
-    def on_amp_change(self, attr, value):
-        super().on_amp_change(attr,value)
+    def on_change(self, attr, value): # amp change
+        super().on_change(attr,value)
         if attr in ("volume","muted","maxvol"): self.updateIcon()
             
     def __init__(self, *args, **xargs):

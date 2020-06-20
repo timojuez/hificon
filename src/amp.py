@@ -221,7 +221,6 @@ class AmpEvents(object):
 
 
 class DefaultActions(AmpEvents):
-    # TODO: move to other module?
     """ implementing actions """
     
     def on_shutdown(self, sig, frame):

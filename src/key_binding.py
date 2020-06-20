@@ -39,14 +39,14 @@ class VolumeChanger(AmpEvents):
         self.button = button
         self.fire_volume()
     
-    def on_amp_connect(self):
-        super().on_amp_connect()
+    def on_connect(self): # amp connect
+        super().on_connect()
         try: # preload values
             self.amp.volume
         except ConnectionError as e: print(repr(e), file=sys.stderr)
         
-    def on_amp_change(self, attr, value):
-        super().on_amp_change(attr, value)
+    def on_change(self, attr, value): # amp change
+        super().on_change(attr, value)
         if attr != "volume" or self.keys_pressed <= 0: return
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
