@@ -1,3 +1,12 @@
+"""
+Class that listens for system events such as shutdown, suspend, resume, sound playing.
+The available events depend on the platform.
+Example:
+    class MyListener(SystemEvents):
+        def on_shutdown(self): print("shutting down now!")
+    MyListener().mainloop()
+"""
+
 import signal, time
 from threading import Thread
 
