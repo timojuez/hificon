@@ -226,28 +226,28 @@ class DefaultActions(AmpEvents):
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
         super().on_shutdown(sig,frame)
-        try: self.poweroff()
+        try: self.amp.poweroff()
         except ConnectionError: pass
-        self.disconnect()
+        self.amp.disconnect()
         
     def on_suspend(self):
         super().on_suspend()
-        try: self.poweroff()
+        try: self.amp.poweroff()
         except ConnectionError: pass
-        self.disconnect()
+        self.amp.disconnect()
     
     def on_resume(self):
         super().on_resume()
-        self.on_disconnected()
+        self.amp.on_disconnected()
 
     def on_start_playing(self):
         super().on_start_playing()
-        try: self.poweron()
+        try: self.amp.poweron()
         except ConnectionError: pass
 
     def on_sound_idle(self):
         super().on_sound_idle()
-        try: self.poweroff()
+        try: self.amp.poweroff()
         except ConnectionError: pass
     
 
