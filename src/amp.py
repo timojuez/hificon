@@ -51,14 +51,14 @@ class AbstractAmp(object):
         try:
             if not force and not config.getboolean("Amp","control_power_on") or self.power:
                 return
-            if config.get("Amp","source"): self.source = config.get("Amp","source")
+            if config["Amp"].get("source"): self.source = config["Amp"]["source"]
             self.power = True
         except ConnectionError: pass
 
     def poweroff(self, force=False):
         try:
             if not force and (not config.getboolean("Amp","control_power_off") 
-                or config.get("Amp","source") and self.source != config.get("Amp","source")): return
+                or config["Amp"].get("source") and self.source != config["Amp"]["source"]): return
             self.power = False
         except ConnectionError: pass
 
