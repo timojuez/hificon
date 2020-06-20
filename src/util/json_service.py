@@ -72,7 +72,8 @@ class RemoteControlService(JsonService):
         try:
             if self._func_whitelist: assert(data["func"] in self._func_whitelist)
             #assert(isinstance(data["kwargs"]["button"],bool))
-            func = getattr(self._obj, data["func"])
+            func = self._obj
+            for attr in data["func"].split("."): func = getattr(func,attr)
             kwargs = data["kwargs"]
         except:
             return print("[%s] invalid message."%self.__class__.__name__, file=sys.stderr)
