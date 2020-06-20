@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
-
 import argparse, os, sys
 from threading import Thread
 from .. import Amp
@@ -20,7 +17,7 @@ class CLI(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        amp = Amp(self.args.host, protocol=self.args.protocol, cls="BasicAmp", verbose=self.args.verbose)
+        amp = Amp(self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         with amp: self.start(amp)
         os._exit(0) # workaround for --return -v: otherwise after quitting, amp.mainloop tries to write to stderr
 

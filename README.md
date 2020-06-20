@@ -91,7 +91,7 @@ It should be possible to implement the support for other AVR brands like Yamaha,
 It is possible to create a customised controller that keeps your own program synchronised with the amp.
 See ./examples/custom_app.py
 
-If your development only relies on sending commands to the amp, you need the class hificon.Amp(cls="BasicAmp"). Your requirement is purely the hificon package and optionally hificon[autosetup].
+If your development only relies on sending commands to the amp, your requirement is purely the hificon package and optionally hificon[autosetup].
 
 
 ## Limitations

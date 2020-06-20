@@ -166,7 +166,7 @@ class TelnetAmp(AbstractAmp):
                     if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
 
 
-class EventsMixin(SystemEvents):
+class SystemEventsMixin(SystemEvents):
     """ Adds system events listener to amp """
     
     @log_call
@@ -251,7 +251,7 @@ class DefaultActions(AmpEvents):
         except ConnectionError: pass
     
 
-def _make_amp_mixin(**features):
+def _make_features_mixin(**features):
     """
     Make a class where all attributes are getters and setters for amp properties
     args: class_attribute_name=MyFeature
@@ -293,7 +293,7 @@ def _make_amp_mixin(**features):
         
         
     dict_ = dict()
-    try: dict_["protocol"] = sys._getframe(3).f_globals['__name__']
+    try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
     except: pass
     dict_.update({
         k:property(
@@ -306,13 +306,9 @@ def _make_amp_mixin(**features):
     return cls
 
 
-def _make_amp(features, base_cls=object):
+def make_amp(features, base_cls=object):
     for name in features.keys(): 
         if hasattr(base_cls,name):
             raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
-    return type("Amp", (_make_amp_mixin(**features),base_cls), dict())
+    return type("Amp", (_make_features_mixin(**features),SystemEventsMixin,base_cls), dict())
     
-
-def make_basic_amp(**features): return _make_amp(features)
-def make_amp(**features): return _make_amp(features, EventsMixin)
-

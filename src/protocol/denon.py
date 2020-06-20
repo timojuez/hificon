@@ -1,5 +1,5 @@
 import sys
-from ..amp import Feature, TelnetAmp, make_amp, make_basic_amp
+from ..amp import Feature, TelnetAmp, make_amp
 
 
 class DenonFeature(Feature):
@@ -121,6 +121,5 @@ class Abstract_denon(object):
         super().send(cmd.upper())
         
         
-class Amp(Abstract_denon, make_amp(**features), TelnetAmp): pass
-class BasicAmp(Abstract_denon, make_basic_amp(**features), TelnetAmp): pass
+class Amp(Abstract_denon, make_amp(features,TelnetAmp)): pass
 

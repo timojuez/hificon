@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
-
 import subprocess, sys, ipaddress, os, argparse, pkgutil, socket
 try: import nmap
 except ImportError: pass
@@ -57,7 +54,7 @@ def set_port():
 def source_setup():
     from .. import Amp
     input("On your amp, select the input source that you want to control with this program and press ENTER.")
-    with Amp(protocol=".denon", cls="BasicAmp") as amp:
+    with Amp(protocol=".denon") as amp:
         source = amp.source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
@@ -83,7 +80,7 @@ def discover_denon():
     for host in PrivateNetwork().find_hosts():
         if host.lower().startswith("denon"):
             from .. import Amp
-            with Amp(protocol=".denon", cls="BasicAmp", host=host) as amp:
+            with Amp(protocol=".denon", host=host) as amp:
                 try: name = amp.denon_name
                 except: name = host
             print("Found %s on %s."%(name, host))
