@@ -184,7 +184,12 @@ class CommonAmpWithEvents(SystemEvents,TelnetAmp):
     def on_resume(self):
         """ Is being executed after resume computer from suspension """
         pass
-        
+
+    def on_connect(self):
+        super().on_connect()
+        if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
+            self.on_start_playing()
+
     @log_call
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()

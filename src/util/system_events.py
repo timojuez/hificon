@@ -39,11 +39,6 @@ class PulseMixin(_Abstract):
         self.pulse = PulseListener(self, connect=False, consider_old_sinks=False)
         self.pulse.connect_async()
         
-    def on_connect(self):
-        # Amp connected
-        super().on_connect()
-        if self.pulse.connected and self.pulse.is_playing: self.on_start_playing()
-
     def on_pulse_connected(self): pass
     def on_start_playing(self): pass
     def on_stop_playing(self): pass
