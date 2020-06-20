@@ -5,7 +5,7 @@ from src import PKG_NAME
 
 
 setup(name=PKG_NAME,
-      version='1.5.11a',
+      version='1.5.12a',
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',

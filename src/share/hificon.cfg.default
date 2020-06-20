@@ -15,12 +15,16 @@ source =
 
 
 [KeyEventHandling]
-# IPC service port
-ipc_port = -1
 # Wait @interval milliseconds after each @step volume steps
 interval = 30
 # volume steps while key is pressed
 step = 1.0
+
+
+[Service]
+# IPC service port
+ipc_port = -1
+secure_mode = yes
 
 
 [GUI]

@@ -4,7 +4,7 @@ from threading import Thread
 from .util import json_service
 from .config import config
 
-ipc_port = config.getint("KeyEventHandling","ipc_port")
+ipc_port = config.getint("Service","ipc_port")
 
 
 class _AmpEvents(object):
@@ -88,7 +88,8 @@ class VolumeChanger(_AmpEvents):
 
 def RemoteControlService(*args,**xargs):
     if ipc_port < 0: return
-    return json_service.RemoteControlService(*args,port=ipc_port,func_whitelist=("press","release"),**xargs)
+    whitelist = ("press","release") if config.getbool("Service","secure_mode") else None
+    return json_service.RemoteControlService(*args,port=ipc_port,func_whitelist=whitelist,**xargs)
     
 
 send = lambda e: json_service.send(e, port=ipc_port)

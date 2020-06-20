@@ -50,7 +50,7 @@ def set_port():
     sock = socket.socket()
     sock.bind(('127.0.0.1', 0))
     port = sock.getsockname()[1]
-    config["KeyEventHandling"]["ipc_port"] = str(port)
+    config["Service"]["ipc_port"] = str(port)
     print("Set port %d"%port)
     
 
