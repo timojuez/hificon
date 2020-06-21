@@ -21,8 +21,8 @@ class CLI(object):
         with amp: self.start(amp)
 
     def start(self, amp):
-        amp.bind(on_disconnected=self.on_disconnected)
         if self.args.follow or len(self.args.command) == 0:
+            amp.bind(on_disconnected=self.on_disconnected)
             amp.bind(on_receive_raw_data=self.receive)
             for cmd in self.args.command:
                 print(cmd)
@@ -40,7 +40,7 @@ class CLI(object):
     def receive(self, data): print(data)
     
     def on_disconnected(self):
-        print("Connection lost", file=sys.stderr)
+        print("Connection closed", file=sys.stderr)
         exit()
         
 
