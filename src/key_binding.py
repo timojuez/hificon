@@ -2,7 +2,7 @@
 import time, sys
 from threading import Thread
 from .util import json_service
-from .amp import AmpEvents
+from .amp_controller import AmpEvents
 from .config import config
 
 ipc_port = config.getint("Service","ipc_port")

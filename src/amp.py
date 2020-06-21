@@ -1,16 +1,16 @@
 import sys, time, socket
-from threading import Lock, Thread, Timer
+from threading import Thread, Lock
 from telnetlib import Telnet
 from contextlib import suppress
-from .util.system_events import SystemEvents
-from .util import call_sequence, log_call
+from .util.function_bind import Bindable
+from .util import log_call
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import Feature, make_feature
 from . import NAME
 
 
-class AbstractAmp(object):
+class AbstractAmp(Bindable):
     """
     Abstract Amplifier Interface
     Note: Event callbacks (on_connect, on_change) might be called in the mainloop
@@ -32,24 +32,21 @@ class AbstractAmp(object):
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
+    
+    def __enter__(self): self.connect(); self.enter(); return self
+
+    def __exit__(self, type, value, tb): self.exit()
+
+    def enter(self):
+        self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
+        self._mainloopt.start()
+
+    def exit(self): self.disconnect(); self._mainloopt.join()
+    
+    def connect(self, tries=1): self.connected = True
+
+    def disconnect(self): pass
         
-    def __enter__(self):
-        self.connect()
-        self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
-        return self
-
-    def __exit__(self, type, value, tb):
-        self.disconnect()
-        self._mainloopt.join()
-
-    def bind(self, **callbacks):
-        """
-        bind(event=function)
-        Register callback on @event. Event can be any function in Amp
-        """
-        for name, callback in callbacks.items():
-            setattr(self, name, call_sequence(getattr(self,name), callback))
-
     def poweron(self, force=False):
         try:
             if not force and not config.getboolean("Amp","control_power_on") or self.power:
@@ -65,22 +62,13 @@ class AbstractAmp(object):
             self.power = False
         except ConnectionError: pass
 
-    def connect(self, tries=1): self.connected = True
-
-    def connect_async(self):
-        Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
-        
-    def disconnect(self): pass
-        
     @log_call
     def on_connect(self):
         """ Execute when connected e.g. after connection aborted """
         if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         
     @log_call
-    def on_disconnected(self):
-        self.connected = False
-        #self.connect_async()
+    def on_disconnected(self): self.connected = False
 
     @log_call
     def on_change(self, attrib, new_val): pass
@@ -89,7 +77,9 @@ class AbstractAmp(object):
     @log_call
     def on_poweroff(self): pass
 
-    def mainloop(self): raise NotImplementedError()
+    def mainloop(self):
+        """ listens on amp for events and calls on_change. Return when connection closed """
+        raise NotImplementedError()
     
 
 class TelnetAmp(AbstractAmp):
@@ -100,7 +90,6 @@ class TelnetAmp(AbstractAmp):
 
     def __init__(self, *args, **xargs):
         self.connecting_lock = Lock()
-        self._stoploop = False
         super().__init__(*args, **xargs)
 
     def send(self, cmd):
@@ -150,18 +139,14 @@ class TelnetAmp(AbstractAmp):
 
     def disconnect(self):
         #super().disconnect()
+        self._stoploop = True
         with suppress(AttributeError):
             self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
             self._telnet.close()
 
-    def __exit__(self, type, value, tb):
-        self._stoploop = True
-        super().__exit__(type,value,tb)
-        
     def on_receive_raw_data(self, data): pass
 
-    def mainloop(self, blocking=True):
-        if not blocking: return self.__enter__()
+    def mainloop(self):
         self._stoploop = False
         while not self._stoploop:
             try: cmd = self.read(5)
@@ -178,91 +163,6 @@ class TelnetAmp(AbstractAmp):
                 for attrib,(old,new) in consumed.items():
                     if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
 
-
-class SystemEventsMixin(SystemEvents):
-    """ Adds system events listener to amp """
-    
-    @log_call
-    def on_shutdown(self, sig, frame):
-        """ when shutting down computer """
-        pass
-        
-    @log_call
-    def on_suspend(self): pass
-    
-    @log_call
-    def on_resume(self):
-        """ Is being executed after resume computer from suspension """
-        pass
-
-    def on_connect(self):
-        super().on_connect()
-        if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
-            self.on_start_playing()
-
-    @log_call
-    def on_start_playing(self):
-        if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
-
-    @log_call
-    def on_stop_playing(self):
-        try: timeout = config.getfloat("Amp","poweroff_timeout")*60
-        except ValueError: return
-        if not timeout: return
-        self._timer_poweroff = Timer(timeout,self.on_sound_idle)
-        self._timer_poweroff.start()
-    
-    @log_call
-    def on_sound_idle(self): pass
-    
-
-class AmpEvents(object):
-    """ Classes that inherit from this class will automatically have their functions bound
-    to amp """
-
-    def __new__(cls, amp):
-        events = filter((lambda attr:attr.startswith("on_")), dir(amp))
-        dct = {attr: lambda *args,**xargs:None for attr in events}
-        cls_events = type("Events_%s"%cls.__name__, (object,), dct)
-        cls_complete = type(cls.__name__,(cls,cls_events),{})
-        return super().__new__(cls_complete)
-        
-    def __init__(self, amp):
-        events = filter((lambda attr:attr.startswith("on_")), dir(amp))
-        self.amp = amp
-        for attr in events: amp.bind(**{attr:getattr(self,attr)})
-
-
-class AutoPower(AmpEvents):
-    """ implementing actions for automatic power management """
-    
-    def on_shutdown(self, sig, frame):
-        """ when shutting down computer """
-        super().on_shutdown(sig,frame)
-        try: self.amp.poweroff()
-        except ConnectionError: pass
-        self.amp.disconnect()
-        
-    def on_suspend(self):
-        super().on_suspend()
-        try: self.amp.poweroff()
-        except ConnectionError: pass
-        self.amp.disconnect()
-    
-    def on_resume(self):
-        super().on_resume()
-        self.amp.mainloop() # FIXME
-
-    def on_start_playing(self):
-        super().on_start_playing()
-        try: self.amp.poweron()
-        except ConnectionError: pass
-
-    def on_sound_idle(self):
-        super().on_sound_idle()
-        try: self.amp.poweroff()
-        except ConnectionError: pass
-    
 
 def _make_features_mixin(**features):
     """
@@ -323,5 +223,5 @@ def make_amp(features, base_cls=object):
     for name in features.keys(): 
         if hasattr(base_cls,name):
             raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
-    return type("Amp", (_make_features_mixin(**features),SystemEventsMixin,base_cls), dict())
+    return type("Amp", (_make_features_mixin(**features),base_cls), dict())
     
