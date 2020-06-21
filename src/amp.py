@@ -67,7 +67,7 @@ class AbstractAmp(object):
     def connect_async(self):
         Thread(target=self.connect, args=(-1,), name="connecting", daemon=True).start()
         
-    def disconnect(self): self.connected = False
+    def disconnect(self): pass
         
     @log_call
     def on_connect(self):
@@ -75,7 +75,9 @@ class AbstractAmp(object):
         if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         
     @log_call
-    def on_disconnected(self): self.connect_async()
+    def on_disconnected(self):
+        self.connected = False
+        self.connect_async()
 
     @log_call
     def on_change(self, attrib, new_val): pass
