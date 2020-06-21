@@ -24,9 +24,11 @@ class SoundMixin(AmpEvents):
     @log_call
     def on_start_playing(self):
         if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
+        super().on_start_playing()
 
     @log_call
     def on_stop_playing(self):
+        super().on_stop_playing()
         try: timeout = config.getfloat("Amp","poweroff_timeout")*60
         except ValueError: return
         if not timeout: return
@@ -34,7 +36,7 @@ class SoundMixin(AmpEvents):
         self._timer_poweroff.start()
     
     @log_call
-    def on_sound_idle(self): pass
+    def on_sound_idle(self): super().on_sound_idle()
 
     def on_connect(self):
         super().on_connect()
