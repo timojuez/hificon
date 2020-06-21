@@ -1,3 +1,8 @@
+"""
+Common amplifier classes for creating an amp protocol.
+Use TelnetAmp/AbstractAmp, Feature and make_amp(). Examples in ./protocol
+"""
+
 import sys, time, socket
 from threading import Thread, Lock
 from telnetlib import Telnet
@@ -64,16 +69,20 @@ class AbstractAmp(Bindable):
 
     @log_call
     def on_connect(self):
-        """ Execute when connected e.g. after connection aborted """
+        """ Execute when connected to amp e.g. after connection aborted """
         if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
         
     @log_call
     def on_disconnected(self): self.connected = False
 
     @log_call
-    def on_change(self, attrib, new_val): pass
+    def on_change(self, attrib, new_val):
+        """ attribute on amplifier has changed """
+        pass
+        
     @log_call
     def on_poweron(self): pass
+    
     @log_call
     def on_poweroff(self): pass
 
