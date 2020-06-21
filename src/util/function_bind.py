@@ -38,7 +38,8 @@ class Autobind(object):
         cls_complete = type(cls.__name__,(cls,cls_events),{})
         return super().__new__(cls_complete)
         
-    def __init__(self, obj):
+    def __init__(self, obj, *args, **xargs):
         events = filter((lambda attr:attr.startswith("on_")), dir(obj))
         for attr in events: obj.bind(**{attr:getattr(self,attr)})
+        super().__init__(*args,**xargs)
 
