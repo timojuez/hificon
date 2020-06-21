@@ -10,7 +10,7 @@ except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
 from .. import Amp, NAME
-from ..amp import AutoPower, AmpEvents
+from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
 
@@ -128,9 +128,9 @@ def main():
     args = parser.parse_args()
     
     amp = Amp(verbose=args.verbose+1)
-    AutoPower(amp)
+    ac = AmpController(amp)
     program = Main(amp)
-    Thread(name="Amp",target=amp.mainloop,daemon=True).start()
+    Thread(name="Amp",target=ac.mainloop,daemon=True).start()
     RemoteControlService(program,verbose=args.verbose)()
     program.mainloop()
         
