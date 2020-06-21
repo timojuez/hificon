@@ -220,8 +220,8 @@ class AmpEvents(object):
         for attr in events: amp.bind(**{attr:getattr(self,attr)})
 
 
-class DefaultActions(AmpEvents):
-    """ implementing actions """
+class AutoPower(AmpEvents):
+    """ implementing actions for automatic power management """
     
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """

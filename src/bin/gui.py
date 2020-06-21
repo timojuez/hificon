@@ -10,7 +10,7 @@ except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
 from .. import Amp, NAME
-from ..amp import DefaultActions
+from ..amp import AutoPower, AmpEvents
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
 
@@ -119,7 +119,7 @@ class Tray(object):
         except ConnectionError: pass
         
 
-class Main(NotificationMixin, VolumeChanger, Tray, DefaultActions): pass
+class Main(NotificationMixin, VolumeChanger, Tray, AmpEvents): pass
 
 
 def main():    
@@ -128,6 +128,7 @@ def main():
     args = parser.parse_args()
     
     amp = Amp(verbose=args.verbose+1)
+    AutoPower(amp)
     program = Main(amp)
     Thread(name="Amp",target=amp.mainloop,daemon=True).start()
     RemoteControlService(program,verbose=args.verbose)()
