@@ -1,6 +1,7 @@
 import sys, time, socket
 from threading import Lock, Thread, Timer
 from telnetlib import Telnet
+from contextlib import suppress
 from .util.system_events import SystemEvents
 from .util import call_sequence, log_call
 from .config import config
@@ -34,10 +35,12 @@ class AbstractAmp(object):
         
     def __enter__(self):
         self.connect()
-        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
+        self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
         return self
 
-    def __exit__(self, type, value, tb): self.disconnect()
+    def __exit__(self, type, value, tb):
+        self.disconnect()
+        self._mainloopt.join()
 
     def bind(self, **callbacks):
         """
@@ -77,7 +80,7 @@ class AbstractAmp(object):
     @log_call
     def on_disconnected(self):
         self.connected = False
-        self.connect_async()
+        #self.connect_async()
 
     @log_call
     def on_change(self, attrib, new_val): pass
@@ -97,6 +100,7 @@ class TelnetAmp(AbstractAmp):
 
     def __init__(self, *args, **xargs):
         self.connecting_lock = Lock()
+        self._stoploop = False
         super().__init__(*args, **xargs)
 
     def send(self, cmd):
@@ -145,17 +149,24 @@ class TelnetAmp(AbstractAmp):
         finally: self.connecting_lock.release()
 
     def disconnect(self):
-        super().disconnect()
-        try: self._telnet.close()
-        except AttributeError: pass
+        #super().disconnect()
+        with suppress(AttributeError):
+            self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
+            self._telnet.close()
 
+    def __exit__(self, type, value, tb):
+        self._stoploop = True
+        super().__exit__(type,value,tb)
+        
     def on_receive_raw_data(self, data): pass
-    
+
     def mainloop(self, blocking=True):
         if not blocking: return self.__enter__()
-        while True:
+        self._stoploop = False
+        while not self._stoploop:
             try: cmd = self.read(5)
-            except ConnectionError: self.connect(-1)
+            except ConnectionError: 
+                if not self._stoploop: self.connect(-1)
             else:
                 # receiving
                 if  not cmd: continue
@@ -240,7 +251,7 @@ class AutoPower(AmpEvents):
     
     def on_resume(self):
         super().on_resume()
-        self.amp.on_disconnected()
+        self.amp.mainloop() # FIXME
 
     def on_start_playing(self):
         super().on_start_playing()

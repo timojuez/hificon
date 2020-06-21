@@ -19,7 +19,6 @@ class CLI(object):
     def __call__(self):
         amp = Amp(self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         with amp: self.start(amp)
-        os._exit(0) # workaround for --return -v: otherwise after quitting, amp.mainloop tries to write to stderr
 
     def start(self, amp):
         amp.bind(on_disconnected=self.on_disconnected)
@@ -42,7 +41,7 @@ class CLI(object):
     
     def on_disconnected(self):
         print("Connection lost", file=sys.stderr)
-        os._exit(1)
+        exit()
         
 
 main = lambda:CLI()()
