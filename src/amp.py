@@ -16,16 +16,27 @@ from . import NAME
 
 
 def require(*features):
+    """
+    Decorator that states which amp features have to be loaded before calling the function.
+    Call might be delayed until the feature values have been set.
+    Can be used in types AbstractAmp or AmpEvents.
+    Example: @require("volume","muted")
+    """
+    def _find_amp(args): 
+        """ search AbstractAmp type in args """
+        try:
+            amp = getattr(args[0],"amp",None)
+            return next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
+        except (StopIteration, IndexError):
+            raise Exception("@require needs AbstractAmp instance")
+    
     def decorator(func):
         def call(*args,**xargs):
+            amp = _find_amp(args)
             try:
-                amp = getattr(args[0],"amp",None)
-                amp = next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
-            except (StopIteration, IndexError):
-                raise Exception("@require needs AbstractAmp instance")
-            
-            if not amp.connected or not hasattr(amp,"features"): return
-            features_ = [amp.features[name] for name in features]
+                assert(amp.connected and hasattr(amp,"features"))
+                features_ = [amp.features[name] for name in features]
+            except (AssertionError, AttributeError, KeyError): return
             unset = list(filter(lambda f:not f.isset(), features_))
             if unset:
                 try: [f.poll() for f in unset]
