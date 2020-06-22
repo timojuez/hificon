@@ -181,19 +181,14 @@ class TelnetAmp(AbstractAmp):
     def mainloop(self):
         self._stoploop = False
         while not self._stoploop:
-            try: cmd = self.read(5)
+            try: data = self.read(5)
             except ConnectionError: 
                 if not self._stoploop: self.connect(-1)
             else:
                 # receiving
-                if  not cmd: continue
-                self.on_receive_raw_data(cmd) # TODO: instead use minimalistic protocol.raw_telnet and listen on on_change(None, cmd)
-                if self.verbose > 3: print(cmd, file=sys.stderr)
-                consumed = {attrib:f.consume(cmd) for attrib,f in self.features.items() if f.matches(cmd)}
-                if not consumed: Thread(name="on_change",target=self.on_change,args=(None, cmd)).start()
-                elif False in consumed.values(): continue
-                for attrib,(old,new) in consumed.items():
-                    if old != new: Thread(name="on_change",target=self.on_change,args=(attrib,new)).start()
+                if  not data: continue
+                if self.verbose > 3: print(data, file=sys.stderr)
+                self.on_receive_raw_data(data) 
 
 
 def _make_features_mixin(**features):
@@ -218,6 +213,14 @@ def _make_features_mixin(**features):
         def _set_feature_value(self, name, value):
             self.features[name].set(value)
         
+        def on_receive_raw_data(self, data):
+            super().on_receive_raw_data(data)
+            consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
+            if not consumed: Thread(name="on_change",target=self.on_change,args=(None, data)).start()
+            elif False in consumed.values(): return
+            for attrib,(old,new) in consumed.items():
+                if old != new: self.on_change(attrib,new)
+    
 
     class SendOnceMixin(object):
         """ prevent the same values from being sent to the amp in a row """
