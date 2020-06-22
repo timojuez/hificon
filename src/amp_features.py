@@ -50,10 +50,12 @@ class Feature(AbstractFeature):
     def isset(self): return hasattr(self,'_val')
         
     def unset(self): self.__dict__.pop("_val",None)
-        
+    
+    def async_poll(self): return self.amp.send(self.call)
+    
     def poll(self):
         self._value_set_event.clear()
-        self.amp.send(self.call)
+        self.async_poll()
         if not self._value_set_event.wait(timeout=2):
             if self.default_value: return self.store(self.default_value)
             else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)

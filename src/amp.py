@@ -7,6 +7,7 @@ import sys, time, socket
 from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
+from datetime import datetime, timedelta
 from .util.function_bind import Bindable
 from .util import log_call
 from .config import config
@@ -19,16 +20,16 @@ def require(*features):
     """
     Decorator that states which amp features have to be loaded before calling the function.
     Call might be delayed until the feature values have been set.
-    Can be used in types AbstractAmp or AmpEvents.
+    Can be used in types RequirementsMixin or AmpEvents.
     Example: @require("volume","muted")
     """
     def _find_amp(args): 
-        """ search AbstractAmp type in args """
+        """ search RequirementsMixin type in args """
         try:
             amp = getattr(args[0],"amp",None)
-            return next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
+            return next(filter(lambda e: isinstance(e,RequirementsMixin), (amp,)+args))
         except (StopIteration, IndexError):
-            raise TypeError("@require needs AbstractAmp instance")
+            raise TypeError("@require needs RequirementsMixin instance")
     
     def decorator(func):
         def call(*args,**xargs):
@@ -39,15 +40,49 @@ def require(*features):
             except (AssertionError, AttributeError, KeyError): return
             unset = list(filter(lambda f:not f.isset(), features_))
             if unset:
-                try: [f.poll() for f in unset]
+                try: [f.async_poll() for f in unset]
                 except ConnectionError: return
-                #return amp._pending.append((datetime(),unset,func,args,xargs))
+                return amp._pending.append((datetime.now(),unset,func,args,xargs))
             return func(*args,**xargs)
         return call
     return decorator
 
 
-class AbstractAmp(Bindable):
+class RequirementsMixin(object):
+
+    def __init__(self,*args,**xargs):
+        self._pending = []
+        self._on_change = self.on_change
+        self.on_change = self.on_change_decorator
+        super().__init__(*args,**xargs)
+    
+    def on_change_decorator(self, attr, val):
+        """ update and call methods with @require decorator """
+        print(attr)
+        try:
+            assert(self._pending and attr in self.features)
+            print("[%s] %d pending functions"%(self.__class__.__name__, len(self._pending)),
+                file=sys.stderr)
+            now = datetime.now()
+            feature = self.features[attr]
+            age_filter = lambda e: e[0]+timedelta(seconds=12) < now
+            expired = list(filter(age_filter, self._pending))
+            for e in expired: self._pending.remove(e)
+            for d,u,func,*_ in expired: print("[%s] pending function `%s` expired"
+                %(self.__class__.__name__, func.__name__), file=sys.stderr)
+            assert(self._pending)
+            for date, unset, *_ in self._pending:
+                if feature in unset: unset.remove(feature)
+            available = list(filter(lambda e: not e[1], self._pending))
+            assert(available)
+            print("[%s] calling %d pending functions"
+                %(self.__class__.__name__,len(available)), file=sys.stderr)
+            for e in available: self._pending.remove(e)
+            for _,_,func,args,xargs in available: func(*args,**xargs)
+        except AssertionError: self._on_change(attr, val)
+
+
+class AbstractAmp(Bindable, RequirementsMixin):
     """
     Abstract Amplifier Interface
     Note: Event callbacks (on_connect, on_change) might be called in the mainloop
@@ -166,7 +201,7 @@ class TelnetAmp(AbstractAmp):
                 if tries == 0: raise
             else:
                 super().connect()
-                return Thread(name="on_connect",target=self.on_connect).start()
+                return self.on_connect()
             time.sleep(3)
 
     def disconnect(self):
@@ -216,7 +251,7 @@ def _make_features_mixin(**features):
         def on_receive_raw_data(self, data):
             super().on_receive_raw_data(data)
             consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
-            if not consumed: Thread(name="on_change",target=self.on_change,args=(None, data)).start()
+            if not consumed: self.on_change(None, data)
             elif False in consumed.values(): return
             for attrib,(old,new) in consumed.items():
                 if old != new: self.on_change(attrib,new)
