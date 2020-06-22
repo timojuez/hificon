@@ -35,7 +35,7 @@ class SoundMixin(AmpEvents):
         self._timer_poweroff.start()
     
     @log_call
-    def on_sound_idle(self): super().on_sound_idle()
+    def on_sound_idle(self): pass
 
     def on_connect(self):
         super().on_connect()
