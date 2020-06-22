@@ -4,7 +4,7 @@ Use TelnetAmp/AbstractAmp, Feature and make_amp(). Examples in ./protocol
 """
 
 import sys, time, socket
-from threading import Thread, Lock
+from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
 from .util.function_bind import Bindable
@@ -127,10 +127,6 @@ class TelnetAmp(AbstractAmp):
     @host is the amp's hostname or IP.
     """
 
-    def __init__(self, *args, **xargs):
-        self.connecting_lock = Lock()
-        super().__init__(*args, **xargs)
-
     def send(self, cmd):
         if self.verbose > 3: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
         try:
@@ -162,19 +158,16 @@ class TelnetAmp(AbstractAmp):
         """
         @tries int: -1 for infinite
         """
-        self.connecting_lock.acquire() #blocking=False
-        try:
-            if self.connected: return
-            while tries:
-                if tries > 0: tries -= 1
-                try: self._telnet = Telnet(self.host,23,timeout=2)
-                except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
-                    if tries == 0: raise
-                else:
-                    super().connect()
-                    return Thread(name="on_connect",target=self.on_connect).start()
-                time.sleep(3)
-        finally: self.connecting_lock.release()
+        if self.connected: return
+        while tries:
+            if tries > 0: tries -= 1
+            try: self._telnet = Telnet(self.host,23,timeout=2)
+            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
+                if tries == 0: raise
+            else:
+                super().connect()
+                return Thread(name="on_connect",target=self.on_connect).start()
+            time.sleep(3)
 
     def disconnect(self):
         #super().disconnect()
