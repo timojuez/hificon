@@ -15,6 +15,27 @@ from .amp_features import Feature, make_feature
 from . import NAME
 
 
+def require(*features):
+    def decorator(func):
+        def call(*args,**xargs):
+            try:
+                amp = getattr(args[0],"amp",None)
+                amp = next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
+            except (StopIteration, IndexError):
+                raise Exception("@require needs AbstractAmp instance")
+            
+            if not amp.connected or not hasattr(amp,"features"): return
+            features_ = [amp.features[name] for name in features]
+            unset = list(filter(lambda f:not f.isset(), features_))
+            if unset:
+                try: [f.poll() for f in unset]
+                except ConnectionError: return
+                #return amp._pending.append((datetime(),unset,func,args,xargs))
+            return func(*args,**xargs)
+        return call
+    return decorator
+
+
 class AbstractAmp(Bindable):
     """
     Abstract Amplifier Interface
@@ -52,20 +73,18 @@ class AbstractAmp(Bindable):
 
     def disconnect(self): pass
         
+    @require("power","source")
     def poweron(self, force=False):
-        try:
-            if not force and not config.getboolean("Amp","control_power_on") or self.power:
-                return
-            if config["Amp"].get("source"): self.source = config["Amp"]["source"]
-            self.power = True
-        except ConnectionError: pass
+        if not force and not config.getboolean("Amp","control_power_on") or self.power:
+            return
+        if config["Amp"].get("source"): self.source = config["Amp"]["source"]
+        self.power = True
 
+    @require("power","source")
     def poweroff(self, force=False):
-        try:
-            if not force and (not config.getboolean("Amp","control_power_off") 
-                or config["Amp"].get("source") and self.source != config["Amp"]["source"]): return
-            self.power = False
-        except ConnectionError: pass
+        if not force and (not config.getboolean("Amp","control_power_off") 
+            or config["Amp"].get("source") and self.source != config["Amp"]["source"]): return
+        self.power = False
 
     @log_call
     def on_connect(self):

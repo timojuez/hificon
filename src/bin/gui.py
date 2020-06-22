@@ -10,6 +10,7 @@ except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
 from .. import Amp, NAME
+from ..amp import require
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
@@ -52,9 +53,10 @@ class NotificationMixin(object):
         super().on_change(attr,value)
 
     def on_scroll(self, *args, **xargs):
-        try: volume = self.amp.volume
-        except ConnectionError: volume = None
-        self.notify("volume",volume)
+        self.notify("volume")
+        @require("volume")
+        def go(amp): self.notify("volume",self.amp.volume)
+        go(self.amp)
         super().on_scroll(*args,**xargs)
         
 
@@ -92,31 +94,29 @@ class Tray(object):
         self.icon.connect("scroll-event",self.on_scroll)
         super().__init__(*args,**xargs)
     
-    def updateIcon(self): 
+    @require("muted","volume","maxvol")
+    def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-        try:
-            muted = self.amp.muted
-            volume = 0 if muted else self.amp.volume
-            maxvol = self.amp.maxvol
-        except ConnectionError: pass
-        else: 
-            #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
-            if muted or volume == 0:
-                self.icon.set_icon_full("audio-volume-muted","muted")
-            else:
-                icon_idx = math.ceil(volume/maxvol *len(icons))-1
-                self.icon.set_icon_full(icons[icon_idx],str(volume))
-            self.icon.visible = True
+        muted = self.amp.muted
+        volume = 0 if muted else self.amp.volume
+        maxvol = self.amp.maxvol
+
+        #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
+        if muted or volume == 0:
+            self.icon.set_icon_full("audio-volume-muted","muted")
+        else:
+            icon_idx = math.ceil(volume/maxvol *len(icons))-1
+            self.icon.set_icon_full(icons[icon_idx],str(volume))
+        self.icon.visible = True
     
+    @require("volume")
     def on_scroll(self, icon, steps, direction):
-        try:
-            if direction == Gdk.ScrollDirection.UP:
-                volume = self.amp.volume+self.scroll_delta*steps
-            elif direction == Gdk.ScrollDirection.DOWN:
-                volume = self.amp.volume-self.scroll_delta*steps
-            else: return
-            self.amp.volume = volume
-        except ConnectionError: pass
+        if direction == Gdk.ScrollDirection.UP:
+            volume = self.amp.volume+self.scroll_delta*steps
+        elif direction == Gdk.ScrollDirection.DOWN:
+            volume = self.amp.volume-self.scroll_delta*steps
+        else: return
+        self.amp.volume = volume
         
 
 class Main(NotificationMixin, VolumeChanger, Tray, AmpEvents): pass

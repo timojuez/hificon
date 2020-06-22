@@ -3,6 +3,7 @@ import time, sys
 from threading import Thread
 from .util import json_service
 from .amp_controller import AmpEvents
+from .amp import require
 from .config import config
 
 ipc_port = config.getint("Service","ipc_port")
@@ -41,9 +42,9 @@ class VolumeChanger(AmpEvents):
     
     def on_connect(self): # amp connect
         super().on_connect()
-        try: # preload values
-            self.amp.volume
-        except ConnectionError as e: print(repr(e), file=sys.stderr)
+        # preload values
+        try: self.amp.features["volume"].poll()
+        except Exception as e: print(repr(e), file=sys.stderr)
         
     def on_change(self, attr, value): # amp change
         super().on_change(attr, value)
@@ -51,24 +52,18 @@ class VolumeChanger(AmpEvents):
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
         
+    @require("volume")
     def fire_volume(self):
-        for _ in range(100):
-            if self.keys_pressed <= 0: return
-            try: self.amp.volume += self.step*(int(self.button)*2-1)
-            except ConnectionError: time.sleep(20)
-            else: break
+        if self.keys_pressed <= 0: return
+        self.amp.volume += self.step*(int(self.button)*2-1)
 
     def release(self, button):
         """ button released """
         self.keys_pressed -= 1
         if not (self.keys_pressed <= 0): self.button = not button
         self.fire_volume()
-        Thread(target=self._poweron, name="poweron", daemon=False).start()
-    
-    def _poweron(self):
-        try: self.amp.poweron(True)
-        except ConnectionError: pass
-        
+        Thread(target=self.amp.poweron, args=(True,), name="poweron", daemon=False).start()
+
 
 def RemoteControlService(*args,**xargs):
     if ipc_port < 0: return

@@ -74,24 +74,20 @@ class AutoPower:
     
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        try: self.amp.poweroff()
-        except ConnectionError: pass
+        self.amp.poweroff()
         super().on_shutdown(sig,frame)
         
     def on_suspend(self):
-        try: self.amp.poweroff()
-        except ConnectionError: pass
+        self.amp.poweroff()
         super().on_suspend()
     
     def on_start_playing(self):
         super().on_start_playing()
-        try: self.amp.poweron()
-        except ConnectionError: pass
+        self.amp.poweron()
 
     def on_sound_idle(self):
         super().on_sound_idle()
-        try: self.amp.poweroff()
-        except ConnectionError: pass
+        self.amp.poweroff()
     
 
 class AmpController(AutoPower, KeepConnected, SoundMixin, SystemEvents):
