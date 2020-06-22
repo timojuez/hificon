@@ -28,7 +28,7 @@ def require(*features):
             amp = getattr(args[0],"amp",None)
             return next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
         except (StopIteration, IndexError):
-            raise Exception("@require needs AbstractAmp instance")
+            raise TypeError("@require needs AbstractAmp instance")
     
     def decorator(func):
         def call(*args,**xargs):
