@@ -4,7 +4,6 @@ Main class AmpController
 """
 
 from threading import Timer
-from contextlib import suppress
 from .util.function_bind import Autobind
 from .util.system_events import SystemEvents
 from .util import log_call
