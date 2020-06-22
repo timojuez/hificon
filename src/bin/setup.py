@@ -1,7 +1,7 @@
 import sys, os, argparse, pkgutil, socket
 from ..util.network import PrivateNetwork
 from ..config import config, FILE
-from .. import NAME
+from .. import NAME, Amp
 
 
 class Main(object):
@@ -49,8 +49,8 @@ def set_port():
     
 
 def source_setup():
-    from .. import Amp
-    input("On your amp, select the input source that you want to control with this program and press ENTER.")
+    if input("On your amp, select the input source that you want to control "
+        "with this program and press ENTER. [s]kip? ") == "s": return
     with Amp(protocol=".denon") as amp:
         source = amp.source
     print("Registered input source `%s`."%source)
@@ -76,7 +76,6 @@ def discover_denon():
     """
     for host in PrivateNetwork().find_hosts():
         if host.lower().startswith("denon"):
-            from .. import Amp
             with Amp(protocol=".denon", host=host) as amp:
                 try: name = amp.denon_name
                 except: name = host
