@@ -43,8 +43,7 @@ class VolumeChanger(AmpEvents):
     def on_connect(self): # amp connect
         super().on_connect()
         # preload values
-        try: self.amp.features["volume"].poll()
-        except Exception as e: print(repr(e), file=sys.stderr)
+        self.fire_volume()
         
     def on_change(self, attr, value): # amp change
         super().on_change(attr, value)
