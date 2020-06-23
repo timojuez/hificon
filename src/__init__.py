@@ -2,7 +2,7 @@ import importlib
 
 NAME = "HiFiCon"
 PKG_NAME = "hificon"
-VERSION = "1.5.45a"
+VERSION = "1.5.46a"
 
 
 def Amp(*args, protocol=None, cls="Amp", **xargs):

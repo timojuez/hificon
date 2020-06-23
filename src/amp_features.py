@@ -197,13 +197,13 @@ class AsyncFeature(AbstractFeature):
     High level telnet protocol communication
     """
 
-    def __init__(self, amp, attr):
+    def __init__(self, amp, attr=None):
         """ amp instance, connected amp attribute name """
         super().__init__()
         self.amp = amp
         self.attr = attr
         self._polled = False
-        amp.features[attr] = self
+        if attr: amp.features[attr] = self
         
     name = property(lambda self:self.__class__.__name__)
 
