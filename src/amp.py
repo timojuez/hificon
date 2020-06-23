@@ -50,7 +50,7 @@ class AbstractAmp(Bindable):
     
     def connect(self, tries=1): self.connected = True
 
-    def disconnect(self): pass
+    def disconnect(self): self._stoploop = True
         
     @require("power","source")
     def poweron(self, force=False):
@@ -88,6 +88,11 @@ class AbstractAmp(Bindable):
 
     def mainloop(self):
         """ listens on amp for events and calls on_change. Return when connection closed """
+        self._stoploop = False
+        while not self._stoploop: self.mainloop_hook()
+        
+    def mainloop_hook(self):
+        """ This will be called regularly by mainloop """
         raise NotImplementedError()
     
 
@@ -140,23 +145,20 @@ class TelnetAmp(AbstractAmp):
             time.sleep(3)
 
     def disconnect(self):
-        #super().disconnect()
-        self._stoploop = True
+        super().disconnect()
         with suppress(AttributeError):
             self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
             self._telnet.close()
 
-    def mainloop(self):
-        self._stoploop = False
-        while not self._stoploop:
-            try: data = self.read(5)
-            except ConnectionError: 
-                if not self._stoploop: self.connect(-1)
-            else:
-                # receiving
-                if  not data: continue
-                if self.verbose > 3: print(data, file=sys.stderr)
-                self.on_receive_raw_data(data) 
+    def mainloop_hook(self):
+        if not self.connected: self.connect(-1)
+        try: data = self.read(5)
+        except ConnectionError: pass
+        else:
+            # receiving
+            if not data: return
+            if self.verbose > 3: print(data, file=sys.stderr)
+            self.on_receive_raw_data(data) 
 
 
 def make_amp(features, base_cls=AbstractAmp):
