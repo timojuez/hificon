@@ -9,7 +9,7 @@ from telnetlib import Telnet
 from contextlib import suppress
 from datetime import datetime, timedelta
 from .util.function_bind import Bindable
-from .util import log_call
+from .util import log_call, call_sequence
 from .config import config
 from .config import FILE as CONFFILE
 from .amp_features import Feature, make_feature
@@ -29,8 +29,12 @@ def require(*features):
 class RequirementsMixin(object):
 
     def __init__(self,*args,**xargs):
-        super().__init__(*args,**xargs)
         self._pending = []
+        self.mainloop = call_sequence(self.mainloop_prepare, self.mainloop)
+        super().__init__(*args,**xargs)
+
+    def mainloop_prepare(self,*args,**xargs):
+        if hasattr(self,"_on_change"): return
         self._on_change = self.on_change
         self.on_change = self.on_change_decorator
     
@@ -38,7 +42,7 @@ class RequirementsMixin(object):
         """ update and call methods with @require decorator """
         if self._pending: print("[%s] %d pending functions"
             %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-        if not [p() for p in self._pending if p.has_polled(attr)]:
+        if not any([p.has_polled(attr) for p in self._pending]):
             self._on_change(attr, val)
 
 
@@ -60,21 +64,21 @@ class Call(object):
         except (AssertionError, AttributeError, KeyError, ConnectionError): 
             try: self.amp._pending.remove(self)
             except ValueError: pass
-        else: self(True)
+        else: self._try_call()
         
-    def __call__(self, skip_timeout=False):
-        if not skip_timeout and self._time+timedelta(seconds=2) < datetime.now():
-            self.amp._pending.remove(self)
-            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
-                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
-
-        elif not self.missing_features:
+    def _try_call(self):
+        if not self.missing_features:
             self.amp._pending.remove(self)
             if self.amp.verbose > 4: print("[%s] calling function %s"
                 %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
             self._func(*self._args,**self._kwargs)
-    
+        
     def has_polled(self, feature):
+        if self._time+timedelta(seconds=2) < datetime.now():
+            self.amp._pending.remove(self)
+            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
+                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
+        else: self._try_call()
         try: self._polled.remove(self.amp.features.get(feature))
         except ValueError: return False
         else: return True
