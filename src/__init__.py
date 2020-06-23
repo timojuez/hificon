@@ -5,6 +5,7 @@ PKG_NAME = "hificon"
 
 
 def Amp(*args, protocol=None, cls="Amp", **xargs):
+    """ returns amp instance from @protocol module. Read @protocol from config if None """
     from .config import config
     protocol = protocol or config.get("Amp","protocol")
     try:
