@@ -17,21 +17,25 @@ class CLI(object):
         parser.add_argument("-c", "--command", default=[], metavar="CMD", nargs="*", help='Execute commands')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
+        assert(not (self.args.ret and self.args.follow))
+        assert(self.args.command or not self.args.ret)
         
     def __call__(self):
-        self.amp = Amp(self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         self.matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
-        with self.amp:
-            if self.args.follow or len(self.args.command) == 0 and not self.args.file:
-                self.spawn_shell()
-            if self.args.file: self.parse_file()
-            else: self.execute_command_args()
-    
-    def spawn_shell(self):
-        print("$_ HIFI SHELL %s\n"%VERSION)
-        self.amp.bind(on_disconnected=self.on_disconnected)
+        if len(self.args.command) == 0 and not self.args.file: self.print_header()
+        self.amp = Amp(
+            self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
-        self.execute_command_args()
+        with self.amp:
+            for cmd in self.args.command: self.parse(cmd)
+            if self.args.file: self.parse_file()
+            if not self.args.file and not self.args.command: self.prompt()
+    
+    def print_header(self):
+        print("$_ HIFI SHELL %s\n"%VERSION)
+
+    def prompt(self):
+        self.amp.bind(on_disconnected=self.on_disconnected)
         while True:
             try: cmd = input("%s $ "%self.amp.prompt).strip()
             except KeyboardInterrupt: pass
@@ -41,10 +45,6 @@ class CLI(object):
                 except Exception as e: print(repr(e))
             print()
         return
-
-    def execute_command_args(self):
-        for cmd in self.args.command: self.parse(cmd)
-        self.args.command.clear()
 
     def parse_file(self):
         with open(self.args.file) as fp:
