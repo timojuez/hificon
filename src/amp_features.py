@@ -183,7 +183,8 @@ class SynchronousFeatureMixin(object):
     def poll(self):
         """ synchronous poll """
         e = Event()
-        require(self.attr)(lambda self: e.set())(self)
+        def poll_event(self): e.set()
+        require(self.attr)(poll_event)(self)
         self.async_poll()
         if not e.wait(timeout=MAX_CALL_DELAY):
             if self.default_value: return self.store(self.default_value)
