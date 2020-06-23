@@ -1,4 +1,6 @@
 from threading import Event, Lock
+from .amp import require, RESPONSE_TIMEOUT
+
 
 class AbstractFeature(object):
     call = None
@@ -19,32 +21,53 @@ class AbstractFeature(object):
     def on_change(self, old, new): pass
 
 
-class Feature(AbstractFeature):
-    """
-    An attribute of the amplifier
-    High level telnet protocol communication
-    """
+class SynchronousMixin(object):
 
-    def __init__(self, amp, name=None):
-        self.amp = amp
-        amp.features[name] = self
-        self._value_set_event = Event()
-        self._value_set_event.set()
+    def __init__(self):
         self._poll_lock = Lock()
-        
-    name = property(lambda self:self.__class__.__name__)
+        super().__init__()
 
     def get(self):
         self._poll_lock.acquire()
         try:
-            if not self.amp.connected: 
-                raise ConnectionError("`%s` is not available when amp is disconnected."%self.__class__.__name__)
-            try: return self._val
+            try: return super().get()
             except AttributeError:
                 self.poll()
                 return self._val
         finally: self._poll_lock.release()
         
+    def poll(self):
+        """ synchronous poll """
+        e = Event()
+        require(self.attr)(e.set)()
+        self.async_poll()
+        if not e.wait(timeout=RESPONSE_TIMEOUT):
+            if self.default_value: return self.store(self.default_value)
+            else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
+        else: return self._val
+    
+
+class AsyncFeature(AbstractFeature):
+    """
+    An attribute of the amplifier
+    High level telnet protocol communication
+    """
+
+    def __init__(self, amp, attr):
+        """ amp instance, connected amp attribute name """
+        super().__init__()
+        self.amp = amp
+        self.attr = attr
+        amp.features[attr] = self
+        
+    name = property(lambda self:self.__class__.__name__)
+
+    def get(self):
+        if not self.amp.connected: 
+            raise ConnectionError("`%s` is not available when amp is disconnected."%self.__class__.__name__)
+        try: return self._val
+        except AttributeError: raise AttributeError("Value not available. Use @require")
+    
     def set(self, value): self.send(value)
 
     def isset(self): return hasattr(self,'_val')
@@ -52,14 +75,6 @@ class Feature(AbstractFeature):
     def unset(self): self.__dict__.pop("_val",None)
     
     def async_poll(self): return self.amp.send(self.call)
-    
-    def poll(self):
-        self._value_set_event.clear()
-        self.async_poll()
-        if not self._value_set_event.wait(timeout=2):
-            if self.default_value: return self.store(self.default_value)
-            else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
-        else: return self._val
     
     def resend(self): return self.send(self._val)
     
@@ -70,12 +85,11 @@ class Feature(AbstractFeature):
     def store(self, value):
         old = getattr(self,'_val',None)
         self._val = value
-        if not self._value_set_event.is_set():
-            # call caused by poll(). Return False -> will not call amp.on_change
-            self._value_set_event.set()
-            return False
         if self._val != old: self.on_change(old, self._val)
         return old, self._val
+
+
+Feature(SynchronousMixin, AsyncFeature): pass
 
 
 class RawFeature(Feature): # TODO: move to protocol.raw_telnet

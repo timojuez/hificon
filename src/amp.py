@@ -16,6 +16,9 @@ from .amp_features import Feature, make_feature
 from . import NAME
 
 
+RESPONSE_TIMEOUT = 2
+
+
 def require(*features):
     """
     Decorator that states which amp features have to be loaded before calling the function.
@@ -74,7 +77,7 @@ class Call(object):
             self._func(*self._args,**self._kwargs)
         
     def has_polled(self, feature):
-        if self._time+timedelta(seconds=2) < datetime.now():
+        if self._time+timedelta(seconds=RESPONSE_TIMEOUT) < datetime.now():
             self.amp._pending.remove(self)
             if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
@@ -265,7 +268,6 @@ def _make_features_mixin(**features):
             super().on_receive_raw_data(data)
             consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
             if not consumed: self.on_change(None, data)
-            elif False in consumed.values(): return
             for attrib,(old,new) in consumed.items():
                 if old != new: self.on_change(attrib,new)
     
