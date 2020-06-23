@@ -114,7 +114,7 @@ class Abstract_denon(object):
         cmd = cmd.upper()
         if "?" in cmd and not matches:
             function = cmd.replace("?","")
-            return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self).get())
+            return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self,None).get())
         return super().__call__(cmd,matches)
     
     def send(self, cmd):
