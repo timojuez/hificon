@@ -203,7 +203,7 @@ class AsyncFeature(AbstractFeature):
         self.amp = amp
         self.attr = attr
         self._polled = False
-        if attr: amp.features[attr] = self
+        amp.features[attr] = self
         
     name = property(lambda self:self.__class__.__name__)
 

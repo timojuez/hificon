@@ -74,7 +74,7 @@ class CLI(object):
 
     def parse_attr(self, attr):
         if attr == "?":
-            attrs = map(lambda e: "$%s"%e,list(self.amp.features.keys()))
+            attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
             print(", ".join(attrs))
         else: print(getattr(self.amp,attr))
     
