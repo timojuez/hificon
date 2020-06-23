@@ -23,7 +23,66 @@ def require(*features):
     Can be used in types RequirementsMixin or AmpEvents.
     Example: @require("volume","muted")
     """
-    def _find_amp(args): 
+    return lambda func: lambda *args,**xargs: Call(features, func, args, xargs)
+
+
+class RequirementsMixin(object):
+
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
+        self._pending = []
+        self._on_change = self.on_change
+        self.on_change = self.on_change_decorator
+    
+    def on_change_decorator(self, attr, val):
+        """ update and call methods with @require decorator """
+        if self._pending: print("[%s] %d pending functions"
+            %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
+        if not [p() for p in self._pending if p.has_polled(attr)]:
+            self._on_change(attr, val)
+
+
+class Call(object):
+    """ Function that requires features """
+
+    def __init__(self, features, func, args=set(), kwargs={}):
+        self._func = func
+        self._args = args
+        self._kwargs = kwargs
+        self._time = datetime.now()
+        self.amp = self._find_amp(args)
+        self.amp._pending.append(self)
+        try:
+            assert(self.amp.connected and hasattr(self.amp,"features"))
+            self._features = [self.amp.features[name] for name in features]
+            self._polled = self.missing_features
+            for f in self._polled: f.async_poll()
+        except (AssertionError, AttributeError, KeyError, ConnectionError): 
+            try: self.amp._pending.remove(self)
+            except ValueError: pass
+        else: self(True)
+        
+    def __call__(self, skip_timeout=False):
+        if not skip_timeout and self._time+timedelta(seconds=2) < datetime.now():
+            self.amp._pending.remove(self)
+            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
+                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
+
+        elif not self.missing_features:
+            self.amp._pending.remove(self)
+            if self.amp.verbose > 4: print("[%s] calling function %s"
+                %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
+            self._func(*self._args,**self._kwargs)
+    
+    def has_polled(self, feature):
+        try: self._polled.remove(self.amp.features.get(feature))
+        except ValueError: return False
+        else: return True
+    
+    @property
+    def missing_features(self): return list(filter(lambda f:not f.isset(), self._features))
+
+    def _find_amp(self, args): 
         """ search RequirementsMixin type in args """
         try:
             amp = getattr(args[0],"amp",None)
@@ -31,56 +90,6 @@ def require(*features):
         except (StopIteration, IndexError):
             raise TypeError("@require needs RequirementsMixin instance")
     
-    def decorator(func):
-        def call(*args,**xargs):
-            amp = _find_amp(args)
-            try:
-                assert(amp.connected and hasattr(amp,"features"))
-                features_ = [amp.features[name] for name in features]
-            except (AssertionError, AttributeError, KeyError): return
-            unset = list(filter(lambda f:not f.isset(), features_))
-            if unset:
-                try: [f.async_poll() for f in unset]
-                except ConnectionError: return
-                return amp._pending.append((datetime.now(),unset,func,args,xargs))
-            return func(*args,**xargs)
-        return call
-    return decorator
-
-
-class RequirementsMixin(object):
-
-    def __init__(self,*args,**xargs):
-        self._pending = []
-        self._on_change = self.on_change
-        self.on_change = self.on_change_decorator
-        super().__init__(*args,**xargs)
-    
-    def on_change_decorator(self, attr, val):
-        """ update and call methods with @require decorator """
-        print(attr)
-        try:
-            assert(self._pending and attr in self.features)
-            print("[%s] %d pending functions"%(self.__class__.__name__, len(self._pending)),
-                file=sys.stderr)
-            now = datetime.now()
-            feature = self.features[attr]
-            age_filter = lambda e: e[0]+timedelta(seconds=12) < now
-            expired = list(filter(age_filter, self._pending))
-            for e in expired: self._pending.remove(e)
-            for d,u,func,*_ in expired: print("[%s] pending function `%s` expired"
-                %(self.__class__.__name__, func.__name__), file=sys.stderr)
-            assert(self._pending)
-            for date, unset, *_ in self._pending:
-                if feature in unset: unset.remove(feature)
-            available = list(filter(lambda e: not e[1], self._pending))
-            assert(available)
-            print("[%s] calling %d pending functions"
-                %(self.__class__.__name__,len(available)), file=sys.stderr)
-            for e in available: self._pending.remove(e)
-            for _,_,func,args,xargs in available: func(*args,**xargs)
-        except AssertionError: self._on_change(attr, val)
-
 
 class AbstractAmp(Bindable, RequirementsMixin):
     """
