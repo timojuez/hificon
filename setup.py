@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
 from distutils.core import setup
-from src import PKG_NAME
+from src import PKG_NAME, VERSION
 
 
 setup(name=PKG_NAME,
-      version='1.5.43a',
+      version=VERSION,
       description='Network Amp Controlling Software',
       author='Timo Richter',
       author_email='timo.juez@gmail.com',
