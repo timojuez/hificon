@@ -1,3 +1,0 @@
-#!/bin/bash -e
-hifi_sh MVUP MVUP MVUP MVUP MVUP MVUP MVUP MVUP MVUP MVUP
-
