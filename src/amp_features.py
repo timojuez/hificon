@@ -102,7 +102,8 @@ class FunctionCall(object):
         except KeyError as e:
             if self.amp.verbose > 3:
                 print("[%s] Warning: Amp does not provide feature required by `%s`: %s"
-                %(self.__class__.__name__,e,self._func.__name__), file=sys.stderr)
+                %(self.__class__.__name__,self._func.__name__,e), file=sys.stderr)
+            return
         self.missing_features = list(filter(lambda f:not f.isset(), self._features))
         if self._try_call(): return
         self.amp._pending.append(self) # = self.enable
