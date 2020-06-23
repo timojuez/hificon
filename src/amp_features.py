@@ -47,13 +47,15 @@ class FunctionCall(object):
         self._kwargs = kwargs
         self._time = datetime.now()
         self.amp = self._find_amp(args)
-        try:
-            assert(self.amp.connected and hasattr(self.amp,"features"))
-            self._features = [self.amp.features[name] for name in features]
-            self.missing_features = list(filter(lambda f:not f.isset(), self._features))
-        except (AssertionError, AttributeError, KeyError): return
+        if not self.amp or not self.amp.connected: return
+        try: self._features = [self.amp.features[name] for name in features]
+        except KeyError as e:
+            if self.amp.verbose > 3:
+                print("[%s] Warning: Amp does not provide feature required by `%s`: %s"
+                %(self.__class__.__name__,e,self._func.__name__), file=sys.stderr)
+        self.missing_features = list(filter(lambda f:not f.isset(), self._features))
         if self._try_call(): return
-        self.amp._pending.append(self)
+        self.amp._pending.append(self) # = self.enable
         try: [f.async_poll() for f in self.missing_features]
         except ConnectionError: self.disable()
         
@@ -84,7 +86,8 @@ class FunctionCall(object):
             amp = getattr(args[0],"amp",None)
             return next(filter(lambda e: isinstance(e,RequirementsAmpMixin), (amp,)+args))
         except (StopIteration, IndexError):
-            raise TypeError("@require needs RequirementsAmpMixin instance")
+            print("[WARNING] `%s` will never be called. @require needs "
+                "RequirementsAmpMixin instance"%self._func.__name__, file=sys.stderr)
 
 
 class AbstractFeature(object):
