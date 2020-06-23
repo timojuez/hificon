@@ -5,7 +5,7 @@ from .util import call_sequence
 from datetime import datetime, timedelta
 
 
-MAX_CALL_DELAY = 2 #seconds
+MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 
 
 class FeatureAmpMixin(object):
