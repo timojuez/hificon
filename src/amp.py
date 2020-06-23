@@ -29,6 +29,8 @@ class AbstractAmp(Bindable):
     features = {}
     connected = False
 
+    prompt = property(lambda self: "%s:%s@%s"%(self.protocol,NAME,self.host))
+
     def __init__(self, host=None, name=None, verbose=0, **callbacks):
         super().__init__()
         self.verbose = verbose
@@ -101,9 +103,11 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
-
+    PORT = 23
+    prompt = property(lambda self: "%s:%s"%(super().prompt,self.PORT))
+    
     def send(self, cmd):
-        if self.verbose > 3: print("%s@%s:%s $ %s"%(NAME,self.host,self.protocol,cmd), file=sys.stderr)
+        if self.verbose > 3: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
         try:
             assert(self.connected)
             self._telnet.write(("%s\n"%cmd).encode("ascii"))
@@ -136,7 +140,7 @@ class TelnetAmp(AbstractAmp):
         if self.connected: return
         while tries:
             if tries > 0: tries -= 1
-            try: self._telnet = Telnet(self.host,23,timeout=2)
+            try: self._telnet = Telnet(self.host,self.PORT,timeout=2)
             except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
                 if tries == 0: raise
             else:

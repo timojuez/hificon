@@ -1,6 +1,6 @@
 import argparse, os, sys
 from threading import Thread
-from .. import Amp
+from .. import Amp, VERSION
 
 
 class CLI(object):
@@ -22,6 +22,7 @@ class CLI(object):
 
     def start(self, amp):
         if self.args.follow or len(self.args.command) == 0:
+            print("$_ HIFI SHELL %s (%s)\n"%(VERSION, amp.prompt))
             amp.bind(on_disconnected=self.on_disconnected)
             amp.bind(on_receive_raw_data=self.receive)
             for cmd in self.args.command:
@@ -40,7 +41,7 @@ class CLI(object):
     def receive(self, data): print(data)
     
     def on_disconnected(self):
-        print("Connection closed", file=sys.stderr)
+        print("\nConnection closed", file=sys.stderr)
         exit()
         
 
