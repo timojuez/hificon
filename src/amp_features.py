@@ -12,30 +12,10 @@ def require(*features):
     """
     Decorator that states which amp features have to be loaded before calling the function.
     Call might be delayed until the feature values have been set.
-    Can be used in types RequirementsAmpMixin or AmpEvents.
+    Can be used in Amp or AmpEvents.
     Example: @require("volume","muted")
     """
     return lambda func: lambda *args,**xargs: FunctionCall(features, func, args, xargs)
-
-
-class RequirementsAmpMixin(object):
-
-    def __init__(self,*args,**xargs):
-        self._pending = []
-        self.mainloop = call_sequence(self.mainloop_prepare, self.mainloop)
-        super().__init__(*args,**xargs)
-
-    def mainloop_prepare(self,*args,**xargs):
-        if hasattr(self,"_on_change"): return
-        self._on_change = self.on_change
-        self.on_change = self.on_change_decorator
-    
-    def on_change_decorator(self, attr, val):
-        """ update and call methods with @require decorator """
-        if self.verbose > 4 and self._pending: print("[%s] %d pending functions"
-            %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-        if not any([p.has_polled(attr) for p in self._pending]):
-            self._on_change(attr, val)
 
 
 class FunctionCall(object):
@@ -81,13 +61,13 @@ class FunctionCall(object):
         return True
         
     def _find_amp(self, args): 
-        """ search RequirementsAmpMixin type in args """
+        """ search FeatureAmpMixin type in args """
         try:
             amp = getattr(args[0],"amp",None)
-            return next(filter(lambda e: isinstance(e,RequirementsAmpMixin), (amp,)+args))
+            return next(filter(lambda e: isinstance(e,FeatureAmpMixin), (amp,)+args))
         except (StopIteration, IndexError):
             print("[WARNING] `%s` will never be called. @require needs "
-                "RequirementsAmpMixin instance"%self._func.__name__, file=sys.stderr)
+                "FeatureAmpMixin instance"%self._func.__name__, file=sys.stderr)
 
 
 class AbstractFeature(object):
