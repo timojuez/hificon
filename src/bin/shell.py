@@ -1,5 +1,6 @@
 import argparse, os, sys, time
 from threading import Thread
+from contextlib import suppress
 from .. import Amp, VERSION
 
 
@@ -27,7 +28,10 @@ class CLI(object):
             self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
-            for cmd in self.args.command: self.parse(cmd)
+            for cmd in self.args.command: 
+                p = self.parse(cmd)
+                print(p)
+                if p == False: sys.exit(1)
             if self.args.file: self.parse_file()
             if not self.args.file and not self.args.command: self.prompt()
     
@@ -41,8 +45,10 @@ class CLI(object):
             except KeyboardInterrupt: pass
             except EOFError: break
             else: 
-                try: self.parse(cmd)
+                try: p = self.parse(cmd)
                 except Exception as e: print(repr(e))
+                else:
+                    if p: print(p)
             print()
         return
 
@@ -62,21 +68,23 @@ class CLI(object):
     
     def parse(self, cmd):
         if cmd.startswith("//") or cmd.startswith("#"): return
-        elif cmd in ("?","help","!help"): self.print_help()
-        elif cmd.startswith("$"): self.parse_attr(cmd[1:])
+        elif cmd in ("?","help","!help"): return self.print_help()
+        elif cmd.startswith("$"): return self.parse_attr(cmd[1:])
         elif cmd == "!wait": time.sleep(1)
         elif cmd == "!exit": exit()
-        else: self.to_amp(cmd)
-
-    def to_amp(self, cmd):
-        r = self.amp.query(cmd,self.matches)
-        if r: print(r)
+        else: return self.amp.query(cmd,self.matches)
 
     def parse_attr(self, attr):
         if attr == "?":
             attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
-            print(", ".join(attrs))
-        else: print(getattr(self.amp,attr))
+            return ", ".join(attrs)
+        elif "=" in attr:
+            attr,value = attr.split("=")
+            attr = attr.strip()
+            if attr not in self.amp.features: raise AttributeError("Unknown variable")
+            value = guess_type(value.strip())
+            setattr(self.amp,attr, value)
+        else: return getattr(self.amp,attr)
     
     def receive(self, data): print(data)
     
@@ -84,6 +92,14 @@ class CLI(object):
         print("\nConnection closed", file=sys.stderr)
         exit()
         
+
+def guess_type(val):
+    def _bool(val):
+        try: return {"True":True, "False": False}[val]
+        except KeyError as e: raise ValueError(e)
+    for t in [_bool, int, float, str]: 
+        with suppress(ValueError): return t(val)
+    
 
 main = lambda:CLI()()
 if __name__ == "__main__":
