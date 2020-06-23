@@ -1,4 +1,5 @@
 import sys
+from contextlib import suppress
 from threading import Event, Lock
 from .util import call_sequence
 from datetime import datetime, timedelta
@@ -46,22 +47,21 @@ class FunctionCall(object):
         self._kwargs = kwargs
         self._time = datetime.now()
         self.amp = self._find_amp(args)
-        self.amp._pending.append(self)
         try:
             assert(self.amp.connected and hasattr(self.amp,"features"))
             self._features = [self.amp.features[name] for name in features]
             self.missing_features = list(filter(lambda f:not f.isset(), self._features))
-            for f in self.missing_features: f.async_poll()
-        except (AssertionError, AttributeError, KeyError, ConnectionError): 
-            try: self.amp._pending.remove(self)
-            except ValueError: pass
-        else: self._try_call()
+        except (AssertionError, AttributeError, KeyError): return
+        if self._try_call(): return
+        self.amp._pending.append(self)
+        try: [f.async_poll() for f in self.missing_features]
+        except ConnectionError: self.disable()
+        
+    def disable(self):
+        with suppress(ValueError): self.amp._pending.remove(self)
         
     def _try_call(self):
-        if not self.missing_features:
-            self.amp._pending.remove(self)
-            self._func(*self._args,**self._kwargs)
-            return True
+        if not self.missing_features: return self._func(*self._args,**self._kwargs) or True
         
     def has_polled(self, feature):
         """ returns if we are waiting for @feature, update internal values and try call """
@@ -69,12 +69,13 @@ class FunctionCall(object):
         except ValueError: return False
     
         if self._time+timedelta(seconds=MAX_CALL_DELAY) < datetime.now():
-            self.amp._pending.remove(self)
             if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
-        elif self._try_call() and self.amp.verbose > 4:
-            print("[%s] called pending function %s"
+            self.disable()
+        elif self._try_call():
+            if self.amp.verbose > 4: print("[%s] called pending function %s"
                 %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
+            self.disable()
         return True
         
     def _find_amp(self, args): 
