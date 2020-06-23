@@ -7,98 +7,15 @@ import sys, time, socket
 from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
-from datetime import datetime, timedelta
 from .util.function_bind import Bindable
-from .util import log_call, call_sequence
+from .util import log_call
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import Feature, make_feature
+from .amp_features import Feature, make_feature, require, RequirementsAmpMixin
 from . import NAME
 
 
-RESPONSE_TIMEOUT = 2
-
-
-def require(*features):
-    """
-    Decorator that states which amp features have to be loaded before calling the function.
-    Call might be delayed until the feature values have been set.
-    Can be used in types RequirementsMixin or AmpEvents.
-    Example: @require("volume","muted")
-    """
-    return lambda func: lambda *args,**xargs: Call(features, func, args, xargs)
-
-
-class RequirementsMixin(object):
-
-    def __init__(self,*args,**xargs):
-        self._pending = []
-        self.mainloop = call_sequence(self.mainloop_prepare, self.mainloop)
-        super().__init__(*args,**xargs)
-
-    def mainloop_prepare(self,*args,**xargs):
-        if hasattr(self,"_on_change"): return
-        self._on_change = self.on_change
-        self.on_change = self.on_change_decorator
-    
-    def on_change_decorator(self, attr, val):
-        """ update and call methods with @require decorator """
-        if self._pending: print("[%s] %d pending functions"
-            %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-        if not any([p.has_polled(attr) for p in self._pending]):
-            self._on_change(attr, val)
-
-
-class Call(object):
-    """ Function that requires features """
-
-    def __init__(self, features, func, args=set(), kwargs={}):
-        self._func = func
-        self._args = args
-        self._kwargs = kwargs
-        self._time = datetime.now()
-        self.amp = self._find_amp(args)
-        self.amp._pending.append(self)
-        try:
-            assert(self.amp.connected and hasattr(self.amp,"features"))
-            self._features = [self.amp.features[name] for name in features]
-            self._polled = self.missing_features
-            for f in self._polled: f.async_poll()
-        except (AssertionError, AttributeError, KeyError, ConnectionError): 
-            try: self.amp._pending.remove(self)
-            except ValueError: pass
-        else: self._try_call()
-        
-    def _try_call(self):
-        if not self.missing_features:
-            self.amp._pending.remove(self)
-            if self.amp.verbose > 4: print("[%s] calling function %s"
-                %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
-            self._func(*self._args,**self._kwargs)
-        
-    def has_polled(self, feature):
-        if self._time+timedelta(seconds=RESPONSE_TIMEOUT) < datetime.now():
-            self.amp._pending.remove(self)
-            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
-                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
-        else: self._try_call()
-        try: self._polled.remove(self.amp.features.get(feature))
-        except ValueError: return False
-        else: return True
-    
-    @property
-    def missing_features(self): return list(filter(lambda f:not f.isset(), self._features))
-
-    def _find_amp(self, args): 
-        """ search RequirementsMixin type in args """
-        try:
-            amp = getattr(args[0],"amp",None)
-            return next(filter(lambda e: isinstance(e,RequirementsMixin), (amp,)+args))
-        except (StopIteration, IndexError):
-            raise TypeError("@require needs RequirementsMixin instance")
-    
-
-class AbstractAmp(Bindable, RequirementsMixin):
+class AbstractAmp(Bindable, RequirementsAmpMixin):
     """
     Abstract Amplifier Interface
     Note: Event callbacks (on_connect, on_change) might be called in the mainloop
