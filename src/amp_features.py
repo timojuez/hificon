@@ -1,6 +1,6 @@
 import sys
 from contextlib import suppress
-from threading import Event, Lock, Timer
+from threading import Event, Lock
 from .util import call_sequence
 from datetime import datetime, timedelta
 
@@ -21,6 +21,10 @@ class FeatureAmpMixin(object):
     
     def _set_feature_value(self, name, value):
         self.features[name].set(value)
+    
+    def mainloop_hook(self):
+        super().mainloop_hook()
+        for p in self._pending: p.check_expiration()
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
@@ -106,7 +110,7 @@ class FunctionCall(object):
             return
         self.missing_features = list(filter(lambda f:not f.isset(), self._features))
         if self._try_call(): return
-        self._postpone()
+        self.amp._pending.append(self) #postpone
         try: [f.async_poll() for f in self.missing_features]
         except ConnectionError: self.cancel()
         
@@ -122,21 +126,14 @@ class FunctionCall(object):
             print("[WARNING] `%s` will never be called. @require needs "
                 "FeatureAmpMixin instance"%self._func.__name__, file=sys.stderr)
 
-    def _postpone(self):
-        self._timer = Timer(MAX_CALL_DELAY, self._expire)
-        self._timer.start()
-        self.amp._pending.append(self)
-    
     def cancel(self):
-        """ stop any feature execution of this call. Returns True on success """
-        self._timer.cancel()
-        try: self.amp._pending.remove(self)
-        except ValueError: return False
-        else: return True
+        with suppress(ValueError): self.amp._pending.remove(self)
         
-    def _expire(self):
-        if self.cancel() and self.amp.verbose > 3: print("[%s] pending function `%s` expired"
-            %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
+    def check_expiration(self):
+        if self._time+timedelta(seconds=MAX_CALL_DELAY) < datetime.now():
+            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
+                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
+            self.cancel()
     
     def has_polled(self, feature):
         """ returns if we are waiting for @feature, update internal values and try call """
