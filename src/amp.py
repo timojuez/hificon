@@ -11,7 +11,7 @@ from .util.function_bind import Bindable
 from .util import log_call
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import Feature, make_feature, require, make_features_mixin
+from .amp_features import Feature, require, make_features_mixin
 from . import NAME
 
 
@@ -53,6 +53,10 @@ class AbstractAmp(Bindable):
     def connect(self, tries=1): self.connected = True
 
     def disconnect(self): self._stoploop = True
+    
+    def query(self, cmd, matches=None): raise NotImplementedError()
+
+    __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
     @require("power","source")
     def poweron(self, force=False):
@@ -123,15 +127,6 @@ class TelnetAmp(AbstractAmp):
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
-    
-    def query(self, cmd, matches=None):
-        """
-        send @cmd to amp and return line where matches(line) is True
-        """
-        if not matches: return self.send(cmd)
-        else: return make_feature(self,cmd,matches).get()
-    
-    __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
     
     def connect(self, tries=1):
         """

@@ -11,9 +11,6 @@ class DenonFeature(Feature):
         self.amp.send(cmd) # TODO: add matches= for synchronous call?
     
     def parse(self, cmd):
-        """
-        Update property according to @cmd
-        """
         param = cmd[len(self.function):]
         return self.decodeVal(param)
         
@@ -111,14 +108,15 @@ class Abstract_denon(object):
         @cmd str: function[?|param]
         @matches callable: return received line where matches(line) is True
         """
-        cmd = cmd.upper()
-        if "?" in cmd and not matches:
-            function = cmd.replace("?","")
-            return "%s%s"%(function,type(function,(NominalFeature,),dict(function=function))(self).get())
-        return super().query(cmd,matches)
+        _function = cmd.upper().replace("?","")
+        if "?" not in cmd: return self.send(_function)
+        class _Feature(NominalFeature): 
+            function=_function
+            matches = lambda self, data: matches and matches(data) or super().matches(data)
+        _Feature.__name__ = _function
+        return "%s%s"%(_function, _Feature(self).get())
     
-    def send(self, cmd):
-        super().send(cmd.upper())
+    def send(self, cmd): super().send(cmd.upper())
         
         
 class Amp(Abstract_denon, make_amp(features,TelnetAmp)): pass

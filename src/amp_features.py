@@ -237,15 +237,3 @@ class AsyncFeature(AbstractFeature):
 
 class Feature(SynchronousFeatureMixin, AsyncFeature): pass
 
-
-class RawFeature(Feature): # TODO: move to protocol.raw_telnet
-    
-    def parse(self, cmd): return cmd
-    def send(self, value): self.amp.send(value)
-    def matches(self, cmd): return False
-    
-
-def make_feature(amp, cmd, matches=None):
-    return type(cmd, (RawFeature,), dict(call=cmd, matches=lambda self,cmd:matches(cmd)))(amp)
-
-
