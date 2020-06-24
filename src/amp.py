@@ -23,7 +23,7 @@ class AbstractAmp(Bindable):
         mainloop.
     """
     
-    protocol = "Undefined"
+    protocol = None
     host = "Undefined"
     name = None
     features = {}
@@ -170,5 +170,8 @@ def make_amp(features, base_cls=AbstractAmp):
     for name in features.keys(): 
         if hasattr(base_cls,name):
             raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
-    return type("Amp", (make_features_mixin(**features),base_cls), dict())
+    dict_ = dict()
+    with suppress(Exception): dict_["protocol"] = \
+        base_cls.protocol or sys._getframe(1).f_globals['__name__']
+    return type("Amp", (make_features_mixin(**features),base_cls), dict_)
     

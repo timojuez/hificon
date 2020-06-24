@@ -67,17 +67,13 @@ def make_features_mixin(**features):
         def __init__(self, *args, **xargs):
             super().__init__(*args,**xargs)
             for k,v in features.items(): v(self,k)
-            
-    dict_ = dict()
-    try: dict_["protocol"] = sys._getframe(2).f_globals['__name__']
-    except: pass
-    dict_.update({
+    dict_ = {
         k:property(
             lambda self,k=k:self.features[k].get(),
             lambda self,val,k=k:self._set_feature_value(k,val)
         )
         for k,v in features.items()
-    })
+    }
     cls = type("AmpFeatures", (SendOnceMixin,InitMixin,FeatureAmpMixin), dict_)
     return cls
 
