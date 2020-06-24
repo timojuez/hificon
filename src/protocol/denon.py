@@ -99,7 +99,7 @@ features = dict(
 )
 
 
-class Abstract_denon(object):
+class DenonAmp(TelnetAmp):
     protocol = "Denon"
     
     def query(self, cmd, matches=None):
@@ -119,5 +119,5 @@ class Abstract_denon(object):
     def send(self, cmd): super().send(cmd.upper())
         
         
-class Amp(Abstract_denon, make_amp(features,TelnetAmp)): pass
+Amp = make_amp(features, DenonAmp)
 
