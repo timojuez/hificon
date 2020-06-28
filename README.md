@@ -3,17 +3,17 @@
 
 ## Features
 - Denon De Luxe: Control your Denon amp's power and master volume with your laptop
-- Hifi icon: Volume control tray icon
+- Hificon icon: Volume control tray icon
 - Mouse and keyboard volume key support
 - Amplifier notifications screen overlay
 - Automatic amplifier discovery
 - Automatic power control
 	- Switching the amplifier on when sound starts playing
 	- Switching the amplifier off when sound stops or computer shuts down/suspends
-- Hifi shell programming: Send custom commands to the amp
-- Compatibility: Uses only the amp's telnet interface
+- Hifi shell: Send custom commands to the amp and program your own hifi script
+- Compatibility: Needs only the amp's telnet interface
 - Platform independent
-- Want to use your home cinema AVR zone 2 output in your computer room? No problem
+- Easily control your AVR – even far away from remote control distance
 
 
 ## Requirements
@@ -65,7 +65,7 @@ See configuration options in ~/.hificon.cfg and src/share/hificon.cfg.default.
 
 ## Usage
 
-Note that this program is still in development and therefore try it with all sound output stopped.
+Note that this program is still in development and therefore try it first with all sound output stopped.
 
 ### Graphical Main Application
 Start the main application:
@@ -74,18 +74,22 @@ Start the main application:
 You may want to add the command to autostart.
 
 
-### CLI and shortcuts
+### Hifi Shell
 Plain commands can be sent to the amp
 
-`hifi_sh [command]`
+`hifi_sh -c [command]`
 
-See the ./examples/*.sh.
+Hifi scripts can be executed:
+
+`hifi_sh FILE.hifi`
+
+See the ./examples/.
 
 
 ## Development
 
 ### Support for other AVR brands
-It should be possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See denon.py as an example. See also "protocol" parameter in config and in hifi_sh.
+It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifi_sh.
 
 ### Custom amp control software
 It is possible to create a customised controller that keeps your own program synchronised with the amp.
@@ -96,7 +100,7 @@ If your development only relies on sending commands to the amp, your requirement
 
 ## Limitations
 - Currently only Denon protocol devices are being supported.
-- If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, add the amp's IP address as "Host = [IP]" to .hificon.cfg in your user directory.
+- If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, add the amp's IP address as "Host = [IP]" under [Amp] to .hificon.cfg in your user directory.
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 
