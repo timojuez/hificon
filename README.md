@@ -97,6 +97,9 @@ See ./examples/custom_app.py
 
 If your development only relies on sending commands to the amp, your requirement is purely the hificon package and optionally hificon[autosetup].
 
+### Test own software on Denon AVRs
+For testing purposes, there is a Denon AVR software dummy that acts like the amp's Telnet protocol. Try it with `hifi_shell --protocol .dummy`.
+
 
 ## Limitations
 - Currently only Denon protocol devices are being supported.
