@@ -11,11 +11,11 @@ MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 class FeatureAmpMixin(object):
 
     def __init__(self,*args,**xargs):
-        super().__init__(*args,**xargs)
         self._pending = []
         self.features = {}
         # apply @features to Amp
         for attr,F in self._feature_classes.items(): F(self,attr)
+        super().__init__(*args,**xargs)
     
     def on_connect(self):
         for f in self.features.values(): f.unset()
