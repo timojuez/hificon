@@ -54,7 +54,7 @@ class Maxvol(FloatFeature):
     call="MV?"
     default_value = 98
     def set(self, val): raise RuntimeError("Cannot set MVMAX!")
-    def encode(self): pass
+    def encode(self, val): pass
         
 
 class Power(NominalFeature):
@@ -78,7 +78,7 @@ class Name(NominalFeature):
     function = "NSFRN "
     def matches(self, cmd): return cmd.startswith(self.function)
     def set(self, val): raise RuntimeError("Cannot set value!")
-    def encode(self): pass
+    def encode(self, val): pass
 
     
 class SubwooferVolume(FloatFeature):
