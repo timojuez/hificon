@@ -59,6 +59,8 @@ class AbstractAmp(Bindable):
 
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
+    def send(self, cmd): raise NotImplementedError()
+
     @require("power","source")
     def poweron(self, force=False):
         if not force and not config.getboolean("Amp","control_power_on") or self.power:

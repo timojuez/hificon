@@ -13,8 +13,8 @@ class _Amp(TelnetAmp):
         class RawFeature(Feature):
             call = cmd
             matches = lambda self, data: matches(data)
-            def parse(self, cmd): return cmd
-            def send(self, value): self.amp.send(value)
+            def decode(self, cmd): return cmd
+            def encode(self, value): return value
         RawFeature.__name__ = cmd
         return RawFeature(self).get()
 

@@ -148,12 +148,12 @@ class AbstractFeature(object):
         """ return True if cmd shall be parsed with this class """
         raise NotImplementedError()
         
-    def parse(self, cmd): # rename to decodeVal?
+    def decode(self, cmd):
         """ transform string @cmd to native value """
         raise NotImplementedError()
         
-    def send(self, value):
-        """ send @value to amp """
+    def encode(self, value):
+        """ encode @value to amp command """
         raise NotImplementedError()
     
     def on_change(self, old, new): pass
@@ -209,7 +209,7 @@ class AsyncFeature(AbstractFeature):
         except AttributeError: 
             raise AttributeError("`%s` not available. Use @require"%self.attr)
     
-    def set(self, value): self.send(value)
+    def set(self, value): self.amp.send(self.encode(value))
 
     def isset(self): return hasattr(self,'_val')
         
@@ -220,11 +220,11 @@ class AsyncFeature(AbstractFeature):
         self._polled = True
         return self.amp.send(self.call)
     
-    def resend(self): return self.send(self._val)
+    def resend(self): return self.set(self._val)
     
     def consume(self, cmd):
-        """ parse and apply @cmd to this object """
-        return self.store(self.parse(cmd))
+        """ decode and apply @cmd to this object """
+        return self.store(self.decode(cmd))
         
     def store(self, value):
         old = getattr(self,'_val',None)

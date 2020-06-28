@@ -6,11 +6,10 @@ class DenonFeature(Feature):
     function = "" #Amp function command
     call = property(lambda self: "%s?"%self.function)
 
-    def send(self, value):
-        cmd = "%s%s"%(self.function, self.encodeVal(value))
-        self.amp.send(cmd) # TODO: add matches= for synchronous call?
+    def encode(self, value):
+        return "%s%s"%(self.function, self.encodeVal(value))
     
-    def parse(self, cmd):
+    def decode(self, cmd):
         param = cmd[len(self.function):]
         return self.decodeVal(param)
         
@@ -55,7 +54,7 @@ class Maxvol(FloatFeature):
     call="MV?"
     default_value = 98
     def set(self, val): raise RuntimeError("Cannot set MVMAX!")
-    def send(self): pass
+    def encode(self): pass
         
 
 class Power(NominalFeature):
@@ -79,7 +78,7 @@ class Name(NominalFeature):
     function = "NSFRN "
     def matches(self, cmd): return cmd.startswith(self.function)
     def set(self, val): raise RuntimeError("Cannot set value!")
-    def send(self): pass
+    def encode(self): pass
 
     
 class SubwooferVolume(FloatFeature):
