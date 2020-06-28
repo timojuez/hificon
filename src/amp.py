@@ -27,6 +27,7 @@ class AbstractAmp(Bindable):
     host = "Undefined"
     name = None
     features = {}
+    _feature_classes = []
     connected = False
 
     prompt = property(lambda self: "%s:%s@%s"%(self.protocol,NAME,self.host))

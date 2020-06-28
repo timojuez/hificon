@@ -14,6 +14,8 @@ class FeatureAmpMixin(object):
         super().__init__(*args,**xargs)
         self._pending = []
         self.features = {}
+        # apply @features to Amp
+        for attr,F in self._feature_classes.items(): F(self,attr)
     
     def on_connect(self):
         for f in self.features.values(): f.unset()
@@ -62,11 +64,6 @@ def make_features_mixin(**features):
     args: class_attribute_name=MyFeature
         where MyFeature inherits from Feature
     """
-    class InitMixin(object):
-        """ apply @features to Amp """
-        def __init__(self, *args, **xargs):
-            super().__init__(*args,**xargs)
-            for k,v in features.items(): v(self,k)
     dict_ = {
         k:property(
             lambda self,k=k:self.features[k].get(),
@@ -74,7 +71,8 @@ def make_features_mixin(**features):
         )
         for k,v in features.items()
     }
-    cls = type("AmpFeatures", (SendOnceMixin,InitMixin,FeatureAmpMixin), dict_)
+    dict_["_feature_classes"] = features
+    cls = type("AmpFeatures", (SendOnceMixin,FeatureAmpMixin), dict_)
     return cls
 
 
