@@ -1,4 +1,4 @@
-import argparse, sys, time, selectors
+import argparse, sys, time, selectors, traceback
 from ..util.json_service import Service
 from .. import Amp
 
@@ -14,16 +14,18 @@ class Main(Service):
         parser.add_argument('--host', type=str, default="127.0.0.1", help='Listen')
         parser.add_argument('--port', type=int, default=0, help='Listen')
         parser.add_argument('--protocol', type=str, default=".dummy", help='Amp protocol')
+        parser.add_argument('-n','--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
         self.args = parser.parse_args()
         self._send = b""
-        self.amp = Amp(protocol=self.args.protocol)
+        self._break = "\n" if self.args.newline else "\r"
+        self.amp = Amp(protocol=self.args.protocol, verbose=2)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
         super().__init__(host=self.args.host, port=self.args.port, verbose=1)
         self.mainloop()
 
     def read(self, data):
         try: self.amp.send(data.strip().decode())
-        except Exception as e: print(repr(e))
+        except Exception as e: print(traceback.format_exc())
         
     def write(self, conn):
         time.sleep(.1)
@@ -34,7 +36,7 @@ class Main(Service):
         self._send = self._send[l:]
     
     def on_amp_read(self, data):
-        self._send += ("%s\r"%data).encode("ascii")
+        self._send += ("%s%s"%(data,self._break)).encode("ascii")
 
 
 main = lambda:Main()
