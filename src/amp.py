@@ -110,6 +110,7 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
+    host = None
     PORT = 23
     prompt = property(lambda self: "%s:%s"%(super().prompt,self.PORT))
     
