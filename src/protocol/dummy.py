@@ -3,7 +3,7 @@ Dry software run that acts like a real amp
 """
 
 from ..amp import AbstractAmp, make_amp
-from .denon import Amp # TODO: make DummyAmp available for all protocols
+from .. import Amp_cls # TODO: make DummyAmp available for all protocols
 
 
 default_values = dict(
@@ -26,7 +26,7 @@ class DummyAmp(AbstractAmp):
     def __init__(self, *args, **xargs):
         super().__init__(host=self.host,name=self.name)
         for attr, value in default_values.items():
-            self.features[attr].store(value)
+            if attr in self.features: self.features[attr].store(value)
 
     def disconnect(self):
         super().disconnect()
@@ -51,5 +51,5 @@ class DummyAmp(AbstractAmp):
                 return encoded
     
 
-Amp = make_amp(Amp._feature_classes, DummyAmp)
+Amp = make_amp(Amp_cls()._feature_classes, DummyAmp)
 
