@@ -9,6 +9,7 @@ try:
 except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
+from dbus.exceptions import DBusException
 from .. import Amp, NAME
 from ..amp import require
 from ..amp_controller import AmpEvents, AmpController
@@ -21,6 +22,7 @@ class NotificationMixin(object):
     def __init__(self,*args,**xargs):
         self._notify_events = config.get("GUI","notify_events")
         self._notifications = {}
+        Notify.init(NAME)
         super().__init__(*args,**xargs)
         
     def _createNotification(self):
@@ -38,8 +40,10 @@ class NotificationMixin(object):
         n = self._notifications[attr]
         if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
         if val is not None: n.update("%s: %s"%(name, val),self.amp.name)
-        Notify.init(NAME)
-        n.show()
+        try: n.show()
+        except DBusException: # notify2 bug workaround
+            Notify.init(NAME)
+            n.show()
 
     def press(self,*args,**xargs):
         self.notify("volume")
@@ -56,7 +60,7 @@ class NotificationMixin(object):
         self.notify("volume")
         @require("volume")
         def go(amp): self.notify("volume",self.amp.volume)
-        go(self.amp)
+        if not self.amp.features["volume"].isset(): go(self.amp)
         super().on_scroll(*args,**xargs)
         
 
