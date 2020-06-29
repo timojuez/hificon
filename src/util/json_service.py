@@ -10,15 +10,16 @@ from threading import Thread
 PORT=654321
 
 
-class JsonService(object):
+class Service(object):
     """
     A service communicating with Json objects. Call mainloop() after init.
     """
-
+    EVENTS = selectors.EVENT_READ #| selectors.EVENT_WRITE
+    
     def __init__(self, host="127.0.0.1", port=PORT, verbose=0):
         self._verbose = verbose
         if self._verbose > 0: print(
-            "[%s] Listening on port %d"%(self.__class__.__name__,port), file=sys.stderr)
+            "[%s] Listening on %s:%d"%(self.__class__.__name__,host,port), file=sys.stderr)
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
         sock.bind((host, port))
@@ -39,20 +40,30 @@ class JsonService(object):
     def accept(self, sock, mask):
         conn, addr = sock.accept()
         conn.setblocking(False)
-        self.sel.register(conn, selectors.EVENT_READ, self.read)
+        self.sel.register(conn, self.EVENTS, self.connection)
+        
+    def connection(self, conn, mask):
+        if mask & selectors.EVENT_READ:
+            data = conn.recv(1000)
+            if data: self.read(data)
+            else:
+                self.sel.unregister(conn)
+                conn.close()
+        if mask & selectors.EVENT_WRITE: self.write(conn)
 
-    def read(self, conn, mask):
-        data = conn.recv(1000)
-        if data:
-            try:
-                d = json.loads(data.decode())
-                if self._verbose > 1: print(
-                    "[%s] Received %s"%(self.__class__.__name__,d), file=sys.stderr)
-            except Exception as e: print(repr(e))
-            else: self.on_read(d)
-        else:
-            self.sel.unregister(conn)
-            conn.close()
+    def read(self, conn, mask): pass
+    def write(self, conn, mask): pass
+    
+
+class JsonService(Service):
+
+    def read(self, data):
+        try:
+            d = json.loads(data.decode())
+            if self._verbose > 1: print(
+                "[%s] Received %s"%(self.__class__.__name__,d), file=sys.stderr)
+        except Exception as e: print(repr(e))
+        else: self.on_read(d)
 
     def on_read(self, data): pass
 
