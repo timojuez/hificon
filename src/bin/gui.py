@@ -132,7 +132,7 @@ def main():
     args = parser.parse_args()
     
     amp = Amp(verbose=args.verbose+1)
-    ac = AmpController(amp, verbose=args.verbose)
+    ac = AmpController(amp, verbose=args.verbose+1)
     program = Main(amp)
     Thread(name="Amp",target=ac.mainloop,daemon=True).start()
     RemoteControlService(program,verbose=args.verbose)()

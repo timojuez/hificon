@@ -10,6 +10,13 @@ from .util import log_call
 from .config import config
 
 
+class _Verbosity(object):
+    
+    def __init__(self, *args, **xargs):
+        self.verbose = xargs.get("verbose",0)
+        super().__init__(*args,**xargs)
+
+
 class AmpEvents(Autobind):
     
     def __init__(self, obj, *args, **xargs):
@@ -17,7 +24,7 @@ class AmpEvents(Autobind):
         self.amp = obj
 
     
-class SoundMixin(AmpEvents):
+class SoundMixin(AmpEvents,_Verbosity):
     """ provide on_sound_idle and may call on_start_playing when connected """
 
     @log_call
@@ -43,7 +50,7 @@ class SoundMixin(AmpEvents):
             self.on_start_playing()
 
     
-class KeepConnected:
+class KeepConnected(_Verbosity):
     """ keep amp connected whenever possible """
     
     def mainloop(self):

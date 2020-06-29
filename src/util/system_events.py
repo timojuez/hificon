@@ -13,7 +13,7 @@ from threading import Thread
 
 class _Abstract(object):
 
-    def __init__(self, *args, verbose=False, **xargs):
+    def __init__(self, *args, verbose=0, **xargs):
         super().__init__(*args,**xargs)
         
     def mainloop(self,*args,**xargs):
@@ -39,7 +39,7 @@ class PulseMixin(_Abstract):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.pulse = PulseListener(self, connect=False, consider_old_sinks=False, verbose=xargs.get("verbose",False))
+        self.pulse = PulseListener(self, connect=False, consider_old_sinks=False, verbose=xargs.get("verbose",0) > 1)
         self.pulse.connect_async()
         
     def on_pulse_connected(self): pass
