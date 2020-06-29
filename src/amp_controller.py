@@ -12,8 +12,8 @@ from .config import config
 
 class AmpEvents(Autobind):
     
-    def __init__(self, obj):
-        super().__init__(obj)
+    def __init__(self, obj, *args, **xargs):
+        super().__init__(obj, *args, **xargs)
         self.amp = obj
 
     

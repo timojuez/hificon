@@ -30,7 +30,7 @@ class Autobind(object):
     to @obj. For all functions @obj.f, self.f will be called if it exists each time
     after @obj.f is being called. """
 
-    def __new__(cls, obj):
+    def __new__(cls, obj, *args, **xargs):
         if not isinstance(obj,Bindable): raise ValueError("obj %s must be of type Bindable"%obj)
         events = filter((lambda attr:attr.startswith("on_")), dir(obj))
         dct = {attr: lambda *args,**xargs:None for attr in events}

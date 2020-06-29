@@ -13,6 +13,9 @@ from threading import Thread
 
 class _Abstract(object):
 
+    def __init__(self, *args, verbose=False, **xargs):
+        super().__init__(*args,**xargs)
+        
     def mainloop(self,*args,**xargs):
         if hasattr(super(),"mainloop"): return super().mainloop(*args,**xargs)
         else:
@@ -36,7 +39,7 @@ class PulseMixin(_Abstract):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.pulse = PulseListener(self, connect=False, consider_old_sinks=False)
+        self.pulse = PulseListener(self, connect=False, consider_old_sinks=False, verbose=xargs.get("verbose",False))
         self.pulse.connect_async()
         
     def on_pulse_connected(self): pass
