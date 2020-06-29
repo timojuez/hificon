@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import argparse, sys, math, pkgutil, io
+import notify2 as Notify
 from threading import Thread
 try:
     import gi
-    gi.require_version('Gtk', '3.0')
-    gi.require_version('Notify', '0.7')
-    from gi.repository import Gtk, Gdk, Notify
+    gi.require_version('Gdk', '3.0')
+    from gi.repository import Gdk
 except ImportError as e: print(repr(e), file=sys.stderr)
 import pystray
 from PIL import Image
@@ -20,12 +20,11 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         self._notify_events = config.get("GUI","notify_events")
-        Notify.init(NAME)
         self._notifications = {}
         super().__init__(*args,**xargs)
         
     def _createNotification(self):
-        notification = Notify.Notification()
+        notification = Notify.Notification("")
         notification.set_urgency(2)
         notification.set_timeout(config.getint("GUI","notification_timeout"))
         notification.update("Connecting ...",self.amp.name)
@@ -39,6 +38,7 @@ class NotificationMixin(object):
         n = self._notifications[attr]
         if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
         if val is not None: n.update("%s: %s"%(name, val),self.amp.name)
+        Notify.init(NAME)
         n.show()
 
     def press(self,*args,**xargs):

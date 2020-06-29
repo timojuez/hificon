@@ -16,8 +16,8 @@ setup(name=PKG_NAME,
       install_requires=["argparse"],
       extras_require={
         "autosetup": ["python-nmap", "netifaces"],
-        "gnu_desktop": ["PyGObject","pycairo","pulsectl","pystray","Pillow"],
-        "nongnu_desktop": ["pynput","pystray","Pillow"],
+        "gnu_desktop": ["PyGObject","pycairo","pulsectl","pystray","Pillow","notify2"],
+        "nongnu_desktop": ["pynput","pystray","Pillow","notify2"],
       },
       include_package_data=True,
       entry_points={'console_scripts': [
