@@ -54,7 +54,6 @@ class Maxvol(FloatFeature):
     call="MV?"
     default_value = 98
     def set(self, val): raise RuntimeError("Cannot set MVMAX!")
-    def encode(self, val): pass
         
 
 class Power(NominalFeature):
@@ -62,7 +61,9 @@ class Power(NominalFeature):
     translation = {"ON":True,"STANDBY":False}
     
     def on_change(self, old, new):
-        return {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]()
+        try: func = {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]
+        except KeyError: return
+        else: return func()
     
     
 class Muted(NominalFeature):
@@ -78,7 +79,6 @@ class Name(NominalFeature):
     function = "NSFRN "
     def matches(self, cmd): return cmd.startswith(self.function)
     def set(self, val): raise RuntimeError("Cannot set value!")
-    def encode(self, val): pass
 
     
 class SubwooferVolume(FloatFeature):
