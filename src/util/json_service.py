@@ -51,8 +51,8 @@ class Service(object):
                 conn.close()
         if mask & selectors.EVENT_WRITE: self.write(conn)
 
-    def read(self, conn, mask): pass
-    def write(self, conn, mask): pass
+    def read(self, data): pass
+    def write(self, conn): pass
     
 
 class JsonService(Service):
