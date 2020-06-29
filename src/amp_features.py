@@ -1,4 +1,4 @@
-import sys
+import sys, traceback
 from contextlib import suppress
 from threading import Event, Lock
 from .util import call_sequence
@@ -224,7 +224,9 @@ class AsyncFeature(AbstractFeature):
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
-        return self.store(self.decode(cmd))
+        try: d = self.decode(cmd)
+        except: print(traceback.format_exc(), file=sys.stderr)
+        else: return self.store(d)
         
     def store(self, value):
         old = getattr(self,'_val',None)
