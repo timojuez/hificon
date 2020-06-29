@@ -22,6 +22,7 @@ setup(name=PKG_NAME,
       include_package_data=True,
       entry_points={'console_scripts': [
         'hifi_sh = %s.bin.shell:main'%PKG_NAME,
+        "hificon_amp_telnet_service = %s.bin.amp_telnet_service:main"%PKG_NAME,
         'hificon = %s.bin.gui:main'%PKG_NAME,
         'hificon_setup = %s.bin.setup:main [autosetup]'%PKG_NAME,
         'hificon_mouse_binding = %s.bin.mouse_binding:main [nongnu_desktop]'%PKG_NAME,
