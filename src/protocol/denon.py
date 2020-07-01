@@ -37,7 +37,8 @@ class FloatFeature(DenonFeature):
         return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
-        return "%03d"%(self._roundVolume(val)*10)
+        val = self._roundVolume(val)
+        return "%02d"%val if val.is_integer() else "%03d"%(val*10)
         
 
 ######### Features implementation (see Denon CLI protocol)
