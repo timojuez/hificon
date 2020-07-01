@@ -1,41 +1,11 @@
-import argparse, os, sys, time
+#from code import InteractiveConsole
+import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
 from .. import Amp, VERSION
 
 
-class Parser:
-
-    def parse(self, cmd):
-        if cmd.startswith("//") or cmd.startswith("#"): return
-        elif cmd in ("?","help","!help"): return self.print_help()
-        elif cmd.startswith("$"): return self.parse_attr(cmd[1:])
-        elif cmd == "!wait": time.sleep(1)
-        elif cmd == "!exit": exit()
-        else: return self.amp.query(cmd,self.matches)
-
-    def parse_attr(self, attr):
-        if attr == "?":
-            attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
-            return ", ".join(attrs)
-        elif "=" in attr:
-            attr,value = attr.split("=")
-            attr = attr.strip()
-            if attr not in self.amp.features: raise AttributeError("Unknown variable")
-            value = guess_type(value.strip())
-            setattr(self.amp,attr, value)
-        else: return getattr(self.amp,attr)
-    
-
-def guess_type(val):
-    def _bool(val):
-        try: return {"True":True, "False": False}[val]
-        except KeyError as e: raise ValueError(e)
-    for t in [_bool, int, float, str]: 
-        with suppress(ValueError): return t(val)
-    
-
-class CLI(Parser):
+class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Controller for Network Amp - CLI')
@@ -59,10 +29,8 @@ class CLI(Parser):
             self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
-            for cmd in self.args.command: 
-                p = self.parse(cmd)
-                if p is not None: print(p)
-                if p == False: sys.exit(1)
+            self.compiler = Compiler(amp=self.amp, help=self.print_help)
+            for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
             if not self.args.file and not self.args.command: self.prompt()
     
@@ -76,39 +44,157 @@ class CLI(Parser):
             except KeyboardInterrupt: pass
             except EOFError: break
             else: 
-                try: p = self.parse(cmd)
-                except Exception as e: print(repr(e))
-                else:
-                    if p is not None: print(p)
+                try: self.compiler.run(cmd)
+                except Exception as e: print(traceback.format_exc())
             print()
 
     def parse_file(self):
         with open(self.args.file) as fp:
-            for line in fp.read(): self.parse(line.strip())
+            self.compiler.run(fp.read(),self.args.file)
             
     def print_help(self):
-        return (
+        attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
+        features = "".join(map(lambda e:"\t\t%s\n"%e,attrs))
+        print(
             "Low level functions (protocol dependent):\n"
-            "\tCMD\tSend CMD to the amp\n"
+            "\tCMD or $'CMD'\tSend CMD to the amp\n"
             "\n"
             "High level functions:\n"
-            "\t$?\tPrint all available amp attributes for current protocol\n"
             "\t$attribute\tPrint attribute from amp\n"
             "\t$attribute=value\tSet attribute\n"
+            "\tCurrent protocol supports attributes:\n%(features)s\n"
             "\n"
             "Internal functions:\n"
-            "\t!help\tShow help\n"
-            "\t!wait\tSleep one second\n"
-            "\t!exit\tQuit\n"
+            "\thelp()\tShow help\n"
+            "\twait(seconds)\tSleep given amount of seconds\n"
+            "\texit()\tQuit\n"
+            %dict(features=features)
         )
-    
+
     def receive(self, data): print(data)
     
     def on_disconnected(self):
         print("\nConnection closed", file=sys.stderr)
         exit()
-        
 
+
+class AmpCommandTransformation(ast.NodeTransformer):
+    """ transformer for the parsed python syntax tree """
+
+    def visit_Expr(self, node):
+        return self.make_amp_cmd(node, node.value)
+        
+    def make_amp_cmd(self, node, value):
+        """
+        handle amp commands outside of $, like MVUP;MVUP;
+        """
+        if isinstance(value, ast.Name): value=value.id
+        
+        #transforms amp functions to amp.query(...)
+        #e.g. "if True: 'MVMAX 23'" -> "if True: amp.send('MVMAX 23')"
+        #elif isinstance(value, Str): value = value.s
+        #elif isinstance(value, Constant): value = value.value
+        else: return node
+
+        amp_ = ast.Name(id="amp", ctx=ast.Load())
+        return ast.Expr(value=ast.Call(
+            func=ast.Name(id="print",ctx=ast.Load()),
+            args=[ast.Call(
+                func=ast.Attribute(value=amp_,attr="query",ctx=ast.Load()),
+                args=[ast.Str(Preprocessor.decode(value),ctx=ast.Load())],
+                keywords=[],
+                ctx=ast.Load())],
+            keywords=[], ctx=ast.Load()),
+            ctx=ast.Load())
+
+    def visit_Name(self, node):
+        """ undo preprocessing in var names """
+        return ast.Name(Preprocessor.decode(node.id), ctx=ast.Load())
+        node.id = Preprocessor.decode(node.id)
+        return node
+
+
+class Regex:
+    """ Regex builder for sourcecode replacements """
+    
+    _count = 0
+    
+    @classmethod
+    def escapedChar(self): 
+        """ matches a character and ignore backslash escaping """
+        try: return r"(?:(?=(?P<backsl%(c)d>\\?))(?P=backsl%(c)d).)"%dict(c=self._count)
+        finally: self._count += 1
+
+    @classmethod
+    def string(self): 
+        """ matches a quoted string """
+        try: return r"(?P<quote%(c)d>[\"'])%(char)s*?(?P=quote%(c)d)"%dict(
+            c=self._count,char=self.escapedChar())
+        finally: self._count += 1
+    
+    @classmethod
+    def any(self, exclude=[]):
+        """ like dot but includes strings in sourcecode and exclude @exclude """
+        excl = "".join(list(map(lambda e: "%s|"%e, exclude)))
+        return r"(?:((?!%s\"|').)?(%s)?)*"%(excl,Regex.string())
+
+    @classmethod
+    def replaceCode(self, pattern, repl, string, exclude=[], flags=re.S|re.I):
+        """ replace only outside of strings """
+        before = self.any(exclude=exclude)
+        after = self.any(exclude=exclude)
+        pattern = r"(?P<before>%s)%s(?P<after>%s)"%(before,pattern,after)
+        return re.sub(
+            pattern,
+            r"\g<before>%s\g<after>"%repl,
+            string, flags=flags)
+
+
+class Preprocessor:
+    """ Taking care of syntax that might be incompatible with the python parser
+    like $ or ? outside of strings """
+    
+    replace = {"?":"PREPRO__question__"}
+    
+    @classmethod
+    def process(self, source):
+        source = "%s\n\n#$cmd; $''; cmd?\n"%source #FIXME: workaround for regex
+        # handle $"cmd"
+        source = Regex.replaceCode(
+            r"\$(?P<cmd>%s)"%Regex.string(),
+            r"amp.query(\g<cmd>)",
+            source, 
+            exclude=[r"\$\"",r"\$'"])
+        
+        # handle $var
+        source = Regex.replaceCode(r"\$","amp.",source,exclude=[r"\$"])
+
+        return self.encode(source)
+
+    @classmethod
+    def encode(self, source):
+        for k,v in self.replace.items(): source = Regex.replaceCode(
+            re.escape(k), re.escape(v), source, exclude=[re.escape(k)])
+        return source
+
+    @classmethod
+    def decode(self, name):
+        for k,v in self.replace.items(): name = name.replace(v,k)
+        return name
+
+
+class Compiler(Preprocessor):
+
+    def __init__(self, **env): 
+        self.env = dict(**env, wait=time.sleep)
+
+    def run(self, source, filename="<input>"):
+        tree = ast.parse(Preprocessor.process(source))
+        tree = ast.fix_missing_locations(AmpCommandTransformation().visit(tree))
+        print(ast.dump(tree))
+        exec(compile(tree, filename=filename,mode="exec"), self.env)
+    
+    
 main = lambda:CLI()()
 if __name__ == "__main__":
     main()
