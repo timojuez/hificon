@@ -1,0 +1,15 @@
+#!/usr/bin/env hifi_sh
+
+def on_amp_change(attr, value):
+    print("\nChanged %s to %s."%(attr,value))
+
+def volume_prompt():
+    print("Current volume: %.1f" % $volume)
+    while True:
+        newvol = input("Enter new volume: ")
+        $volume = float(newvol)
+
+if __name__ == "__main__":
+    $bind(on_change=on_amp_change)
+    volume_prompt()
+
