@@ -184,7 +184,7 @@ class Preprocessor:
 class Compiler(Preprocessor):
 
     def __init__(self, **env): 
-        self.env = dict(**env, wait=time.sleep)
+        self.env = dict(**env, wait=time.sleep, __name__="__main__")
 
     def run(self, source, filename="<input>", mode="single"):
         tree = ast.parse(Preprocessor.process(source),mode=mode)
