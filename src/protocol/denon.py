@@ -43,6 +43,12 @@ class FloatFeature(DenonFeature):
 
 ######### Features implementation (see Denon CLI protocol)
 
+class FrontSpeaker(NominalFeature):
+    function = "PSFRONT "
+    call = "PSFRONT?"
+    translation = {"SPA":"A","SPB":"B","A+B":"A+B"}
+    
+
 class Volume(FloatFeature):
     function = "MV"
     # TODO: value may be relative?
@@ -96,6 +102,7 @@ features = dict(
         source = Source,
         sub_volume = SubwooferVolume,
         denon_name = Name,
+        front_speaker = FrontSpeaker,
 )
 
 
