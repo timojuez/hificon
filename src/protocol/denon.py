@@ -14,7 +14,7 @@ class DenonFeature(Feature):
         return self.decodeVal(param)
         
     def matches(self, cmd):
-        return cmd.startswith(self.function) and " " not in cmd.replace(self.function,"",1)
+        return cmd.startswith(self.function) #and " " not in cmd.replace(self.function,"",1)
     
         
 class NominalFeature(DenonFeature):
@@ -44,16 +44,15 @@ class FloatFeature(DenonFeature):
 ######### Features implementation (see Denon CLI protocol)
 
 class FrontSpeaker(NominalFeature):
-    function = "PSFRONT "
-    call = "PSFRONT?"
-    translation = {"SPA":"A","SPB":"B","A+B":"A+B"}
+    function = "PSFRONT"
+    translation = {" SPA":"A"," SPB":"B"," A+B":"A+B"}
     
 
 class Volume(FloatFeature):
     function = "MV"
     # TODO: value may be relative?
-    def set(self, value):
-        super().set(min(max(0,value),self.amp.maxvol))
+    def set(self, value): super().set(min(max(0,value),self.amp.maxvol))
+    def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
 
     
 class Maxvol(FloatFeature):
@@ -84,7 +83,6 @@ class Source(NominalFeature):
 
 class Name(NominalFeature):
     function = "NSFRN "
-    def matches(self, cmd): return cmd.startswith(self.function)
     def set(self, val): raise RuntimeError("Cannot set value!")
 
     
