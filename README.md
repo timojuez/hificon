@@ -2,22 +2,23 @@
 ### Free High Freedelity for Your Computer
 
 ## Features
-- Denon De Luxe: Control your Denon amp's power and master volume with your laptop
-- Hificon icon: Volume control tray icon
-- Mouse and keyboard volume key support
-- Amplifier notifications screen overlay
-- Automatic amplifier discovery
-- Automatic power control
+- Hificon icon*: Master volume control tray icon
+- Mouse and keyboard volume key support*
+- Amplifier notifications screen overlay: no need to connect a display to your amp's HDMI out
+- Automatic amplifier discovery*
+- Automatic power control*
 	- Switching the amplifier on when sound starts playing
 	- Switching the amplifier off when sound stops or computer shuts down/suspends
-- Hifi shell: Send custom commands to the amp and program your own hifi script
+- HiFiSh HiFi Shell: Send custom commands to the amp and program your own hifi script
 - Compatibility: Needs only the amp's telnet interface
 - Platform independent
 - Easily control your AVR – even far away from remote control distance
 
+*Currently only supports Denon/Marantz AVR compatible (tested with Denon X1400H)
+
 
 ## Requirements
-- Denon/Marantz AVR compatible, connected via LAN/Wifi (tested with Denon X1400H)
+- Amplifier connected via LAN/Wifi
 - Python 3 and Pip
 
 Optional:
@@ -74,16 +75,24 @@ Start the main application:
 You may want to add the command to autostart.
 
 
-### Hifi Shell
-Plain commands can be sent to the amp
+### HiFi Shell
+HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for amplifier programming. It can read and write the amp's attributes or run remote control actions.
 
-`hifi_sh -c [command]`
+#### Starting the shell
+Calling `hifi_sh` without arguments will start the prompt.
+To execute a command from bash, call `hifi_sh -c '[command]'`
+Hifi scripts can be executed by `hifi_sh FILE.hifi`
 
-Hifi scripts can be executed:
+See also `hifi_sh -h` and the ./examples/.
 
-`hifi_sh FILE.hifi`
+#### Raw commands
+Raw commands can be sent to the amp like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
 
-See the ./examples/.
+#### High level commands
+High level attributes are not protocol (amp manufacturer) specific and start with a `$`. 
+Example: `$volume=40`
+To see what attributes are being supported, type `help()` or call `hifi_sh -c 'help()'`
+
 
 
 ## Development
@@ -102,7 +111,6 @@ For testing purposes, there is a Denon AVR software dummy that acts like the amp
 
 
 ## Limitations
-- Currently only Denon protocol devices are being supported.
 - If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, add the amp's IP address as "Host = [IP]" under [Amp] to .hificon.cfg in your user directory.
 - This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
