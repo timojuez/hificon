@@ -1,0 +1,13 @@
+#!/usr/bin/env hifi_sh
+$poweron(force=True)
+
+# Switch Bass Mode
+if $front_speaker != "A":
+    $'MNMEN OFF'; $'MNMEN ON'; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCDN; MNCDN; MNCDN; MNENT; MNCDN; MNENT; MNCDN; MNCDN; MNCDN; MNCDN; MNCDN; MNENT; MNENT; MNCRT; MNENT 
+    wait(2)
+    $'MNMEN OFF'
+
+$'DIM DAR'; $'PSFRONT SPA'; $'SISAT/CBL'; $'MSDTS SURROUND'; $'PSMULTEQ:AUDYSSEY'; #$'MSDOLBY DIGITAL'
+wait(1)
+$'CVSW 465'
+

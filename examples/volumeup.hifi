@@ -1,12 +1,3 @@
 #!/usr/bin/env hifi_sh
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
-MVUP
+$volume += 5
 

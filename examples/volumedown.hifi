@@ -1,12 +1,3 @@
 #!/usr/bin/env hifi_sh
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
-MVDOWN
+$volume -= 5
 
