@@ -23,13 +23,13 @@ class CLI:
         assert(self.args.command or not self.args.ret)
         
     def __call__(self):
-        self.matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
+        matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
         self.amp = Amp(
             self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
-            self.compiler = Compiler(amp=self.amp, help=self.print_help)
+            self.compiler = Compiler(amp=self.amp, help=self.print_help, __matches__=matches)
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
             if not self.args.file and not self.args.command: self.prompt()
@@ -100,7 +100,8 @@ class AmpCommandTransformation(ast.NodeTransformer):
         amp_ = ast.Name(id="amp", ctx=ast.Load())
         return ast.Expr(value=ast.Call(
                 func=ast.Attribute(value=amp_,attr="query",ctx=ast.Load()),
-                args=[ast.Str(Preprocessor.decode(value),ctx=ast.Load())],
+                args=[ast.Str(Preprocessor.decode(value),ctx=ast.Load()),
+                    ast.Name(id="__matches__",ctx=ast.Load())],
                 keywords=[],
                 ctx=ast.Load()),
             ctx=ast.Load())
