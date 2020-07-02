@@ -1,4 +1,4 @@
-#from code import InteractiveConsole
+#from code import InteractiveConsole #TODO
 import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
@@ -35,7 +35,8 @@ class CLI:
             if not self.args.file and not self.args.command: self.prompt()
     
     def print_header(self):
-        print("$_ HIFI SHELL %s\n"%VERSION)
+        print("$_ HIFI SHELL %s"%VERSION)
+        print("Copyright (c) 2020 Timo L. Richter\n")
 
     def prompt(self):
         self.amp.bind(on_disconnected=self.on_disconnected)
@@ -50,7 +51,7 @@ class CLI:
 
     def parse_file(self):
         with open(self.args.file) as fp:
-            self.compiler.run(fp.read(),self.args.file)
+            self.compiler.run(fp.read(),self.args.file,"exec")
             
     def print_help(self):
         attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
@@ -98,18 +99,14 @@ class AmpCommandTransformation(ast.NodeTransformer):
 
         amp_ = ast.Name(id="amp", ctx=ast.Load())
         return ast.Expr(value=ast.Call(
-            func=ast.Name(id="print",ctx=ast.Load()),
-            args=[ast.Call(
                 func=ast.Attribute(value=amp_,attr="query",ctx=ast.Load()),
                 args=[ast.Str(Preprocessor.decode(value),ctx=ast.Load())],
                 keywords=[],
-                ctx=ast.Load())],
-            keywords=[], ctx=ast.Load()),
+                ctx=ast.Load()),
             ctx=ast.Load())
 
     def visit_Name(self, node):
         """ undo preprocessing in var names """
-        return ast.Name(Preprocessor.decode(node.id), ctx=ast.Load())
         node.id = Preprocessor.decode(node.id)
         return node
 
@@ -188,11 +185,10 @@ class Compiler(Preprocessor):
     def __init__(self, **env): 
         self.env = dict(**env, wait=time.sleep)
 
-    def run(self, source, filename="<input>"):
-        tree = ast.parse(Preprocessor.process(source))
+    def run(self, source, filename="<input>", mode="single"):
+        tree = ast.parse(Preprocessor.process(source),mode=mode)
         tree = ast.fix_missing_locations(AmpCommandTransformation().visit(tree))
-        print(ast.dump(tree))
-        exec(compile(tree, filename=filename,mode="exec"), self.env)
+        exec(compile(tree, filename=filename, mode=mode), self.env)
     
     
 main = lambda:CLI()()
