@@ -139,14 +139,24 @@ class Regex:
     @classmethod
     def replaceCode(self, pattern, repl, string, exclude=[], flags=re.S|re.I):
         """ replace only outside of strings """
+        matches = [e for e in re.finditer(self.string(), string)]
+        notstring_start = [0]+[e.end() for e in matches]
+        notstring_end = [e.start() for e in matches]+[len(string)]
+        for start, end in zip(reversed(notstring_start), reversed(notstring_end)):
+            sub = re.sub(pattern,repl, string, flags)
+            string = "%s%s%s"%(string[:start], sub, string[end:])
+        return string
+        
         before = self.any(exclude=exclude)
         after = self.any(exclude=exclude)
         pattern = r"(?P<before>%s)%s(?P<after>%s)"%(before,pattern,after)
-        return re.sub(
+        string = "%s\n#PREPRO__WORKAROUND $'' $cmd cmd?"%string #FIXME: workaround for regex
+        ret = re.sub(
             pattern,
             r"\g<before>%s\g<after>"%repl,
             string, flags=flags)
-
+        return ret.split("#PREPRO__WORKAROUND",1)[0]
+        
 
 class Preprocessor:
     """ Taking care of syntax that might be incompatible with the python parser
@@ -156,7 +166,8 @@ class Preprocessor:
     
     @classmethod
     def process(self, source):
-        source = "%s\n\n#$cmd; $''; cmd?\n"%source #FIXME: workaround for regex
+        source = self._remove_comments(source)
+        
         # handle $"cmd"
         source = Regex.replaceCode(
             r"\$(?P<cmd>%s)"%Regex.string(),
