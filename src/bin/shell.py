@@ -29,11 +29,16 @@ class CLI:
             self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
-            self.compiler = Compiler(amp=self.amp, help=self.print_help, __matches__=matches)
+            self.compiler = Compiler(amp=self.amp, __query__=self.query, __wait__=.1, help=self.print_help, __matches__=matches)
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
             if not self.args.file and not self.args.command: self.prompt()
     
+    def query(self, cmd, matches, wait):
+        r = self.amp.query(cmd, matches)
+        if wait: time.sleep(wait)
+        return r
+        
     def print_header(self):
         print("$_ HIFI SHELL %s"%VERSION)
         print("Copyright (c) 2020 Timo L. Richter\n")
@@ -82,103 +87,74 @@ class CLI:
 class AmpCommandTransformation(ast.NodeTransformer):
     """ transformer for the parsed python syntax tree """
 
-    def visit_Expr(self, node):
-        return self.make_amp_cmd(node, node.value)
-        
-    def make_amp_cmd(self, node, value):
-        """
-        handle amp commands outside of $, like MVUP;MVUP;
-        """
-        if isinstance(value, ast.Name): value=value.id
-        
-        #transforms amp functions to amp.query(...)
-        #e.g. "if True: 'MVMAX 23'" -> "if True: amp.send('MVMAX 23')"
-        #elif isinstance(value, Str): value = value.s
-        #elif isinstance(value, Constant): value = value.value
-        else: return node
-
+    def _query_call(self, cmd):
+        """ returns __query__(@cmd, __matches__, __wait__) """
         amp_ = ast.Name(id="amp", ctx=ast.Load())
-        return ast.Expr(value=ast.Call(
-                func=ast.Attribute(value=amp_,attr="query",ctx=ast.Load()),
-                args=[ast.Str(Preprocessor.decode(value),ctx=ast.Load()),
-                    ast.Name(id="__matches__",ctx=ast.Load())],
-                keywords=[],
-                ctx=ast.Load()),
+        node = ast.Call(
+            func=ast.Name(id="__query__", ctx=ast.Load()),
+            args=[
+                ast.Str(Preprocessor.decode(cmd),ctx=ast.Load()),
+                ast.Name(id="__matches__",ctx=ast.Load()),
+                ast.Name(id="__wait__",ctx=ast.Load()),
+            ],
+            keywords=[],
             ctx=ast.Load())
-
-    def visit_Name(self, node):
-        """ undo preprocessing in var names """
-        node.id = Preprocessor.decode(node.id)
+        self.generic_visit(node)
         return node
-
-
-class Regex:
-    """ Regex builder for sourcecode replacements """
+     
+    def visit_Expr(self, node):
+        """ handle amp commands outside of $, like MVUP;MVUP; """
+        if isinstance(node.value, ast.Name): node.value = self._query_call(node.value.id)
+        self.generic_visit(node)
+        return node
+        
+    def visit_Constant(self, node):
+        """ handle $'cmd' """
+        if node.value.startswith("__PREPRO_DOLLAR__"):
+            return self._query_call(node.value.replace("__PREPRO_DOLLAR__","",1))
+        return node
+        
+    def visit_Str(self, node):
+        """ handle $'cmd' """
+        if node.s.startswith("__PREPRO_DOLLAR__"):
+            return self._query_call(node.s.replace("__PREPRO_DOLLAR__","",1))
+        return node
     
-    _count = 0
-    
-    @classmethod
-    def escapedChar(self): 
-        """ matches a character and ignore backslash escaping """
-        try: return r"(?:(?=(?P<backsl%(c)d>\\?))(?P=backsl%(c)d).)"%dict(c=self._count)
-        finally: self._count += 1
-
-    @classmethod
-    def string(self): 
-        """ matches a quoted string """
-        try: return r"(?P<quote%(c)d>[\"'])%(char)s*?(?P=quote%(c)d)"%dict(
-            c=self._count,char=self.escapedChar())
-        finally: self._count += 1
-    
-    @classmethod
-    def any(self, exclude=[]):
-        """ like dot but includes strings in sourcecode and exclude @exclude """
-        excl = "".join(list(map(lambda e: "%s|"%e, exclude)))
-        return r"(?:((?!%s\"|').)?(%s)?)*"%(excl,Regex.string())
-
-    @classmethod
-    def replaceCode(self, pattern, repl, string, exclude=[], flags=re.S|re.I):
-        """ replace only outside of strings """
-        before = self.any(exclude=exclude)
-        after = self.any(exclude=exclude)
-        pattern = r"(?P<before>%s)%s(?P<after>%s)"%(before,pattern,after)
-        return re.sub(
-            pattern,
-            r"\g<before>%s\g<after>"%repl,
-            string, flags=flags)
-
+    def visit(self, node):
+        r = super().visit(node)
+        # undo preprocessing
+        if isinstance(node, ast.Name): node.id = Preprocessor.decode(node.id)
+        elif isinstance(node, ast.ClassDef): node.name = Preprocessor.decode(node.name)
+        elif isinstance(node, ast.keyword): node.arg = Preprocessor.decode(node.arg)
+        elif isinstance(node, ast.AsyncFunctionDef): node.name = Preprocessor.decode(node.name)
+        elif isinstance(node, ast.FunctionDef): node.name = Preprocessor.decode(node.name)
+        elif isinstance(node, ast.arg): node.arg = Preprocessor.decode(node.arg)
+        elif isinstance(node, ast.Constant): node.value = Preprocessor.decode(node.value)
+        elif isinstance(node, ast.Str): node.s = Preprocessor.decode(node.s)
+        return r
+        
 
 class Preprocessor:
     """ Taking care of syntax that might be incompatible with the python parser
     like $ or ? outside of strings """
     
-    replace = {"?":"PREPRO__question__"}
+    replace = [
+        #str,   replace,                ocurrance after parsing
+        ("?",   "__PREPRO_QUESTION__",  "__PREPRO_QUESTION__"),
+        ("$'",  "'__PREPRO_DOLLAR__",   "__PREPRO_DOLLAR__"),
+        ('$"',  '"__PREPRO_DOLLAR__',   "__PREPRO_DOLLAR__"),
+        ("$",   "amp.",                 "amp."),
+    ]
     
     @classmethod
-    def process(self, source):
-        source = "%s\n\n#$cmd; $''; cmd?\n"%source #FIXME: workaround for regex
-        # handle $"cmd"
-        source = Regex.replaceCode(
-            r"\$(?P<cmd>%s)"%Regex.string(),
-            r"amp.query(\g<cmd>)",
-            source, 
-            exclude=[r"\$\"",r"\$'"])
-        
-        # handle $var
-        source = Regex.replaceCode(r"\$","amp.",source,exclude=[r"\$"])
-
-        return self.encode(source)
-
-    @classmethod
     def encode(self, source):
-        for k,v in self.replace.items(): source = Regex.replaceCode(
-            re.escape(k), re.escape(v), source, exclude=[re.escape(k)])
+        for s,repl,find in self.replace: source = source.replace(s,repl)
         return source
-
+        
     @classmethod
-    def decode(self, name):
-        for k,v in self.replace.items(): name = name.replace(v,k)
-        return name
+    def decode(self, data):
+        for s,repl,find in self.replace: data = data.replace(find,s)
+        return data
 
 
 class Compiler(Preprocessor):
@@ -187,8 +163,10 @@ class Compiler(Preprocessor):
         self.env = dict(**env, wait=time.sleep, __name__="__main__")
 
     def run(self, source, filename="<input>", mode="single"):
-        tree = ast.parse(Preprocessor.process(source),mode=mode)
-        tree = ast.fix_missing_locations(AmpCommandTransformation().visit(tree))
+        tree = ast.parse(Preprocessor.encode(source),mode=mode)
+        tree = AmpCommandTransformation().visit(tree)
+        tree = ast.fix_missing_locations(tree)
+        #print(ast.dump(tree))
         exec(compile(tree, filename=filename, mode=mode), self.env)
     
     
