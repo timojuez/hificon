@@ -29,12 +29,20 @@ class CLI:
             self.args.host, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
-            self.compiler = Compiler(amp=self.amp, __query__=self.query, __wait__=.1, help=self.print_help, __matches__=matches)
+            self.compiler = Compiler(
+                # environment variables for hifish
+                __query__ = self.query,
+                __matches__ = matches,
+                __wait__ = .1,
+                amp = self.amp,
+                help = self.print_help,
+            )
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
             if not self.args.file and not self.args.command: self.prompt()
     
     def query(self, cmd, matches, wait):
+        """ calling $"cmd" or $'cmd' from within hifish. @matches comes from --return """
         r = self.amp.query(cmd, matches)
         if wait: time.sleep(wait)
         return r
@@ -89,7 +97,6 @@ class AmpCommandTransformation(ast.NodeTransformer):
 
     def _query_call(self, cmd):
         """ returns __query__(@cmd, __matches__, __wait__) """
-        amp_ = ast.Name(id="amp", ctx=ast.Load())
         node = ast.Call(
             func=ast.Name(id="__query__", ctx=ast.Load()),
             args=[
