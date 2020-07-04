@@ -117,7 +117,7 @@ class DenonAmp(TelnetAmp):
         if "?" not in cmd: return self.send(_function)
         class _Feature(NominalFeature): 
             function=_function
-            matches = lambda self, data: matches and matches(data) or super().matches(data)
+            matches = lambda self, data: not matches and super().matches(data) or matches(data)
         _Feature.__name__ = _function
         return "%s%s"%(_function, _Feature(self).get())
     
