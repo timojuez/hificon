@@ -93,6 +93,23 @@ High level attributes are not protocol (amp manufacturer) specific and start wit
 Example: `$volume=40`
 To see what attributes are being supported, type `help()` or call `hifi_sh -c 'help()'`
 
+#### PyFiHiFi Language
+HiFiSh compiles the code into Python as described below. The Python code assumes the following:
+```
+import time
+from hificon import Amp
+__matches__ = None
+__wait__ = .1
+amp = Amp()
+```
+
+| HiFiSh | Python |
+| --- | --- |
+| `$"X"` or `$'X'` | `amp.query(X, __matches__); time.sleep(__wait__)` |
+| `$X` | `amp.X` |
+| `wait(X)` | `time.sleep(X)` |
+
+If `__matches__` is a callable, `$""` will return the received line from the amp where `__matches__(line) == True`.
 
 
 ## Development
