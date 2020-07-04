@@ -3,6 +3,8 @@ import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
 from .. import Amp, VERSION
+try: import readline
+except ImportError: pass
 
 
 class CLI:
