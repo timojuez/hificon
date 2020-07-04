@@ -98,18 +98,18 @@ HiFiSh compiles the code into Python as described below. The Python code assumes
 ```
 import time
 from hificon import Amp
-__matches__ = None
+__return__ = None
 __wait__ = .1
 amp = Amp()
 ```
 
 | HiFiSh | Python |
 | --- | --- |
-| `$"X"` or `$'X'` | `amp.query(X, __matches__); time.sleep(__wait__)` |
+| `$"X"` or `$'X'` | `amp.query(X, __return__); time.sleep(__wait__)` |
 | `$X` | `amp.X` |
 | `wait(X)` | `time.sleep(X)` |
 
-If `__matches__` is a callable, `$""` will return the received line from the amp where `__matches__(line) == True`.
+If `__return__` is a callable, `$""` will return the received line from the amp where `__return__(line) == True`.
 
 
 ## Development

@@ -34,7 +34,7 @@ class CLI:
             self.compiler = Compiler(
                 # environment variables for hifish
                 __query__ = self.query,
-                __matches__ = matches,
+                __return__ = matches,
                 __wait__ = .1,
                 amp = self.amp,
                 help = self.print_help,
@@ -97,12 +97,12 @@ class AmpCommandTransformation(ast.NodeTransformer):
     """ transformer for the parsed python syntax tree """
 
     def _query_call(self, cmd):
-        """ returns __query__(@cmd, __matches__, __wait__) """
+        """ returns __query__(@cmd, __return__, __wait__) """
         node = ast.Call(
             func=ast.Name(id="__query__", ctx=ast.Load()),
             args=[
                 ast.Str(Preprocessor.decode(cmd),ctx=ast.Load()),
-                ast.Name(id="__matches__",ctx=ast.Load()),
+                ast.Name(id="__return__",ctx=ast.Load()),
                 ast.Name(id="__wait__",ctx=ast.Load()),
             ],
             keywords=[],
