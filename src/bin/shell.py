@@ -69,21 +69,20 @@ class CLI:
             self.compiler.run(fp.read(),self.args.file,"exec")
             
     def print_help(self):
-        attrs = map(lambda e: "$%s"%e,filter(lambda e:e,(self.amp.features.keys())))
+        attrs = map(lambda e: "$%s"%e,filter(lambda e:e,sorted(self.amp.features.keys())))
         features = "".join(map(lambda e:"\t\t%s\n"%e,attrs))
         print(
-            "Low level functions (protocol dependent):\n"
-            "\tCMD or $'CMD'\tSend CMD to the amp\n"
-            "\n"
-            "High level functions:\n"
-            "\t$attribute\tPrint attribute from amp\n"
-            "\t$attribute=value\tSet attribute\n"
-            "\tCurrent protocol supports attributes:\n%(features)s\n"
-            "\n"
             "Internal functions:\n"
             "\thelp()\tShow help\n"
             "\twait(seconds)\tSleep given amount of seconds\n"
             "\texit()\tQuit\n"
+            "\n"
+            "High level functions (protocol independent)\n"
+            "\t$attribute\tVariable that contains amp's attribute, potentially read and writeable\n"
+            "\tCurrent protocol supports attributes:\n%(features)s\n"
+            "\n"
+            "Low level functions (protocol dependent)\n"
+            "\tCMD or $'CMD'\tSend CMD to the amp and return answer\n"
             %dict(features=features)
         )
 
