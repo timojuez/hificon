@@ -3,7 +3,7 @@ Dry software run that acts like a real amp
 """
 
 from ..amp import AbstractAmp, make_amp
-from .. import Amp_cls # TODO: make DummyAmp available for all protocols
+from .. import Amp_cls
 
 
 default_values = dict(
@@ -18,13 +18,13 @@ default_values = dict(
 
 
 class DummyAmp(AbstractAmp):
-    protocol = "Dummy"
     host = "dummy"
     name = "Dummy"
     connected = True
 
     def __init__(self, *args, **xargs):
         super().__init__(host=self.host,name=self.name)
+        self.protocol = "%s_Dummy"%super().protocol
         for attr, value in default_values.items():
             if attr in self.features: self.features[attr].store(value)
 
@@ -54,5 +54,8 @@ class DummyAmp(AbstractAmp):
         return r
     
 
-Amp = make_amp(Amp_cls()._feature_classes, DummyAmp)
+def Amp(*args, emulate=None, **xargs):
+    """ extra argument @emulate must be a protocol module """
+    return make_amp(Amp_cls(protocol=emulate)._feature_classes, DummyAmp)(*args, **xargs)
+    
 
