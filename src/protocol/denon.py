@@ -1,8 +1,11 @@
 import sys, math
-from ..amp import Feature, TelnetAmp, make_amp
+from ..amp import TelnetAmp, make_amp
+from .. import amp_features
 
 
-class DenonFeature(Feature):
+class DenonFeature:
+    """ Handles Denon format "@function@value" """
+    
     function = None #str, Amp function command
     call = property(lambda self: "%s?"%self.function)
 
@@ -19,8 +22,10 @@ class DenonFeature(Feature):
         
 ######### Data Types
 
-class NominalFeature(DenonFeature):
+class SelectFeature(DenonFeature, amp_features.SelectFeature):
     translation = {} #return_string to value
+    
+    options = property(lambda self: list(self.translation.values()))
 
     def decodeVal(self, val):
         r = self.translation[val] = self.translation.get(val,val)
@@ -30,7 +35,7 @@ class NominalFeature(DenonFeature):
         return {val:key for key,val in self.translation.items()}.get(val,val)
         
 
-class FloatFeature(DenonFeature):
+class FloatFeature(DenonFeature, amp_features.FloatFeature):
 
     @staticmethod
     def _roundVolume(vol):
@@ -44,7 +49,7 @@ class FloatFeature(DenonFeature):
         return "%02d"%val if val.is_integer() else "%03d"%(val*10)
 
 
-class IntFeature(DenonFeature):
+class IntFeature(DenonFeature, amp_features.IntFeature):
     min = 0
     max = 99
     
@@ -57,7 +62,7 @@ class IntFeature(DenonFeature):
         except ValueError: return False
         
 
-class BoolFeature(NominalFeature):
+class BoolFeature(SelectFeature, amp_features.BoolFeature):
     translation = {"ON":True,"OFF":False}
     
 
@@ -70,7 +75,7 @@ class RelativeFloat(FloatFeature):
     def decodeVal(self, val): return super().decodeVal(val)-50
     
     
-class StrictFloatFeature(RelativeFloat, BoolFeature):
+class LooseFloatFeature(RelativeFloat, BoolFeature):
     """ Value where the amp does not always send a float """
     
     def matches(self, data):
@@ -81,14 +86,14 @@ class StrictFloatFeature(RelativeFloat, BoolFeature):
         except (TypeError, ValueError, AssertionError): return False
 
 
-class StrictBoolFeature(BoolFeature):
+class LooseBoolFeature(BoolFeature):
     """ Value where the amp does not always send a boolean """
 
     def matches(self,data):
         return super().matches(data) and isinstance(self.decode(data), bool)
 
     def on_change(self, old, new):
-        if new == True: self.amp.send(self.call) # make amp send the nonbool value
+        if new == True: self.amp.send(self.call) # make amp send the nonbool value TODO: only once
 
 
 ######### Features implementation (see Denon CLI protocol)
@@ -103,8 +108,9 @@ class Maxvol(FloatFeature): #undocumented
     call="MV?"
     default_value = 98
     def set(self, val): raise RuntimeError("Cannot set MVMAX!")
+    def on_change(self, old, new): self.amp.features["volume"].max = new
 
-class Power(NominalFeature):
+class Power(SelectFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
@@ -113,14 +119,14 @@ class Power(NominalFeature):
         except KeyError: return
         else: return func()
     
-class Muted(NominalFeature):
+class Muted(SelectFeature):
     function = "MU"
     translation = {"ON":True,"OFF":False}
 
-class Source(NominalFeature):
+class Source(SelectFeature):
     function = "SI"
 
-class Name(NominalFeature): #undocumented
+class Name(SelectFeature): #undocumented
     function = "NSFRN "
     def set(self, val): raise RuntimeError("Cannot set value!")
 
@@ -182,21 +188,21 @@ class MainZone(BoolFeature):
     name = "Main Zone"
     function = "ZM"
     
-class RecSelect(NominalFeature):
+class RecSelect(SelectFeature):
     name = "Rec Select"
     function = "SR"
 
-class InputMode(NominalFeature):
+class InputMode(SelectFeature):
     name = "Input Mode"
     translation = {"AUTO":"Auto", "HDMI":"HDMI", "DIGITAL":"Digital", "ANALOG": "Analog"}
     function = "SD"
 
-class DigitalInput(NominalFeature):
+class DigitalInput(SelectFeature):
     name = "Digital Input"
     function = "DC"
     translation = {"AUTO":"Auto", "PCM": "PCM", "DTS":"DTS"}
     
-class VideoSelect(NominalFeature):
+class VideoSelect(SelectFeature):
     name =" Video Select Mode"
     function = "SV"
     translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel"}
@@ -208,37 +214,37 @@ class MainZoneSleep(IntFeature):
     function = "SLP"
     # TODO: OFF
 
-class Surround(NominalFeature):
+class Surround(SelectFeature):
     name = "Surround Mode"
     function = "MS"
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual"}
     
-class QuickSelect(NominalFeature):
+class QuickSelect(SelectFeature):
     name = "Quick Select"
     function="MSQUICK"
     call="MSQUICK ?"
     translation = {str(n+1):str(n+1) for n in range(5)}
 
 """
-class QuickSelectSave(NominalFeature):
+class QuickSelectSave(SelectFeature):
     name = "Quick Select (save)"
     def encode(self, value): return "QUICK%s MEMORY"%value
     def get(self): raise AttributeError("Cannot read value")
 """ # TODO
 
-class HDMIMonitor(NominalFeature):
+class HDMIMonitor(SelectFeature):
     name =" HDMI Monitor auto detection"
     function = "VSMONI"
     call = "VSMONI ?"
     translation = {"MONI1":"OUT-1", "MONI2":"OUT-2"}
     
-class Asp(NominalFeature):
+class Asp(SelectFeature):
     name = "ASP mode"
     function = "VSASP"
     call = "VSASP ?"
     translation = {"NRM":"Normal", "FUL":"Full"}
     
-class Resolution(NominalFeature):
+class Resolution(SelectFeature):
     function = "VSSC"
     call = "VSSC ?"
     translation = {"48P":"480p/576p", "10I":"1080i", "72P":"720p", "10P":"1080p", "10P24":"1080p:24Hz", "AUTO":"Auto"}
@@ -248,12 +254,12 @@ class HDMIResolution(Resolution):
     function = "VSSCH"
     call = "VSSCH ?"
 
-class HDMIAudioOut(NominalFeature):
+class HDMIAudioOut(SelectFeature):
     name = "HDMI Audio Output"
     function = "VSAUDIO "
     translation = {"AMP":"to Amp", "TV": "to TV"}
     
-class VideoProcessing(NominalFeature):
+class VideoProcessing(SelectFeature):
     name = "Video Processing Mode"
     function = "VSVPM"
     call = "VSVPM ?"
@@ -263,7 +269,7 @@ class ToneCtrl(BoolFeature):
     name = "Tone Control"
     function = "PSTONE CTRL "
     
-class SurroundBackMode(NominalFeature):
+class SurroundBackMode(SelectFeature):
     name = "Surround Back SP Mode"
     function = "PSSB:"
     call = "PSSB: ?"
@@ -274,7 +280,7 @@ class CinemaEq(BoolFeature):
     function = "PSCINEMA EQ."
     call = "PSCINEMA EQ. ?"
 
-class Mode(NominalFeature):
+class Mode(SelectFeature):
     function = "PSMODE:"
     call = "PSMODE: ?"
     translation = {"MUSIC":"Music","CINEMA":"Cinema","GAME":"Game","PRO LOGIC":"Pro Logic"}
@@ -283,18 +289,18 @@ class FrontHeight(BoolFeature):
     function = "PSFH:"
     call = "PSFH: ?"
 
-class PL2HG(NominalFeature):
+class PL2HG(SelectFeature):
     name = "PL2z Height Gain"
     function = "PSPHG "
     translation = {"LOW":"Low","MID":"Medium","HI":"High"}
     
-class SpeakerOutput(NominalFeature):
+class SpeakerOutput(SelectFeature):
     name = "Speaker Output"
     function = "PSSP:"
     call = "PSSP: ?"
     translation = {"FH":"F. Height", "FW":"F. Wide", "SB":"S. Back"}
     
-class MultiEQ(NominalFeature):
+class MultiEQ(SelectFeature):
     name = "MultiEQ XT mode"
     function = "PSMULTEQ:"
     call = "PSMULTEQ: ?"
@@ -304,17 +310,17 @@ class DynEq(BoolFeature):
     name = "Dynamic Eq"
     function = "PSDYNEQ "
     
-class RefLevel(NominalFeature):
+class RefLevel(SelectFeature):
     name = "Reference Level"
     function = "PSREFLEV "
     translation = {"0":"0dB","5":"5dB","10":"10dB","15":"15dB"}
     
-class DynVol(NominalFeature):
+class DynVol(SelectFeature):
     name = "Dynamic Volume"
     function = "PSDYNVOL "
     translation = {"NGT":"Midnight", "EVE":"Evening", "DAY":"Day"}
     
-class AudysseyDsx(NominalFeature):
+class AudysseyDsx(SelectFeature):
     name = "Audyssey DSX"
     function = "PSDSX "
     translation = {"ONH":"On (Height)", "ONW":"On (Wide)","OFF":"Off"}
@@ -331,11 +337,11 @@ class Bass(IntFeature): function = "PSBAS "
     
 class Treble(IntFeature): function = "PSTRE "
     
-class DRC(NominalFeature):
+class DRC(SelectFeature):
     function = "PSDRC "
     translation = {"AUTO":"Auto", "LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
-class DynCompression(NominalFeature):
+class DynCompression(SelectFeature):
     function = "PSDCO "
     name = "Dynamic Compression"
     translation = {"LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
@@ -373,19 +379,19 @@ class _SubwooferAdjustment: #undocumented
     function = "PSSWL "
     name = "Subwoofer Adjustment"
 
-class SubwooferAdjustmentSwitch(_SubwooferAdjustment, StrictBoolFeature): pass
+class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
 
-class SubwooferAdjustment(_SubwooferAdjustment,StrictFloatFeature): pass
+class SubwooferAdjustment(_SubwooferAdjustment,LooseFloatFeature): pass
 
 class _DialogLevel: #undocumented
     function = "PSDIL "
     name = "Dialog Level"
 
-class DialogLevelSwitch(_DialogLevel, StrictBoolFeature): pass
+class DialogLevelSwitch(_DialogLevel, LooseBoolFeature): pass
 
-class DialogLevel(_DialogLevel, StrictFloatFeature): pass
+class DialogLevel(_DialogLevel, LooseFloatFeature): pass
 
-class RoomSize(NominalFeature):
+class RoomSize(SelectFeature):
     name = "Room Size"
     function = "PSRSZ "
     translation = {e:e for e in ["S","MS","M","ML","L"]}
@@ -395,12 +401,12 @@ class AudioDelay(IntFeature):
     max = 999
     function  ="PSDELAY "
 
-class Restorer(NominalFeature):
+class Restorer(SelectFeature):
     name = "Audio Restorer"
     function = "PSRSTR "
     translation = {"OFF":"Off", "MODE1":"Mode 1", "MODE2":"Mode 2", "MODE3":"Mode 3"}
     
-class FrontSpeaker(NominalFeature):
+class FrontSpeaker(SelectFeature):
     name = "Front Speaker"
     function = "PSFRONT"
     translation = {" SPA":"A"," SPB":"B"," A+B":"A+B"}
@@ -490,7 +496,7 @@ class DenonAmp(TelnetAmp):
         """
         _function = cmd.upper().replace("?","")
         if "?" not in cmd: return self.send(_function)
-        class _Feature(NominalFeature): 
+        class _Feature(SelectFeature): 
             function=_function
             matches = lambda self, data: (matches(data) if matches else super().matches(data))
         _Feature.__name__ = _function

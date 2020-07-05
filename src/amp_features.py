@@ -237,3 +237,20 @@ class AsyncFeature(AbstractFeature):
 
 class Feature(SynchronousFeatureMixin, AsyncFeature): pass
 
+
+class IntFeature(Feature):
+    type=int
+    min=0
+    max=99
+
+class SelectFeature(Feature):
+    type=str
+    options = []
+
+class FloatFeature(Feature):
+    type=float
+    min=0
+    max=99
+
+class BoolFeature(Feature): type=bool
+
