@@ -56,7 +56,7 @@ class AbstractAmp(Bindable):
     
     @property
     def prompt(self):
-        p = "%s:%s@%s"%(self.protocol,NAME,self.host)
+        p = "%s://%s"%(self.protocol,self.host)
         if self.port: p = "%s:%d"%(p,self.port)
         return p
         
