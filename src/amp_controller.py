@@ -78,6 +78,10 @@ class KeepConnected(_Verbosity):
 class AutoPower:
     """ implementing actions for automatic power management """
     
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.amp.preload_features.update(("source","power"))
+        
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
         self.amp.poweroff()
