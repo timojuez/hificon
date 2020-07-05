@@ -93,6 +93,8 @@ class AbstractAmp(Bindable):
         """ attribute on amplifier has changed """
         if attr == None and self.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, new_val))
+        elif attr and self.verbose > 2:
+            print("[%s] $%s = %s"%(self.__class__.__name__,attr,repr(new_val)))
         
     @log_call
     def on_poweron(self): pass
@@ -119,7 +121,7 @@ class TelnetAmp(AbstractAmp):
     """
     
     def send(self, cmd):
-        if self.verbose > 3: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
+        if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
         try:
             assert(self.connected)
             self._telnet.write(("%s\r"%cmd).encode("ascii"))
@@ -165,7 +167,7 @@ class TelnetAmp(AbstractAmp):
         else:
             # receiving
             if not data: return
-            if self.verbose > 3: print(data, file=sys.stderr)
+            if self.verbose > 4: print(data, file=sys.stderr)
             self.on_receive_raw_data(data) 
 
 

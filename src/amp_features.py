@@ -36,7 +36,7 @@ class FeatureAmpMixin(object):
         if not consumed: self.on_change(None, data)
         for attr,(old,new) in consumed.items():
             if old == new: continue 
-            if self.verbose > 4 and self._pending: print("[%s] %d pending functions"
+            if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
                 %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
             if not any([p.has_polled(attr) for p in self._pending.copy()]): # has_polled() changes self._pending
                 self.on_change(attr, new)
@@ -127,7 +127,7 @@ class FunctionCall(object):
         
     def check_expiration(self):
         if self._time+timedelta(seconds=MAX_CALL_DELAY) < datetime.now():
-            if self.amp.verbose > 3: print("[%s] pending function `%s` expired"
+            if self.amp.verbose > 1: print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
     
@@ -136,7 +136,7 @@ class FunctionCall(object):
         try: self.missing_features.remove(self.amp.features.get(feature))
         except ValueError: return False
         if self._try_call():
-            if self.amp.verbose > 4: print("[%s] called pending function %s"
+            if self.amp.verbose > 5: print("[%s] called pending function %s"
                 %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
             self.cancel()
         return True
