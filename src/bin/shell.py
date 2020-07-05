@@ -2,7 +2,7 @@
 import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
-from .. import Amp, VERSION
+from .. import Amp, VERSION, amp_features
 try: import readline
 except ImportError: pass
 
@@ -39,6 +39,7 @@ class CLI:
                 __wait__ = .1,
                 amp = self.amp,
                 help = self.print_help,
+                help_attr = self.print_help_attr,
             )
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
@@ -71,8 +72,6 @@ class CLI:
             self.compiler.run(fp.read(),self.args.file,"exec")
             
     def print_help(self):
-        attrs = map(lambda e: "$%s"%e,filter(lambda e:e,sorted(self.amp.features.keys())))
-        features = "".join(map(lambda e:"\t\t%s\n"%e,attrs))
         print(
             "Internal functions:\n"
             "\thelp()\tShow help\n"
@@ -81,13 +80,24 @@ class CLI:
             "\n"
             "High level functions (protocol independent)\n"
             "\t$attribute\tVariable that contains amp's attribute, potentially read and writeable\n"
-            "\tCurrent protocol supports attributes:\n%(features)s\n"
+            "\tTo see a list of attributes, type help_attr()\n"
             "\n"
             "Low level functions (protocol dependent)\n"
             "\tCMD or $'CMD'\tSend CMD to the amp and return answer\n"
-            %dict(features=features)
         )
 
+    def print_help_attr(self):
+        print("Current protocol supports these attributes:\n")
+        for name, f in sorted(self.amp.features.items(), key=lambda e:e[0]):
+            if not name: continue
+            print("\t$%(name)s %(type)s "%dict(name=name, type=f.type.__name__), end="")
+            if isinstance(f,amp_features.IntFeature) or isinstance(f,amp_features.FloatFeature):
+                print("[%s..%s] "%(f.min,f.max), end="")
+            elif isinstance(f,amp_features.SelectFeature) or isinstance(f,amp_features.BoolFeature): 
+                print(f.options, end="")
+            print()
+        print()
+    
     def receive(self, data): print(data)
     
     def on_disconnected(self):
