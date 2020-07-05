@@ -42,7 +42,7 @@ class CLI:
             )
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
-            if not self.args.file and not self.args.command: self.prompt()
+            if not self.args.file and not self.args.command or self.args.follow: self.prompt()
     
     def query(self, cmd, matches, wait):
         """ calling $"cmd" or $'cmd' from within hifish. @matches comes from --return """
