@@ -1,4 +1,4 @@
-import sys, math, time
+import sys, math
 from ..amp import TelnetAmp, make_amp
 from .. import amp_features
 
@@ -502,9 +502,7 @@ class DenonAmp(TelnetAmp):
         _Feature.__name__ = _function
         return "%s%s"%(_function, _Feature(self).get())
     
-    def send(self, cmd):
-        super().send(cmd.upper())
-        time.sleep(.01) # Denon workaround
+    def send(self, cmd): super().send(cmd.upper())
         
         
 Amp = make_amp(features, DenonAmp)
