@@ -2,17 +2,16 @@
 Dry software run that acts like a real amp
 """
 
+import math
 from ..amp import AbstractAmp, make_amp
 from .. import Amp_cls
+from .. import amp_features
 
 
 default_values = dict(
     volume = 25.5,
     maxvol = 98,
-    power = True,
     denon_name = "Dummy X7800H",
-    source = "CBL/Any",
-    sub_volume = 50,
     muted = False,
 )
 
@@ -26,8 +25,14 @@ class DummyAmp:
         super().__init__(*args, **xargs)
         self.protocol = "%s_emulator"%super().protocol
         self.port = None
-        for attr, value in default_values.items():
-            if attr in self.features: self.features[attr].store(value)
+        for name, f in self.features.items():
+            if name in default_values: val = default_values[name]
+            elif isinstance(f, amp_features.IntFeature): val = math.ceil((f.max+f.min)/2)
+            elif isinstance(f, amp_features.FloatFeature): val = (f.max+f.min)/2
+            elif isinstance(f, amp_features.SelectFeature) and f.options: val = f.options[0]
+            elif isinstance(f, amp_features.BoolFeature): val = True
+            else: continue
+            f.store(val)
     
     def connect(self): return AbstractAmp.connect(self)
 
