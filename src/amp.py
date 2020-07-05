@@ -89,9 +89,10 @@ class AbstractAmp(Bindable):
     def on_disconnected(self): self.connected = False
 
     @log_call
-    def on_change(self, attrib, new_val):
+    def on_change(self, attr, new_val):
         """ attribute on amplifier has changed """
-        pass
+        if attr == None and self.verbose > 1:
+            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, new_val))
         
     @log_call
     def on_poweron(self): pass
