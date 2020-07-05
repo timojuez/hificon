@@ -23,10 +23,10 @@ class Main(Service):
         self.mainloop()
 
     def read(self, data):
-        data = data.strip().decode()
-        print("%s $ %s"%(self.amp.prompt,data))
-        try: self.amp.send(data)
-        except Exception as e: print(traceback.format_exc())
+        for data in data.strip().decode().replace("\n","\r").split("\r"):
+            print("%s $ %s"%(self.amp.prompt,data))
+            try: self.amp.send(data)
+            except Exception as e: print(traceback.format_exc())
         
     def write(self, conn):
         time.sleep(.05)

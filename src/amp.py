@@ -121,7 +121,7 @@ class TelnetAmp(AbstractAmp):
         if self.verbose > 3: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
         try:
             assert(self.connected)
-            self._telnet.write(("%s\n"%cmd).encode("ascii"))
+            self._telnet.write(("%s\r"%cmd).encode("ascii"))
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
