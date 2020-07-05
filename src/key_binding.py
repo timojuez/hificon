@@ -32,6 +32,7 @@ class VolumeChanger(AmpEvents):
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
+        self.amp.preload_features.add("volume")
         
     def press(self, button):
         """ start sending volume events to amp """
@@ -40,11 +41,6 @@ class VolumeChanger(AmpEvents):
         self.button = button
         self.fire_volume()
     
-    def on_connect(self): # amp connect
-        super().on_connect()
-        # preload values
-        self.fire_volume()
-        
     def on_change(self, attr, value): # amp change
         super().on_change(attr, value)
         if attr != "volume" or self.keys_pressed <= 0: return

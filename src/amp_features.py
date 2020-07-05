@@ -19,6 +19,8 @@ class FeatureAmpMixin(object):
     
     def on_connect(self):
         for f in self.features.values(): f.unset()
+        def preload(amp): pass
+        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
         super().on_connect()
     
     def _set_feature_value(self, name, value):
@@ -143,6 +145,7 @@ class FunctionCall(object):
 class AbstractFeature(object):
     call = None
     default_value = None #if no response
+    type = object # value data type, e.g. int, bool, str
     
     def matches(self, cmd):
         """ return True if cmd shall be parsed with this class """

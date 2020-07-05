@@ -28,6 +28,7 @@ class AbstractAmp(Bindable):
     port = None
     name = None
     features = {}
+    preload_features = set() # feature keys to be polled on_connect
     connected = False
 
     def __init__(self, host=None, port=None, name=None, verbose=0, **callbacks):

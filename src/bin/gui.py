@@ -24,7 +24,8 @@ class NotificationMixin(object):
         self._notifications = {}
         Notify.init(NAME)
         super().__init__(*args,**xargs)
-        
+        self.amp.preload_features.add("volume")
+    
     def _createNotification(self):
         notification = Notify.Notification("")
         notification.set_urgency(2)
@@ -46,7 +47,7 @@ class NotificationMixin(object):
             n.show()
 
     def press(self,*args,**xargs):
-        self.notify("volume")
+        self.notify("volume", self.amp.volume if self.amp.features["volume"].isset() else None)
         super().press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
@@ -57,10 +58,7 @@ class NotificationMixin(object):
         super().on_change(attr,value)
 
     def on_scroll(self, *args, **xargs):
-        self.notify("volume")
-        @require("volume")
-        def go(amp): self.notify("volume",self.amp.volume)
-        if not self.amp.features["volume"].isset(): go(self.amp)
+        self.notify("volume", self.amp.volume if self.amp.features["volume"].isset() else None)
         super().on_scroll(*args,**xargs)
         
 
