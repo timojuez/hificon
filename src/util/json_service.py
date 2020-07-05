@@ -18,11 +18,11 @@ class Service(object):
     
     def __init__(self, host="127.0.0.1", port=PORT, verbose=0):
         self._verbose = verbose
-        if self._verbose > 0: print(
-            "[%s] Listening on %s:%d"%(self.__class__.__name__,host,port), file=sys.stderr)
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
         sock.bind((host, port))
+        if self._verbose > 0: print(
+            "[%s] Listening on %s:%d"%(self.__class__.__name__,*sock.getsockname()), file=sys.stderr)
         sock.listen(100)
         sock.setblocking(False)
         self.sel.register(sock, selectors.EVENT_READ, self.accept)
