@@ -34,8 +34,8 @@ class AbstractAmp(Bindable):
         super().__init__()
         self.verbose = verbose
         self.bind(**callbacks)
-        self.host = host or config["Amp"].get("Host")
-        self.port = port or config["Amp"].get("port")
+        self.host = host or self.host or config["Amp"].get("Host")
+        self.port = port or self.port or config["Amp"].getint("port")
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)

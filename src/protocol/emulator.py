@@ -25,6 +25,7 @@ class DummyAmp:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.protocol = "%s_emulator"%super().protocol
+        self.port = None
         for attr, value in default_values.items():
             if attr in self.features: self.features[attr].store(value)
     
@@ -42,6 +43,9 @@ class DummyAmp:
         r = None
         for attr, f in self.features.items():
             if f.call == cmd:
+                if not f.isset():
+                    print("WARNING: `%s` is being requested but has not been set."%f.name)
+                    return
                 encoded = f.encode(f.get())
                 self.on_receive_raw_data(encoded)
                 if matches and matches(encoded) or f.matches(encoded):
