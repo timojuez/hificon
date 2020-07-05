@@ -36,7 +36,7 @@ class FeatureAmpMixin(object):
             if old == new: continue 
             if self.verbose > 4 and self._pending: print("[%s] %d pending functions"
                 %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            if not any([p.has_polled(attr) for p in self._pending]):
+            if not any([p.has_polled(attr) for p in self._pending.copy()]): # has_polled() changes self._pending
                 self.on_change(attr, new)
 
 
