@@ -15,7 +15,7 @@ class Main(Service):
         self.args = parser.parse_args()
         self._send = b""
         self._break = "\n" if self.args.newline else "\r"
-        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol, verbose=2)
+        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol)
         print("Emulating telnet amplifier")
         print("Protocol is %s."%self.amp.protocol)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
@@ -23,11 +23,13 @@ class Main(Service):
         self.mainloop()
 
     def read(self, data):
-        try: self.amp.send(data.strip().decode())
+        data = data.strip().decode()
+        print("%s $ %s"%(self.amp.prompt,data))
+        try: self.amp.send(data)
         except Exception as e: print(traceback.format_exc())
         
     def write(self, conn):
-        time.sleep(.1)
+        time.sleep(.05)
         if not self._send: return
         l = len(self._send)
         try: conn.sendall(self._send[:l])
@@ -35,6 +37,7 @@ class Main(Service):
         self._send = self._send[l:]
     
     def on_amp_read(self, data):
+        print(data)
         self._send += ("%s%s"%(data,self._break)).encode("ascii")
 
 
