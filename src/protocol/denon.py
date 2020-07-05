@@ -20,29 +20,27 @@ class DenonFeature:
         return cmd.startswith(self.function) #and " " not in cmd.replace(self.function,"",1)
     
         
-######### Data Types
+class _Translation:
+    translation = {} #{return_string:value} decode return_string to value / encode vice versa
 
-class SelectFeature(DenonFeature, amp_features.SelectFeature):
-    translation = {} #return_string to value
-    
     options = property(lambda self: list(self.translation.values()))
-
-    def decodeVal(self, val):
-        r = self.translation[val] = self.translation.get(val,val)
-        return r
+    
+    def decodeVal(self, val): return self.translation.get(val,val)
         
     def encodeVal(self, val):
         return {val:key for key,val in self.translation.items()}.get(val,val)
-        
+
+
+######### Data Types
+
+class SelectFeature(_Translation, DenonFeature, amp_features.SelectFeature): pass
 
 class FloatFeature(DenonFeature, amp_features.FloatFeature):
 
     @staticmethod
-    def _roundVolume(vol):
-        return .5*round(vol/.5)
+    def _roundVolume(vol): return .5*round(vol/.5)
 
-    def decodeVal(self, val):
-        return int(val.ljust(3,"0"))/10
+    def decodeVal(self, val): return int(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
         val = self._roundVolume(val)
@@ -57,12 +55,10 @@ class IntFeature(DenonFeature, amp_features.IntFeature):
         digits = math.ceil(math.log(self.max+1,10))
         return ("%%0%dd"%digits)%val
     
-    def decodeVal(self, val): 
-        return int(val)
-        #except ValueError: return False
+    def decodeVal(self, val): return int(val)
         
 
-class BoolFeature(SelectFeature, amp_features.BoolFeature):
+class BoolFeature(_Translation, DenonFeature, amp_features.BoolFeature):
     translation = {"ON":True,"OFF":False}
     
 
