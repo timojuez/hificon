@@ -16,6 +16,8 @@ class Main(Service):
         self._send = b""
         self._break = "\n" if self.args.newline else "\r"
         self.amp = Amp(protocol=".dummy", emulate=self.args.protocol, verbose=2)
+        print("Emulating telnet amplifier")
+        print("Protocol is %s."%self.amp.protocol)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
         super().__init__(host=self.args.host, port=self.args.port, verbose=1)
         self.mainloop()

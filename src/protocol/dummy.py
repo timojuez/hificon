@@ -19,12 +19,11 @@ default_values = dict(
 
 class DummyAmp(AbstractAmp):
     host = "dummy"
-    name = "Dummy"
+    name = "Emulator"
     connected = True
 
     def __init__(self, *args, **xargs):
         super().__init__(host=self.host,name=self.name)
-        self.protocol = "%s_Dummy"%super().protocol
         for attr, value in default_values.items():
             if attr in self.features: self.features[attr].store(value)
 
@@ -56,6 +55,9 @@ class DummyAmp(AbstractAmp):
 
 def Amp(*args, emulate=None, **xargs):
     """ extra argument @emulate must be a protocol module """
-    return make_amp(Amp_cls(protocol=emulate)._feature_classes, DummyAmp)(*args, **xargs)
+    original_amp = Amp_cls(protocol=emulate)
+    amp = make_amp(original_amp._feature_classes, DummyAmp)
+    amp.protocol = "%s_emulator"%original_amp.protocol
+    return amp(*args, **xargs)
     
 
