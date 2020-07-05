@@ -122,6 +122,7 @@ class TelnetAmp(AbstractAmp):
         try:
             assert(self.connected)
             self._telnet.write(("%s\r"%cmd).encode("ascii"))
+            time.sleep(.01)
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
