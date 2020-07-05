@@ -11,6 +11,7 @@ protocol = .denon
 source = 
 
 # host = 1.2.3.4
+port = 23
 # name = AVR
 
 

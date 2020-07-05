@@ -24,19 +24,18 @@ class AbstractAmp(Bindable):
     """
     
     protocol = None
-    host = "Undefined"
+    host = None
+    port = None
     name = None
     features = {}
-    _feature_classes = []
     connected = False
 
-    prompt = property(lambda self: "%s:%s@%s"%(self.protocol,NAME,self.host))
-
-    def __init__(self, host=None, name=None, verbose=0, **callbacks):
+    def __init__(self, host=None, port=None, name=None, verbose=0, **callbacks):
         super().__init__()
         self.verbose = verbose
         self.bind(**callbacks)
         self.host = host or config["Amp"].get("Host")
+        self.port = port or config["Amp"].get("port")
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
@@ -55,6 +54,12 @@ class AbstractAmp(Bindable):
 
     def disconnect(self): self._stoploop = True
     
+    @property
+    def prompt(self):
+        p = "%s:%s@%s"%(self.protocol,NAME,self.host)
+        if self.port: p = "%s:%d"%(p,self.port)
+        return p
+        
     def query(self, cmd, matches=None): raise NotImplementedError()
 
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
@@ -110,9 +115,6 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
-    host = None
-    PORT = 23
-    prompt = property(lambda self: "%s:%s"%(super().prompt,self.PORT))
     
     def send(self, cmd):
         if self.verbose > 3: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
@@ -139,7 +141,7 @@ class TelnetAmp(AbstractAmp):
         if self.connected: return
         while tries:
             if tries > 0: tries -= 1
-            try: self._telnet = Telnet(self.host,self.PORT,timeout=2)
+            try: self._telnet = Telnet(self.host,self.port,timeout=2)
             except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
                 if tries == 0: raise
             else:
