@@ -17,19 +17,22 @@ default_values = dict(
 )
 
 
-class DummyAmp(AbstractAmp):
+class DummyAmp:
     host = "dummy"
     name = "Emulator"
     connected = True
-
+    
     def __init__(self, *args, **xargs):
-        super().__init__(host=self.host,name=self.name)
+        super().__init__(*args, **xargs)
+        self.protocol = "%s_emulator"%super().protocol
         for attr, value in default_values.items():
             if attr in self.features: self.features[attr].store(value)
+    
+    def connect(self): return AbstractAmp.connect(self)
 
     def disconnect(self):
-        super().disconnect()
-        self.on_disconnected()
+        AbstractAmp.disconnect(self)
+        AbstractAmp.on_disconnected(self)
 
     def mainloop(self): pass
     
@@ -55,9 +58,6 @@ class DummyAmp(AbstractAmp):
 
 def Amp(*args, emulate=None, **xargs):
     """ extra argument @emulate must be a protocol module """
-    original_amp = Amp_cls(protocol=emulate)
-    amp = make_amp(original_amp._feature_classes, DummyAmp)
-    amp.protocol = "%s_emulator"%original_amp.protocol
-    return amp(*args, **xargs)
-    
+    Original_amp = Amp_cls(protocol=emulate)
+    return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
 
