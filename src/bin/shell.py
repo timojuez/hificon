@@ -64,6 +64,7 @@ class CLI:
                 try: self.compiler.run(cmd)
                 except Exception as e: print(traceback.format_exc())
             print()
+        print()
 
     def parse_file(self):
         with open(self.args.file) as fp:
