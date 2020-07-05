@@ -58,8 +58,8 @@ class IntFeature(DenonFeature, amp_features.IntFeature):
         return ("%%0%dd"%digits)%val
     
     def decodeVal(self, val): 
-        try: return int(val)
-        except ValueError: return False
+        return int(val)
+        #except ValueError: return False
         
 
 class BoolFeature(SelectFeature, amp_features.BoolFeature):
@@ -75,8 +75,8 @@ class RelativeFloat(FloatFeature):
     def decodeVal(self, val): return super().decodeVal(val)-50
     
     
-class LooseFloatFeature(RelativeFloat, BoolFeature):
-    """ Value where the amp does not always send a float """
+class _LooseNumericFeature:
+    """ Value where the amp does not always send a numeric """
     
     def matches(self, data):
         try:
@@ -85,6 +85,10 @@ class LooseFloatFeature(RelativeFloat, BoolFeature):
             return True
         except (TypeError, ValueError, AssertionError): return False
 
+
+class LooseFloatFeature(_LooseNumericFeature, RelativeFloat): pass
+
+class LooseIntFeature(_LooseNumericFeature, IntFeature): pass
 
 class LooseBoolFeature(BoolFeature):
     """ Value where the amp does not always send a boolean """
@@ -208,11 +212,13 @@ class VideoSelect(SelectFeature):
     translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel"}
 
 class MainZoneSleep(IntFeature):
-    min = 1
+    min = 0 # 1..120, 0 will send "OFF"
     max = 120
     name = "Main Zone Sleep (minutes)"
     function = "SLP"
-    # TODO: OFF
+    def encode(self, val): return super().encode({0:"OFF"}.get(val,val))
+    def decode(self, val): return super().encode({"OFF":0}.get(val,val))
+    
 
 class Surround(SelectFeature):
     name = "Surround Mode"
@@ -225,12 +231,11 @@ class QuickSelect(SelectFeature):
     call="MSQUICK ?"
     translation = {str(n+1):str(n+1) for n in range(5)}
 
-"""
-class QuickSelectSave(SelectFeature):
+class QuickSelectStore(QuickSelect):
     name = "Quick Select (save)"
     def encode(self, value): return "QUICK%s MEMORY"%value
-    def get(self): raise AttributeError("Cannot read value")
-""" # TODO
+    def decode(self, val): return "(select)"
+    def get(self): return self.decode(None)
 
 class HDMIMonitor(SelectFeature):
     name =" HDMI Monitor auto detection"
@@ -440,6 +445,7 @@ features = dict(
         sleep = MainZoneSleep,
         surround = Surround,
         quick_select = QuickSelect,
+        quick_select_store = QuickSelectStore,
         hdmi_monitor = HDMIMonitor,
         asp = Asp,
         resolution = Resolution,
