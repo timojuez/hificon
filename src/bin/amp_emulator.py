@@ -15,7 +15,7 @@ class Main(Service):
         self.args = parser.parse_args()
         self._send = b""
         self._break = "\n" if self.args.newline else "\r"
-        self.amp = Amp(protocol=".dummy", emulate=self.args.protocol, verbose=2)
+        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol, verbose=2)
         print("Emulating telnet amplifier")
         print("Protocol is %s."%self.amp.protocol)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
