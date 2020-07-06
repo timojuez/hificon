@@ -100,7 +100,7 @@ class LooseBoolFeature(BoolFeature):
 
 class Volume(FloatFeature):
     function = "MV"
-    def set(self, value): super().set(min(max(0,value),self.amp.maxvol))
+    def set(self, value): super().set(min(max(self.min,value),self.max))
     def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
     
 class Maxvol(FloatFeature): #undocumented
@@ -119,12 +119,11 @@ class Power(SelectFeature):
         except KeyError: return
         else: return func()
     
-class Muted(SelectFeature):
-    function = "MU"
-    translation = {"ON":True,"OFF":False}
+class Muted(BoolFeature): function = "MU"
 
 class Source(SelectFeature):
     function = "SI"
+    # TODO: options
 
 class Name(SelectFeature): #undocumented
     function = "NSFRN "
@@ -287,6 +286,7 @@ class Mode(SelectFeature):
     translation = {"MUSIC":"Music","CINEMA":"Cinema","GAME":"Game","PRO LOGIC":"Pro Logic"}
     
 class FrontHeight(BoolFeature):
+    name = "Front Height"
     function = "PSFH:"
     call = "PSFH: ?"
 
