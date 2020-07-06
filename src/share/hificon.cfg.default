@@ -31,7 +31,7 @@ secure_mode = yes
 [GUI]
 # values: "all", "all_implemented", "" or list of attributes separated by ", "
 notify_events = all_implemented
-# on screen notification timeout in seconds
+# on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
 
