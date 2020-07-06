@@ -90,7 +90,7 @@ class CLI:
         print("Current protocol supports these attributes:\n")
         for name, f in sorted(self.amp.features.items(), key=lambda e:e[0]):
             if not name: continue
-            print("\t$%(name)s %(type)s "%dict(name=name, type=f.type.__name__), end="")
+            print("\t$%(name)s  %(title)s  %(type)s "%dict(name=name, type=f.type.__name__, title=f.name), end="")
             if isinstance(f,amp_features.IntFeature) or isinstance(f,amp_features.FloatFeature):
                 print("[%s..%s] "%(f.min,f.max), end="")
             elif isinstance(f,amp_features.SelectFeature) or isinstance(f,amp_features.BoolFeature): 
