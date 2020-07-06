@@ -34,6 +34,7 @@ notify_events = all_implemented
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
+backend = wx # preferred backend, "wx" or "gtk"
 
 
 [MouseBinding]

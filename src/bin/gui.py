@@ -15,10 +15,17 @@ class GUI_Backend:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._app = wx.App()
-        if ui.backend != "wx": ui.init(NAME)
+        try: 
+            assert(config["GUI"].get("backend") == "gtk")
+            ui.loadgtk()
+        except (AssertionError, ImportError): ui.loadwx()
+        else: ui.init(NAME)
 
     def mainloop(self):
-        if ui.backend != "wx": ui.mainloop() # Thread(target=ui.mainloop, name="ui.mainloop", daemon=True).start()
+        if ui.backend != "wx": Thread(target=ui.mainloop, name="ui.mainloop", daemon=True).start()
+        if ui.backend != "wx": # TODO: has to stay until more wx is being implemented
+            import time
+            while 1: time.sleep(1)
         self._app.MainLoop()
     
 
@@ -36,7 +43,6 @@ class NotificationMixin(object):
         notification.set_urgency(2)
         notification.set_timeout(config.getint("GUI","notification_timeout"))
         notification.update("Connecting ...",self.amp.name)
-        notification.connect_icon(self.icon)
         return notification
     
     def notify(self, attr, val=None):
@@ -87,23 +93,23 @@ class Tray(object):
     @require("muted","volume","maxvol")
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-        muted = self.amp.muted
-        volume = 0 if muted else self.amp.volume
-        maxvol = self.amp.maxvol
+        volume = 0 if self.amp.muted else self.amp.volume
 
         #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
-        if muted or volume == 0:
-            self._set_icon_by_name("audio-volume-muted", "muted")
+        if self.amp.muted or volume == 0:
+            self._set_icon_by_name("audio-volume-muted")
         else:
-            icon_idx = math.ceil(volume/maxvol *len(icons))-1
-            self._set_icon_by_name(icons[icon_idx], str(volume))
+            icon_idx = math.ceil(volume/self.amp.maxvol *len(icons))-1
+            self._set_icon_by_name(icons[icon_idx])
         self.icon.show()
     
-    def _set_icon_by_name(self, name, help):
+    def _set_icon_by_name(self, name):
+        if getattr(self,"_icon_name",None) == name: return
+        self._icon_name = name
         image_data = pkgutil.get_data(
             __name__,"../share/icons/24/%s-dark.png"%name)
         icon = Image.open(io.BytesIO(image_data))
-        self.icon.set_icon(icon, help)
+        self.icon.set_icon(icon, name)
     
     @require("volume")
     def on_scroll_up(self, steps):
