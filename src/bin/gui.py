@@ -2,7 +2,7 @@
 import argparse, sys, math, pkgutil, io, wx
 from threading import Thread
 from PIL import Image
-from .. import Amp, NAME
+from .. import Amp, NAME, amp_features
 from ..amp import require
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
@@ -10,16 +10,53 @@ from .. import ui
 from ..config import config
 
 
+try:
+    assert(config["GUI"].get("backend") == "gtk")
+    ui.loadgtk()
+except (AssertionError, ImportError): ui.loadwx()
+else: ui.init(NAME)
+
+
+class NotificationWithTitle:
+    
+    def __init__(self, subtitle, *args, **xargs):
+        self._subtitle = subtitle
+        super().__init__(*args, **xargs)
+
+
+class TextNotification(NotificationWithTitle, ui.Notification):
+    
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
+        TextNotification.update(self, "Connecting ...")
+
+    def update(self, text): not text or super().update(text, self._subtitle)
+    
+
+class TextFeatureNotification(TextNotification):
+    
+    def update(self, feature):
+        if feature.isset(): val = {True:"On",False:"Off"}.get(feature.get(), feature.get())
+        else: return
+        super().update("%s: %s"%(feature.name, val))
+
+
+class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
+    
+    def update(self, feature):
+        super().update(
+            title=feature.name,
+            message=str(feature.get() if feature.isset() else None),
+            value=feature.get() if feature.isset() else None,
+            min=feature.min,
+            max=feature.max)
+    
+
 class GUI_Backend:
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._app = wx.App()
-        try: 
-            assert(config["GUI"].get("backend") == "gtk")
-            ui.loadgtk()
-        except (AssertionError, ImportError): ui.loadwx()
-        else: ui.init(NAME)
 
     def mainloop(self):
         if ui.backend != "wx": Thread(target=ui.mainloop, name="ui.mainloop", daemon=True).start()
@@ -34,39 +71,40 @@ class NotificationMixin(object):
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
         self._notify_events = config.get("GUI","notify_events")
-        self._notifications = {key:self._createNotification()
-            for key in list(self.amp.features.keys())+[None]}
+        self._notifications = {key:self._createNotification(f)
+            for key,f in list(self.amp.features.items())+[(None,None)]}
         self.amp.preload_features.add("volume")
     
-    def _createNotification(self):
-        notification = ui.Notification()
-        notification.set_urgency(2)
-        notification.set_timeout(config.getint("GUI","notification_timeout"))
-        notification.update("Connecting ...",self.amp.name)
-        return notification
+    def _createNotification(self, feature):
+        if isinstance(feature, amp_features.NumericFeature): N = NumericFeatureNotification
+        elif feature is None: N = TextNotification
+        else: N = TextFeatureNotification
+        n = N(self.amp.name)
+        n.update(feature)
+        n.set_urgency(2)
+        n.set_timeout(config.getint("GUI","notification_timeout"))
+        return n
     
-    def notify(self, attr, val=None):
-        if attr == "maxvol": return
-        try: name = self.amp.features[attr].name
-        except (AttributeError, KeyError): name = attr
+    def update_notification(self, attr, val=None):
         n = self._notifications[attr]
-        if isinstance(val,bool): val = {True:"On",False:"Off"}[val]
-        if val is not None: n.update("%s: %s"%(name, val),self.amp.name)
-        n.show()
+        f = self.amp.features.get(attr)
+        n.update(f or val)
+        return n
 
-    def press(self,*args,**xargs):
-        self.notify("volume", self.amp.volume if self.amp.features["volume"].isset() else None)
+    def press(self,*args,**xargs): # TODO: rename to on_press
+        self._notifications["volume"].show()
         super().press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
-        if (    self._notify_events == "all"
+        if attr != "maxvol" and (
+                self._notify_events == "all"
                 or self._notify_events == "all_implemented" and attr
                 or attr in self._notify_events.split(", ")):
-            self.notify(attr,value)
+            self.update_notification(attr, value).show()
         super().on_change(attr,value)
 
     def on_scroll(self, *args, **xargs):
-        self.notify("volume", self.amp.volume if self.amp.features["volume"].isset() else None)
+        self._notifications["volume"].show()
         super().on_scroll(*args,**xargs)
         
 
@@ -133,10 +171,14 @@ def main():
     amp = Amp(verbose=args.verbose+1)
     ac = AmpController(amp, verbose=args.verbose+1)
     program = Main(amp)
-    Thread(name="Amp",target=ac.mainloop,daemon=True).start()
-    RemoteControlService(program,verbose=args.verbose)()
-    program.mainloop()
-        
+    try:
+        Thread(name="Amp",target=ac.mainloop,daemon=True).start()
+        RemoteControlService(program,verbose=args.verbose)()
+        program.mainloop()
+    finally:
+        try: program.icon.__del__()
+        except: pass
+
 
 if __name__ == "__main__":
     main()

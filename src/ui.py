@@ -1,6 +1,13 @@
-import tempfile
+import wx, tempfile, os
+from threading import Timer
 from .util.function_bind import Bindable
 
+
+def CallAfter(func):
+    def decorator(*args, **xargs):
+        wx.CallAfter(func, *args, **xargs)
+    return decorator
+    
 
 class _Icon(Bindable):
 
@@ -22,8 +29,87 @@ class _Icon(Bindable):
     def on_scroll_down(self, steps): pass
 
 
-class _Notification(Bindable): pass
+class _Notification(Bindable):
 
+    def set_urgency(self, n): pass
+
+
+class GaugeNotification(_Notification, wx.Frame): 
+    _timeout = 2
+    _min = 0
+    _max = 100
+    _value = 0
+    _title = ""
+    _message = ""
+    
+    def __init__(self, parent=None, title="GaugeNotification"):
+        super().__init__(parent, title = title,style=wx.STAY_ON_TOP|wx.FRAME_NO_TASKBAR|wx.BORDER_NONE)
+        screen_width, screen_height = wx.DisplaySize()
+
+        self.width = screen_width*0.045
+        self.height = screen_height*.3
+        self.dim = (screen_width-self.width-screen_width*0.01, screen_height*0.1)
+        self.bar_width = self.width*.2
+        self.bar_height = self.height*0.7
+
+        background = wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUBAR)
+        text = wx.SystemSettings.GetColour(wx.SYS_COLOUR_CAPTIONTEXT)
+        self.bar1 = wx.SystemSettings.GetColour(wx.SYS_COLOUR_MENUHILIGHT)
+        self.bar2 = wx.SystemSettings.GetColour(wx.SYS_COLOUR_CAPTIONTEXT)
+        
+        self.pnl = wx.Panel(self) 
+        self.pnl.SetBackgroundColour(background)
+        self.pnl.SetForegroundColour(text)
+        self.border = wx.BoxSizer(wx.VERTICAL)
+        vbox_outer = wx.BoxSizer(wx.VERTICAL)
+        self.vbox_inner = wx.BoxSizer(wx.VERTICAL)
+		    
+        self.text1 = wx.StaticText(self.pnl)
+        self.text2 = wx.StaticText(self.pnl)
+        
+        vbox_outer.Add(self.text1, border=5, flag=wx.ALL|wx.ALIGN_CENTER)
+        vbox_outer.Add(self.vbox_inner, proportion=1, flag=wx.ALIGN_CENTER)
+        vbox_outer.Add(self.text2, border=5, flag=wx.ALL|wx.ALIGN_CENTER)
+        self.border.Add(vbox_outer, border=10, flag=wx.ALL|wx.EXPAND)
+        self.pnl.SetSizer(self.border)
+
+        self.SetSize((self.width, self.height))
+        self.SetPosition(self.dim)
+
+    def set_timeout(self, t): self._timeout = t/1000
+    
+    @CallAfter
+    def update(self, title=None, message=None, value=None, min=None, max=None):
+        if not title and value is not None: title = "%0.1f"%value
+        if title is not None: self._title = title
+        if message is not None: self._message = message
+        if value is not None: self._value = value
+        if min is not None: self._min = min
+        if max is not None: self._max = max
+
+        self.text2.SetLabel(self._message)
+        self.vbox_inner.Clear()
+        buttomHeight = int((self._value-self._min)/(self._max-self._min)*self.bar_height)
+        self.top = wx.Window(self.pnl,size=(self.bar_width,self.bar_height-buttomHeight))
+        self.top.SetBackgroundColour(self.bar2)
+        self.buttom = wx.Window(self.pnl, size=(self.bar_width,buttomHeight))
+        self.buttom.SetBackgroundColour(self.bar1)
+        self.vbox_inner.Add(self.top)
+        self.vbox_inner.Add(self.buttom)
+        self.text1.SetLabel(self._title)
+        self.Update()
+
+    @CallAfter
+    def show(self):
+        self.Show(True)
+        try: self._timer.cancel()
+        except: pass
+        self._timer = Timer(self._timeout, self.hide)
+        self._timer.start()
+
+    @CallAfter
+    def hide(self): self.Hide()
+    
 
 def loadwx():
     # use wxwidgets
@@ -45,22 +131,26 @@ def loadwx():
         
         _timeout = NotificationMessage.Timeout_Auto
         
+        @CallAfter
         def update(self, title=None, message=None):
-            if message: wx.CallAfter(self.SetMessage,message)
-            if title: wx.CallAfter(self.SetTitle,title)
+            if message: self.SetMessage(message)
+            if title: self.SetTitle(title)
         
         def set_urgency(self, n): pass
         
         def set_timeout(self, t): self._timeout = t/1000
         
-        def show(self): wx.CallAfter(self.Show, timeout=self._timeout)
+        @CallAfter
+        def show(self): self.Show(timeout=self._timeout)
 
     
     class Icon(_Icon, TaskBarIcon):
         
-        def show(self): wx.CallAfter(self.SetIcon, *self._seticon)
+        @CallAfter
+        def show(self): self.SetIcon(*self._seticon)
         
-        def hide(self): wx.CallAFter(self.RemoveIcon)
+        @CallAfter
+        def hide(self): self.RemoveIcon()
         
         def set_icon_by_path(self, path, help):
             self._seticon = (wx.Icon(path), help)
@@ -68,9 +158,6 @@ def loadwx():
         
         def connect(self, *args, **xargs): pass
         
-
-    return dict(init=init, mainloop=mainloop, Notification=Notification, Icon=Icon, backend="wx")
-    
     
 def loadgtk():
     # use Gtk
