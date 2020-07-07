@@ -9,6 +9,7 @@ MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 
 
 class FeatureAmpMixin(object):
+    _pending = None
 
     def __init__(self,*args,**xargs):
         self._pending = []
@@ -44,7 +45,8 @@ class FeatureAmpMixin(object):
 
 class SendOnceMixin(object):
     """ prevent the same values from being sent to the amp in a row """
-
+    _block_on_set = None
+    
     def __init__(self,*args,**xargs):
         self._block_on_set = {}
         super().__init__(*args,**xargs)

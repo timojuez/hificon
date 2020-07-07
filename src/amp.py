@@ -30,6 +30,9 @@ class AbstractAmp(Bindable):
     features = {}
     preload_features = set() # feature keys to be polled on_connect
     connected = False
+    verbose = 0
+    _mainloopt = None
+    _stoploop = None
 
     def __init__(self, host=None, port=None, name=None, verbose=0, **callbacks):
         super().__init__()
@@ -40,6 +43,12 @@ class AbstractAmp(Bindable):
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
+    
+    def __setattr__(self, name, value):
+        """ @name must match an existing attribute """
+        if not hasattr(self, name):
+            raise AttributeError("%s object has no attribute %s"%(repr(self.__class__.__name__),repr(name)))
+        else: super().__setattr__(name, value)
     
     def __enter__(self): self.connect(); self.enter(); return self
 
@@ -119,6 +128,7 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
+    _telnet = None
     
     def send(self, cmd):
         if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
