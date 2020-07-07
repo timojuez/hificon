@@ -60,9 +60,6 @@ class GUI_Backend:
 
     def mainloop(self):
         if ui.backend != "wx": Thread(target=ui.mainloop, name="ui.mainloop", daemon=True).start()
-        if ui.backend != "wx": # TODO: has to stay until more wx is being implemented
-            import time
-            while 1: time.sleep(1)
         self._app.MainLoop()
     
 
