@@ -216,7 +216,7 @@ class AsyncFeature(AbstractFeature):
     
     def set(self, value, force=False):
         if not force and not isinstance(value, self.type):
-            raise TypeError("Value `%s` is not of type `%s`."%(value,self.type.__name__))
+            raise TypeError("Value %s is not of type %s."%(repr(value),self.type.__name__))
         self.amp.send(self.encode(value))
 
     def isset(self): return hasattr(self,'_val')

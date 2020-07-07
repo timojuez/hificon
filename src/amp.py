@@ -47,7 +47,8 @@ class AbstractAmp(Bindable):
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
         if not hasattr(self, name):
-            raise AttributeError("%s object has no attribute %s"%(repr(self.__class__.__name__),repr(name)))
+            raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
+                "use decorator @require('attribute')")%(repr(self.__class__.__name__),repr(name)))
         else: super().__setattr__(name, value)
     
     def __enter__(self): self.connect(); self.enter(); return self
