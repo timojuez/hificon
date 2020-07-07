@@ -36,27 +36,28 @@ class GaugeNotification ( wx.Panel ):
 		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
 
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOTEXT ) )
-		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_ACTIVECAPTION ) )
+		self.SetBackgroundColour( wx.Colour( 47, 47, 47 ) )
 
 		border = wx.BoxSizer( wx.VERTICAL )
 
 		vbox_outer = wx.BoxSizer( wx.VERTICAL )
 
-		self.title = wx.StaticText( self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.title = wx.StaticText( self, wx.ID_ANY, u"Front L Volume", wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_END )
 		self.title.Wrap( -1 )
 
 		self.title.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
-		self.title.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
+		self.title.SetForegroundColour( wx.Colour( 222, 214, 214 ) )
 
-		vbox_outer.Add( self.title, 0, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 5 )
+		vbox_outer.Add( self.title, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
 		gauge = wx.BoxSizer( wx.VERTICAL )
 
-		self.empty = wx.StaticLine( self, wx.ID_ANY, wx.DefaultPosition, wx.Size( 20,30 ), wx.LI_VERTICAL )
-		self.empty.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.empty.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
+		self.empty = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 20,30 ), 0 )
+		self.empty.Wrap( -1 )
 
-		gauge.Add( self.empty, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 0 )
+		self.empty.SetBackgroundColour( wx.Colour( 74, 74, 74 ) )
+
+		gauge.Add( self.empty, 1, wx.ALIGN_CENTER_HORIZONTAL, 2 )
 
 		self.progress = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 20,50 ), 0 )
 		self.progress.Wrap( -1 )
@@ -69,11 +70,11 @@ class GaugeNotification ( wx.Panel ):
 
 		vbox_outer.Add( gauge, 1, wx.ALIGN_CENTER, 5 )
 
-		self.subtitle = wx.StaticText( self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.subtitle = wx.StaticText( self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_END )
 		self.subtitle.Wrap( -1 )
 
 		self.subtitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
-		self.subtitle.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
+		self.subtitle.SetForegroundColour( wx.Colour( 222, 214, 214 ) )
 
 		vbox_outer.Add( self.subtitle, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 

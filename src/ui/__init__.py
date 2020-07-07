@@ -48,7 +48,7 @@ class GaugeNotification(_Notification, gauge_notification.GaugeNotification):
         frame.SetPosition((wx.DisplaySize()[0]-frame.Size.GetWidth()-20, 170))
         super().__init__(frame)
     
-    def set_timeout(self, t): self._timeout = .8 #t/1000
+    def set_timeout(self, t): self._timeout = t/1000
     
     @CallAfter
     def update(self, title=None, message=None, value=None, min=None, max=None):
