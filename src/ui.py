@@ -43,6 +43,8 @@ def loadwx():
 
     class Notification(_Notification, NotificationMessage):
         
+        _timeout = NotificationMessage.Timeout_Auto
+        
         def update(self, title=None, message=None):
             if message: wx.CallAfter(self.SetMessage,message)
             if title: wx.CallAfter(self.SetTitle,title)
