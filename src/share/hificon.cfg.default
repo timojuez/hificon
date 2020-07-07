@@ -34,11 +34,12 @@ notify_events = all_implemented
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
-backend = wx # preferred backend, "wx" or "gtk"
+# preferred backend, "wx" or "gtk"
+backend = gtk
 
 
 [MouseBinding]
-# mouse_binding options
+# mouse_binding options, see also your ~/.xbindkeysrc
 vol_up = button9
 vol_down = button8
 
