@@ -212,7 +212,10 @@ class AsyncFeature(AbstractFeature):
         except AttributeError: 
             raise AttributeError("`%s` not available. Use @require"%self.attr)
     
-    def set(self, value): self.amp.send(self.encode(value))
+    def set(self, value, force=False):
+        if not force and not isinstance(value, self.type):
+            raise TypeError("Value `%s` is not of type `%s`."%(value,self.type.__name__))
+        self.amp.send(self.encode(value))
 
     def isset(self): return hasattr(self,'_val')
         
@@ -240,10 +243,12 @@ class AsyncFeature(AbstractFeature):
 
 class Feature(SynchronousFeatureMixin, AsyncFeature): pass
 
-
 class NumericFeature(Feature):
     min=0
     max=99
+
+
+class BoolFeature(Feature): type=bool
 
 class IntFeature(NumericFeature): type=int
 
@@ -251,7 +256,17 @@ class SelectFeature(Feature):
     type=str
     options = []
 
-class FloatFeature(NumericFeature): type=float
+    def set(self, value, force=False):
+        if not force and value not in self.options:
+            raise ValueError("Value must be one of %s or try amp.features[%s].set(value, force=True)"
+                %(self.options, repr(self.attr)))
+        return super().set(value, force)
+    
 
-class BoolFeature(Feature): type=bool
+class FloatFeature(NumericFeature):
+    type=float
+    
+    def set(self, value, force=False):
+        return super().set((float(value) if isinstance(value, int) else value), force)
+
 

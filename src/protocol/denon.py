@@ -100,14 +100,14 @@ class LooseBoolFeature(BoolFeature):
 
 class Volume(FloatFeature):
     function = "MV"
-    def set(self, value): super().set(min(max(self.min,value),self.max))
+    def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
     def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
     
 class Maxvol(FloatFeature): #undocumented
     function="MVMAX "
     call="MV?"
     default_value = 98
-    def set(self, val): raise RuntimeError("Cannot set MVMAX!")
+    def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX!")
     def on_change(self, old, new): self.amp.features["volume"].max = new
 
 class Power(SelectFeature):
@@ -127,7 +127,7 @@ class Source(SelectFeature):
 
 class Name(SelectFeature): #undocumented
     function = "NSFRN "
-    def set(self, val): raise RuntimeError("Cannot set value!")
+    def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
 
 class _ChannelVolume(RelativeFloat): call = "CV?"
 
