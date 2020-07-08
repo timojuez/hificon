@@ -46,8 +46,8 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
     def update(self, feature):
         super().update(
             title=feature.name,
-            message=str(feature.get() if feature.isset() else None),
-            value=feature.get() if feature.isset() else None,
+            message=str(feature.get() if feature.isset() else "..."),
+            value=feature.get() if feature.isset() else feature.min,
             min=feature.min,
             max=feature.max)
     
@@ -100,9 +100,17 @@ class NotificationMixin(object):
             self.update_notification(attr, value).show()
         super().on_change(attr,value)
 
-    def on_scroll(self, *args, **xargs):
+    def on_scroll_up(self, *args, **xargs):
         self._notifications["volume"].show()
-        super().on_scroll(*args,**xargs)
+        if self.amp.features["volume"].isset():
+            self._notifications["volume"].update(self.amp.features["volume"])
+        super().on_scroll_up(*args,**xargs)
+        
+    def on_scroll_down(self, *args, **xargs):
+        self._notifications["volume"].show()
+        if self.amp.features["volume"].isset():
+            self._notifications["volume"].update(self.amp.features["volume"])
+        super().on_scroll_down(*args,**xargs)
         
 
 class Tray(object):
