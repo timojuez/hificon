@@ -505,7 +505,7 @@ class DenonAmp(TelnetAmp):
         return "%s%s"%(_function, _Feature(self).get())
     
     def send(self, cmd): super().send(cmd.upper())
-        
-        
+
+
 Amp = make_amp(features, DenonAmp)
 

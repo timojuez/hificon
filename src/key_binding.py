@@ -3,7 +3,7 @@ import time, sys
 from threading import Thread
 from .util import json_service
 from .amp_controller import AmpEvents
-from .amp import require
+from . import amp_features
 from .config import config
 
 ipc_port = config.getint("Service","ipc_port")
@@ -47,7 +47,7 @@ class VolumeChanger(AmpEvents):
         if self.interval: time.sleep(self.interval)
         self.fire_volume()
         
-    @require("volume")
+    @amp_features.require("volume")
     def fire_volume(self):
         if self.keys_pressed <= 0: return
         self.amp.volume += self.step*(int(self.button)*2-1)

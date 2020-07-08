@@ -3,7 +3,7 @@ from contextlib import suppress
 from threading import Event, Lock
 from .util import call_sequence
 from datetime import datetime, timedelta
-from .amp import AbstractAmp
+from .amp_type import AmpType
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
@@ -45,13 +45,13 @@ class FunctionCall(object):
         if not self.missing_features: return self._func(*self._args,**self._kwargs) or True
         
     def _find_amp(self, args): 
-        """ search AbstractAmp type in args """
+        """ search AmpType type in args """
         try:
             amp = getattr(args[0],"amp",None)
-            return next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
+            return next(filter(lambda e: isinstance(e,AmpType), (amp,)+args))
         except (StopIteration, IndexError):
             print("[WARNING] `%s` will never be called. @require needs "
-                "AbstractAmp instance"%self._func.__name__, file=sys.stderr)
+                "AmpType instance"%self._func.__name__, file=sys.stderr)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)

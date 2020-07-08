@@ -1,21 +1,22 @@
 """
 Common amplifier classes for creating an amp protocol.
-Use TelnetAmp/AbstractAmp, Feature and make_amp(). Examples in ./protocol
+Use TelnetAmp or AbstractAmp. Examples in ./protocol
 """
 
 import sys, time, socket
 from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
+from .amp_type import AmpType
+from .amp_features import require
 from .util.function_bind import Bindable
 from .util import log_call
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import Feature, require
 from . import NAME
 
 
-class _AbstractAmp(Bindable):
+class _AbstractAmp(Bindable, AmpType):
     """
     Abstract Amplifier Interface
     Note: Event callbacks (on_connect, on_change) might be called in the mainloop
@@ -27,8 +28,6 @@ class _AbstractAmp(Bindable):
     host = None
     port = None
     name = None
-    features = {}
-    preload_features = set() # feature keys to be polled on_connect
     connected = False
     verbose = 0
     _mainloopt = None
@@ -43,13 +42,6 @@ class _AbstractAmp(Bindable):
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
-    
-    def __setattr__(self, name, value):
-        """ @name must match an existing attribute """
-        if not hasattr(self, name):
-            raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
-                "use decorator @require('attribute')")%(repr(self.__class__.__name__),repr(name)))
-        else: super().__setattr__(name, value)
     
     def __enter__(self): self.connect(); self.enter(); return self
 
@@ -84,7 +76,7 @@ class _AbstractAmp(Bindable):
         if config["Amp"].get("source"): self.features["source"].set(config["Amp"]["source"], force=True)
         self.power = True
 
-    @require("source")
+    @require("power","source")
     def poweroff(self, force=False):
         if not force and (not config.getboolean("Amp","control_power_off") 
             or config["Amp"].get("source") and self.source != config["Amp"]["source"]): return
@@ -125,6 +117,7 @@ class _AbstractAmp(Bindable):
     
     
 class FeaturesMixin(object):
+    features = {}
     _pending = None
 
     def __init__(self,*args,**xargs):
@@ -133,11 +126,16 @@ class FeaturesMixin(object):
         # apply @features to Amp
         for attr,F in self._feature_classes.items(): F(self,attr)
         super().__init__(*args,**xargs)
-    
+
+    def __setattr__(self, name, value):
+        """ @name must match an existing attribute """
+        if not hasattr(self, name):
+            raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
+                "use decorator @amp_features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
+        else: super().__setattr__(name, value)
+
     def on_connect(self):
         for f in self.features.values(): f.unset()
-        def preload(amp): pass
-        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
         super().on_connect()
     
     def _set_feature_value(self, name, value):
@@ -159,6 +157,15 @@ class FeaturesMixin(object):
                 self.on_change(attr, new)
 
 
+class PreloadMixin:
+    preload_features = set() # feature keys to be polled on_connect
+
+    def on_connect(self):
+        super().on_connect()
+        def preload(amp): pass
+        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
+        
+
 class SendOnceMixin(object):
     """ prevent the same values from being sent to the amp in a row """
     _block_on_set = None
@@ -178,7 +185,7 @@ class SendOnceMixin(object):
         super().on_change(*args,**xargs)
 
 
-class AbstractAmp(SendOnceMixin, FeaturesMixin, _AbstractAmp): pass
+class AbstractAmp(SendOnceMixin, PreloadMixin, FeaturesMixin, _AbstractAmp): pass
 
     
 class TelnetAmp(AbstractAmp):
@@ -245,7 +252,7 @@ def make_amp(features, base_cls=AbstractAmp):
     features: dict(class_attribute_name=MyFeature)
         where MyFeature inherits from amp_features.Feature
     """
-    assert(issubclass(base_cls, AbstractAmp))
+    assert(issubclass(base_cls, AmpType))
     for name in features.keys(): 
         if hasattr(base_cls,name):
             raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
@@ -261,5 +268,5 @@ def make_amp(features, base_cls=AbstractAmp):
 
     with suppress(Exception): dict_["protocol"] = \
         base_cls.protocol or sys._getframe(1).f_globals['__name__']
-    return type("Amp", (_make_features_mixin(**features),base_cls), dict_)
+    return type("Amp", (base_cls,), dict_)
     

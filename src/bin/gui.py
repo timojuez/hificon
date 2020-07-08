@@ -3,7 +3,6 @@ import argparse, sys, math, pkgutil, io, wx
 from threading import Thread
 from PIL import Image
 from .. import Amp, NAME, amp_features
-from ..amp import require
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
 from .. import ui
@@ -133,7 +132,7 @@ class Tray(object):
         self.icon = ui.Icon()
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
     
-    @require("muted","volume","maxvol")
+    @amp_features.require("muted","volume","maxvol")
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         volume = 0 if self.amp.muted else self.amp.volume
@@ -154,12 +153,12 @@ class Tray(object):
         icon = Image.open(io.BytesIO(image_data))
         self.icon.set_icon(icon, name)
     
-    @require("volume")
+    @amp_features.require("volume")
     def on_scroll_up(self, steps):
         volume = self.amp.volume+self.scroll_delta*steps
         self.amp.volume = volume
 
-    @require("volume")
+    @amp_features.require("volume")
     def on_scroll_down(self, steps):
         volume = self.amp.volume-self.scroll_delta*steps
         self.amp.volume = volume
