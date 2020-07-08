@@ -16,7 +16,7 @@ class Main(object):
         if button not in (VOLUP, VOLDOWN):
             return
         button = button == VOLUP # to bool
-        func = {True:"press",False:"release"}[pressed]
+        func = {True:"on_key_press",False:"on_key_release"}[pressed]
         send(dict(kwargs=dict(button=button), func=func))
             
     def __call__(self):

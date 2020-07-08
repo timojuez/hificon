@@ -34,7 +34,7 @@ class VolumeChanger(AmpEvents):
         self.button = None
         self.amp.preload_features.add("volume")
         
-    def press(self, button):
+    def on_key_press(self, button):
         """ start sending volume events to amp """
         self.keys_pressed += 1
         if self.keys_pressed <= 0: return
@@ -52,7 +52,7 @@ class VolumeChanger(AmpEvents):
         if self.keys_pressed <= 0: return
         self.amp.volume += self.step*(int(self.button)*2-1)
 
-    def release(self, button):
+    def on_key_release(self, button):
         """ button released """
         self.keys_pressed -= 1
         if not (self.keys_pressed <= 0): self.button = not button

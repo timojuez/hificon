@@ -88,9 +88,9 @@ class NotificationMixin(object):
         n.update(f or val)
         return n
 
-    def press(self,*args,**xargs): # TODO: rename to on_press
+    def on_key_press(self,*args,**xargs):
         self._notifications["volume"].show()
-        super().press(*args,**xargs)
+        super().on_key_press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
         if attr != "maxvol" and (
