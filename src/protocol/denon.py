@@ -110,7 +110,7 @@ class Maxvol(FloatFeature): #undocumented
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX!")
     def on_change(self, old, new): self.amp.features["volume"].max = new
 
-class Power(SelectFeature):
+class Power(BoolFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
