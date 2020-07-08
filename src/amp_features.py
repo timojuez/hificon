@@ -3,81 +3,10 @@ from contextlib import suppress
 from threading import Event, Lock
 from .util import call_sequence
 from datetime import datetime, timedelta
+from .amp import AbstractAmp
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
-
-
-class FeatureAmpMixin(object):
-    _pending = None
-
-    def __init__(self,*args,**xargs):
-        self._pending = []
-        self.features = {}
-        # apply @features to Amp
-        for attr,F in self._feature_classes.items(): F(self,attr)
-        super().__init__(*args,**xargs)
-    
-    def on_connect(self):
-        for f in self.features.values(): f.unset()
-        def preload(amp): pass
-        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
-        super().on_connect()
-    
-    def _set_feature_value(self, name, value):
-        self.features[name].set(value)
-    
-    def mainloop_hook(self):
-        super().mainloop_hook()
-        for p in self._pending: p.check_expiration()
-    
-    def on_receive_raw_data(self, data):
-        super().on_receive_raw_data(data)
-        consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
-        if not consumed: self.on_change(None, data)
-        for attr,(old,new) in consumed.items():
-            if old == new: continue 
-            if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
-                %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            if not any([p.has_polled(attr) for p in self._pending.copy()]): # has_polled() changes self._pending
-                self.on_change(attr, new)
-
-
-class SendOnceMixin(object):
-    """ prevent the same values from being sent to the amp in a row """
-    _block_on_set = None
-    
-    def __init__(self,*args,**xargs):
-        self._block_on_set = {}
-        super().__init__(*args,**xargs)
-        
-    def _set_feature_value(self, name, value):
-        if name in self._block_on_set and self._block_on_set[name] == value:
-            return
-        self._block_on_set[name] = value
-        super()._set_feature_value(name,value)
-        
-    def on_change(self,*args,**xargs):
-        self._block_on_set.clear() # unblock values after amp switches on
-        super().on_change(*args,**xargs)
-    
-        
-def make_features_mixin(**features):
-    """
-    Make a class where all attributes are getters and setters for amp properties
-    args: class_attribute_name=MyFeature
-        where MyFeature inherits from Feature
-    """
-    dict_ = {
-        k:property(
-            lambda self,k=k:self.features[k].get(),
-            lambda self,val,k=k:self._set_feature_value(k,val)
-        )
-        for k,v in features.items()
-    }
-    dict_["_feature_classes"] = features
-    cls = type("AmpFeatures", (SendOnceMixin,FeatureAmpMixin), dict_)
-    return cls
 
 
 def require(*features):
@@ -116,13 +45,13 @@ class FunctionCall(object):
         if not self.missing_features: return self._func(*self._args,**self._kwargs) or True
         
     def _find_amp(self, args): 
-        """ search FeatureAmpMixin type in args """
+        """ search AbstractAmp type in args """
         try:
             amp = getattr(args[0],"amp",None)
-            return next(filter(lambda e: isinstance(e,FeatureAmpMixin), (amp,)+args))
+            return next(filter(lambda e: isinstance(e,AbstractAmp), (amp,)+args))
         except (StopIteration, IndexError):
             print("[WARNING] `%s` will never be called. @require needs "
-                "FeatureAmpMixin instance"%self._func.__name__, file=sys.stderr)
+                "AbstractAmp instance"%self._func.__name__, file=sys.stderr)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)
@@ -144,7 +73,7 @@ class FunctionCall(object):
         return True
         
 
-class AbstractFeature(object):
+class FeatureInterface(object):
     call = None
     default_value = None #if no response
     type = object # value data type, e.g. int, bool, str
@@ -164,34 +93,7 @@ class AbstractFeature(object):
     def on_change(self, old, new): pass
 
 
-class SynchronousFeatureMixin(object):
-
-    def __init__(self,*args,**xargs):
-        self._poll_lock = Lock()
-        super().__init__(*args,**xargs)
-
-    def get(self):
-        self._poll_lock.acquire()
-        try:
-            try: return super().get()
-            except AttributeError:
-                self.poll()
-                return self._val
-        finally: self._poll_lock.release()
-        
-    def poll(self):
-        """ synchronous poll """
-        e = Event()
-        def poll_event(self): e.set()
-        require(self.attr)(poll_event)(self)
-        self.async_poll()
-        if not e.wait(timeout=MAX_CALL_DELAY):
-            if self.default_value: return self.store(self.default_value)
-            else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
-        else: return self._val
-    
-
-class AsyncFeature(AbstractFeature):
+class AsyncFeature(FeatureInterface):
     """
     An attribute of the amplifier
     High level telnet protocol communication
@@ -243,7 +145,34 @@ class AsyncFeature(AbstractFeature):
         return old, self._val
 
 
-class Feature(SynchronousFeatureMixin, AsyncFeature): pass
+class SynchronousFeature(AsyncFeature):
+
+    def __init__(self,*args,**xargs):
+        self._poll_lock = Lock()
+        super().__init__(*args,**xargs)
+
+    def get(self):
+        self._poll_lock.acquire()
+        try:
+            try: return super().get()
+            except AttributeError:
+                self.poll()
+                return self._val
+        finally: self._poll_lock.release()
+        
+    def poll(self):
+        """ synchronous poll """
+        e = Event()
+        def poll_event(self): e.set()
+        require(self.attr)(poll_event)(self)
+        self.async_poll()
+        if not e.wait(timeout=MAX_CALL_DELAY):
+            if self.default_value: return self.store(self.default_value)
+            else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
+        else: return self._val
+    
+
+Feature = SynchronousFeature
 
 class NumericFeature(Feature):
     min=0

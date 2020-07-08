@@ -11,11 +11,11 @@ from .util.function_bind import Bindable
 from .util import log_call
 from .config import config
 from .config import FILE as CONFFILE
-from .amp_features import Feature, require, make_features_mixin
+from .amp_features import Feature, require
 from . import NAME
 
 
-class AbstractAmp(Bindable):
+class _AbstractAmp(Bindable):
     """
     Abstract Amplifier Interface
     Note: Event callbacks (on_connect, on_change) might be called in the mainloop
@@ -123,7 +123,64 @@ class AbstractAmp(Bindable):
         """ This will be called regularly by mainloop """
         raise NotImplementedError()
     
+    
+class FeaturesMixin(object):
+    _pending = None
 
+    def __init__(self,*args,**xargs):
+        self._pending = []
+        self.features = {}
+        # apply @features to Amp
+        for attr,F in self._feature_classes.items(): F(self,attr)
+        super().__init__(*args,**xargs)
+    
+    def on_connect(self):
+        for f in self.features.values(): f.unset()
+        def preload(amp): pass
+        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
+        super().on_connect()
+    
+    def _set_feature_value(self, name, value):
+        self.features[name].set(value)
+    
+    def mainloop_hook(self):
+        super().mainloop_hook()
+        for p in self._pending: p.check_expiration()
+    
+    def on_receive_raw_data(self, data):
+        super().on_receive_raw_data(data)
+        consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
+        if not consumed: self.on_change(None, data)
+        for attr,(old,new) in consumed.items():
+            if old == new: continue 
+            if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
+                %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
+            if not any([p.has_polled(attr) for p in self._pending.copy()]): # has_polled() changes self._pending
+                self.on_change(attr, new)
+
+
+class SendOnceMixin(object):
+    """ prevent the same values from being sent to the amp in a row """
+    _block_on_set = None
+    
+    def __init__(self,*args,**xargs):
+        self._block_on_set = {}
+        super().__init__(*args,**xargs)
+        
+    def _set_feature_value(self, name, value):
+        if name in self._block_on_set and self._block_on_set[name] == value:
+            return
+        self._block_on_set[name] = value
+        super()._set_feature_value(name,value)
+        
+    def on_change(self,*args,**xargs):
+        self._block_on_set.clear() # unblock values after amp switches on
+        super().on_change(*args,**xargs)
+
+
+class AbstractAmp(SendOnceMixin, FeaturesMixin, _AbstractAmp): pass
+
+    
 class TelnetAmp(AbstractAmp):
     """
     This class connects to the amp via LAN and executes commands
@@ -183,12 +240,26 @@ class TelnetAmp(AbstractAmp):
 
 
 def make_amp(features, base_cls=AbstractAmp):
+    """
+    Make a class where all attributes are getters and setters for amp properties
+    features: dict(class_attribute_name=MyFeature)
+        where MyFeature inherits from amp_features.Feature
+    """
     assert(issubclass(base_cls, AbstractAmp))
     for name in features.keys(): 
         if hasattr(base_cls,name):
             raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
-    dict_ = dict()
+
+    dict_ = {
+        k:property(
+            lambda self,k=k:self.features[k].get(),
+            lambda self,val,k=k:self._set_feature_value(k,val)
+        )
+        for k,v in features.items()
+    }
+    dict_["_feature_classes"] = features
+
     with suppress(Exception): dict_["protocol"] = \
         base_cls.protocol or sys._getframe(1).f_globals['__name__']
-    return type("Amp", (make_features_mixin(**features),base_cls), dict_)
+    return type("Amp", (_make_features_mixin(**features),base_cls), dict_)
     
