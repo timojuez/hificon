@@ -81,7 +81,7 @@ class AbstractAmp(Bindable):
     def poweron(self, force=False):
         if not force and not config.getboolean("Amp","control_power_on") or self.power:
             return
-        if config["Amp"].get("source"): self.source = config["Amp"]["source"]
+        if config["Amp"].get("source"): self.features["source"].set(config["Amp"]["source"], force=True)
         self.power = True
 
     @require("source")
