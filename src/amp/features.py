@@ -1,8 +1,8 @@
 import sys, traceback
 from contextlib import suppress
 from threading import Event, Lock
-from .util import call_sequence
 from datetime import datetime, timedelta
+from ..util import call_sequence
 from .amp_type import AmpType
 
 

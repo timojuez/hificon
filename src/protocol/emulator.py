@@ -3,9 +3,8 @@ Dry software run that acts like a real amp
 """
 
 import math
-from ..amp import AbstractAmp, make_amp
+from ..amp import AbstractAmp, features, make_amp
 from .. import Amp_cls
-from .. import amp_features
 
 
 default_values = dict(
@@ -27,10 +26,10 @@ class DummyAmp:
         self.port = None
         for name, f in self.features.items():
             if name in default_values: val = default_values[name]
-            elif isinstance(f, amp_features.IntFeature): val = math.ceil((f.max+f.min)/2)
-            elif isinstance(f, amp_features.FloatFeature): val = (f.max+f.min)/2
-            elif isinstance(f, amp_features.SelectFeature) and f.options: val = f.options[0]
-            elif isinstance(f, amp_features.BoolFeature): val = True
+            elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
+            elif isinstance(f, features.FloatFeature): val = (f.max+f.min)/2
+            elif isinstance(f, features.SelectFeature) and f.options: val = f.options[0]
+            elif isinstance(f, features.BoolFeature): val = True
             else: continue
             f.store(val)
     

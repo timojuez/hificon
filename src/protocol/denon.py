@@ -1,6 +1,5 @@
 import sys, math
-from ..amp import TelnetAmp, make_amp
-from .. import amp_features
+from ..amp import TelnetAmp, make_amp, features
 
 
 class DenonFeature:
@@ -33,9 +32,9 @@ class _Translation:
 
 ######### Data Types
 
-class SelectFeature(_Translation, DenonFeature, amp_features.SelectFeature): pass
+class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
 
-class FloatFeature(DenonFeature, amp_features.FloatFeature):
+class FloatFeature(DenonFeature, features.FloatFeature):
 
     @staticmethod
     def _roundVolume(vol): return .5*round(vol/.5)
@@ -47,7 +46,7 @@ class FloatFeature(DenonFeature, amp_features.FloatFeature):
         return "%02d"%val if val.is_integer() else "%03d"%(val*10)
 
 
-class IntFeature(DenonFeature, amp_features.IntFeature):
+class IntFeature(DenonFeature, features.IntFeature):
     min = 0
     max = 99
     
@@ -58,7 +57,7 @@ class IntFeature(DenonFeature, amp_features.IntFeature):
     def decodeVal(self, val): return int(val)
         
 
-class BoolFeature(_Translation, DenonFeature, amp_features.BoolFeature):
+class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
     translation = {"ON":True,"OFF":False}
     
 

@@ -2,7 +2,7 @@
 import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
-from .. import Amp, VERSION, amp_features
+from .. import Amp, amp, VERSION
 try: import readline
 except ImportError: pass
 
@@ -91,9 +91,9 @@ class CLI:
         for name, f in sorted(self.amp.features.items(), key=lambda e:e[0]):
             if not name: continue
             print("\t$%(name)s  %(title)s  %(type)s "%dict(name=name, type=f.type.__name__, title=f.name), end="")
-            if isinstance(f,amp_features.IntFeature) or isinstance(f,amp_features.FloatFeature):
+            if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.FloatFeature):
                 print("[%s..%s] "%(f.min,f.max), end="")
-            elif isinstance(f,amp_features.SelectFeature) or isinstance(f,amp_features.BoolFeature): 
+            elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature): 
                 print(f.options, end="")
             print()
         print()

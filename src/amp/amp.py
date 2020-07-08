@@ -8,12 +8,12 @@ from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
-from .amp_features import require
-from .util.function_bind import Bindable
-from .util import log_call
-from .config import config
-from .config import FILE as CONFFILE
-from . import NAME
+from .features import require
+from ..util.function_bind import Bindable
+from ..util import log_call
+from ..config import config
+from ..config import FILE as CONFFILE
+from .. import NAME
 
 
 class _AbstractAmp(Bindable, AmpType):

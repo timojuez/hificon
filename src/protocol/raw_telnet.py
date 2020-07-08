@@ -1,4 +1,4 @@
-from ..amp import Feature, TelnetAmp, make_amp
+from ..amp import feature, TelnetAmp, make_amp
 
 
 class _Amp(TelnetAmp):
@@ -10,7 +10,7 @@ class _Amp(TelnetAmp):
         send @cmd to amp and return line where matches(line) is True
         """
         if not matches: return self.send(cmd)
-        class RawFeature(Feature):
+        class RawFeature(feature.Feature):
             call = cmd
             matches = lambda self, data: matches(data)
             def decode(self, cmd): return cmd
