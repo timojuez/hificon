@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import time, sys
-from threading import Thread
+from threading import Thread, Lock
+from contextlib import suppress
 from .util import json_service
 from .amp_controller import AmpEvents
 from . import amp
@@ -32,31 +33,32 @@ class VolumeChanger(AmpEvents):
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
         self.step = config.getfloat("KeyEventHandling","step")
         self.button = None
+        self._vol_lock = Lock()
         self.amp.preload_features.add("volume")
         
+    @amp.features.require("volume")
     def on_key_press(self, button):
         """ start sending volume events to amp """
         self.keys_pressed += 1
-        if self.keys_pressed <= 0: return
         self.button = button
-        self.fire_volume()
+        with suppress(RuntimeError): self._vol_lock.release()
+        if self.keys_pressed != 1: return # run the following once for all keys
+        while self.keys_pressed > 0:
+            self._vol_lock.acquire()
+            if self.keys_pressed > 0:
+                self.amp.volume += self.step*(int(self.button)*2-1)
+                if self.interval: time.sleep(self.interval)
     
     def on_change(self, attr, value): # amp change
         super().on_change(attr, value)
         if attr != "volume" or self.keys_pressed <= 0: return
-        if self.interval: time.sleep(self.interval)
-        self.fire_volume()
-        
-    @amp.features.require("volume")
-    def fire_volume(self):
-        if self.keys_pressed <= 0: return
-        self.amp.volume += self.step*(int(self.button)*2-1)
+        with suppress(RuntimeError): self._vol_lock.release()
 
     def on_key_release(self, button):
         """ button released """
         self.keys_pressed -= 1
-        if not (self.keys_pressed <= 0): self.button = not button
-        self.fire_volume()
+        if self.keys_pressed > 0: self.button = not button
+        with suppress(RuntimeError): self._vol_lock.release()
         Thread(target=self.amp.poweron, args=(True,), name="poweron", daemon=False).start()
 
 
