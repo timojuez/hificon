@@ -107,13 +107,17 @@ class CLI:
 
 class AmpCommandTransformation(ast.NodeTransformer):
     """ transformer for the parsed python syntax tree """
-
+    
+    def __init__(self, preprocessor):
+        super().__init__()
+        self.preprocessor = preprocessor
+        
     def _query_call(self, cmd):
         """ returns __query__(@cmd, __return__, __wait__) """
         node = ast.Call(
             func=ast.Name(id="__query__", ctx=ast.Load()),
             args=[
-                ast.Str(Preprocessor.decode(cmd),ctx=ast.Load()),
+                ast.Str(self.preprocessor.decode(cmd),ctx=ast.Load()),
                 ast.Name(id="__return__",ctx=ast.Load()),
                 ast.Name(id="__wait__",ctx=ast.Load()),
             ],
@@ -128,29 +132,27 @@ class AmpCommandTransformation(ast.NodeTransformer):
         self.generic_visit(node)
         return node
         
-    def visit_Constant(self, node):
+    def _visit_Str(self, node, value):
         """ handle $'cmd' """
-        if node.value.startswith("__PREPRO_DOLLAR__"):
-            return self._query_call(node.value.replace("__PREPRO_DOLLAR__","",1))
+        for r,o in (dict(self.preprocessor.replace)["$'"], dict(self.preprocessor.replace)['$"']):
+            if value.startswith(o): return self._query_call(value.replace(o,"",1))
         return node
+            
+    def visit_Constant(self, node): return self._visit_Str(node, node.value)
         
-    def visit_Str(self, node):
-        """ handle $'cmd' """
-        if node.s.startswith("__PREPRO_DOLLAR__"):
-            return self._query_call(node.s.replace("__PREPRO_DOLLAR__","",1))
-        return node
+    def visit_Str(self, node): return self._visit_Str(node, node.s)
     
     def visit(self, node):
         r = super().visit(node)
         # undo preprocessing
-        if isinstance(node, ast.Name): node.id = Preprocessor.decode(node.id)
-        elif isinstance(node, ast.ClassDef): node.name = Preprocessor.decode(node.name)
-        elif isinstance(node, ast.keyword): node.arg = Preprocessor.decode(node.arg)
-        elif isinstance(node, ast.AsyncFunctionDef): node.name = Preprocessor.decode(node.name)
-        elif isinstance(node, ast.FunctionDef): node.name = Preprocessor.decode(node.name)
-        elif isinstance(node, ast.arg): node.arg = Preprocessor.decode(node.arg)
-        elif isinstance(node, ast.Constant): node.value = Preprocessor.decode(node.value)
-        elif isinstance(node, ast.Str): node.s = Preprocessor.decode(node.s)
+        if isinstance(node, ast.Name): node.id = self.preprocessor.decode(node.id)
+        elif isinstance(node, ast.ClassDef): node.name = self.preprocessor.decode(node.name)
+        elif isinstance(node, ast.keyword): node.arg = self.preprocessor.decode(node.arg)
+        elif isinstance(node, ast.AsyncFunctionDef): node.name = self.preprocessor.decode(node.name)
+        elif isinstance(node, ast.FunctionDef): node.name = self.preprocessor.decode(node.name)
+        elif isinstance(node, ast.arg): node.arg = self.preprocessor.decode(node.arg)
+        elif isinstance(node, ast.Constant): node.value = self.preprocessor.decode(node.value)
+        elif isinstance(node, ast.Str): node.s = self.preprocessor.decode(node.s)
         return r
         
 
@@ -159,21 +161,27 @@ class Preprocessor:
     like $ or ? outside of strings """
     
     replace = [
-        #str,   replace,                ocurrance after parsing
-        ("?",   "__PREPRO_QUESTION__",  "__PREPRO_QUESTION__"),
-        ("$'",  "'__PREPRO_DOLLAR__",   "__PREPRO_DOLLAR__"),
-        ('$"',  '"__PREPRO_DOLLAR__',   "__PREPRO_DOLLAR__"),
-        ("$",   "amp.",                 "amp."),
+        #str,   replace,            ocurrance in string after parsing
+        ("?",   ("__quest__",       "__quest__")),
+        ("$'",  ("'__dollar1__",    "__dollar1__")),
+        ('$"',  ('"__dollar2__',    "__dollar2__")),
+        ("$",   ("amp.",            "amp.")),
     ]
     
-    @classmethod
-    def encode(self, source):
-        for s,repl,find in self.replace: source = source.replace(s,repl)
+    def __init__(self, source):
+        self.source = source
+        def find_unique(r, o):
+            if o in source: return find_unique("%s1"%r, "%s1"%o)
+            else: return r,o
+        self.replace = [(s,find_unique(r,o)) for s,(r,o) in self.replace]
+    
+    def encode(self):
+        source = self.source
+        for s,(repl,find) in self.replace: source = source.replace(s,repl)
         return source
         
-    @classmethod
     def decode(self, data):
-        for s,repl,find in self.replace: data = data.replace(find,s)
+        for s,(repl,find) in self.replace: data = data.replace(repl,s)
         return data
 
 
@@ -183,8 +191,9 @@ class Compiler(Preprocessor):
         self.env = dict(**env, wait=time.sleep, __name__="__main__")
 
     def run(self, source, filename="<input>", mode="single"):
-        tree = ast.parse(Preprocessor.encode(source),mode=mode)
-        tree = AmpCommandTransformation().visit(tree)
+        preprocessor = Preprocessor(source)
+        tree = ast.parse(preprocessor.encode(),mode=mode)
+        tree = AmpCommandTransformation(preprocessor).visit(tree)
         tree = ast.fix_missing_locations(tree)
         #print(ast.dump(tree))
         exec(compile(tree, filename=filename, mode=mode), self.env)
