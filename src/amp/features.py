@@ -20,7 +20,7 @@ def require(*features):
 
 
 class FunctionCall(object):
-    """ Function call that requires features """
+    """ Function call that requires features. Drops call if no connection """
 
     def __init__(self, features, func, args=set(), kwargs={}):
         self._func = func
@@ -42,7 +42,10 @@ class FunctionCall(object):
         except ConnectionError: self.cancel()
         
     def _try_call(self):
-        if not self.missing_features: return self._func(*self._args,**self._kwargs) or True
+        if not self.missing_features: 
+            try: self._func(*self._args,**self._kwargs)
+            except ConnectionError: self.cancel()
+            return True
         
     def _find_amp(self, args): 
         """ search AmpType type in args """
