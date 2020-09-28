@@ -22,8 +22,16 @@ class Frame ( wx.Frame ):
 		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 
 
+		# Connect Events
+		self.Bind( wx.EVT_MOVE_END, self.FrameOnMoveEnd )
+
 	def __del__( self ):
 		pass
+
+
+	# Virtual event handlers, overide them in your derived class
+	def FrameOnMoveEnd( self, event ):
+		event.Skip()
 
 
 ###########################################################################
@@ -86,7 +94,33 @@ class GaugeNotification ( wx.Panel ):
 		self.Layout()
 		border.Fit( self )
 
+		# Connect Events
+		self.Bind( wx.EVT_LEFT_UP, self.on_click )
+		self.Bind( wx.EVT_RIGHT_UP, self.on_click )
+		self.title.Bind( wx.EVT_LEFT_UP, self.on_click )
+		self.title.Bind( wx.EVT_RIGHT_UP, self.on_click )
+		self.empty.Bind( wx.EVT_LEFT_UP, self.on_click )
+		self.empty.Bind( wx.EVT_RIGHT_UP, self.on_click )
+		self.progress.Bind( wx.EVT_LEFT_UP, self.on_click )
+		self.progress.Bind( wx.EVT_RIGHT_UP, self.on_click )
+		self.subtitle.Bind( wx.EVT_LEFT_UP, self.on_click )
+		self.subtitle.Bind( wx.EVT_RIGHT_UP, self.on_click )
+
 	def __del__( self ):
 		pass
+
+
+	# Virtual event handlers, overide them in your derived class
+	def on_click( self, event ):
+		event.Skip()
+
+
+
+
+
+
+
+
+
 
 

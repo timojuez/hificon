@@ -50,6 +50,8 @@ class GaugeNotification(_Notification, gauge_notification.GaugeNotification):
     
     def set_timeout(self, t): self._timeout = t/1000
     
+    def on_click(self, *args): self.hide()
+    
     @CallAfter
     def update(self, title=None, message=None, value=None, min=None, max=None):
         if not message and value is not None: message = "%0.1f"%value

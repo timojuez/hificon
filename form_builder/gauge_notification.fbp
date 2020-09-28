@@ -56,8 +56,9 @@
             <property name="window_name"></property>
             <property name="window_style">wxBORDER_NONE</property>
             <property name="xrc_skip_sizer">1</property>
+            <event name="OnMoveEnd">FrameOnMoveEnd</event>
         </object>
-        <object class="Panel" expanded="0">
+        <object class="Panel" expanded="1">
             <property name="aui_managed">0</property>
             <property name="aui_manager_style">wxAUI_MGR_DEFAULT</property>
             <property name="bg">47,47,47</property>
@@ -79,16 +80,18 @@
             <property name="window_extra_style"></property>
             <property name="window_name"></property>
             <property name="window_style">wxBORDER_NONE</property>
-            <object class="wxBoxSizer" expanded="0">
+            <event name="OnLeftUp">on_click</event>
+            <event name="OnRightUp">on_click</event>
+            <object class="wxBoxSizer" expanded="1">
                 <property name="minimum_size"></property>
                 <property name="name">border</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
-                <object class="sizeritem" expanded="0">
+                <object class="sizeritem" expanded="1">
                     <property name="border">10</property>
                     <property name="flag">wxALIGN_CENTER_HORIZONTAL|wxALL</property>
                     <property name="proportion">1</property>
-                    <object class="wxBoxSizer" expanded="0">
+                    <object class="wxBoxSizer" expanded="1">
                         <property name="minimum_size"></property>
                         <property name="name">vbox_outer</property>
                         <property name="orient">wxVERTICAL</property>
@@ -152,13 +155,15 @@
                                 <property name="window_name"></property>
                                 <property name="window_style"></property>
                                 <property name="wrap">-1</property>
+                                <event name="OnLeftUp">on_click</event>
+                                <event name="OnRightUp">on_click</event>
                             </object>
                         </object>
-                        <object class="sizeritem" expanded="0">
+                        <object class="sizeritem" expanded="1">
                             <property name="border">5</property>
                             <property name="flag">wxALIGN_CENTER</property>
                             <property name="proportion">1</property>
-                            <object class="wxBoxSizer" expanded="0">
+                            <object class="wxBoxSizer" expanded="1">
                                 <property name="minimum_size">-1,-1</property>
                                 <property name="name">gauge</property>
                                 <property name="orient">wxVERTICAL</property>
@@ -222,6 +227,8 @@
                                         <property name="window_name"></property>
                                         <property name="window_style"></property>
                                         <property name="wrap">-1</property>
+                                        <event name="OnLeftUp">on_click</event>
+                                        <event name="OnRightUp">on_click</event>
                                     </object>
                                 </object>
                                 <object class="sizeritem" expanded="0">
@@ -283,6 +290,8 @@
                                         <property name="window_name"></property>
                                         <property name="window_style"></property>
                                         <property name="wrap">-1</property>
+                                        <event name="OnLeftUp">on_click</event>
+                                        <event name="OnRightUp">on_click</event>
                                     </object>
                                 </object>
                             </object>
@@ -346,6 +355,8 @@
                                 <property name="window_name"></property>
                                 <property name="window_style"></property>
                                 <property name="wrap">-1</property>
+                                <event name="OnLeftUp">on_click</event>
+                                <event name="OnRightUp">on_click</event>
                             </object>
                         </object>
                     </object>
