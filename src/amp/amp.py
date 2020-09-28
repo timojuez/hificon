@@ -198,7 +198,7 @@ class TelnetAmp(AbstractAmp):
     def send(self, cmd):
         if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
         try:
-            assert(self.connected)
+            assert(self.connected and self._telnet.sock)
             self._telnet.write(("%s\r"%cmd).encode("ascii"))
             time.sleep(.01)
         except (OSError, EOFError, AssertionError, AttributeError) as e:
@@ -207,7 +207,7 @@ class TelnetAmp(AbstractAmp):
         
     def read(self, timeout=None):
         try:
-            assert(self.connected)
+            assert(self.connected and self._telnet.sock)
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
         except socket.timeout: return None
         except (OSError, EOFError, AssertionError, AttributeError) as e:
