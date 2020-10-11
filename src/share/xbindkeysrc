@@ -12,13 +12,13 @@
 "hificon_key_event_handler --up --released"
   b:9 + Release
 
-"hifi_sh MVUP"
+"hifish -c MVUP"
   XF86AudioRaiseVolume
 
-"hifi_sh MVDOWN"
+"hifish -c MVDOWN"
   XF86AudioLowerVolume
 
-"hifi_sh MUON"
+"hifish -c MUON"
   XF86AudioMute
 
 

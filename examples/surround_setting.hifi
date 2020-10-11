@@ -1,4 +1,4 @@
-#!/usr/bin/env hifi_sh
+#!/usr/bin/env hifish
 $poweron(force=True)
 
 # Switch Bass Mode

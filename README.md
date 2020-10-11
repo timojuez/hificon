@@ -79,11 +79,11 @@ You may want to add the command to autostart.
 HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for amplifier programming. It can read and write the amp's attributes or run remote control actions.
 
 #### Starting the shell
-Calling `hifi_sh` without arguments will start the prompt.
-To execute a command from bash, call `hifi_sh -c '[command]'`
-Hifi scripts can be executed by `hifi_sh FILE.hifi`
+Calling `hifish` without arguments will start the prompt.
+To execute a command from bash, call `hifish -c '[command]'`
+Hifi scripts can be executed by `hifish FILE.hifi`
 
-See also `hifi_sh -h` and the ./examples/.
+See also `hifish -h` and the ./examples/.
 
 #### Raw commands
 Raw commands can be sent to the amp like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
@@ -91,7 +91,7 @@ Raw commands can be sent to the amp like `MV50` or `PWON`. If your command conta
 #### High level commands
 High level attributes are not protocol (amp manufacturer) specific and start with a `$`. 
 Example: `$volume=40`
-To see what attributes are being supported, type `help()` or call `hifi_sh -c 'help()'`
+To see what attributes are being supported, type `help()` or call `hifish -c 'help()'`
 
 #### PyFiHiFi Language
 HiFiSh compiles the code into Python as described below. The Python code assumes the following:
@@ -115,7 +115,7 @@ If `__return__` is a callable, `$""` will return the received line from the amp 
 ## Development
 
 ### Support for other AVR brands
-It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifi_sh.
+It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifish.
 
 ### Custom amp control software
 It is possible to create a customised controller that keeps your own program synchronised with the amp.
@@ -124,9 +124,9 @@ See ./examples/custom_app.py
 If your development only relies on sending commands to the amp, your requirement is purely the hificon package and optionally hificon[autosetup].
 
 ### AVR Emulator
-For testing purposes, there is a Denon AVR software emulator that acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_amp_emulator --port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifi_sh --protocol .denon --host 127.0.0.1 --port [port]`.
+For testing purposes, there is a Denon AVR software emulator that acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_amp_emulator --port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
 
-You can also emulate a shell on the amp that is being defined in your config's [Amp] protocol: `hifi_sh --protocol .emulator`
+You can also emulate a shell on the amp that is being defined in your config's [Amp] protocol: `hifish --protocol .emulator`
 
 
 ## Limitations

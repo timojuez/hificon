@@ -1,4 +1,4 @@
-#!/usr/bin/env hifi_sh
+#!/usr/bin/env hifish
 
 def on_amp_change(attr, value):
     print("\nChanged %s to %s."%(attr,value))

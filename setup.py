@@ -21,7 +21,7 @@ setup(name=PKG_NAME,
       },
       include_package_data=True,
       entry_points={'console_scripts': [
-        'hifi_sh = %(name)s.bin.hifish:main'%dict(name=PKG_NAME),
+        'hifish = %(name)s.bin.hifish:main'%dict(name=PKG_NAME),
         "%(name)s_amp_emulator = %(name)s.bin.amp_emulator:main"%dict(name=PKG_NAME),
         '%(name)s = %(name)s.bin.main:main'%dict(name=PKG_NAME),
         '%(name)s_setup = %(name)s.bin.setup:main [autosetup]'%dict(name=PKG_NAME),
