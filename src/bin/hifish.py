@@ -138,7 +138,7 @@ class AmpCommandTransformation(ast.NodeTransformer):
             if value.startswith(o): return self._query_call(value.replace(o,"",1))
         return node
             
-    def visit_Constant(self, node): return self._visit_Str(node, node.value)
+    def visit_Constant(self, node): return self._visit_Str(node, node.value) if isinstance(node.value, str) else node
         
     def visit_Str(self, node): return self._visit_Str(node, node.s)
     
@@ -151,7 +151,7 @@ class AmpCommandTransformation(ast.NodeTransformer):
         elif isinstance(node, ast.AsyncFunctionDef): node.name = self.preprocessor.decode(node.name)
         elif isinstance(node, ast.FunctionDef): node.name = self.preprocessor.decode(node.name)
         elif isinstance(node, ast.arg): node.arg = self.preprocessor.decode(node.arg)
-        elif isinstance(node, ast.Constant): node.value = self.preprocessor.decode(node.value)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str): node.value = self.preprocessor.decode(node.value)
         elif isinstance(node, ast.Str): node.s = self.preprocessor.decode(node.s)
         return r
         
