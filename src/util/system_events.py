@@ -7,7 +7,7 @@ Example:
     MyListener().mainloop()
 """
 
-import signal, time
+import signal, time, sys
 from threading import Thread
 
 
@@ -32,7 +32,7 @@ class SignalMixin(_Abstract):
         signal.signal(signal.SIGTERM, self.on_shutdown)
         
     def on_startup(self): pass
-    def on_shutdown(self): pass
+    def on_shutdown(self, sig, frame): sys.exit(0)
 
 
 class PulseMixin(_Abstract):
