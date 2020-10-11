@@ -56,7 +56,6 @@
             <property name="window_name"></property>
             <property name="window_style">wxBORDER_NONE</property>
             <property name="xrc_skip_sizer">1</property>
-            <event name="OnMoveEnd">FrameOnMoveEnd</event>
         </object>
         <object class="Panel" expanded="1">
             <property name="aui_managed">0</property>
@@ -82,16 +81,16 @@
             <property name="window_style">wxBORDER_NONE</property>
             <event name="OnLeftUp">on_click</event>
             <event name="OnRightUp">on_click</event>
-            <object class="wxBoxSizer" expanded="1">
+            <object class="wxBoxSizer" expanded="0">
                 <property name="minimum_size"></property>
                 <property name="name">border</property>
                 <property name="orient">wxVERTICAL</property>
                 <property name="permission">none</property>
-                <object class="sizeritem" expanded="1">
+                <object class="sizeritem" expanded="0">
                     <property name="border">10</property>
                     <property name="flag">wxALIGN_CENTER_HORIZONTAL|wxALL</property>
                     <property name="proportion">1</property>
-                    <object class="wxBoxSizer" expanded="1">
+                    <object class="wxBoxSizer" expanded="0">
                         <property name="minimum_size"></property>
                         <property name="name">vbox_outer</property>
                         <property name="orient">wxVERTICAL</property>
@@ -159,20 +158,20 @@
                                 <event name="OnRightUp">on_click</event>
                             </object>
                         </object>
-                        <object class="sizeritem" expanded="1">
+                        <object class="sizeritem" expanded="0">
                             <property name="border">5</property>
                             <property name="flag">wxALIGN_CENTER</property>
                             <property name="proportion">1</property>
-                            <object class="wxBoxSizer" expanded="1">
+                            <object class="wxBoxSizer" expanded="0">
                                 <property name="minimum_size">-1,-1</property>
                                 <property name="name">gauge</property>
                                 <property name="orient">wxVERTICAL</property>
                                 <property name="permission">public</property>
-                                <object class="sizeritem" expanded="1">
+                                <object class="sizeritem" expanded="0">
                                     <property name="border">2</property>
                                     <property name="flag">wxALIGN_CENTER_HORIZONTAL</property>
                                     <property name="proportion">1</property>
-                                    <object class="wxStaticText" expanded="1">
+                                    <object class="wxStaticText" expanded="0">
                                         <property name="BottomDockable">1</property>
                                         <property name="LeftDockable">1</property>
                                         <property name="RightDockable">1</property>
@@ -361,6 +360,15 @@
                         </object>
                     </object>
                 </object>
+            </object>
+            <object class="wxTimer" expanded="0">
+                <property name="enabled">1</property>
+                <property name="id">wxID_ANY</property>
+                <property name="name">signal_process_timer</property>
+                <property name="oneshot">0</property>
+                <property name="period">1000</property>
+                <property name="permission">protected</property>
+                <event name="OnTimer">signal_process_timerOnTimer</event>
             </object>
         </object>
     </object>
