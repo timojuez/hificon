@@ -35,7 +35,7 @@ class SoundMixin(AmpEvents,_Verbosity):
     @log_call
     def on_stop_playing(self):
         super().on_stop_playing()
-        try: timeout = config.getfloat("Amp","poweroff_timeout")*60
+        try: timeout = config.getfloat("Amp","poweroff_after")*60
         except ValueError: return
         if not timeout: return
         self._timer_poweroff = Timer(timeout,self.on_sound_idle)

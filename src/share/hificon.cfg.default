@@ -4,7 +4,7 @@ control_power_on = yes
 # Switch the Amp off on suspend/shutdown/idle
 control_power_off = yes
 # Delay in minutes to power off Amp after last output stopped (float or "no")
-poweroff_timeout = 10
+poweroff_after = 10
 # module that implements the protocol
 protocol = .denon
 # Amp input source that this program controls. Important for power control. Empty means "all"
