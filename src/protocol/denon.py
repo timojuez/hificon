@@ -109,6 +109,51 @@ class Maxvol(FloatFeature): #undocumented
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX!")
     def on_change(self, old, new): self.amp.features["volume"].max = new
 
+class _SpeakerConfig(SelectFeature):
+    call = "SSSPC ?"
+    translation = {"SMA":"Small","LAR":"Large","NON":"None"}
+
+class FrontSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Front Speaker Config."
+    function = "SSSPCFRO "
+    
+class SurroundSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Surround Speaker Config."
+    function = "SSSPCSUA "
+    
+class CenterSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Center Speaker Config."
+    function = "SSSPCCEN "
+    
+class SurroundBackSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Surround Back Speaker Config."
+    function = "SSSPCSBK "
+    
+class FrontHeightSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Front Height Speaker Config."
+    function = "SSSPCFRH "
+    
+class TopFrontSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Top Front Speaker Config."
+    function = "SSSPCTFR "
+    
+class TopMiddleSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Top Middle Speaker Config."
+    function = "SSSPCTPM "
+    
+class FrontAtmosSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Front Atmos Speaker Config."
+    function = "SSSPCFRD "
+    
+class SurroundAtmosSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Surround Atmos Speaker Config."
+    function = "SSSPCSUD "
+    
+class SubwooferSpeakerConfig(_SpeakerConfig): #undocumented
+    name = "Subwoofer Speaker Config."
+    function = "SSSPCSWF "
+    translation = {"YES":"Yes","NO":"No"}
+    
 class Power(BoolFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
@@ -482,6 +527,16 @@ features = dict(
         subwoofer_adjustment_switch = SubwooferAdjustmentSwitch,
         dialog_level = DialogLevel,
         dialog_level_switch = DialogLevelSwitch,
+        front_speaker_config = FrontSpeakerConfig,
+        surround_speaker_config = SurroundSpeakerConfig,
+        center_speaker_config = CenterSpeakerConfig,
+        surround_back_speaker_config = SurroundBackSpeakerConfig,
+        front_height_speaker_config = FrontHeightSpeakerConfig,
+        top_front_speaker_config = TopFrontSpeakerConfig,
+        top_middle_speaker_config = TopMiddleSpeakerConfig,
+        front_atmos_speaker_config = FrontAtmosSpeakerConfig,
+        surround_atmos_speaker_config = SurroundAtmosSpeakerConfig,
+        subwoofer_speaker_config = SubwooferSpeakerConfig,
         # TODO: implement PV
 )
 
