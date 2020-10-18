@@ -120,11 +120,22 @@ class Volume(FloatFeature):
     def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
     
 class Maxvol(FloatFeature): #undocumented
+    name = "Max. Vol."
     function="MVMAX "
     call="MV?"
     default_value = 98
-    def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX!")
+    def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
     def on_change(self, old, new): self.amp.features["volume"].max = new
+
+class VolumeLimit(_PresetValue, SelectFeature): #undocumented
+    name = "Volume Limit"
+    function="SSVCTZMALIM "
+    value = "(select)"
+    translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
+    def unset(self): self._val = "(select)"
+    def on_change(self, old, new): self.amp.features["maxvol"].async_poll(force=True)
+    #def async_poll(self,*args,**xargs): self.amp.features["maxvol"].async_poll(,*args,**xargs)
+    #def poll(self,*args,**xargs): self.amp.features["maxvol"].poll(,*args,**xargs)
 
 class _SpeakerConfig(SelectFeature):
     call = "SSSPC ?"
@@ -555,6 +566,7 @@ features = dict(
         front_atmos_speaker_config = FrontAtmosSpeakerConfig,
         surround_atmos_speaker_config = SurroundAtmosSpeakerConfig,
         subwoofer_speaker_config = SubwooferSpeakerConfig,
+        volume_limit = VolumeLimit,
         # TODO: implement PV
 )
 
