@@ -30,11 +30,20 @@ class _Translation:
         return {val:key for key,val in self.translation.items()}.get(val,val)
 
 
-class _Constant:
+class _PresetValue:
+    """ Inherit if feature value shall have a preset value. Set value in inherited class. """
+    value = None
+
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
+        self._val = self.value
+    def get(self): return self._val # skip amp.connected check; TODO: move this to features.py.AsyncFeature.get
+    def unset(self): self._val = self.value
+
+
+class _Constant(_PresetValue):
     """ Inerhit if feature value may not change """
-    #_val = "VALUE"
     def matches(self,*args,**xargs): return False
-    def unset(self): pass
     def store(self,*args,**xargs): pass
 
 
@@ -282,7 +291,7 @@ class QuickSelect(SelectFeature):
 
 class QuickSelectStore(_Constant, QuickSelect):
     name = "Quick Select (save)"
-    _val = "(select)"
+    value = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
 
 class HDMIMonitor(SelectFeature):
