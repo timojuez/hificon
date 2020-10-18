@@ -275,7 +275,7 @@ class Surround(SelectFeature):
     }
     
 class QuickSelect(SelectFeature):
-    name = "Quick Select"
+    name = "Quick Select (load)"
     function="MSQUICK"
     call="MSQUICK ?"
     translation = {str(n+1):str(n+1) for n in range(5)}
