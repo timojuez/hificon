@@ -82,7 +82,10 @@ class FeatureInterface(object):
     type = object # value data type, e.g. int, bool, str
     
     def matches(self, cmd):
-        """ return True if cmd shall be parsed with this class """
+        """
+        @cmd: line received from amp
+        return True if cmd shall be parsed with this class
+        """
         raise NotImplementedError()
         
     def decode(self, cmd):
