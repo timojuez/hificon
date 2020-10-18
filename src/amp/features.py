@@ -128,8 +128,9 @@ class AsyncFeature(FeatureInterface):
         
     def unset(self): self.__dict__.pop("_val",None); self._polled = False
     
-    def async_poll(self):
-        if self._polled: return
+    def async_poll(self, force=False):
+        """ poll feature value if not polled before or force is True """
+        if self._polled and not force: return
         self._polled = True
         return self.amp.send(self.call)
     
@@ -163,12 +164,12 @@ class SynchronousFeature(AsyncFeature):
                 return self._val
         finally: self._poll_lock.release()
         
-    def poll(self):
+    def poll(self, force=False):
         """ synchronous poll """
         e = Event()
         def poll_event(self): e.set()
         require(self.attr)(poll_event)(self)
-        self.async_poll()
+        self.async_poll(force)
         if not e.wait(timeout=MAX_CALL_DELAY):
             if self.default_value: return self.store(self.default_value)
             else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
