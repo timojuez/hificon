@@ -30,6 +30,14 @@ class _Translation:
         return {val:key for key,val in self.translation.items()}.get(val,val)
 
 
+class _Constant:
+    """ Inerhit if feature value may not change """
+    #_val = "VALUE"
+    def matches(self,*args,**xargs): return False
+    def unset(self): pass
+    def store(self,*args,**xargs): pass
+
+
 ######### Data Types
 
 class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
@@ -272,11 +280,10 @@ class QuickSelect(SelectFeature):
     call="MSQUICK ?"
     translation = {str(n+1):str(n+1) for n in range(5)}
 
-class QuickSelectStore(QuickSelect):
+class QuickSelectStore(_Constant, QuickSelect):
     name = "Quick Select (save)"
+    _val = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
-    def decode(self, val): return "(select)"
-    def get(self): return self.decode(None)
 
 class HDMIMonitor(SelectFeature):
     name =" HDMI Monitor auto detection"
