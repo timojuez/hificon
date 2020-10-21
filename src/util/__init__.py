@@ -1,7 +1,7 @@
 import sys
+from .call_sequence import *
+from .function_bind import *
 
-def call_sequence(*functions):
-    return lambda *args,**xargs: [f(*args,**xargs) for f in functions]
 
 def log_call(func):
     """ object function decorator """

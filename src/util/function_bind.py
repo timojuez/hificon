@@ -11,7 +11,7 @@ Example:
     a.on_event() # output: 1\n2
 """
 
-from . import call_sequence
+from .call_sequence import *
 
 
 class Bindable(object):

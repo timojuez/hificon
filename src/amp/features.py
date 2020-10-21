@@ -2,7 +2,7 @@ import sys, traceback
 from contextlib import suppress
 from threading import Event, Lock
 from datetime import datetime, timedelta
-from ..util import call_sequence
+from ..util import call_sequence, Bindable
 from .amp_type import AmpType
 
 
@@ -99,7 +99,7 @@ class FeatureInterface(object):
     def on_change(self, old, new): pass
 
 
-class AsyncFeature(FeatureInterface):
+class AsyncFeature(FeatureInterface, Bindable):
     """
     An attribute of the amplifier
     High level telnet protocol communication
