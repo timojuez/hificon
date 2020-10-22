@@ -45,6 +45,8 @@ class DummyAmp:
 
     def query(self, cmd, matches=None):
         r = None
+
+        # cmd is a request
         for attr, f in self.features.items():
             if f.call == cmd:
                 if not f.isset():
@@ -55,12 +57,14 @@ class DummyAmp:
                 if matches and matches(encoded) or f.matches(encoded):
                     if r is None: r = encoded
         if r is not None: return r
+
+        # cmd is a command
         for attr, f in self.features.items():
             if matches and matches(cmd) or f.matches(cmd):
-                f.consume(cmd)
+                self.on_receive_raw_data(cmd)
                 encoded = f.encode(f.get())
-                self.on_receive_raw_data(encoded)
                 r = encoded
+                break
         return r
     
 
