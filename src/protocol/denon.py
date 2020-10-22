@@ -284,8 +284,8 @@ class MainZoneSleep(IntFeature):
     max = 120
     name = "Main Zone Sleep (minutes)"
     function = "SLP"
-    def encode(self, val): return super().encode({0:"OFF"}.get(val,val))
-    def decode(self, val): return super().encode({"OFF":0}.get(val,val))
+    def encodeVal(self, val): return "OFF" if val==0 else super().encodeVal(val)
+    def decodeVal(self, val): return 0 if val=="OFF" else super().decodeVal(val)
     
 
 class Surround(SelectFeature):
