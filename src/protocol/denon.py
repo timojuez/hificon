@@ -277,7 +277,7 @@ class DigitalInput(SelectFeature):
 class VideoSelect(SelectFeature):
     name =" Video Select Mode"
     function = "SV"
-    translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel"}
+    translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel", "OFF":"Off"}
 
 class MainZoneSleep(IntFeature):
     min = 0 # 1..120, 0 will send "OFF"
@@ -301,7 +301,7 @@ class QuickSelect(SelectFeature):
     name = "Quick Select (load)"
     function="MSQUICK"
     call="MSQUICK ?"
-    translation = {str(n+1):str(n+1) for n in range(5)}
+    translation = {"0":"(None)", **{str(n+1):str(n+1) for n in range(5)}}
 
 class QuickSelectStore(_Constant, QuickSelect):
     name = "Quick Select (save)"
@@ -398,7 +398,7 @@ class RefLevel(SelectFeature):
 class DynVol(SelectFeature):
     name = "Dynamic Volume"
     function = "PSDYNVOL "
-    translation = {"NGT":"Midnight", "EVE":"Evening", "DAY":"Day"}
+    translation = {"NGT":"Midnight", "EVE":"Evening", "DAY":"Day", "OFF":"Off"}
     
 class AudysseyDsx(SelectFeature):
     name = "Audyssey DSX"
