@@ -1,4 +1,4 @@
-import wx, tempfile, os
+import wx, tempfile, os, sys
 from threading import Timer
 from ..util.function_bind import Bindable
 from . import gauge_notification
@@ -150,7 +150,11 @@ def loadgtk():
         if not GLib.MainLoop().is_running(): GLib.MainLoop().run()
 
 
-    class Notification(_Notification, Notify.Notification): pass
+    class Notification(_Notification, Notify.Notification):
+
+        def show(self, *args, **xargs):
+            try: return super().show(*args,**xargs)
+            except GLib.Error as e: print(repr(e), file=sys.stderr)
 
 
     class Icon(_Icon):
