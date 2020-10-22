@@ -294,6 +294,8 @@ class Surround(SelectFeature):
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual",
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "MULTI CH IN":"Multi Channel In", #undocumented
     }
+    def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
+    
     
 class QuickSelect(SelectFeature):
     name = "Quick Select (load)"
@@ -318,12 +320,15 @@ class Asp(SelectFeature):
     call = "VSASP ?"
     translation = {"NRM":"Normal", "FUL":"Full"}
     
-class Resolution(SelectFeature):
+class _Resolution(SelectFeature):
+    translation = {"48P":"480p/576p", "10I":"1080i", "72P":"720p", "10P":"1080p", "10P24":"1080p:24Hz", "AUTO":"Auto"}
+
+class Resolution(_Resolution):
     function = "VSSC"
     call = "VSSC ?"
-    translation = {"48P":"480p/576p", "10I":"1080i", "72P":"720p", "10P":"1080p", "10P24":"1080p:24Hz", "AUTO":"Auto"}
+    def matches(self, data): return super().matches(data) and not data.startswith("VSSCH")
     
-class HDMIResolution(Resolution):
+class HDMIResolution(_Resolution):
     name = "HDMI Resolution"
     function = "VSSCH"
     call = "VSSCH ?"
