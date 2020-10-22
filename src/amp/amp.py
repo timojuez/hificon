@@ -113,7 +113,7 @@ class _AbstractAmp(Bindable, AmpType):
         
     def mainloop_hook(self):
         """ This will be called regularly by mainloop """
-        raise NotImplementedError()
+        pass
     
     
 class FeaturesMixin(object):
@@ -237,6 +237,7 @@ class TelnetAmp(AbstractAmp):
             self._telnet.close()
 
     def mainloop_hook(self):
+        super().mainloop_hook()
         if not self.connected: self.connect(-1)
         try: data = self.read(5)
         except ConnectionError: pass
