@@ -9,24 +9,25 @@ from .amp_type import AmpType
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 
 
-def require(*features):
+def require(*features, timeout=MAX_CALL_DELAY):
     """
     Decorator that states which amp features have to be loaded before calling the function.
     Call might be delayed until the feature values have been set.
+    Skip call if delay is longer than @timeout seconds.
     Can be used in Amp or AmpEvents.
     Example: @require("volume","muted")
     """
-    return lambda func: lambda *args,**xargs: FunctionCall(features, func, args, xargs)
+    return lambda func: lambda *args,**xargs: FunctionCall(features, func, args, xargs, timeout)
 
 
 class FunctionCall(object):
     """ Function call that requires features. Drops call if no connection """
 
-    def __init__(self, features, func, args=set(), kwargs={}):
+    def __init__(self, features, func, args=set(), kwargs={}, timeout=MAX_CALL_DELAY):
         self._func = func
         self._args = args
         self._kwargs = kwargs
-        self._time = datetime.now()
+        self._timeout = datetime.now()+timedelta(seconds=timeout) if timeout != None else None
         self.amp = self._find_amp(args)
         if not self.amp or not self.amp.connected: return
         try: self._features = [self.amp.features[name] for name in features]
@@ -60,7 +61,7 @@ class FunctionCall(object):
         with suppress(ValueError): self.amp._pending.remove(self)
         
     def check_expiration(self):
-        if self._time+timedelta(seconds=MAX_CALL_DELAY) < datetime.now():
+        if self._timeout and self._timeout < datetime.now():
             if self.amp.verbose > 1: print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
