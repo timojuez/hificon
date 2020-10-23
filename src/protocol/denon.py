@@ -68,7 +68,8 @@ class IntFeature(DenonFeature, features.IntFeature):
     max = 99
     
     def encodeVal(self, val):
-        digits = math.ceil(math.log(self.max+1,10))
+        longestValue = max(abs(self.max),abs(self.min))
+        digits = math.ceil(math.log(longestValue+1,10))
         return ("%%0%dd"%digits)%val
     
     def decodeVal(self, val): return int(val)
@@ -435,7 +436,12 @@ class DynCompression(SelectFeature):
     name = "Dynamic Compression"
     translation = {"LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
-class LFE(IntFeature): function = "PSLFE "
+class LFE(IntFeature):
+    function = "PSLFE "
+    min=-10
+    max=0
+    def decodeVal(self, val): return super().decodeVal(val)*-1
+    def encodeVal(self, val): return super().encodeVal(val*-1)
 
 class Effect(IntFeature):
     name = "Effect Level"
