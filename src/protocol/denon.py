@@ -591,6 +591,10 @@ class LfeLowpass(SelectFeature): #undocumented
     translation = {x:"%d Hz"%int(x) 
         for x in ["080","090","100","110","120","150","200","250"]}
 
+class Display(SelectFeature):
+    function = "DIM "
+    translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
+
 
 features = dict(
         maxvol = Maxvol,
@@ -686,6 +690,7 @@ features = dict(
         crossover_surround_atmos = CrossoverSurroundAtmos,
         subwoofer_mode = SubwooferMode,
         lfe_lowpass = LfeLowpass,
+        display = Display,
         # TODO: implement PV
 )
 
