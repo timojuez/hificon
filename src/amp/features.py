@@ -209,3 +209,19 @@ class FloatFeature(NumericFeature):
         return super().set((float(value) if isinstance(value, int) else value), force)
 
 
+class PresetValue:
+    """ Inherit if feature value shall have a preset value. Set value in inherited class. """
+    value = None
+
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
+        self._val = self.value
+    def get(self): return self._val # skip amp.connected check; TODO: move this to features.py.AsyncFeature.get
+    def unset(self): self._val = self.value
+
+
+class Constant(PresetValue):
+    """ Inerhit if feature value may not change """
+    def matches(self,*args,**xargs): return False
+    def store(self,*args,**xargs): pass
+

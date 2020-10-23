@@ -30,23 +30,6 @@ class _Translation:
         return {val:key for key,val in self.translation.items()}.get(val,val)
 
 
-class _PresetValue:
-    """ Inherit if feature value shall have a preset value. Set value in inherited class. """
-    value = None
-
-    def __init__(self,*args,**xargs):
-        super().__init__(*args,**xargs)
-        self._val = self.value
-    def get(self): return self._val # skip amp.connected check; TODO: move this to features.py.AsyncFeature.get
-    def unset(self): self._val = self.value
-
-
-class _Constant(_PresetValue):
-    """ Inerhit if feature value may not change """
-    def matches(self,*args,**xargs): return False
-    def store(self,*args,**xargs): pass
-
-
 ######### Data Types
 
 class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
@@ -137,7 +120,7 @@ class Maxvol(FloatFeature): #undocumented
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
     def on_change(self, old, new): self.amp.features["volume"].max = new
 
-class VolumeLimit(_PresetValue, SelectFeature): #undocumented
+class VolumeLimit(features.PresetValue, SelectFeature): #undocumented
     name = "Volume Limit"
     function="SSVCTZMALIM "
     value = "(select)"
@@ -313,7 +296,7 @@ class QuickSelect(SelectFeature):
     call="MSQUICK ?"
     translation = {"0":"(None)", **{str(n+1):str(n+1) for n in range(5)}}
 
-class QuickSelectStore(_Constant, QuickSelect):
+class QuickSelectStore(features.Constant, QuickSelect):
     name = "Quick Select (save)"
     value = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
