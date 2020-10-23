@@ -78,9 +78,12 @@ class FunctionCall(object):
         
 
 class FeatureInterface(object):
+    name = "Short description"
+    category = "Other"
     call = None
     default_value = None #if no response
     type = object # value data type, e.g. int, bool, str
+    
     
     def matches(self, cmd):
         """

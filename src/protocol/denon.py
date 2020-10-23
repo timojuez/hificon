@@ -108,12 +108,14 @@ class LooseBoolFeature(BoolFeature):
 ######### Features implementation (see Denon CLI protocol)
 
 class Volume(FloatFeature):
+    category = "Volume"
     function = "MV"
     def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
     def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
     
 class Maxvol(FloatFeature): #undocumented
     name = "Max. Vol."
+    category = "Volume"
     function="MVMAX "
     call="MV?"
     default_value = 98
@@ -122,6 +124,7 @@ class Maxvol(FloatFeature): #undocumented
 
 class VolumeLimit(features.PresetValue, SelectFeature): #undocumented
     name = "Volume Limit"
+    category = "Volume"
     function="SSVCTZMALIM "
     value = "(select)"
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
@@ -131,6 +134,7 @@ class VolumeLimit(features.PresetValue, SelectFeature): #undocumented
     #def poll(self,*args,**xargs): self.amp.features["maxvol"].poll(,*args,**xargs)
 
 class _SpeakerConfig(SelectFeature):
+    category = "Speakers"
     call = "SSSPC ?"
     translation = {"SMA":"Small","LAR":"Large","NON":"None"}
 
@@ -184,9 +188,12 @@ class Power(BoolFeature):
         except KeyError: return
         else: return func()
     
-class Muted(BoolFeature): function = "MU"
+class Muted(BoolFeature):
+    category = "Volume"
+    function = "MU"
 
 class Source(SelectFeature):
+    category = "Input"
     function = "SI"
     # TODO: options
 
@@ -195,7 +202,9 @@ class Name(SelectFeature): #undocumented
     options = property(lambda self:[self.get()])
     def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
 
-class _ChannelVolume(RelativeFloat): call = "CV?"
+class _ChannelVolume(RelativeFloat):
+    category = "Options for Input"
+    call = "CV?"
 
 class FrontLeftVolume(_ChannelVolume):
     name = "Front L Volume"
@@ -259,16 +268,19 @@ class RecSelect(SelectFeature):
 
 class InputMode(SelectFeature):
     name = "Input Mode"
+    category = "Input"
     translation = {"AUTO":"Auto", "HDMI":"HDMI", "DIGITAL":"Digital", "ANALOG": "Analog"}
     function = "SD"
 
 class DigitalInput(SelectFeature):
     name = "Digital Input"
+    category = "Input"
     function = "DC"
     translation = {"AUTO":"Auto", "PCM": "PCM", "DTS":"DTS"}
     
 class VideoSelect(SelectFeature):
     name =" Video Select Mode"
+    category = "Video"
     function = "SV"
     translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel", "OFF":"Off"}
 
@@ -283,6 +295,7 @@ class MainZoneSleep(IntFeature):
 
 class Surround(SelectFeature):
     name = "Surround Mode"
+    category = "Options for Input"
     function = "MS"
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual",
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "M CH IN+NEURAL:X": "Multi Channel In + DTS Neural:X", "M CH IN+VIRTUAL:X":"Multi Channel In + DTS Virtual:X", "MULTI CH IN":"Multi Channel In", #undocumented
@@ -303,6 +316,7 @@ class QuickSelectStore(features.Constant, QuickSelect):
 
 class HDMIMonitor(SelectFeature):
     name =" HDMI Monitor auto detection"
+    category = "Video"
     function = "VSMONI"
     call = "VSMONI ?"
     translation = {"MONI1":"OUT-1", "MONI2":"OUT-2"}
@@ -314,6 +328,7 @@ class Asp(SelectFeature):
     translation = {"NRM":"Normal", "FUL":"Full"}
     
 class _Resolution(SelectFeature):
+    category = "Video"
     translation = {"48P":"480p/576p", "10I":"1080i", "72P":"720p", "10P":"1080p", "10P24":"1080p:24Hz", "AUTO":"Auto"}
 
 class Resolution(_Resolution):
@@ -328,17 +343,20 @@ class HDMIResolution(_Resolution):
 
 class HDMIAudioOut(SelectFeature):
     name = "HDMI Audio Output"
+    category = "Video"
     function = "VSAUDIO "
     translation = {"AMP":"to Amp", "TV": "to TV"}
     
 class VideoProcessing(SelectFeature):
     name = "Video Processing Mode"
+    category = "Video"
     function = "VSVPM"
     call = "VSVPM ?"
     translation = {"AUTO":"Auto", "GAME":"Game", "MOVI": "Movie"}
     
 class ToneCtrl(BoolFeature):
     name = "Tone Control"
+    category = "Options for Input"
     function = "PSTONE CTRL "
     
 class SurroundBackMode(SelectFeature):
@@ -375,26 +393,31 @@ class SpeakerOutput(SelectFeature):
     
 class MultiEQ(SelectFeature):
     name = "MultiEQ XT mode"
+    category = "Audyssey"
     function = "PSMULTEQ:"
     call = "PSMULTEQ: ?"
     translation = {"AUDYSSEY":"Audyssey", "BYP.LR":"L/R Bypass", "FLAT":"Flat", "MANUAL":"Manual", "OFF":"Off"}
     
 class DynEq(BoolFeature):
     name = "Dynamic Eq"
+    category = "Audyssey"
     function = "PSDYNEQ "
     
 class RefLevel(SelectFeature):
     name = "Reference Level"
+    category = "Audyssey"
     function = "PSREFLEV "
     translation = {"0":"0dB","5":"5dB","10":"10dB","15":"15dB"}
     
 class DynVol(SelectFeature):
     name = "Dynamic Volume"
+    category = "Audyssey"
     function = "PSDYNVOL "
     translation = {"NGT":"Midnight", "EVE":"Evening", "DAY":"Day", "OFF":"Off"}
     
 class AudysseyDsx(SelectFeature):
     name = "Audyssey DSX"
+    category = "Audyssey"
     function = "PSDSX "
     translation = {"ONH":"On (Height)", "ONW":"On (Wide)","OFF":"Off"}
     
@@ -406,9 +429,13 @@ class StageHeight(IntFeature):
     function = "PSSTH "
     name = "Stage Height"
     
-class Bass(RelativeInt): function = "PSBAS "
+class Bass(RelativeInt):
+    category = "Options for Input"
+    function = "PSBAS "
     
-class Treble(RelativeInt): function = "PSTRE "
+class Treble(RelativeInt):
+    category = "Options for Input"
+    function = "PSTRE "
     
 class DRC(SelectFeature):
     function = "PSDRC "
@@ -420,6 +447,7 @@ class DynCompression(SelectFeature):
     translation = {"LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
 class LFE(IntFeature):
+    category = "Audio"
     function = "PSLFE "
     min=-10
     max=0
@@ -431,6 +459,7 @@ class Effect(IntFeature):
     function = "PSEFF "
     
 class Delay(IntFeature):
+    category = "Audio"
     max=999
     function = "PSDEL "
     name = "Delay"
@@ -451,9 +480,13 @@ class CenterImage(IntFeature):
     name = "Center Image"
     function = "PSCEI "
     
-class Subwoofer(BoolFeature): function = "PSSWR "
+class Subwoofer(BoolFeature):
+    category = "Bass"
+    function = "PSSWR "
 
 class _SubwooferAdjustment: #undocumented
+    category = "Bass"
+    #category = "Audio"
     function = "PSSWL "
     name = "Subwoofer Adjustment"
 
@@ -462,6 +495,7 @@ class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
 class SubwooferAdjustment(_SubwooferAdjustment,LooseFloatFeature): pass
 
 class _DialogLevel: #undocumented
+    category = "Audio"
     function = "PSDIL "
     name = "Dialog Level"
 
@@ -476,11 +510,13 @@ class RoomSize(SelectFeature):
     
 class AudioDelay(IntFeature):
     name = "Audio Delay"
+    category = "Audio"
     max = 999
     function  ="PSDELAY "
 
 class Restorer(SelectFeature):
     name = "Audio Restorer"
+    category = "Audio"
     function = "PSRSTR "
     translation = {"OFF":"Off", "MODE1":"Mode 1", "MODE2":"Mode 2", "MODE3":"Mode 3"}
     
@@ -491,11 +527,13 @@ class FrontSpeaker(SelectFeature):
     
 class Crossover(SelectFeature): #undocumented
     name = "Crossover Speaker Select"
+    category = "Bass"
     function = "SSCFR "
     translation = {"ALL":"All","IDV":"Individual"}
     def matches(self, data): return super().matches(data) and "END" not in data
 
 class _Crossover(SelectFeature): #undocumented
+    category = "Bass"
     call = "SSCFR ?"
     translation = {x:"%d Hz"%int(x)
         for x in ["040","060","080","090","100","110","120","150","200","250"]}
@@ -542,11 +580,13 @@ class CrossoverSurroundAtmos(_Crossover): #undocumented
 
 class SubwooferMode(SelectFeature): #undocumented
     name = "Subwoofer Mode"
+    category = "Bass"
     function = "SSSWM "
     translation = {"L+M":"LFE + Main", "LFE":"LFE"}
     
 class LfeLowpass(SelectFeature): #undocumented
     name = "LFE Lowpass Freq."
+    category = "Bass"
     function = "SSLFL "
     translation = {x:"%d Hz"%int(x) 
         for x in ["080","090","100","110","120","150","200","250"]}
