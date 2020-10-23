@@ -78,6 +78,15 @@ class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
     translation = {"ON":True,"OFF":False}
     
 
+class RelativeInt(IntFeature):
+    min = -6
+    max = 6
+    default_value = 0
+    
+    def encodeVal(self, val): return super().encodeVal(val+50)
+    def decodeVal(self, val): return super().decodeVal(val)-50
+    
+
 class RelativeFloat(FloatFeature):
     min = -12
     max = 12
@@ -413,9 +422,9 @@ class StageHeight(IntFeature):
     function = "PSSTH "
     name = "Stage Height"
     
-class Bass(IntFeature): function = "PSBAS "
+class Bass(RelativeInt): function = "PSBAS "
     
-class Treble(IntFeature): function = "PSTRE "
+class Treble(RelativeInt): function = "PSTRE "
     
 class DRC(SelectFeature):
     function = "PSDRC "
