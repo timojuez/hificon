@@ -500,6 +500,68 @@ class FrontSpeaker(SelectFeature):
     function = "PSFRONT"
     translation = {" SPA":"A"," SPB":"B"," A+B":"A+B"}
     
+class Crossover(SelectFeature): #undocumented
+    name = "Crossover Speaker Select"
+    function = "SSCFR "
+    translation = {"ALL":"All","IDV":"Individual"}
+    def matches(self, data): return super().matches(data) and "END" not in data
+
+class _Crossover(SelectFeature): #undocumented
+    call = "SSCFR ?"
+    translation = {x:"%d Hz"%int(x)
+        for x in ["040","060","080","090","100","110","120","150","200","250"]}
+
+class CrossoverAll(_Crossover): #undocumented
+    name = "Crossover (all)"
+    function = "SSCFRALL "
+    
+class CrossoverFront(_Crossover): #undocumented
+    name = "Crossover (front)"
+    function = "SSCFRFRO "
+    
+class CrossoverSurround(_Crossover): #undocumented
+    name = "Crossover (surround)"
+    function = "SSCFRSUA "
+
+class CrossoverCenter(_Crossover): #undocumented
+    name = "Crossover (center)"
+    function = "SSCFRCEN "
+
+class CrossoverSurroundBack(_Crossover): #undocumented
+    name = "Crossover (surround back)"
+    function = "SSCFRSBK "
+
+class CrossoverFrontHeight(_Crossover): #undocumented
+    name = "Crossover (front height)"
+    function = "SSCFRFRH "
+
+class CrossoverTopFront(_Crossover): #undocumented
+    name = "Crossover (top front)"
+    function = "SSCFRTFR "
+
+class CrossoverTopMiddle(_Crossover): #undocumented
+    name = "Crossover (top middle)"
+    function = "SSCFRTPM "
+
+class CrossoverFrontAtmos(_Crossover): #undocumented
+    name = "Crossover (front atmos)"
+    function = "SSCFRFRD "
+
+class CrossoverSurroundAtmos(_Crossover): #undocumented
+    name = "Crossover (surround atmos)"
+    function = "SSCFRSUD "
+
+class SubwooferMode(SelectFeature): #undocumented
+    name = "Subwoofer Mode"
+    function = "SSSWM "
+    translation = {"L+M":"LFE + Main", "LFE":"LFE"}
+    
+class LfeLowpass(SelectFeature): #undocumented
+    name = "LFE Lowpass Freq."
+    function = "SSLFL "
+    translation = {x:"%d Hz"%int(x) 
+        for x in ["080","090","100","110","120","150","200","250"]}
+
 
 features = dict(
         maxvol = Maxvol,
@@ -582,6 +644,19 @@ features = dict(
         surround_atmos_speaker_config = SurroundAtmosSpeakerConfig,
         subwoofer_speaker_config = SubwooferSpeakerConfig,
         volume_limit = VolumeLimit,
+        crossover = Crossover,
+        crossover_all = CrossoverAll,
+        crossover_front = CrossoverFront,
+        crossover_surround = CrossoverSurround,
+        crossover_center = CrossoverCenter,
+        crossover_surround_back = CrossoverSurroundBack,
+        crossover_front_height = CrossoverFrontHeight,
+        crossover_top_front = CrossoverTopFront,
+        crossover_top_middle = CrossoverTopMiddle,
+        crossover_front_atmos = CrossoverFrontAtmos,
+        crossover_surround_atmos = CrossoverSurroundAtmos,
+        subwoofer_mode = SubwooferMode,
+        lfe_lowpass = LfeLowpass,
         # TODO: implement PV
 )
 
