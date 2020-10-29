@@ -25,7 +25,7 @@ def bind_widget_to_feature(f, get_from_widget, set_to_widget):
     
     """
     lock = Lock()
-    def on_user_change(*args):
+    def on_widget_change(*args):
         if lock.locked(): return
         new = get_from_widget(*args)
         with lock: set_to_widget(f.get())
@@ -35,7 +35,7 @@ def bind_widget_to_feature(f, get_from_widget, set_to_widget):
         with lock: set_to_widget(new)
     set_to_widget(f.get())
     f.bind(on_change=on_feature_change)
-    return on_user_change
+    return on_widget_change
 
 
 class TabPanel(TabbedPanelItem): pass
@@ -64,7 +64,6 @@ class Menu(TabbedPanel):
 
     def __init__(self, amp, **kwargs):
         super().__init__(**kwargs)
-        #self.SetTitle(self.GetTitle()%dict(name=NAME, amp=amp.name))
         tabs = {}
         self.features = {}
         for key, f in amp.features.items():
