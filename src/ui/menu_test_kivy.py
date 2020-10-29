@@ -113,25 +113,26 @@ class Menu(TabbedPanel):
         self.features[key]["checkboxes"]["objects"].append(row.ids.checkbox)
         return row
         
-    def _addNumericFeature(self, f, tostr=lambda n:"%d"%n, toint=lambda n:int(n), fromint=lambda n:n):
+    def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
+        if step: panel.ids.slider.step = step
         
-        def get(inst, value): return fromint(panel.ids.slider.value)
+        def get(inst, value): return from_widget(panel.ids.slider.value)
         def set(value):
-            panel.ids.slider.value = toint(value)
-            panel.ids.slider.max = toint(f.max)
-            panel.ids.slider.min = toint(f.min)
-            panel.ids.label.text = tostr(value)
+            panel.ids.slider.value = value
+            panel.ids.slider.max = f.max
+            panel.ids.slider.min = f.min
+            panel.ids.label.text = str(value)
 
         on_change = bind_widget_to_feature(f,get,set)
         panel.ids.slider.bind(value=on_change)
         return panel
     
     def addIntFeature(self, f):
-        return self._addNumericFeature(f)
+        return self._addNumericFeature(f, from_widget=lambda n:int(n), step=1)
         
     def addFloatFeature(self, f):
-        return self._addNumericFeature(f,tostr=lambda n:"%0.1f"%n,toint=lambda n:n*2,fromint=lambda n:n/2)
+        return self._addNumericFeature(f, step=.5)
 
     def addBoolFeature(self, f):
         switch = Switch()
