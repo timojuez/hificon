@@ -180,6 +180,7 @@ class SubwooferSpeakerConfig(_SpeakerConfig): #undocumented
     translation = {"YES":"Yes","NO":"No"}
     
 class Power(BoolFeature):
+    category = "Misc"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
     
@@ -203,7 +204,7 @@ class Name(SelectFeature): #undocumented
     def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
 
 class _ChannelVolume(RelativeFloat):
-    category = "Options for Input"
+    category = "Volume"
     call = "CV?"
 
 class FrontLeftVolume(_ChannelVolume):
@@ -295,7 +296,7 @@ class MainZoneSleep(IntFeature):
 
 class Surround(SelectFeature):
     name = "Surround Mode"
-    category = "Options for Input"
+    category = "Misc"
     function = "MS"
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual",
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "M CH IN+NEURAL:X": "Multi Channel In + DTS Neural:X", "M CH IN+VIRTUAL:X":"Multi Channel In + DTS Virtual:X", "MULTI CH IN":"Multi Channel In", #undocumented
@@ -356,7 +357,7 @@ class VideoProcessing(SelectFeature):
     
 class ToneCtrl(BoolFeature):
     name = "Tone Control"
-    category = "Options for Input"
+    category = "Misc"
     function = "PSTONE CTRL "
     
 class SurroundBackMode(SelectFeature):
@@ -430,11 +431,11 @@ class StageHeight(IntFeature):
     name = "Stage Height"
     
 class Bass(RelativeInt):
-    category = "Options for Input"
+    category = "Misc"
     function = "PSBAS "
     
 class Treble(RelativeInt):
-    category = "Options for Input"
+    category = "Misc"
     function = "PSTRE "
     
 class DRC(SelectFeature):
@@ -527,13 +528,13 @@ class FrontSpeaker(SelectFeature):
     
 class Crossover(SelectFeature): #undocumented
     name = "Crossover Speaker Select"
-    category = "Bass"
+    category = "Speakers"
     function = "SSCFR "
     translation = {"ALL":"All","IDV":"Individual"}
     def matches(self, data): return super().matches(data) and "END" not in data
 
 class _Crossover(SelectFeature): #undocumented
-    category = "Bass"
+    category = "Speakers"
     call = "SSCFR ?"
     translation = {x:"%d Hz"%int(x)
         for x in ["040","060","080","090","100","110","120","150","200","250"]}
