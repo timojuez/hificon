@@ -1,0 +1,81 @@
+<Menu>:
+    default_tab_text: "Pinned"
+    default_tab: pinned
+    TabPanel:
+        id: pinned
+        text: "Pinned"
+    TabPanel:
+        id: all
+        text: "All"
+
+
+<TabPanel>:
+    ScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+        
+        ScrollViewLayout:
+            id: layout
+
+
+<ScrollViewLayout>:
+    cols: 1
+    size_hint_y: None
+
+
+<FeatureRow>:
+    cols: 3
+    size_hint_y: None
+
+    AnchorLayout:
+        anchor_y: 'center'
+        size_hint: 0.4, None
+        padding: 20
+
+        Label:
+            id: text
+            
+            text_size: self.width, None
+            height: self.texture_size[1]
+            
+            #pos_hint: {'right': 1}
+            #size_hint_x: 0.4
+            #size_hint_x: None
+            #halign: 'left'
+            #on_texture_size: text.setter('size')
+            #on_size: text.setter('size')
+            #text_size: self.size
+    BoxLayout:
+        id: content
+
+    AnchorLayout:
+        anchor_x: 'center'
+        size_hint_x: 0.4
+        CheckBox:
+            id: checkbox
+            size_hint_x: None
+            width: 50
+
+
+<NumericFeature>:
+    cols: 2
+
+    Slider:
+        id: slider
+        
+    Label:
+        id: label
+        text: str(slider.value)
+        size_hint_x: None
+        width: 50
+        
+
+<SelectFeatureOption>:
+    size_hint_y: None
+    height: 44
+
+
+<SelectFeatureOptions>:
+
+<SelectFeature>:
+    
