@@ -111,8 +111,6 @@ class Menu(TabbedPanel):
                     c.active = active
         row.ids.checkbox.bind(active=on_checkbox)
         
-        #on_feature_change(None, f.get())
-        #f.bind(on_change=on_feature_change)
         self.features[key]["checkboxes"]["objects"].append(row.ids.checkbox)
         return row
         
@@ -125,23 +123,8 @@ class Menu(TabbedPanel):
             panel.ids.slider.max = toint(f.max)
             panel.ids.slider.min = toint(f.min)
             panel.ids.label.text = tostr(value)
-        def on_feature_change(old, new):
-            panel.ids.slider.value = toint(new)
-            panel.ids.slider.max = toint(f.max)
-            panel.ids.slider.min = toint(f.min)
-            panel.ids.label.text = tostr(new)
-        def on_change(instance,value):
-            old = f.get()
-            new = fromint(panel.ids.slider.value)
-            on_feature_change(None, f.get())
-            try: f.set(new)
-            except Exception as e:
-                print(repr(e))
 
         on_change = bind_widget_to_feature(f,get,set)
-        #on_feature_change(None, f.get())
-        #f.bind(on_change=on_feature_change)
-        
         panel.ids.slider.bind(value=on_change)
         return panel
     
@@ -157,18 +140,9 @@ class Menu(TabbedPanel):
         
         def get(inst, value): return switch.active
         def set(value): switch.active = value
-        
-        def on_feature_change(old,new):
-            with lock: switch.active = new
-        def on_change(instance,value):
-            if lock.locked(): return
-            with lock: switch.active = not switch.active
-            f.set(not switch.active)
-        
+
         on_change = bind_widget_to_feature(f,get,set)
-        #on_feature_change(None, f.get())
         switch.bind(active=on_change)
-        #f.bind(on_change=on_feature_change)
         return switch
 
     def addSelectFeature(self, f):
@@ -185,16 +159,9 @@ class Menu(TabbedPanel):
         
         def get(inst, value): return value
         def set(value): button.text = value
-        
-        def on_feature_change(old, new): button.text = new
-        def on_change(instance, value):
-            try: f.set(value)
-            except Exception as e: print(repr(e))
 
         on_change = bind_widget_to_feature(f,get,set)
         #dropdown.bind(on_select=on_change)
-        ##on_feature_change(None, f.get())
-        ##f.bind(on_change=on_feature_change)
 
         return button
 
