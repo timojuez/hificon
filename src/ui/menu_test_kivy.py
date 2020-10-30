@@ -119,8 +119,7 @@ class Menu(TabbedPanel):
         
         def get(inst, value): return from_widget(panel.ids.slider.value)
         def set(value):
-            panel.ids.slider.max = f.max
-            panel.ids.slider.min = f.min
+            panel.ids.slider.range = (f.min, f.max)
             panel.ids.slider.value = value
             panel.ids.label.text = str(value)
 
