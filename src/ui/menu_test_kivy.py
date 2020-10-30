@@ -14,29 +14,38 @@ from ..amp import features
 from .. import Amp, NAME
 
 
-def bind_widget_to_feature(f, get_from_widget, set_to_widget):
+def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_setter):
     """
-    Binds a widget with given getter and setter to a feature value.
-    Returns the function that shall be bound to the widget on_change event.
-    @f Feature object
-    @get_from_widget: callable
-    @set_to_widget: callable(new value)
-    @returns: callable on_change(*a) will call get_from_widget(*a)
-    
+    Binds a widget with given getter and setter asynchronously to a value so that 
+        the widget always stays synchronised with the value.
+    Returns the functions that shall be called when the value resp. widget changes
+    @value_getter: callable
+    @value_setter: callable(new value)
+    @widget_getter: callable
+    @widget_setter: callable(new value)
+    @returns: (callable on_variable_change, callable on_widget_change)
+        on_value_change(*a) will call get_from_widget(*a)
     """
     lock = Lock()
     def on_widget_change(*args):
         if lock.locked(): return
-        new = get_from_widget(*args)
-        with lock: set_to_widget(f.get())
-        try: f.set(new)
+        new = widget_getter(*args)
+        with lock: widget_setter(value_getter())
+        try: value_setter(new)
         except Exception as e: print(repr(e))
-    def on_feature_change(old, new):
-        with lock: set_to_widget(new)
-    set_to_widget(f.get())
-    f.bind(on_change=on_feature_change)
-    return on_widget_change
+    def on_value_change(old, new):
+        with lock: widget_setter(new)
+    return on_value_change, on_widget_change
 
+def bind_widget_to_feature(f, widget_getter, widget_setter):
+    """ @f Feature object """
+    on_value_change, on_widget_change = bind_widget_to_value(
+        f.get, f.set, widget_getter, widget_setter)
+    
+    widget_setter(f.get())
+    f.bind(on_change=on_value_change)
+    return on_widget_change
+    
 
 class TabPanel(TabbedPanelItem): pass
 
