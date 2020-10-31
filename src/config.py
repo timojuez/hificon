@@ -10,6 +10,12 @@ class MyConfigParser(configparser.ConfigParser):
     
     def clear_sections(self):
         for s in self.sections(): self[s].clear()
+        
+    def getlist(self, section, option):
+        return list(map(lambda s:s.strip(), self[section][option].split(",")))
+        
+    def setlist(self, section, option, value):
+        self[section][option] = ", ".join(value)
     
     def save(self):
         with open(FILE,"w") as f:
