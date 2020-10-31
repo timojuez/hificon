@@ -45,7 +45,6 @@ class GaugeNotification(_Notification, gauge_notification.GaugeNotification):
     
     def __init__(self):
         frame = gauge_notification.Frame(None)
-        frame.SetPosition((wx.DisplaySize()[0]-frame.Size.GetWidth()-20, 170))
         super().__init__(frame)
     
     def set_timeout(self, t): self._timeout = t/1000
@@ -72,6 +71,7 @@ class GaugeNotification(_Notification, gauge_notification.GaugeNotification):
 
     @CallAfter
     def show(self):
+        self.GetParent().SetPosition((wx.DisplaySize()[0]-self.GetParent().Size.GetWidth()-20, 170))
         self.GetParent().Show(True)
         try: self._timer.cancel()
         except: pass
