@@ -9,6 +9,7 @@ from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
 
+from decimal import Decimal
 from threading import Lock
 from ..util.async_kivy import bind_widget_to_value
 from ..amp import features
@@ -85,7 +86,7 @@ class Menu(TabbedPanel):
         if f.type == bool: w = self.addBoolFeature(f)
         elif f.type == str: w = self.addSelectFeature(f)
         elif f.type == int: w = self.addIntFeature(f)
-        elif f.type == float: w = self.addFloatFeature(f)
+        elif f.type == Decimal: w = self.addDecimalFeature(f)
         else: raise RuntimeError("Not implemented: Type '%s'"%f.type)
         if w: row.ids.content.add_widget(w)
         
@@ -123,7 +124,7 @@ class Menu(TabbedPanel):
     def addIntFeature(self, f):
         return self._addNumericFeature(f, from_widget=lambda n:int(n), step=1)
         
-    def addFloatFeature(self, f):
+    def addDecimalFeature(self, f):
         return self._addNumericFeature(f, step=.5)
 
     def addBoolFeature(self, f):
