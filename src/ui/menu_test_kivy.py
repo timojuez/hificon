@@ -118,7 +118,6 @@ class Menu(TabbedPanel):
             if active: self.pinned.append(key)
             else: self.pinned.remove(key)
             config.setlist("GUI", "pinned", self.pinned)
-            config.save()
             with self.features[key]["checkboxes"]["lock"]:
                 if active: show_widget(self.features[key]["panel"])
                 else: hide_widget(self.features[key]["panel"])
