@@ -119,6 +119,7 @@ class _AbstractAmp(Bindable, AmpType):
 class FeaturesMixin(object):
     features = {}
     _pending = None
+    _polled = []
 
     def __init__(self,*args,**xargs):
         self._pending = []
@@ -135,6 +136,7 @@ class FeaturesMixin(object):
         else: super().__setattr__(name, value)
 
     def on_connect(self):
+        self._polled.clear()
         for f in self.features.values(): f.unset()
         super().on_connect()
     
@@ -167,7 +169,7 @@ class PreloadMixin:
         for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
         
 
-class SendOnceMixin(object):
+class SendOnceMixin(object): # TODO: move to Feature so that it affects f.set()
     """ prevent the same values from being sent to the amp in a row """
     _block_on_set = None
     
