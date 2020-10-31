@@ -136,8 +136,8 @@ class Menu(TabbedPanel):
             bf.ids.off.state = trans[not value]
 
         on_change = self.bind_widget_to_feature(f,get,set)
-        bf.ids.on.bind(on_release=on_change)
-        bf.ids.off.bind(on_release=on_change)
+        bf.ids.on.bind(on_press=on_change)
+        bf.ids.off.bind(on_press=on_change)
         return bf
 
     def addSelectFeature(self, f):
@@ -146,7 +146,7 @@ class Menu(TabbedPanel):
             o = SelectFeatureOption()
             o.text = text
             #o.bind(on_release=lambda i: dropdown.select(i.text))
-            o.bind(on_release=lambda i: on_change(o,i.text))
+            o.bind(on_press=lambda i: on_change(o,i.text))
             dropdown.add_widget(o)
         
         button = SelectFeature()
