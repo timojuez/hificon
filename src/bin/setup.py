@@ -29,14 +29,11 @@ class Main(object):
         
     def __call__(self):
         if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/n] "%FILE) != "y": return
-        config.clear_sections()
-        config.read([FILE])
         for arg, func in filter(lambda e: callable(e[1]), self.args._get_kwargs()):
             try: func()
             except Exception as e:
                 print("Exception in %s: %s"%(arg,repr(e)))
             print()
-        config.save()
         print("done. The service needs to be (re)started.")
         
 
