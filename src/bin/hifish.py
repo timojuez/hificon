@@ -2,6 +2,7 @@
 import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
+from decimal import Decimal
 from .. import Amp, amp, VERSION
 try: import readline
 except ImportError: pass
@@ -37,6 +38,7 @@ class CLI:
                 __query__ = self.query,
                 __return__ = matches,
                 __wait__ = .1,
+                Decimal = Decimal,
                 amp = self.amp,
                 help = self.print_help,
                 help_attr = self.print_help_attr,
