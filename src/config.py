@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 import os, configparser, pkgutil
+from decimal import Decimal
 from . import PKG_NAME
 
 FILE=os.path.expanduser("~/.%s.cfg"%PKG_NAME)
@@ -8,6 +9,9 @@ FILE=os.path.expanduser("~/.%s.cfg"%PKG_NAME)
 
 class ExtendedConfigParser(configparser.ConfigParser):
     
+    def __init__(self,*args,**xargs):
+        super().__init__(*args, converters={'decimal': Decimal}, **xargs)
+        
     def clear_sections(self):
         for s in self.sections(): self[s].clear()
         

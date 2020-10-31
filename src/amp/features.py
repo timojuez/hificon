@@ -1,5 +1,6 @@
 import sys, traceback
 from contextlib import suppress
+from decimal import Decimal
 from threading import Event, Lock
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
@@ -128,8 +129,8 @@ class AsyncFeature(FeatureInterface, Bindable):
     
     def set(self, value, force=False):
         if not force and not isinstance(value, self.type):
-            raise TypeError("Value %s is not of type %s."%(repr(value),self.type.__name__))
-        self.amp.send(self.encode(value))
+            print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
+        self.amp.send(self.encode(self.type(value)))
 
     def isset(self): return hasattr(self,'_val')
         
@@ -205,11 +206,11 @@ class SelectFeature(Feature):
         return super().set(value, force)
     
 
-class FloatFeature(NumericFeature):
-    type=float
+class DecimalFeature(NumericFeature):
+    type=Decimal
     
     def set(self, value, force=False):
-        return super().set((float(value) if isinstance(value, int) else value), force)
+        return super().set((Decimal(value) if isinstance(value, int) else value), force)
 
 
 class PresetValue:
