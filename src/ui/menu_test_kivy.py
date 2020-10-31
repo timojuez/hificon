@@ -160,9 +160,13 @@ class Menu(TabbedPanel):
 
 def show_widget(w):
     old_attrs = getattr(w,"_attrs",None)
-    if old_attrs: w.height, w.size_hint_y, w.opacity, w.disabled = old_attrs
+    if old_attrs:
+        w.height, w.size_hint_y, w.opacity, w.disabled = old_attrs
+        del w._attrs
     
 def hide_widget(w):
+    if hasattr(w, "_attrs"): raise RuntimeError(
+        "Widget's attribute '_attrs' is occupied or widget is already hidden!")
     w._attrs = w.height, w.size_hint_y, w.opacity, w.disabled
     w.height = 0
     w.size_hint_y = None
