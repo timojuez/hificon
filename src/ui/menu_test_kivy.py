@@ -112,8 +112,8 @@ class Menu(TabbedPanel):
         
         def get(inst, value): return from_widget(panel.ids.slider.value)
         def set(value):
-            panel.ids.slider.range = (f.min, f.max)
-            panel.ids.slider.value = value
+            panel.ids.slider.range = (float(f.min), float(f.max))
+            panel.ids.slider.value = float(value)
             panel.ids.label.text = str(value)
 
         on_change = bind_widget_to_feature(f,get,set)
