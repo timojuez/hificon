@@ -1,4 +1,3 @@
-from kivy.clock import Clock
 from threading import Lock
 
 
@@ -15,15 +14,14 @@ def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_sette
         on_value_change(*a) will call get_from_widget(*a)
     """
     lock = Lock()
-    def update_widget(dt):
+    def update_widget(*args,**xargs):
         with lock: widget_setter(value_getter())
     
     def on_widget_change(*args):
         if lock.locked(): return
         new = widget_getter(*args)
-        Clock.schedule_once(update_widget, -1)
+        update_widget()
         try: value_setter(new)
         except Exception as e: print(repr(e))
-    def on_value_change(*args, **xargs): Clock.schedule_once(update_widget, -1)
-    return on_value_change, on_widget_change
+    return update_widget, on_widget_change
 

@@ -17,16 +17,6 @@ from ..config import config
 from .. import Amp, NAME
 
 
-def bind_widget_to_feature(f, widget_getter, widget_setter):
-    """ @f Feature object """
-    on_value_change, on_widget_change = bind_widget_to_value(
-        f.get, f.set, widget_getter, widget_setter)
-    
-    f.bind(on_change=on_value_change)
-    if f.isset(): widget_setter(f.get())
-    return on_widget_change
-    
-
 class TabPanel(TabbedPanelItem): pass
 
 class ScrollViewLayout(GridLayout):
@@ -40,7 +30,7 @@ class FeatureRow(GridLayout): pass
 
 class NumericFeature(GridLayout): pass
 
-class BoolFeature(Switch): pass
+class BoolFeature(GridLayout): pass
 
 class SelectFeature(Button): pass
 
@@ -124,7 +114,7 @@ class Menu(TabbedPanel):
             panel.ids.slider.value = float(value)
             panel.ids.label.text = str(float(value))
 
-        on_change = bind_widget_to_feature(f,get,set)
+        on_change = self.bind_widget_to_feature(f,get,set)
         panel.ids.slider.bind(value=on_change)
         return panel
     
@@ -135,14 +125,22 @@ class Menu(TabbedPanel):
         return self._addNumericFeature(f, step=.5)
 
     def addBoolFeature(self, f):
-        switch = Switch()
+        bf = BoolFeature()
         
-        def get(inst, value): return switch.active
-        def set(value): switch.active = value
+        def get(inst):
+            if bf.ids.on.state != "down" and bf.ids.off.state != "down":
+                return not f.get()
+            return bf.ids.on.state == "down"
+            
+        def set(value):
+            trans = {False: "normal", True: "down"}
+            bf.ids.on.state = trans[value]
+            bf.ids.off.state = trans[not value]
 
-        on_change = bind_widget_to_feature(f,get,set)
-        switch.bind(active=on_change)
-        return switch
+        on_change = self.bind_widget_to_feature(f,get,set)
+        bf.ids.on.bind(on_release=on_change)
+        bf.ids.off.bind(on_release=on_change)
+        return bf
 
     def addSelectFeature(self, f):
         dropdown = SelectFeatureOptions()
@@ -159,10 +157,19 @@ class Menu(TabbedPanel):
         def get(inst, value): return value
         def set(value): button.text = value
 
-        on_change = bind_widget_to_feature(f,get,set)
+        on_change = self.bind_widget_to_feature(f,get,set)
         #dropdown.bind(on_select=on_change)
 
         return button
+
+    def bind_widget_to_feature(self, f, widget_getter, widget_setter):
+        """ @f Feature object """
+        on_value_change, on_widget_change = bind_widget_to_value(
+            f.get, f.set, widget_getter, widget_setter)
+        
+        f.bind(on_change=on_value_change)
+        if f.isset(): widget_setter(f.get())
+        return on_widget_change
 
 
 def show_widget(w):
