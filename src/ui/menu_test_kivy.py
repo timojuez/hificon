@@ -22,8 +22,8 @@ def bind_widget_to_feature(f, widget_getter, widget_setter):
     on_value_change, on_widget_change = bind_widget_to_value(
         f.get, f.set, widget_getter, widget_setter)
     
-    widget_setter(f.get())
     f.bind(on_change=on_value_change)
+    if f.isset(): widget_setter(f.get())
     return on_widget_change
     
 
@@ -57,12 +57,17 @@ class Menu(TabbedPanel):
         self.pinned = config.getlist("GUI","pinned")
         self.features = {}
         for key, f in amp.features.items():
+            print("adding %s"%f.name)
+            if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
+            self.addFeature(key, f, tabs[f.category])
+        for key, f in amp.features.items():
             @features.require(key, timeout=None)
-            def add(amp, key, f):
-                print("adding %s"%f.name)
-                if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
-                self.addFeature(key, f, tabs[f.category])
-            add(amp, key, f)
+            def show(amp, key):
+                print("Showing %s"%f.name)
+                for w in self.features[key]["rows"]: show_widget(w)
+                if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
+                
+            show(amp, key)
 
     def _newTab(self, title):
         panel = TabPanel()
@@ -71,9 +76,9 @@ class Menu(TabbedPanel):
         return panel.ids.layout
 
     def addFeature(self, key, f, tab):
-        self.features[key] = {"panel":None, "checkboxes":{"lock":Lock(),"objects":[]}}
-        self.features[key]["panel"] = self._addFeatureToTab(key,f,self.ids.pinned.ids.layout)
-        if key not in self.pinned: hide_widget(self.features[key]["panel"])
+        self.features[key] = {"rows":[], "pinned_row":None, 
+            "checkboxes":{"lock":Lock(),"objects":[]}}
+        self.features[key]["pinned_row"] = self._addFeatureToTab(key,f,self.ids.pinned.ids.layout)
         self._addFeatureToTab(key,f,tab)
         self._addFeatureToTab(key,f,self.ids.all.ids.layout)
         with self.features[key]["checkboxes"]["lock"]:
@@ -90,7 +95,9 @@ class Menu(TabbedPanel):
         else: raise RuntimeError("Not implemented: Type '%s'"%f.type)
         if w: row.ids.content.add_widget(w)
         
+        hide_widget(row)
         tab.add_widget(row)
+        self.features[key]["rows"].append(row)
         
         def on_checkbox(checkbox, active):
             if self.features[key]["checkboxes"]["lock"].locked(): return
@@ -98,8 +105,8 @@ class Menu(TabbedPanel):
             else: self.pinned.remove(key)
             config.setlist("GUI", "pinned", self.pinned)
             with self.features[key]["checkboxes"]["lock"]:
-                if active: show_widget(self.features[key]["panel"])
-                else: hide_widget(self.features[key]["panel"])
+                if active: show_widget(self.features[key]["pinned_row"])
+                else: hide_widget(self.features[key]["pinned_row"])
                 for c in self.features[key]["checkboxes"]["objects"]:
                     c.active = active
         row.ids.checkbox.bind(active=on_checkbox)
