@@ -11,6 +11,7 @@ from kivy.uix.dropdown import DropDown
 
 from threading import Lock
 from ..amp import features
+from ..config import config
 from .. import Amp, NAME
 
 
@@ -74,6 +75,7 @@ class Menu(TabbedPanel):
     def __init__(self, amp, **kwargs):
         super().__init__(**kwargs)
         tabs = {}
+        self.pinned = config.getlist("GUI","pinned")
         self.features = {}
         for key, f in amp.features.items():
             @features.require(key, timeout=None)
@@ -92,10 +94,11 @@ class Menu(TabbedPanel):
     def addFeature(self, key, f, tab):
         self.features[key] = {"panel":None, "checkboxes":{"lock":Lock(),"objects":[]}}
         self.features[key]["panel"] = self._addFeatureToTab(key,f,self.ids.pinned.ids.layout)
-        #if key not in config["ui"]["pinned"]:
-        hide_widget(self.features[key]["panel"])
+        if key not in self.pinned: hide_widget(self.features[key]["panel"])
         self._addFeatureToTab(key,f,tab)
         self._addFeatureToTab(key,f,self.ids.all.ids.layout)
+        with self.features[key]["checkboxes"]["lock"]:
+            for c in self.features[key]["checkboxes"]["objects"]: c.active = key in self.pinned
         
     def _addFeatureToTab(self, key, f, tab):
         row = FeatureRow()
@@ -112,6 +115,10 @@ class Menu(TabbedPanel):
         
         def on_checkbox(checkbox, active):
             if self.features[key]["checkboxes"]["lock"].locked(): return
+            if active: self.pinned.append(key)
+            else: self.pinned.remove(key)
+            config.setlist("GUI", "pinned", self.pinned)
+            config.save()
             with self.features[key]["checkboxes"]["lock"]:
                 if active: show_widget(self.features[key]["panel"])
                 else: hide_widget(self.features[key]["panel"])
