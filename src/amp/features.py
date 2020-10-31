@@ -115,7 +115,6 @@ class AsyncFeature(FeatureInterface, Bindable):
         super().__init__()
         self.amp = amp
         self.attr = attr
-        self._polled = False
         amp.features[attr] = self
         
     name = property(lambda self:self.__class__.__name__)
@@ -134,12 +133,14 @@ class AsyncFeature(FeatureInterface, Bindable):
 
     def isset(self): return hasattr(self,'_val')
         
-    def unset(self): self.__dict__.pop("_val",None); self._polled = False
+    def unset(self):
+        self.__dict__.pop("_val", None)
+        with suppress(ValueError): self.amp._polled.remove(self.call)
     
     def async_poll(self, force=False):
         """ poll feature value if not polled before or force is True """
-        if self._polled and not force: return
-        self._polled = True
+        if self.call in self.amp._polled and not force: return
+        self.amp._polled.append(self.call)
         return self.amp.send(self.call)
     
     def resend(self): return self.set(self._val)
