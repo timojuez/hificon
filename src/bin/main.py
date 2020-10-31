@@ -66,7 +66,7 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        self._notify_events = config.get("GUI","notify_events")
+        self._notify_events = config.getlist("GUI","notify_events")
         self._notifications = {key:self._createNotification(f)
             for key,f in list(self.amp.features.items())+[(None,None)]}
         self.amp.preload_features.add("volume")
@@ -93,9 +93,9 @@ class NotificationMixin(object):
 
     def on_change(self, attr, value): # amp change
         if attr != "maxvol" and (
-                self._notify_events == "all"
-                or self._notify_events == "all_implemented" and attr
-                or attr in self._notify_events.split(", ")):
+                "all" in self._notify_events
+                or "all_implemented" in self._notify_events and attr
+                or attr in self._notify_events):
             self.update_notification(attr, value).show()
         super().on_change(attr,value)
 
