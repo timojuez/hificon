@@ -128,9 +128,7 @@ class Menu(TabbedPanel):
         bf = BoolFeature()
         
         def get(inst):
-            if bf.ids.on.state != "down" and bf.ids.off.state != "down":
-                return not f.get()
-            return bf.ids.on.state == "down"
+            return inst.value if inst.state == "down" else not inst.value
             
         def set(value):
             trans = {False: "normal", True: "down"}
