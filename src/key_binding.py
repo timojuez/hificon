@@ -31,7 +31,7 @@ class VolumeChanger(AmpEvents):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.interval = config.getfloat("KeyEventHandling","interval")/1000
-        self.step = config.getfloat("KeyEventHandling","step")
+        self.step = config.getdecimal("KeyEventHandling","step")
         self.button = None
         self._vol_lock = Lock()
         self.amp.preload_features.add("volume")

@@ -1,4 +1,5 @@
 import sys, math
+from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp, make_amp, features
 
 
@@ -34,16 +35,16 @@ class _Translation:
 
 class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
 
-class FloatFeature(DenonFeature, features.FloatFeature):
+class DecimalFeature(DenonFeature, features.DecimalFeature):
 
     @staticmethod
-    def _roundVolume(vol): return .5*round(vol/.5)
+    def _roundVolume(vol): return Decimal('.5')*round(vol/Decimal('.5'))
 
-    def decodeVal(self, val): return int(val.ljust(3,"0"))/10
+    def decodeVal(self, val): return Decimal(val.ljust(3,"0"))/10
         
     def encodeVal(self, val):
         val = self._roundVolume(val)
-        return "%02d"%val if val.is_integer() else "%03d"%(val*10)
+        return "%02d"%val if val%1 == 0 else "%03d"%(val*10)
 
 
 class IntFeature(DenonFeature, features.IntFeature):
@@ -71,7 +72,7 @@ class RelativeInt(IntFeature):
     def decodeVal(self, val): return super().decodeVal(val)-50
     
 
-class RelativeFloat(FloatFeature):
+class RelativeDecimal(DecimalFeature):
     min = -12
     max = 12
     default_value = 0
@@ -88,10 +89,10 @@ class _LooseNumericFeature:
             assert(super().matches(data))
             self.decode(data)
             return True
-        except (TypeError, ValueError, AssertionError): return False
+        except (TypeError, ValueError, AssertionError, InvalidOperation): return False
 
 
-class LooseFloatFeature(_LooseNumericFeature, RelativeFloat): pass
+class LooseDecimalFeature(_LooseNumericFeature, RelativeDecimal): pass
 
 class LooseIntFeature(_LooseNumericFeature, IntFeature): pass
 
@@ -107,13 +108,13 @@ class LooseBoolFeature(BoolFeature):
 
 ######### Features implementation (see Denon CLI protocol)
 
-class Volume(FloatFeature):
+class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
     def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
     def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
     
-class Maxvol(FloatFeature): #undocumented
+class Maxvol(DecimalFeature): #undocumented
     name = "Max. Vol."
     category = "Volume"
     function="MVMAX "
@@ -203,7 +204,7 @@ class Name(SelectFeature): #undocumented
     options = property(lambda self:[self.get()])
     def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
 
-class _ChannelVolume(RelativeFloat):
+class _ChannelVolume(RelativeDecimal):
     category = "Volume"
     call = "CV?"
 
@@ -493,7 +494,7 @@ class _SubwooferAdjustment: #undocumented
 
 class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
 
-class SubwooferAdjustment(_SubwooferAdjustment,LooseFloatFeature): pass
+class SubwooferAdjustment(_SubwooferAdjustment,LooseDecimalFeature): pass
 
 class _DialogLevel: #undocumented
     category = "Audio"
@@ -502,7 +503,7 @@ class _DialogLevel: #undocumented
 
 class DialogLevelSwitch(_DialogLevel, LooseBoolFeature): pass
 
-class DialogLevel(_DialogLevel, LooseFloatFeature): pass
+class DialogLevel(_DialogLevel, LooseDecimalFeature): pass
 
 class RoomSize(SelectFeature):
     name = "Room Size"

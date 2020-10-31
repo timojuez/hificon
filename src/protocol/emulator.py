@@ -27,7 +27,7 @@ class DummyAmp:
         for name, f in self.features.items():
             if name in default_values: val = default_values[name]
             elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
-            elif isinstance(f, features.FloatFeature): val = (f.max+f.min)/2
+            elif isinstance(f, features.DecimalFeature): val = (f.max+f.min)/2
             elif isinstance(f, features.SelectFeature) and f.options: val = f.options[0]
             elif isinstance(f, features.BoolFeature): val = True
             else: continue

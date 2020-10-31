@@ -91,7 +91,7 @@ class CLI:
         features = filter(lambda e:e[0], self.amp.features.items())
         for name, f in sorted(features, key=lambda e:e[0]):
             print("\t$%(name)s  %(title)s  %(type)s "%dict(name=name, type=f.type.__name__, title=f.name), end="")
-            if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.FloatFeature):
+            if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
                 print("[%s..%s] "%(f.min,f.max), end="")
             elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature): 
                 print(f.options, end="")
