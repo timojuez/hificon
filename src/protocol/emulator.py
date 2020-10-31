@@ -9,7 +9,6 @@ from .. import Amp_cls
 
 
 default_values = dict(
-    maxvol = 98,
     denon_name = "Dummy X7800H",
     muted = False,
 )
@@ -26,6 +25,7 @@ class DummyAmp:
         self.port = None
         for name, f in self.features.items():
             if name in default_values: val = default_values[name]
+            elif getattr(f, "default_value", None): val = f.default_value
             elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
             elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
             elif isinstance(f, features.SelectFeature) and f.options: val = f.options[0]
