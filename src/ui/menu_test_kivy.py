@@ -1,9 +1,9 @@
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.stacklayout import StackLayout
 from kivy.uix.slider import Slider
 from kivy.uix.label import Label
 from kivy.uix.tabbedpanel import TabbedPanelItem
-from kivy.uix.switch import Switch
 from kivy.uix.button import Button
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.scrollview import ScrollView
@@ -19,7 +19,7 @@ from .. import Amp, NAME
 
 class TabPanel(TabbedPanelItem): pass
 
-class ScrollViewLayout(GridLayout):
+class ScrollViewLayout(StackLayout):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
@@ -30,9 +30,9 @@ class FeatureRow(GridLayout): pass
 
 class NumericFeature(GridLayout): pass
 
-class BoolFeature(GridLayout): pass
+class BoolFeature(StackLayout): pass
 
-class SelectFeature(Button): pass
+class SelectFeature(StackLayout): pass
 
 class SelectFeatureOptions(DropDown): pass
 
@@ -166,16 +166,16 @@ class Menu(TabbedPanel):
             o.bind(on_press=lambda i: on_change(o,i.text))
             dropdown.add_widget(o)
         
-        button = SelectFeature()
-        button.bind(on_release=lambda i: dropdown.open(i))
+        layout = SelectFeature()
+        layout.ids.button.bind(on_release=lambda i: dropdown.open(i))
         
         def get(inst, value): return value
-        def set(value): button.text = value
+        def set(value): layout.ids.button.text = value
 
         on_change = self.bind_widget_to_feature(f,get,set)
         #dropdown.bind(on_select=on_change)
 
-        return button
+        return layout
 
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """

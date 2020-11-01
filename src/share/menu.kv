@@ -19,7 +19,6 @@
 
 
 <ScrollViewLayout>:
-    cols: 1
     size_hint_y: None
 
 
@@ -78,17 +77,26 @@
 <SelectFeatureOptions>:
 
 <SelectFeature>:
+    AnchorLayout:
+        anchor_y: 'center'
+        Button:
+            id: button
+            size_hint_y: 0.5
 
 <BoolFeature>:
-    cols: 2
-    ToggleButton:
-        id: off
-        text: "OFF"
-        #group: root
-        value: False
-    ToggleButton:
-        id: on
-        text: "ON"
-        #group: root
-        value: True
+    AnchorLayout:
+        anchor_y: 'center'
+        GridLayout:
+            size_hint_y: 0.5
+            cols: 2
+            ToggleButton:
+                id: off
+                text: "OFF"
+                #group: root
+                value: False
+            ToggleButton:
+                id: on
+                text: "ON"
+                #group: root
+                value: True
 
