@@ -69,10 +69,17 @@ See configuration options in ~/.hificon.cfg and src/share/hificon.cfg.default.
 Note that this program is still in development and therefore try it first with all sound output stopped.
 
 ### Graphical Main Application
-Start the main application:
+Start the HiFi Icon:
 `hificon`
 
 You may want to add the command to autostart.
+
+#### Control Menu
+
+The menu lets you control all available amplifier attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your amp).
+
+`hificon_menu`
+
 
 
 ### HiFi Shell

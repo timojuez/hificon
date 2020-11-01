@@ -1,4 +1,4 @@
-import argparse, os
+import argparse, os, pkgutil
 from decimal import Decimal
 from threading import Lock
 from ..util.async_kivy import bind_widget_to_value
@@ -7,16 +7,16 @@ from ..config import config
 from .. import Amp, NAME
 
 
-if __name__ == "__main__":
-    os.environ["KIVY_NO_ARGS"] = "1"
-    parser = argparse.ArgumentParser(description='Control Menu App')
-    parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
-    parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
-    args = parser.parse_args()
-    amp = Amp(protocol=args.protocol, verbose=args.verbose)
+os.environ["KIVY_NO_ARGS"] = "1"
+parser = argparse.ArgumentParser(description='Control Menu App')
+parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
+parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
+args = parser.parse_args()
+amp = Amp(protocol=args.protocol, verbose=args.verbose)
 
 
 from kivy.app import App
+from kivy.lang import Builder
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.slider import Slider
@@ -216,7 +216,6 @@ def hide_widget(w):
 
 
 class App(App):
-    kv_file = "../share/menu.kv"
     
     def build(self):
         widgetContainer = Menu(amp)
@@ -224,8 +223,15 @@ class App(App):
         return widgetContainer
         
 
-if __name__ == "__main__":
+kv = pkgutil.get_data(__name__,"../share/menu.kv").decode()
+Builder.load_string(kv)
+
+
+def main():
     with amp:
         app = App()
         app.run()      
+
+
+if __name__ == "__main__": main()
 
