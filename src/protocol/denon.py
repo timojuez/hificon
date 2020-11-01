@@ -201,6 +201,12 @@ class Source(SelectFeature):
     translation = config.getdict("Amp","sources")
     
 class SourceOptions(SelectFeature): #undocumented
+    """
+    SSFUN ?
+    SSFUNSAT/CBL CBL/SAT
+    SSFUNMPLAY Media Player
+    SSFUN END    
+    """
     name = "Source Options"
     category = "Input"
     function = "SSFUN"
