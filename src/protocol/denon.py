@@ -198,16 +198,24 @@ class Muted(BoolFeature):
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    translation = config.getdict("Amp","sources")
+    translation = {"PHONO":"Phono", "CD":"CD", "TUNER":"Tuner", "DVD":"DVD",
+        "BD":"Blu-ray","TV":"TV","SAT/CBL":"CBL/SAT","MPLAY":"Media Player",
+        "GAME":"Game","HDRADIO":"HD Radio","NET":"Heos","PANDORA":"Pandora",
+        "SIRIUSXM":"Sirius XM","SPOTIFY":"Spotify","LASTFM":"Last FM",
+        "FLICKR":"Flickr","IRADIO":"IRadio","SERVER":"Server",
+        "FAVORITES":"Favourites","AUX1":"AUX 1","AUX2":"AUX 2","AUX3":"AUX 3",
+        "AUX4":"AUX 4","AUX5":"AUX 5","AUX6":"AUX 6","AUX7":"AUX 7","BT":"Bluetooth",
+        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP",
+        **config.getdict("Amp","source_names")}
     
-class SourceOptions(SelectFeature): #undocumented
+class SourceNames(SelectFeature): #undocumented
     """
     SSFUN ?
     SSFUNSAT/CBL CBL/SAT
     SSFUNMPLAY Media Player
     SSFUN END    
     """
-    name = "Source Options"
+    name = "Source Names"
     category = "Input"
     function = "SSFUN"
     call = "SSFUN ?"

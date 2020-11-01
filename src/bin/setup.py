@@ -61,10 +61,10 @@ def source_setup():
 def source_options_setup():
     with Amp() as amp:
         print("Registered the following input sources:")
-        f = protocol.denon.SourceOptions(amp)
+        f = protocol.denon.SourceNames(amp)
         f.poll()
         for input_ in f.translation.values(): print("\t%s"%input_)
-        config.setdict("Amp", "sources", f.translation)
+        config.setdict("Amp", "source_names", f.translation)
 
 
 def setup_xorg_key_binding():
