@@ -39,6 +39,23 @@ class SelectFeatureOptions(DropDown): pass
 class SelectFeatureOption(Button): pass
 
 
+"""
+class CustomFeature:
+    def isset(self): return True
+    def bind(self,*args,**xargs): pass
+
+class ControlPowerOn(CustomFeature):
+    name = "Auto Power On"
+    category = NAME
+    type = bool
+    def get(self): return config.getboolean("Amp","control_power_on")
+    def set(self, value): config["Amp"]["control_power_on"] = str(int(bool(value)))
+
+custom_menu = dict(_power_on = ControlPowerOn())
+"""
+custom_menu = {}
+
+
 class Menu(TabbedPanel):
 
     def __init__(self, amp, **kwargs):
@@ -46,18 +63,18 @@ class Menu(TabbedPanel):
         tabs = {}
         self.pinned = config.getlist("GUI","pinned")
         self.features = {}
-        for key, f in amp.features.items():
+        for key, f in {**amp.features, **custom_menu}.items():
             print("adding %s"%f.name)
             if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
             self.addFeature(key, f, tabs[f.category])
+        def show(amp, key, f):
+            print("Showing %s"%f.name)
+            for w in self.features[key]["rows"]: show_widget(w)
+            if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
+        for key, f in custom_menu.items():
+            show(amp, key, f)
         for key, f in amp.features.items():
-            @features.require(key, timeout=None)
-            def show(amp, key):
-                print("Showing %s"%f.name)
-                for w in self.features[key]["rows"]: show_widget(w)
-                if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
-                
-            show(amp, key)
+            features.require(key, timeout=None)(show)(amp,key,f) # call show(amp,key,f)
 
     def _newTab(self, title):
         panel = TabPanel()
