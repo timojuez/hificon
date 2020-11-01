@@ -10,7 +10,7 @@ def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_sette
     @value_setter: callable(new value)
     @widget_getter: callable
     @widget_setter: callable(new value)
-    @returns: (callable on_variable_change, callable on_widget_change)
+    @returns: (callable on_value_change, callable on_widget_change)
         on_value_change(*a) will call get_from_widget(*a)
     """
     lock = Lock()
