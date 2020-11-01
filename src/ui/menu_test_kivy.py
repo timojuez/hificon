@@ -211,9 +211,10 @@ class App(App):
         self.title = "%(name)s Control Menu – %(amp)s"%dict(name=NAME, amp=amp.name)
         return widgetContainer
         
-        
+
+import sys        
 #amp = Amp(verbose=15)
-amp = Amp(protocol=".emulator",verbose=15)
+amp = Amp(protocol=sys.argv[1] if len(sys.argv) > 1 else None,verbose=15)
 with amp:
     app = App()
     app.run()
