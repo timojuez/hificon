@@ -1,7 +1,7 @@
-import sys, os, argparse, pkgutil, socket
+import sys, os, argparse, pkgutil, socket, json
 from ..util.network import PrivateNetwork
 from ..config import config, FILE
-from .. import NAME, Amp
+from .. import NAME, Amp, protocol
 
 
 class Main(object):
@@ -19,6 +19,10 @@ class Main(object):
         source = parser.add_mutually_exclusive_group()
         source.add_argument('--source-setup', dest="nothing", action="store_false", help='Connect Denon amp source setting to computer (default)')
         source.add_argument('--no-source-setup', default=source_setup, dest="source_setup", action="store_false")
+        
+        source_options = parser.add_mutually_exclusive_group()
+        source_options.add_argument('--source-options-setup', dest="nothing", action="store_false", help='Refresh input source list (default)')
+        source.add_argument('--no-source-options-setup', default=source_options_setup, dest="source_options_setup", action="store_false")
         
         port = parser.add_mutually_exclusive_group()
         port.add_argument('--set-port', dest="nothing", action="store_false", help='Set a port for inter process communication (default)')
@@ -48,11 +52,20 @@ def set_port():
 def source_setup():
     if input("On your amp, select the input source that you want to control "
         "with this program and press ENTER. [s]kip? ") == "s": return
-    with Amp(protocol=".denon") as amp:
+    with Amp() as amp:
         source = amp.source
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
     
+
+def source_options_setup():
+    with Amp() as amp:
+        print("Registered the following input sources:")
+        f = protocol.denon.SourceOptions(amp)
+        f.poll()
+        for input_ in f.translation.values(): print("\t%s"%input_)
+        config["Amp"]["sources"] = json.dumps(f.translation)
+
 
 def setup_xorg_key_binding():
     xbindkeysrc = os.path.expanduser("~/.xbindkeysrc")

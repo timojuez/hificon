@@ -1,6 +1,7 @@
-import sys, math
+import sys, math, json
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp, make_amp, features
+from ..config import config
 
 
 class DenonFeature:
@@ -197,7 +198,28 @@ class Muted(BoolFeature):
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    # TODO: options
+    translation = json.loads(config["Amp"]["sources"])
+    
+class SourceOptions(SelectFeature): #undocumented
+    name = "Source Options"
+    category = "Input"
+    function = "SSFUN"
+    call = "SSFUN ?"
+    translation = {}
+    _ready = False
+
+    def isset(self): return self._ready
+    def decodeVal(self, val):
+        if val.strip() == "END":
+            self._ready = True
+            return
+        code, name = val.split(" ",1)
+        self.translation[code] = name
+    def unset(self): self._ready = False
+    def get(self): return "(select)"
+    def encode(self, value):
+        return "%s%s"%("SI", self.encodeVal(value))
+
 
 class Name(SelectFeature): #undocumented
     function = "NSFRN "

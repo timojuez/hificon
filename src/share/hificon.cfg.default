@@ -9,6 +9,8 @@ poweroff_after = 10
 protocol = .denon
 # Amp input source that this program controls. Important for power control. Empty means "all"
 source = 
+# Input sources in Json format
+sources = {"DVD": "DVD", "BD": "Blu-ray", "TV": "TV Audio", "SAT/CBL": "CBL/SAT", "MPLAY": "Media Player", "GAME": "Game", "AUX1": "AUX"}
 
 # host = 1.2.3.4
 port = 23
