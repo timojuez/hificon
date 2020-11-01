@@ -120,8 +120,6 @@ class AsyncFeature(FeatureInterface, Bindable):
     name = property(lambda self:self.__class__.__name__)
 
     def get(self):
-        if not self.amp.connected: 
-            raise ConnectionError("`%s` is not available when amp is disconnected."%self.__class__.__name__)
         try: return self._val
         except AttributeError: 
             raise AttributeError("`%s` not available. Use @require"%self.attr)
@@ -221,7 +219,6 @@ class PresetValue:
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
         self._val = self.value
-    def get(self): return self._val # skip amp.connected check; TODO: move this to features.py.AsyncFeature.get
     def unset(self): self._val = self.value
 
 
