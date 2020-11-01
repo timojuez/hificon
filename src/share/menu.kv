@@ -50,10 +50,17 @@
     AnchorLayout:
         anchor_x: 'center'
         size_hint_x: 0.4
-        CheckBox:
-            id: checkbox
+        BoxLayout:
             size_hint_x: None
-            width: 50
+            width: self.minimum_width
+            CheckBox:
+                id: checkbox
+                size_hint_x: None
+                width: 40
+            Label:
+                text: "Pin"
+                size_hint_x: None
+                size: self.texture_size
 
 
 <NumericFeature>:
