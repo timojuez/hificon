@@ -1,4 +1,4 @@
-import sys, os, argparse, pkgutil, socket, json
+import sys, os, argparse, pkgutil, socket
 from ..util.network import PrivateNetwork
 from ..config import config, FILE
 from .. import NAME, Amp, protocol
@@ -64,7 +64,7 @@ def source_options_setup():
         f = protocol.denon.SourceOptions(amp)
         f.poll()
         for input_ in f.translation.values(): print("\t%s"%input_)
-        config["Amp"]["sources"] = json.dumps(f.translation)
+        config.setdict("Amp", "sources", f.translation)
 
 
 def setup_xorg_key_binding():

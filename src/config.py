@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-import os, configparser, pkgutil
+import os, configparser, pkgutil, json
 from decimal import Decimal
 from . import PKG_NAME
 
@@ -20,6 +20,12 @@ class ExtendedConfigParser(configparser.ConfigParser):
         
     def setlist(self, section, option, value):
         self[section][option] = ", ".join(value)
+        
+    def getdict(self, section, option):
+        return json.loads(self[section][option])
+        
+    def setdict(self, section, option, value):
+        self[section][option] = json.dumps(value)
 
 
 class ConfigDiffParser(ExtendedConfigParser):

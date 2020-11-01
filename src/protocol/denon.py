@@ -1,4 +1,4 @@
-import sys, math, json
+import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp, make_amp, features
 from ..config import config
@@ -198,7 +198,7 @@ class Muted(BoolFeature):
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    translation = json.loads(config["Amp"]["sources"])
+    translation = config.getdict("Amp","sources")
     
 class SourceOptions(SelectFeature): #undocumented
     name = "Source Options"
