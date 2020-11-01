@@ -1,4 +1,5 @@
 #from code import InteractiveConsole #TODO
+from codeop import _maybe_compile
 import argparse, os, sys, time, re, ast, traceback
 from threading import Thread
 from contextlib import suppress
@@ -194,11 +195,17 @@ class Compiler(Preprocessor):
 
     def run(self, source, filename="<input>", mode="single"):
         preprocessor = Preprocessor(source)
-        tree = ast.parse(preprocessor.encode(),mode=mode)
-        tree = AmpCommandTransformation(preprocessor).visit(tree)
-        tree = ast.fix_missing_locations(tree)
-        #print(ast.dump(tree))
-        exec(compile(tree, filename=filename, mode=mode), self.env)
+        def compileHifish(source, filename, mode):
+            tree = ast.parse(source, mode=mode)
+            tree = AmpCommandTransformation(preprocessor).visit(tree)
+            tree = ast.fix_missing_locations(tree)
+            #print(ast.dump(tree))
+            return compile(tree, filename=filename, mode=mode)
+            #exec(compile(tree, filename=filename, mode=mode), self.env)
+        source_p = preprocessor.encode()
+        code = _maybe_compile(compileHifish, source_p, filename=filename, symbol=mode)
+        if code: exec(code, self.env)
+        
     
     
 main = lambda:CLI()()
