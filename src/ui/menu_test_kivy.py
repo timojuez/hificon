@@ -1,3 +1,21 @@
+import argparse, os
+from decimal import Decimal
+from threading import Lock
+from ..util.async_kivy import bind_widget_to_value
+from ..amp import features
+from ..config import config
+from .. import Amp, NAME
+
+
+if __name__ == "__main__":
+    os.environ["KIVY_NO_ARGS"] = "1"
+    parser = argparse.ArgumentParser(description='Control Menu App')
+    parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
+    args = parser.parse_args()
+    amp = Amp(protocol=args.protocol, verbose=args.verbose)
+
+
 from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.stacklayout import StackLayout
@@ -9,12 +27,6 @@ from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
 
-from decimal import Decimal
-from threading import Lock
-from ..util.async_kivy import bind_widget_to_value
-from ..amp import features
-from ..config import config
-from .. import Amp, NAME
 
 
 class TabPanel(TabbedPanelItem): pass
@@ -212,11 +224,8 @@ class App(App):
         return widgetContainer
         
 
-import sys        
-#amp = Amp(verbose=15)
-amp = Amp(protocol=sys.argv[1] if len(sys.argv) > 1 else None,verbose=15)
-with amp:
-    app = App()
-    app.run()
-
+if __name__ == "__main__":
+    with amp:
+        app = App()
+        app.run()      
 
