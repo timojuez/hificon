@@ -223,7 +223,6 @@ class SourceOptions(SelectFeature): #undocumented
 
 class Name(SelectFeature): #undocumented
     function = "NSFRN "
-    options = property(lambda self:[self.get()])
     def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
 
 class _ChannelVolume(RelativeDecimal):
