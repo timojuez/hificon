@@ -164,7 +164,7 @@ class Tray(object):
         self.amp.volume = volume
     
 
-class Main(NotificationMixin, VolumeChanger, Tray, AmpEvents, GUI_Backend): pass
+class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, GUI_Backend): pass
 
 
 def main():    
@@ -172,15 +172,16 @@ def main():
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     
-    amp = Amp(verbose=args.verbose+1)
+    amp = Amp(connect=False, verbose=args.verbose+1)
     ac = AmpController(amp, verbose=args.verbose+1)
-    program = Main(amp)
+    app = MainApp(amp)
     try:
-        Thread(name="Amp",target=ac.mainloop,daemon=True).start()
-        RemoteControlService(program,verbose=args.verbose)()
-        program.mainloop()
+        with amp:
+            Thread(name="Amp",target=ac.mainloop,daemon=True).start()
+            RemoteControlService(app,verbose=args.verbose)()
+            app.mainloop()
     finally:
-        try: program.icon.__del__()
+        try: app.icon.__del__()
         except: pass
 
 

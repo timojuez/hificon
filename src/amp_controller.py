@@ -52,11 +52,7 @@ class SoundMixin(AmpEvents,_Verbosity):
     
 class KeepConnected(_Verbosity):
     """ keep amp connected whenever possible """
-    
-    def mainloop(self):
-        self.amp.enter()
-        super().mainloop()
-    
+
     @log_call
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """

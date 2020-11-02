@@ -32,9 +32,11 @@ class _AbstractAmp(Bindable, AmpType):
     verbose = 0
     _mainloopt = None
     _stoploop = None
+    _connectOnEnter = False
 
-    def __init__(self, host=None, port=None, name=None, verbose=0, **callbacks):
+    def __init__(self, host=None, port=None, name=None, connect=True, verbose=0, **callbacks):
         super().__init__()
+        self._connectOnEnter = connect
         self.verbose = verbose
         self.bind(**callbacks)
         self.host = host or self.host or config["Amp"].get("Host")
@@ -43,13 +45,15 @@ class _AbstractAmp(Bindable, AmpType):
         if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
             "IP or hostname in %s."%CONFFILE)
     
-    def __enter__(self): self.connect(); self.enter(); return self
+    def __enter__(self): return self.enter()
 
     def __exit__(self, type, value, tb): self.exit()
 
     def enter(self):
+        if self._connectOnEnter: self.connect()
         self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
         self._mainloopt.start()
+        return self
 
     def exit(self): self.disconnect(); self._mainloopt.join()
     
