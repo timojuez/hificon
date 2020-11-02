@@ -5,6 +5,7 @@ def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_sette
     """
     Binds a widget with given getter and setter asynchronously to a value so that 
         the widget always stays synchronised with the value.
+        You must call on_value_change once before you bind on_widget_change to the widget.
     Returns the functions that shall be called when the value resp. widget changes
     @value_getter: callable
     @value_setter: callable(new value)
@@ -14,14 +15,23 @@ def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_sette
         on_value_change(*a) will call get_from_widget(*a)
     """
     lock = Lock()
-    def update_widget(*args,**xargs):
-        with lock: widget_setter(value_getter())
+    class Previous:
+        is_set = False
+        value = None
     
     def on_widget_change(*args):
         if lock.locked(): return
         new = widget_getter(*args)
-        update_widget()
+        if not Previous.is_set:
+            raise RuntimeError("on_value_change must be called initially.")
+        with lock: widget_setter(Previous.value)
         try: value_setter(new)
         except Exception as e: print(repr(e))
-    return update_widget, on_widget_change
+    def on_value_change(*args, **xargs):
+        with lock:
+            widget_setter(value_getter())
+            Previous.value = value_getter()
+            Previous.is_set = True
+        
+    return on_value_change, on_widget_change
 

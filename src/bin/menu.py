@@ -195,7 +195,7 @@ class Menu(TabbedPanel):
             f.get, f.set, widget_getter, widget_setter)
         
         f.bind(on_change=on_value_change)
-        if f.isset(): widget_setter(f.get())
+        if f.isset(): on_value_change(f.get()) # set static feature values
         return on_widget_change
 
 
