@@ -122,7 +122,10 @@ class Maxvol(DecimalFeature): #undocumented
     call="MV?"
     default_value = 98
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
-    def on_change(self, old, new): self.amp.features["volume"].max = new
+    def on_change(self, old, new):
+        self.amp.features["volume"].max = new
+        if self.amp.features["volume"].isset():
+            self.amp.features["volume"].on_change(self.amp.volume, self.amp.volume)
 
 class VolumeLimit(features.PresetValue, SelectFeature): #undocumented
     name = "Volume Limit"
