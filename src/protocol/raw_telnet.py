@@ -16,7 +16,7 @@ class _Amp(TelnetAmp):
             def decode(self, cmd): return cmd
             def encode(self, value): return value
         RawFeature.__name__ = cmd
-        return RawFeature(self).get()
+        return RawFeature(self).poll(force=True)
 
 Amp = make_amp({}, _Amp)
 

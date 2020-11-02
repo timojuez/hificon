@@ -63,7 +63,12 @@ class _AbstractAmp(Bindable, AmpType):
         if self.port: p = "%s:%d"%(p,self.port)
         return p
         
-    def query(self, cmd, matches=None): raise NotImplementedError()
+    def query(self, cmd, matches=None):
+        """
+        Low level function that sends @cmd and returns a value where matches(value) is True.
+        Only called by hifish
+        """
+        raise NotImplementedError()
 
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
