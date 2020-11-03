@@ -12,7 +12,6 @@ parser = argparse.ArgumentParser(description='Control Menu App')
 parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
 parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
 args = parser.parse_args()
-amp = Amp(protocol=args.protocol, verbose=args.verbose)
 
 
 from kivy.app import App
@@ -79,14 +78,19 @@ class Menu(TabbedPanel):
             print("adding %s"%f.name)
             if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
             self.addFeature(key, f, tabs[f.category])
-        def show(amp, key, f):
-            print("Showing %s"%f.name)
-            for w in self.features[key]["rows"]: show_widget(w)
-            if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
         for key, f in custom_menu.items():
-            show(amp, key, f)
+            self.show_row(amp, key, f)
+        amp.bind(on_connect=self.on_amp_connect)
+
+    def on_amp_connect(self):
         for key, f in amp.features.items():
-            features.require(key, timeout=None)(show)(amp,key,f) # call show(amp,key,f)
+            # call self.show_row(amp,key,f)
+            features.require(key, timeout=None)(self.show_row)(amp,key,f)
+
+    def show_row(self, amp, key, f):
+        print("Showing %s"%f.name)
+        for w in self.features[key]["rows"]: show_widget(w)
+        if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
 
     def _newTab(self, title):
         panel = TabPanel()
@@ -218,19 +222,21 @@ def hide_widget(w):
 class App(App):
     
     def build(self):
-        widgetContainer = Menu(amp)
         self.title = "%(name)s Control Menu – %(amp)s"%dict(name=NAME, amp=amp.name)
-        return widgetContainer
+        return menu
         
 
+
+amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose)
 kv = pkgutil.get_data(__name__,"../share/menu.kv").decode()
 Builder.load_string(kv)
+menu = Menu(amp)
 
 
 def main():
     with amp:
         app = App()
-        app.run()      
+        app.run()
 
 
 if __name__ == "__main__": main()
