@@ -319,7 +319,7 @@ class DigitalInput(SelectFeature):
     translation = {"AUTO":"Auto", "PCM": "PCM", "DTS":"DTS"}
     
 class VideoSelect(SelectFeature):
-    name =" Video Select Mode"
+    name = "Video Select Mode"
     category = "Video"
     function = "SV"
     translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel", "OFF":"Off"}
