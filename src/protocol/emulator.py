@@ -17,7 +17,6 @@ default_values = dict(
 class DummyAmp:
     host = "dummy"
     name = "Emulator"
-    connected = True
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -33,13 +32,18 @@ class DummyAmp:
             else: continue
             f.store(val)
     
-    def connect(self): return AbstractAmp.connect(self)
+    def connect(self):
+        AbstractAmp.connect(self)
+        self.on_connect()
 
     def disconnect(self):
         AbstractAmp.disconnect(self)
         AbstractAmp.on_disconnected(self)
 
-    def mainloop(self): pass
+    def on_connect(self): pass
+        
+    def mainloop(self):
+        if not self.connected: self.connect()
     
     def send(self, cmd): return self.query(cmd)
 
