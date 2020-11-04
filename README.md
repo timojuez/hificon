@@ -124,6 +124,9 @@ If `__return__` is a callable, `$""` will return the received line from the amp 
 ### Support for other AVR brands
 It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifish.
 
+### Reverse Engineering Amplifiers
+`hifish -f` opens a shell and prints all received data from the amp. Meanwhile change settings e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
+
 ### Custom amp control software
 It is possible to create a customised controller that keeps your own program synchronised with the amp.
 See ./examples/custom_app.py
