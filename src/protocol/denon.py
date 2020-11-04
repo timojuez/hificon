@@ -127,16 +127,13 @@ class Maxvol(DecimalFeature): #undocumented
         if self.amp.features["volume"].isset():
             self.amp.features["volume"].on_change(self.amp.volume, self.amp.volume)
 
-class VolumeLimit(features.PresetValue, SelectFeature): #undocumented
+class VolumeLimit(SelectFeature): #undocumented
     name = "Volume Limit"
     category = "Volume"
     function="SSVCTZMALIM "
-    value = "(select)"
+    call = "SSVCTZMA ?"
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
-    def unset(self): self._val = "(select)"
     def on_change(self, old, new): self.amp.features["maxvol"].async_poll(force=True)
-    #def async_poll(self,*args,**xargs): self.amp.features["maxvol"].async_poll(,*args,**xargs)
-    #def poll(self,*args,**xargs): self.amp.features["maxvol"].poll(,*args,**xargs)
 
 class _SpeakerConfig(SelectFeature):
     category = "Speakers"
