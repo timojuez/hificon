@@ -162,9 +162,9 @@ class FeaturesMixin(object):
         consumed = {attrib:values for attrib,values in consumed.items() if values}
         if not consumed: self.on_change(None, data)
         for attr,(old,new) in consumed.items():
+            if not self.features[attr].isset(): continue
             if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
                 %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            if attr in self.features and not self.features[attr].isset(): continue
             if (not any([p.has_polled(attr) for p in self._pending.copy()]) # has_polled() changes self._pending
                     and old != new):
                 self.on_change(attr, new)
