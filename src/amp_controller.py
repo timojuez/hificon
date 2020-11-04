@@ -25,11 +25,11 @@ class AmpEvents(Autobind):
 
     
 class SoundMixin(AmpEvents,_Verbosity):
-    """ provide on_sound_idle and may call on_start_playing when connected """
+    """ provide on_amp_idle and may call on_start_playing when connected """
 
     @log_call
     def on_start_playing(self):
-        if hasattr(self,"_timer_poweroff"): self._timer_poweroff.cancel()
+        if hasattr(self,"_idle_timer"): self._idle_timer.cancel()
         super().on_start_playing()
 
     @log_call
@@ -38,13 +38,16 @@ class SoundMixin(AmpEvents,_Verbosity):
         try: timeout = config.getfloat("Amp","poweroff_after")*60
         except ValueError: return
         if not timeout: return
-        self._timer_poweroff = Timer(timeout,self.on_sound_idle)
-        self._timer_poweroff.start()
+        self._idle_timer = Timer(timeout, self.on_amp_idle)
+        self._idle_timer.start()
     
     @log_call
-    def on_sound_idle(self): pass
+    def on_amp_idle(self): pass
 
-    def on_connect(self):
+    def on_poweroff(self): # bound to self.amp by Autobind
+        if hasattr(self,"_idle_timer"): self._idle_timer.cancel()
+
+    def on_connect(self): # bound to self.amp by Autobind
         super().on_connect()
         if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
             self.on_start_playing()
@@ -91,10 +94,10 @@ class AutoPower:
         super().on_start_playing()
         self.amp.poweron()
 
-    def on_sound_idle(self):
-        super().on_sound_idle()
+    def on_amp_idle(self):
+        super().on_amp_idle()
         self.amp.poweroff()
-    
+
 
 class AmpController(AutoPower, KeepConnected, SoundMixin, SystemEvents):
     """
