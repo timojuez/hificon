@@ -96,12 +96,13 @@ class NotificationMixin(object):
         super().on_key_press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
-        if attr in self._preloading_features: return self._preloading_features.remove(attr)
-        if attr != "maxvol" and (
+        if attr not in self._preloading_features and attr != "maxvol" and (
                 "all" in self._notify_events
                 or "all_implemented" in self._notify_events and attr
                 or attr in self._notify_events):
             self.update_notification(attr, value).show()
+        try: self._preloading_features.remove(attr)
+        except KeyError: pass
         super().on_change(attr,value)
 
     def on_scroll_up(self, *args, **xargs):

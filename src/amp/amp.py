@@ -173,7 +173,7 @@ class FeaturesMixin(object):
 class PreloadMixin:
     preload_features = set() # feature keys to be polled on_connect
 
-    def on_connected(self):
+    def on_connect(self):
         super().on_connect()
         for key in set(self.preload_features):
             if key in self.features: self.features[key].async_poll()
