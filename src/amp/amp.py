@@ -174,8 +174,8 @@ class PreloadMixin:
 
     def on_connect(self):
         super().on_connect()
-        def preload(amp): pass
-        for f in set(self.preload_features): f not in self.features or require(f)(preload)(self)
+        for key in set(self.preload_features):
+            if key in self.features: self.features[key].async_poll()
         
 
 class SendOnceMixin(object): # TODO: move to Feature so that it affects f.set()

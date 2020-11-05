@@ -80,13 +80,7 @@ class Menu(TabbedPanel):
             self.addFeature(key, f, tabs[f.category])
         for key, f in custom_menu.items():
             self.show_row(amp, key, f)
-        amp.bind(on_connect=self.on_amp_connect)
-
-    def on_amp_connect(self):
-        for key, f in amp.features.items():
-            # call self.show_row(amp,key,f)
-            features.require(key, timeout=None)(self.show_row)(amp,key,f)
-            # TODO: remove previous pending features.require call
+        amp.preload_features = list(amp.features.keys())
 
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
