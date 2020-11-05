@@ -14,6 +14,18 @@ default_values = dict(
 )
 
 
+def get_val(f):
+    if f.isset(): val = f.get()
+    elif f.attr in default_values: val = default_values[f.attr]
+    elif getattr(f, "default_value", None): val = f.default_value
+    elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
+    elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
+    elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
+    elif isinstance(f, features.BoolFeature): val = True
+    else: raise TypeError("Feature type %s not known."%f)
+    return f.encode(val)
+
+
 class DummyAmp:
     host = "dummy"
     name = "Emulator"
@@ -22,16 +34,7 @@ class DummyAmp:
         super().__init__(*args, **xargs)
         self.protocol = "%s_emulator"%super().protocol
         self.port = None
-        for name, f in self.features.items():
-            if name in default_values: val = default_values[name]
-            elif getattr(f, "default_value", None): val = f.default_value
-            elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
-            elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
-            elif isinstance(f, features.SelectFeature) and f.options: val = f.options[0]
-            elif isinstance(f, features.BoolFeature): val = True
-            else: continue
-            f.store(val)
-    
+
     def connect(self):
         AbstractAmp.connect(self)
         self.on_connect()
@@ -40,12 +43,12 @@ class DummyAmp:
         AbstractAmp.disconnect(self)
         AbstractAmp.on_disconnected(self)
 
-    def on_connect(self): pass
-        
     def mainloop(self):
         if not self.connected: self.connect()
     
-    def send(self, cmd): return self.query(cmd)
+    def send(self, cmd):
+        AbstractAmp.send(self, cmd)
+        return self.query(cmd)
 
     def query(self, cmd, matches=None):
         r = None
@@ -53,10 +56,7 @@ class DummyAmp:
         # cmd is a request
         for attr, f in self.features.items():
             if f.call == cmd:
-                if not f.isset():
-                    print("WARNING: `%s` is being requested but has not been set."%f.name)
-                    return
-                encoded = f.encode(f.get())
+                encoded = get_val(f)
                 self.on_receive_raw_data(encoded)
                 if matches and matches(encoded) or f.matches(encoded):
                     if r is None: r = encoded
@@ -66,8 +66,7 @@ class DummyAmp:
         for attr, f in self.features.items():
             if matches and matches(cmd) or f.matches(cmd):
                 self.on_receive_raw_data(cmd)
-                encoded = f.encode(f.get())
-                r = encoded
+                r = get_val(f)
                 break
         return r
     
