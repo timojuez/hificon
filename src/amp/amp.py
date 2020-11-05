@@ -113,7 +113,8 @@ class _AbstractAmp(Bindable, AmpType):
     @log_call
     def on_poweroff(self): pass
 
-    def on_receive_raw_data(self, data): pass
+    def on_receive_raw_data(self, data):
+        if self.verbose > 4: print(data, file=sys.stderr)
 
     def mainloop(self):
         """ listens on amp for events and calls on_change. Return when connection closed """
@@ -256,7 +257,6 @@ class TelnetAmp(AbstractAmp):
         else:
             # receiving
             if not data: return
-            if self.verbose > 4: print(data, file=sys.stderr)
             self.on_receive_raw_data(data) 
 
 
