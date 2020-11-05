@@ -169,10 +169,11 @@ class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, GUI_Backend): p
 
 def main():    
     parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
+    parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     
-    amp = Amp(connect=False, verbose=args.verbose+1)
+    amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
     ac = AmpController(amp, verbose=args.verbose+1)
     app = MainApp(amp)
     try:
