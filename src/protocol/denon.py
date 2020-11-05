@@ -104,6 +104,7 @@ class LooseBoolFeature(BoolFeature):
         return super().matches(data) and isinstance(self.decode(data), bool)
 
     def on_change(self, old, new):
+        super().on_change(old, new)
         if new == True: self.amp.send(self.call) # make amp send the nonbool value TODO: only once
 
 
@@ -123,6 +124,7 @@ class Maxvol(DecimalFeature): #undocumented
     default_value = 98
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
     def on_change(self, old, new):
+        super().on_change(old, new)
         self.amp.features["volume"].max = new
         if self.amp.features["volume"].isset():
             self.amp.features["volume"].on_change(self.amp.volume, self.amp.volume)
@@ -133,7 +135,9 @@ class VolumeLimit(SelectFeature): #undocumented
     function="SSVCTZMALIM "
     call = "SSVCTZMA ?"
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
-    def on_change(self, old, new): self.amp.features["maxvol"].async_poll(force=True)
+    def on_change(self, old, new):
+        super().on_change(old, new)
+        self.amp.features["maxvol"].async_poll(force=True)
 
 class _SpeakerConfig(SelectFeature):
     category = "Speakers"
@@ -187,6 +191,7 @@ class Power(BoolFeature):
     translation = {"ON":True,"STANDBY":False}
     
     def on_change(self, old, new):
+        super().on_change(old, new)
         try: func = {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]
         except KeyError: return
         else: return func()

@@ -166,9 +166,7 @@ class FeaturesMixin(object):
             if not self.features[attr].isset(): continue
             if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
                 %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            if (not any([p.has_polled(attr) for p in self._pending.copy()]) # has_polled() changes self._pending
-                    and old != new):
-                self.on_change(attr, new)
+            for p in self._pending.copy(): p.has_polled(attr) # has_polled() changes self._pending
 
 
 class PreloadMixin:

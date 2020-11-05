@@ -101,8 +101,6 @@ class FeatureInterface(object):
         """ encode @value to amp command """
         raise NotImplementedError()
     
-    def on_change(self, old, new): pass
-
 
 class AsyncFeature(FeatureInterface, Bindable):
     """
@@ -114,7 +112,7 @@ class AsyncFeature(FeatureInterface, Bindable):
         """ amp instance, connected amp attribute name """
         super().__init__()
         self.amp = amp
-        self.attr = attr
+        self.attr = attr # TODO: rename to "key"
         amp.features[attr] = self
         
     name = property(lambda self:self.__class__.__name__)
@@ -154,6 +152,9 @@ class AsyncFeature(FeatureInterface, Bindable):
         self._val = value
         if self._val != old: self.on_change(old, self._val)
         return old, self._val
+
+    def on_change(self, old, new):
+        self.amp.on_change(self.attr, new)
 
 
 class SynchronousFeature(AsyncFeature):
