@@ -86,6 +86,7 @@ class Menu(TabbedPanel):
         for key, f in amp.features.items():
             # call self.show_row(amp,key,f)
             features.require(key, timeout=None)(self.show_row)(amp,key,f)
+            # TODO: remove previous pending features.require call
 
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
