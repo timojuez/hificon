@@ -76,7 +76,8 @@ class _AbstractAmp(Bindable, AmpType):
 
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
-    def send(self, cmd): raise NotImplementedError()
+    def send(self, cmd):
+        if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
 
     @require("power","source")
     def poweron(self, force=False):
@@ -208,7 +209,7 @@ class TelnetAmp(AbstractAmp):
     _telnet = None
     
     def send(self, cmd):
-        if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
+        super().send(cmd)
         try:
             assert(self.connected and self._telnet.sock)
             self._telnet.write(("%s\r"%cmd).encode("ascii"))
