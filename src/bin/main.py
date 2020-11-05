@@ -71,10 +71,6 @@ class NotificationMixin(object):
             for key,f in list(self.amp.features.items())+[(None,None)]}
         self.amp.preload_features.add("volume")
     
-    def on_connect(self):
-        self._preloading_features = self.amp.preload_features.copy()
-        super().on_connect()
-        
     def _createNotification(self, feature):
         if isinstance(feature, amp.features.NumericFeature): N = NumericFeatureNotification
         elif feature is None: N = TextNotification
@@ -96,13 +92,11 @@ class NotificationMixin(object):
         super().on_key_press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
-        if attr not in self._preloading_features and attr != "maxvol" and (
+        if attr not in self.amp.preloading_features and attr != "maxvol" and (
                 "all" in self._notify_events
                 or "all_implemented" in self._notify_events and attr
                 or attr in self._notify_events):
             self.update_notification(attr, value).show()
-        try: self._preloading_features.remove(attr)
-        except KeyError: pass
         super().on_change(attr,value)
 
     def on_scroll_up(self, *args, **xargs):
