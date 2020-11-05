@@ -141,7 +141,7 @@ class Tray(object):
         if self.amp.muted or volume == 0:
             self._set_icon_by_name("audio-volume-muted")
         else:
-            icon_idx = math.ceil(volume/self.amp.maxvol *len(icons))-1
+            icon_idx = math.ceil(volume/self.amp.features["volume"].max *len(icons))-1
             self._set_icon_by_name(icons[icon_idx])
         self.icon.show()
     
