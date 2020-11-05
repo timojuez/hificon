@@ -71,6 +71,10 @@ class NotificationMixin(object):
             for key,f in list(self.amp.features.items())+[(None,None)]}
         self.amp.preload_features.add("volume")
     
+    def on_connect(self):
+        self._preloading_features = self.amp.preload_features.copy()
+        super().on_connect()
+        
     def _createNotification(self, feature):
         if isinstance(feature, amp.features.NumericFeature): N = NumericFeatureNotification
         elif feature is None: N = TextNotification
@@ -92,6 +96,7 @@ class NotificationMixin(object):
         super().on_key_press(*args,**xargs)
 
     def on_change(self, attr, value): # amp change
+        if attr in self._preloading_features: return self._preloading_features.remove(attr)
         if attr != "maxvol" and (
                 "all" in self._notify_events
                 or "all_implemented" in self._notify_events and attr
@@ -128,6 +133,7 @@ class Tray(object):
             
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
+        for key in ("volume","muted","maxvol"): self.amp.preload_features.add(key)
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
         self.icon = ui.Icon()
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
