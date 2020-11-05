@@ -128,7 +128,7 @@ class Tray(object):
             
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
-        for key in ("volume","muted","maxvol"): self.amp.preload_features.add(key)
+        self.amp.preload_features.update(("volume","muted","maxvol"))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
         self.icon = ui.Icon()
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)

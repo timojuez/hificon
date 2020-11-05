@@ -80,7 +80,7 @@ class Menu(TabbedPanel):
             self.addFeature(key, f, tabs[f.category])
         for key, f in custom_menu.items():
             self.show_row(amp, key, f)
-        amp.preload_features = list(amp.features.keys())
+        amp.preload_features = set(amp.features.keys())
 
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
