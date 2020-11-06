@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse, sys, math, pkgutil, io, wx
-from threading import Thread
+from threading import Thread, Timer
 from PIL import Image
 from .. import Amp, NAME
 from ..amp_controller import AmpEvents, AmpController
@@ -110,7 +110,7 @@ class NotificationMixin(object):
         if self.amp.features["volume"].isset():
             self._notifications["volume"].update(self.amp.features["volume"])
         super().on_scroll_down(*args,**xargs)
-        
+    
 
 class Tray(object):
 
@@ -168,6 +168,25 @@ class Tray(object):
 class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, GUI_Backend): pass
 
 
+class AmpController(AmpController):
+    """ Adds a notification warning to poweroff on_amp_idle """
+    poweroff_timeout = 10
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._n = ui.Notification()
+        self._n.update("Power off %s"%self.amp.name)
+        if hasattr(self._n, "add_action"):
+            self._n.add_action("Cancel", lambda *args,**xargs: self._poweroff_timer.cancel())
+        self._n.set_timeout(self.poweroff_timeout*1000)
+        
+    def on_amp_idle(self):
+        if not self.amp.can_poweroff: return
+        self._poweroff_timer = Timer(self.poweroff_timeout, super().on_amp_idle)
+        self._poweroff_timer.start()
+        self._n.show()
+        
+
 def main():    
     parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
     parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
@@ -175,8 +194,8 @@ def main():
     args = parser.parse_args()
     
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
-    ac = AmpController(amp, verbose=args.verbose+1)
     app = MainApp(amp)
+    ac = AmpController(amp, verbose=args.verbose+1)
     try:
         with amp:
             Thread(name="Amp",target=ac.mainloop,daemon=True).start()
