@@ -52,11 +52,11 @@ class FunctionCall(object):
     def _find_amp(self, args): 
         """ search AmpType type in args """
         try:
-            amp = getattr(args[0],"amp",None)
+            amp = getattr(args[0],"amp",None) # = self.amp if args==(self,)
             return next(filter(lambda e: isinstance(e,AmpType), (amp,)+args))
         except (StopIteration, IndexError):
-            print("[WARNING] `%s` will never be called. @require needs "
-                "AmpType instance"%self._func.__name__, file=sys.stderr)
+            raise TypeError("`%s` cannot be called. @require needs "
+                "AmpType instance as argument"%self._func.__name__, file=sys.stderr)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)
