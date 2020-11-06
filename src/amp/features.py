@@ -108,19 +108,19 @@ class AsyncFeature(FeatureInterface, Bindable):
     High level telnet protocol communication
     """
 
-    def __init__(self, amp, attr=None):
+    def __init__(self, amp, key=None):
         """ amp instance, connected amp attribute name """
         super().__init__()
         self.amp = amp
-        self.attr = attr # TODO: rename to "key"
-        amp.features[attr] = self
+        self.key = key
+        amp.features[key] = self
         
     name = property(lambda self:self.__class__.__name__)
 
     def get(self):
         try: return self._val
         except AttributeError: 
-            raise AttributeError("`%s` not available. Use @require"%self.attr)
+            raise AttributeError("`%s` not available. Use @require"%self.key)
     
     def set(self, value, force=False):
         if not force and not isinstance(value, self.type):
@@ -154,7 +154,7 @@ class AsyncFeature(FeatureInterface, Bindable):
         return old, self._val
 
     def on_change(self, old, new):
-        self.amp.on_change(self.attr, new)
+        self.amp.on_feature_change(self.key, new, old)
 
 
 class SynchronousFeature(AsyncFeature):
@@ -176,7 +176,7 @@ class SynchronousFeature(AsyncFeature):
         """ synchronous poll """
         e = Event()
         def poll_event(self): e.set()
-        require(self.attr)(poll_event)(self)
+        require(self.key)(poll_event)(self)
         self.async_poll(force)
         if not e.wait(timeout=MAX_CALL_DELAY):
             if self.default_value: return self.store(self.default_value)
@@ -202,7 +202,7 @@ class SelectFeature(Feature):
     def set(self, value, force=False):
         if not force and value not in self.options:
             raise ValueError("Value must be one of %s or try amp.features[%s].set(value, force=True)"
-                %(self.options, repr(self.attr)))
+                %(self.options, repr(self.key)))
         return super().set(value, force)
     
 

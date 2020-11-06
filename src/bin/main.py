@@ -81,9 +81,9 @@ class NotificationMixin(object):
         n.set_timeout(config.getint("GUI","notification_timeout"))
         return n
     
-    def update_notification(self, attr, val=None):
-        n = self._notifications[attr]
-        f = self.amp.features.get(attr)
+    def update_notification(self, key, val=None):
+        n = self._notifications[key]
+        f = self.amp.features.get(key)
         n.update(f or val)
         return n
 
@@ -91,13 +91,13 @@ class NotificationMixin(object):
         self._notifications["volume"].show()
         super().on_key_press(*args,**xargs)
 
-    def on_change(self, attr, value): # amp change
-        if attr not in self.amp.preloading_features and attr != "maxvol" and (
+    def on_feature_change(self, key, value, *args): # bound to amp
+        if key not in self.amp.preloading_features and key != "maxvol" and (
                 "all" in self._notify_events
-                or "all_implemented" in self._notify_events and attr
-                or attr in self._notify_events):
-            self.update_notification(attr, value).show()
-        super().on_change(attr,value)
+                or "all_implemented" in self._notify_events and key
+                or key in self._notify_events):
+            self.update_notification(key, value).show()
+        super().on_feature_change(key,value,*args)
 
     def on_scroll_up(self, *args, **xargs):
         self._notifications["volume"].show()
@@ -122,9 +122,9 @@ class Tray(object):
         self.icon.hide()
         super().on_disconnected()
         
-    def on_change(self, attr, value): # amp change
-        super().on_change(attr,value)
-        if attr in ("volume","muted","maxvol"): self.updateIcon()
+    def on_feature_change(self, key, value, *args): # bound to amp
+        super().on_feature_change(key,value,*args)
+        if key in ("volume","muted","maxvol"): self.updateIcon()
             
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)

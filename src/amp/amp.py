@@ -19,7 +19,7 @@ from .. import NAME
 class _AbstractAmp(Bindable, AmpType):
     """
     Abstract Amplifier Interface
-    Note: Event callbacks (on_connect, on_change) might be called in the mainloop
+    Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop
         and delay further command processing. Use threads for not blocking the
         mainloop.
     """
@@ -102,12 +102,12 @@ class _AbstractAmp(Bindable, AmpType):
     def on_disconnected(self): self.connected = False
 
     @log_call
-    def on_change(self, attr, new_val):
+    def on_feature_change(self, key, value, previous_val):
         """ attribute on amplifier has changed """
-        if attr == None and self.verbose > 1:
-            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, new_val))
-        elif attr and self.verbose > 2:
-            print("[%s] $%s = %s"%(self.__class__.__name__,attr,repr(new_val)))
+        if key == None and self.verbose > 1:
+            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, value))
+        elif key and self.verbose > 2:
+            print("[%s] $%s = %s"%(self.__class__.__name__,key,repr(value)))
         
     @log_call
     def on_poweron(self): pass
@@ -119,7 +119,7 @@ class _AbstractAmp(Bindable, AmpType):
         if self.verbose > 4: print(data, file=sys.stderr)
 
     def mainloop(self):
-        """ listens on amp for events and calls on_change. Return when connection closed """
+        """ listens on amp for events and calls on_feature_change. Return when connection closed """
         self._stoploop = False
         while not self._stoploop: self.mainloop_hook()
         
@@ -161,14 +161,14 @@ class FeaturesMixin(object):
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
-        consumed = {attrib:f.consume(data) for attrib,f in self.features.items() if f.matches(data)}
-        consumed = {attrib:values for attrib,values in consumed.items() if values}
-        if not consumed: self.on_change(None, data)
-        for attr,(old,new) in consumed.items():
-            if not self.features[attr].isset(): continue
+        consumed = {key:f.consume(data) for key,f in self.features.items() if f.matches(data)}
+        consumed = {key:values for key,values in consumed.items() if values}
+        if not consumed: self.on_feature_change(None, data, None)
+        for key,(old,new) in consumed.items():
+            if not self.features[key].isset(): continue
             if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
                 %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            for p in self._pending.copy(): p.has_polled(attr) # has_polled() changes self._pending
+            for p in self._pending.copy(): p.has_polled(key) # has_polled() changes self._pending
 
 
 class PreloadMixin:
@@ -200,9 +200,9 @@ class SendOnceMixin(object): # TODO: move to Feature so that it affects f.set()
         self._block_on_set[name] = value
         super()._set_feature_value(name,value)
         
-    def on_change(self,*args,**xargs):
+    def on_feature_change(self,*args,**xargs):
         self._block_on_set.clear() # unblock values after amp switches on
-        super().on_change(*args,**xargs)
+        super().on_feature_change(*args,**xargs)
 
 
 class AbstractAmp(SendOnceMixin, PreloadMixin, FeaturesMixin, _AbstractAmp): pass

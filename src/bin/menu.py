@@ -190,7 +190,7 @@ class Menu(TabbedPanel):
 
     def on_feature_change(self, f, old, new):
         if old == None: # initial
-            self.show_row(amp, f.attr, f)
+            self.show_row(amp, f.key, f)
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """

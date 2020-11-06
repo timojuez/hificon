@@ -49,9 +49,9 @@ class VolumeChanger(AmpEvents):
                 self.amp.volume += self.step*(int(self.button)*2-1)
                 if self.interval: time.sleep(self.interval)
     
-    def on_change(self, attr, value): # amp change
-        super().on_change(attr, value)
-        if attr != "volume" or self.keys_pressed <= 0: return
+    def on_feature_change(self, key, value, *args): # amp change
+        super().on_feature_change(key, value, *args)
+        if key != "volume" or self.keys_pressed <= 0: return
         with suppress(RuntimeError): self._vol_lock.release()
 
     def on_key_release(self, button):

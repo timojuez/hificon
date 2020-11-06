@@ -16,7 +16,7 @@ default_values = dict(
 
 def get_val(f):
     if f.isset(): val = f.get()
-    elif f.attr in default_values: val = default_values[f.attr]
+    elif f.key in default_values: val = default_values[f.key]
     elif getattr(f, "default_value", None): val = f.default_value
     elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
     elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
@@ -54,7 +54,7 @@ class DummyAmp:
         r = None
 
         # cmd is a request
-        for attr, f in self.features.items():
+        for key, f in self.features.items():
             if f.call == cmd:
                 encoded = get_val(f)
                 self.on_receive_raw_data(encoded)
@@ -63,7 +63,7 @@ class DummyAmp:
         if r is not None: return r
 
         # cmd is a command
-        for attr, f in self.features.items():
+        for key, f in self.features.items():
             if matches and matches(cmd) or f.matches(cmd):
                 self.on_receive_raw_data(cmd)
                 r = get_val(f)

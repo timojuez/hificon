@@ -2,8 +2,8 @@
 from hificon import Amp
 
 
-def on_amp_change(attr, value):
-    print("Changed %s to %s."%(attr,value))
+def on_feature_change(key, value, *args):
+    print("Changed %s to %s."%(key,value))
 
 def volume_prompt():
     print("Current volume: %.1f"%amp.volume)
@@ -13,6 +13,6 @@ def volume_prompt():
 
 if __name__ == "__main__":
     amp = Amp()
-    amp.bind(on_change=on_amp_change, on_connect=volume_prompt)
+    amp.bind(on_feature_change=on_feature_change, on_connect=volume_prompt)
     amp.mainloop()
 
