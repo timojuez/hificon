@@ -1,15 +1,15 @@
 #!/usr/bin/env hifish
 
-def on_amp_change(attr, value):
-    print("\nChanged %s to %s."%(attr,value))
+def on_feature_change(key, value, prev):
+    print("\nChanged %s to %s."%(key,value))
 
 def volume_prompt():
     print("Current volume: %.1f" % $volume)
     while True:
         newvol = input("Enter new volume: ")
-        $volume = float(newvol)
+        $volume = Decimal(newvol)
 
 if __name__ == "__main__":
-    $bind(on_change=on_amp_change)
+    $bind(on_feature_change=on_feature_change)
     volume_prompt()
 
