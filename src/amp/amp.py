@@ -172,18 +172,12 @@ class FeaturesMixin(object):
 
 
 class PreloadMixin:
-    # feature keys to be polled on_connect
-    preload_features = set()
-    # carries all feature keys that are being preloaded while on_change
-    preloading_features = set()
+    preload_features = set() # feature keys to be polled on_connect
 
     def on_connect(self):
         super().on_connect()
-        self.preloading_features = self.preload_features.copy()
-        def preloaded(amp, key):
-            if key in self.preloading_features: self.preloading_features.remove(key)
         for key in set(self.preload_features):
-            if key in self.features: require(key)(preloaded)(self, key)
+            if key in self.features: self.features[key].async_poll()
         
 
 class SendOnceMixin(object): # TODO: move to Feature so that it affects f.set()
