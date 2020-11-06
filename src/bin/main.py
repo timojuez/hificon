@@ -91,13 +91,14 @@ class NotificationMixin(object):
         self._notifications["volume"].show()
         super().on_key_press(*args,**xargs)
 
-    def on_feature_change(self, key, value, *args): # bound to amp
-        if key not in self.amp.preloading_features and key != "maxvol" and (
+    def on_feature_change(self, key, value, prev): # bound to amp
+        if not (key in self.amp.preload_features and prev is None) \
+            and key != "maxvol" and (
                 "all" in self._notify_events
                 or "all_implemented" in self._notify_events and key
                 or key in self._notify_events):
             self.update_notification(key, value).show()
-        super().on_feature_change(key,value,*args)
+        super().on_feature_change(key,value,prev)
 
     def on_scroll_up(self, *args, **xargs):
         self._notifications["volume"].show()
