@@ -56,6 +56,7 @@ class CLI:
     def print_header(self):
         print("$_ HIFI SHELL %s"%VERSION)
         print("Copyright (c) 2020 Timo L. Richter\n")
+        print("To get started, write help()\n")
 
     def prompt(self):
         self.amp.bind(on_disconnected=self.on_disconnected)
