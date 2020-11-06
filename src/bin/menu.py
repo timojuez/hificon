@@ -81,6 +81,7 @@ class Menu(TabbedPanel):
         for key, f in custom_menu.items():
             self.show_row(amp, key, f)
         amp.preload_features = set(amp.features.keys())
+        amp.bind(on_feature_change=self.on_feature_change)
 
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
@@ -188,16 +189,15 @@ class Menu(TabbedPanel):
 
         return layout
 
-    def on_feature_change(self, f, old, new):
-        if old == None: # initial
-            self.show_row(amp, f.key, f)
+    def on_feature_change(self, key, value, prev):
+        if prev == None and key and key in self.features:
+            self.show_row(amp, key, amp.features[key])
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, widget_getter, widget_setter)
         
-        f.bind(on_change=lambda *args: self.on_feature_change(f,*args))
         f.bind(on_change=on_value_change)
         if f.isset(): on_value_change(f.get()) # set static feature values
         return on_widget_change
