@@ -1,5 +1,6 @@
 import sys, os, argparse, pkgutil, socket
-from ..util.network import PrivateNetwork
+from urllib.parse import urlparse
+from ..util import ssdp
 from ..config import config, FILE
 from .. import NAME, Amp, protocol
 
@@ -84,18 +85,27 @@ def discover_denon():
     """
     Search local network for Denon amp
     """
-    for host in PrivateNetwork().find_hosts():
-        if host.lower().startswith("denon"):
+    def check_amp(host):
+        try:
             with Amp(protocol=".denon", host=host) as amp:
-                try: name = amp.denon_name
-                except: name = host
-            print("Found %s on %s."%(name, host))
-            config["Amp"]["Host"] = host
-            config["Amp"]["Name"] = name
-            config["Amp"]["protocol"] = ".denon"
-            return
-    raise Exception("No Denon amp found in local network. Check if amp is connected or"
-        " set IP manually.")
+                name = amp.denon_name
+        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
+            return False
+        print("Found %s on %s."%(name, host))
+        config["Amp"]["Host"] = host
+        config["Amp"]["Name"] = name
+        config["Amp"]["protocol"] = ".denon"
+        return True
+    for response in ssdp.discover():
+        if "denon" in response.st.lower() or "marantz" in response.st.lower():
+            host = urlparse(response.location).hostname
+            if check_amp(host): return
+    #raise Exception("No Denon amp found. Check if amp is connected or"
+    #    " set IP manually.")
+    while True:
+        host = input("No Denon amp found. Enter IP manually: ")
+        if check_amp(host): return
+        else: print("Cannot connect to host.")
 
 
 def main(): Main()()

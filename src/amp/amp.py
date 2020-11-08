@@ -42,7 +42,7 @@ class _AbstractAmp(Bindable, AmpType):
         self.host = host or self.host or config["Amp"].get("Host")
         self.port = port or self.port or config["Amp"].getint("port")
         self.name = name or self.name or config["Amp"].get("Name") or self.host
-        if not self.host: raise RuntimeError("Host is not set! Install autosetup or set AVR "
+        if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
     
     def __enter__(self): return self.enter()

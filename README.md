@@ -23,10 +23,6 @@
 
 Optional:
 
-**For automatic amplifier discovery:**
-- Private nameserver on LAN
-- nmap and net-tools
-
 **For automatic power control:**
 - SystemD
 - Pulseaudio
@@ -40,17 +36,17 @@ Optional:
 ### Ubuntu and other GNU OS
 Install the requirements:
 
-`sudo apt-get install python3-dev python3-pip nmap net-tools python3-gi`
+`sudo apt-get install python3-dev python3-pip python3-gi`
 
 Cloning this repository in the current directory and installing via pip:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[autosetup,gnu_desktop] && rm -R ./hificon && hificon_setup --keys`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && hificon_setup --keys`
 
 ### Proprietary OS
 On Mac/Windows, download and install Python3 with Pip.
 Then execute:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[autosetup,nongnu_desktop] && rm -R ./hificon && hificon_setup`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[nongnu_desktop] && rm -R ./hificon && hificon_setup`
 
 To connect the extra mouse buttons, start `hificon_mouse_binding`. You may want to add the command to autostart.
 
@@ -131,7 +127,7 @@ It is possible to implement the support for other AVR brands like Yamaha, Pionee
 It is possible to create a customised controller that keeps your own program synchronised with the amp.
 See ./examples/custom_app.py
 
-If your development only relies on sending commands to the amp, your requirement is purely the hificon package and optionally hificon[autosetup].
+If your development only relies on sending commands to the amp, your requirement is purely the hificon package.
 
 ### AVR Emulator
 For testing purposes, there is a Denon AVR software emulator that acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_amp_emulator --port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
