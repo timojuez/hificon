@@ -22,7 +22,7 @@ class Main(object):
         
         source_options = parser.add_mutually_exclusive_group()
         source_options.add_argument('--source-options-setup', dest="nothing", action="store_false", help='Refresh input source list (default)')
-        source.add_argument('--no-source-options-setup', default=source_options_setup, dest="source_options_setup", action="store_false")
+        source_options.add_argument('--no-source-options-setup', default=source_options_setup, dest="source_options_setup", action="store_false")
         
         port = parser.add_mutually_exclusive_group()
         port.add_argument('--set-port', dest="nothing", action="store_false", help='Set a port for inter process communication (default)')
@@ -32,7 +32,7 @@ class Main(object):
         self.args = parser.parse_args()
         
     def __call__(self):
-        if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/n] "%FILE) != "y": return
+        if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/N] "%FILE) != "y": return
         for arg, func in filter(lambda e: callable(e[1]), self.args._get_kwargs()):
             try: func()
             except Exception as e:
