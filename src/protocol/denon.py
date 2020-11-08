@@ -229,6 +229,7 @@ class SourceNames(SelectFeature): #undocumented
             return
         code, name = val.split(" ",1)
         self.translation[code] = name
+        self.amp.features["source"].translation[code] = name
     def unset(self): self._ready = False
     def get(self): return "(select)"
     def encode(self, value):
