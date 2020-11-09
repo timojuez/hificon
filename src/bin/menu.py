@@ -78,8 +78,9 @@ class Menu(TabbedPanel):
             print("adding %s"%f.name)
             if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
             self.addFeature(key, f, tabs[f.category])
-        for key, f in custom_menu.items():
-            self.show_row(amp, key, f)
+            if f.isset(): # show static features
+                self.show_row(amp, key, f)
+                f.on_change(None, f.get())
         amp.preload_features = set(amp.features.keys())
         amp.bind(on_feature_change=self.on_feature_change)
 
@@ -199,7 +200,6 @@ class Menu(TabbedPanel):
             f.get, f.set, widget_getter, widget_setter)
         
         f.bind(on_change=on_value_change)
-        if f.isset(): on_value_change(f.get()) # set static feature values
         return on_widget_change
 
 
