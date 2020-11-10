@@ -1,13 +1,13 @@
-#!/usr/bin/env hifish
+#!/usr/bin/env -S hifish -vvvvvv
 $poweron(force=True)
-
-# Switch Bass Mode
-if $front_speaker != "A":
-    $'MNMEN OFF'; $'MNMEN ON'; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCUP; MNCDN; MNCDN; MNCDN; MNENT; MNCDN; MNENT; MNCDN; MNCDN; MNCDN; MNCDN; MNCDN; MNENT; MNENT; MNCRT; MNENT 
-    wait(.5)
-    $'MNMEN OFF'
-
-$'DIM DAR'; $'PSFRONT SPA'; $'SISAT/CBL'; $'MSDTS SURROUND'; $'PSMULTEQ:AUDYSSEY'; #$'MSDOLBY DIGITAL'
+$front_speaker_config = 'Small'
+$subwoofer_mode = 'LFE'
+$display = 'Dark'
+$front_speaker = 'A'
+$source = 'CBL/SAT'
+$surround = 'Multi Channel In'
+$surround = 'Dolby Digital'
+$multi_eq = 'Flat'
 wait(1)
-$'CVSW 465'
+$sub_volume = Decimal('-3.5')
 
