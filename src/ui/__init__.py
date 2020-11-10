@@ -113,6 +113,9 @@ def loadwx():
         @CallAfter
         def show(self): self.Show(timeout=self._timeout)
 
+        @CallAfter
+        def close(self): self.Close()
+
     
     class Icon(_Icon, TaskBarIcon):
         

@@ -180,6 +180,11 @@ class AmpController(AmpController):
         if hasattr(self._n, "add_action"):
             self._n.add_action("Cancel", lambda *args,**xargs: self._poweroff_timer.cancel())
         self._n.set_timeout(self.poweroff_timeout*1000)
+    
+    def on_poweroff(self):
+        try: self._n.close()
+        except: pass
+        super().on_poweroff()
         
     def on_amp_idle(self):
         if not self.amp.can_poweroff: return
