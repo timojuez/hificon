@@ -296,6 +296,86 @@ class FrontWideRightVolume(_ChannelVolume):
     name = "Front Wide R Volume"
     function = "CVFWR "
 
+class _SpeakerLevel(RelativeDecimal):
+    category = "Speakers"
+    call = "SSLEV ?"
+
+class FrontLeftLevel(_SpeakerLevel): #undocumented
+    name = "Front L Level"
+    function = "SSLEVFL "
+
+class FrontRightLevel(_SpeakerLevel): #undocumented
+    name = "Front R Level"
+    function = "SSLEVFR "
+
+class CenterLevel(_SpeakerLevel): #undocumented
+    name = "Center Level"
+    function = "SSLEVC "
+
+class SubwooferLevel(_SpeakerLevel): #undocumented
+    name = "Subwoofer Level"
+    function = "SSLEVSW "
+    
+class SurroundLeftLevel(_SpeakerLevel): #undocumented
+    name = "Surround L Level"
+    function = "SSLEVSL "
+    
+class SurroundRightLevel(_SpeakerLevel): #undocumented
+    name = "Surround R Level"
+    function = "SSLEVSR "
+    
+class SurroundBackLeftLevel(_SpeakerLevel): #undocumented
+    name = "Surround Back L Level"
+    function = "SSLEVSBL "
+    
+class SurroundBackRightLevel(_SpeakerLevel): #undocumented
+    name = "Surround Back R Level"
+    function = "SSLEVSBR "
+    
+class SurroundBackLevel(_SpeakerLevel): #undocumented
+    name = "Surround Back Level"
+    function = "SSLEVSB "
+
+class FrontHeightLeftLevel(_SpeakerLevel): #undocumented
+    name = "Front Height L Level"
+    function = "SSLEVFHL "
+
+class FrontHeightRightLevel(_SpeakerLevel): #undocumented
+    name = "Front Height R Level"
+    function = "SSLEVFHR "
+
+class TopFrontLeftLevel(_SpeakerLevel): #undocumented
+    name = "Top Front L Level"
+    function = "SSLEVTFL "
+
+class TopFrontRightLevel(_SpeakerLevel): #undocumented
+    name = "Top Front R Level"
+    function = "SSLEVTFR "
+
+class TopMiddleLeftLevel(_SpeakerLevel): #undocumented
+    name = "Top Middle L Level"
+    function = "SSLEVTML "
+
+class TopMiddleRightLevel(_SpeakerLevel): #undocumented
+    name = "Top Middle R Level"
+    function = "SSLEVTMR "
+
+class FrontAtmosLeftLevel(_SpeakerLevel): #undocumented
+    name = "Front Atmos L Level"
+    function = "SSLEVFDL "
+
+class FrontAtmosRightLevel(_SpeakerLevel): #undocumented
+    name = "Front Atmos R Level"
+    function = "SSLEVFDR "
+
+class SurroundAtmosLeftLevel(_SpeakerLevel): #undocumented
+    name = "Surround Atmos L Level"
+    function = "SSLEVSDL "
+
+class SurroundAtmosRightLevel(_SpeakerLevel): #undocumented
+    name = "Surround Atmos R Level"
+    function = "SSLEVSDR "
+
 class MainZone(BoolFeature):
     name = "Main Zone"
     function = "ZM"
@@ -729,6 +809,25 @@ features = dict(
         subwoofer_mode = SubwooferMode,
         lfe_lowpass = LfeLowpass,
         display = Display,
+        front_left_level = FrontLeftLevel,
+        front_right_level = FrontRightLevel,
+        center_level = CenterLevel,
+        subwoofer_level = SubwooferLevel,
+        surround_left_level = SurroundLeftLevel,
+        surround_right_level = SurroundRightLevel,
+        surround_back_left_level = SurroundBackLeftLevel,
+        surround_back_right_level = SurroundBackRightLevel,
+        surround_back_level = SurroundBackLevel,
+        front_height_left_level = FrontHeightLeftLevel,
+        front_height_right_level = FrontHeightRightLevel,
+        top_front_left_level = TopFrontLeftLevel,
+        top_front_right_level = TopFrontRightLevel,
+        top_middle_left_level = TopMiddleLeftLevel,
+        top_middle_right_level = TopMiddleRightLevel,
+        front_atmos_left_level = FrontAtmosLeftLevel,
+        front_atmos_right_level = FrontAtmosRightLevel,
+        surround_atmos_left_level = SurroundAtmosLeftLevel,
+        surround_atmos_right_level = SurroundAtmosRightLevel,
         # TODO: implement PV
 )
 
