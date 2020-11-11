@@ -1,126 +1,67 @@
-# -*- coding: utf-8 -*-
+import argparse, os, pkgutil
 
-###########################################################################
-## Python code generated with wxFormBuilder (version 3.9.0 Jul  7 2020)
-## http://www.wxformbuilder.org/
-##
-## PLEASE DO *NOT* EDIT THIS FILE!
-###########################################################################
+os.environ["KIVY_NO_ARGS"] = "1"
+from kivy.config import Config
 
-import wx
-import wx.xrc
+Config.set('graphics', 'borderless', True)
+Config.set('graphics', 'resizable', False)
+Config.set('graphics', 'window_state', 'hidden')
+Config.set('graphics', 'width', 101)
+Config.set('graphics', 'height', 234)
 
-###########################################################################
-## Class Frame
-###########################################################################
-
-class Frame ( wx.Frame ):
-
-	def __init__( self, parent ):
-		wx.Frame.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 101,234 ), style = wx.FRAME_NO_TASKBAR|wx.STAY_ON_TOP|wx.BORDER_NONE )
-
-		self.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
+from kivy.app import App
+from kivy.lang import Builder
+from kivy.core.window import Window
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.stacklayout import StackLayout
+from kivy.uix.boxlayout import BoxLayout
 
 
-	def __del__( self ):
-		pass
+class GaugeNotification(BoxLayout):
+    _timeout = 2
+    _min = 0
+    _max = 100
+    _value = 0
+    _title = ""
+    _message = ""
+    
+    def set_timeout(self, t): self._timeout = t/1000
+    
+    def on_click(self, *args): self.hide()
+    
+    def myupdate(self, title=None, message=None, value=None, min=None, max=None):
+        if not message and value is not None: message = "%0.1f"%value
+        if title is not None: self._title = title
+        if message is not None: self._message = message
+        if value is not None: self._value = value
+        if min is not None: self._min = min
+        if max is not None: self._max = max
+
+        self.ids.title.text = str(title)
+        self.ids.subtitle.text = str(self._message)
+        self.ids.bottom.size_hint_y = float((self._value-self._min)/(self._max-self._min))
+    
+    def show(self):
+        Window.show()
+        #Window.left = wx.DisplaySize()[0]-self.GetParent().Size.GetWidth()-20
+        Window.left = 1800
+        try: self._timer.cancel()
+        except: pass
+        self._timer = Timer(self._timeout, self.hide)
+        self._timer.start()
+
+    def hide(self): Window.hide()
 
 
-###########################################################################
-## Class GaugeNotification
-###########################################################################
+class _App(App):
 
-class GaugeNotification ( wx.Panel ):
-
-	def __init__( self, parent, id = wx.ID_ANY, pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.BORDER_NONE, name = wx.EmptyString ):
-		wx.Panel.__init__ ( self, parent, id = id, pos = pos, size = size, style = style, name = name )
-
-		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_INFOTEXT ) )
-		self.SetBackgroundColour( wx.Colour( 47, 47, 47 ) )
-
-		border = wx.BoxSizer( wx.VERTICAL )
-
-		vbox_outer = wx.BoxSizer( wx.VERTICAL )
-
-		self.title = wx.StaticText( self, wx.ID_ANY, u"Front L Volume", wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_END )
-		self.title.Wrap( -1 )
-
-		self.title.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
-		self.title.SetForegroundColour( wx.Colour( 222, 214, 214 ) )
-
-		vbox_outer.Add( self.title, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
-
-		gauge = wx.BoxSizer( wx.VERTICAL )
-
-		self.empty = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 20,30 ), 0 )
-		self.empty.Wrap( -1 )
-
-		self.empty.SetBackgroundColour( wx.Colour( 74, 74, 74 ) )
-
-		gauge.Add( self.empty, 1, wx.ALIGN_CENTER_HORIZONTAL, 2 )
-
-		self.progress = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 20,50 ), 0 )
-		self.progress.Wrap( -1 )
-
-		self.progress.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
-		self.progress.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_HIGHLIGHT ) )
-
-		gauge.Add( self.progress, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 0 )
+    def build(self):
+        return GaugeNotification()
 
 
-		vbox_outer.Add( gauge, 1, wx.ALIGN_CENTER, 5 )
-
-		self.subtitle = wx.StaticText( self, wx.ID_ANY, u"MyLabel", wx.DefaultPosition, wx.DefaultSize, wx.ST_ELLIPSIZE_END )
-		self.subtitle.Wrap( -1 )
-
-		self.subtitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), wx.FONTFAMILY_DEFAULT, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_BOLD, False, wx.EmptyString ) )
-		self.subtitle.SetForegroundColour( wx.Colour( 222, 214, 214 ) )
-
-		vbox_outer.Add( self.subtitle, 0, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
-
-
-		border.Add( vbox_outer, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.ALL, 10 )
-
-
-		self.SetSizer( border )
-		self.Layout()
-		border.Fit( self )
-		self.signal_process_timer = wx.Timer()
-		self.signal_process_timer.SetOwner( self, wx.ID_ANY )
-		self.signal_process_timer.Start( 1000 )
-
-
-		# Connect Events
-		self.Bind( wx.EVT_LEFT_UP, self.on_click )
-		self.Bind( wx.EVT_RIGHT_UP, self.on_click )
-		self.title.Bind( wx.EVT_LEFT_UP, self.on_click )
-		self.title.Bind( wx.EVT_RIGHT_UP, self.on_click )
-		self.empty.Bind( wx.EVT_LEFT_UP, self.on_click )
-		self.empty.Bind( wx.EVT_RIGHT_UP, self.on_click )
-		self.progress.Bind( wx.EVT_LEFT_UP, self.on_click )
-		self.progress.Bind( wx.EVT_RIGHT_UP, self.on_click )
-		self.subtitle.Bind( wx.EVT_LEFT_UP, self.on_click )
-		self.subtitle.Bind( wx.EVT_RIGHT_UP, self.on_click )
-		self.Bind( wx.EVT_TIMER, self.signal_process_timerOnTimer, id=wx.ID_ANY )
-
-	def __del__( self ):
-		pass
-
-
-	# Virtual event handlers, overide them in your derived class
-	def on_click( self, event ):
-		event.Skip()
-
-
-
-
-
-
-
-
-
-
-	def signal_process_timerOnTimer( self, event ):
-		event.Skip()
-
+kv = pkgutil.get_data(__name__,"../share/gauge_notification.kv").decode()
+if __name__ == '__main__':
+    Builder.load_string(kv)
+    Window.top = 170
+    _App().run()
 
