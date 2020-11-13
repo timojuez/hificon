@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, sys, math, pkgutil, io, wx
+import argparse, sys, math, pkgutil, io
 from threading import Thread, Timer
 from PIL import Image
 from .. import Amp, NAME
@@ -9,11 +9,7 @@ from .. import ui, amp
 from ..config import config
 
 
-try:
-    assert(config["GUI"].get("backend") == "gtk")
-    ui.loadgtk()
-except (AssertionError, ImportError): ui.loadwx()
-else: ui.init(NAME)
+ui.init(NAME)
 
 
 class NotificationWithTitle:
@@ -49,17 +45,6 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
             value=feature.get() if feature.isset() else feature.min,
             min=feature.min,
             max=feature.max)
-    
-
-class GUI_Backend:
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self._app = wx.App()
-
-    def mainloop(self):
-        if ui.backend != "wx": Thread(target=ui.mainloop, name="ui.mainloop", daemon=True).start()
-        self._app.MainLoop()
     
 
 class NotificationMixin(object):
@@ -166,7 +151,8 @@ class Tray(object):
         self.amp.volume = volume
     
 
-class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, GUI_Backend): pass
+class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, ui.GUI_Backend):
+    pass
 
 
 class AmpController(AmpController):
