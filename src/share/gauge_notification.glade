@@ -6,6 +6,7 @@
     <property name="can_focus">False</property>
     <property name="type">popup</property>
     <property name="resizable">False</property>
+    <property name="destroy_with_parent">True</property>
     <property name="type_hint">notification</property>
     <property name="skip_taskbar_hint">True</property>
     <property name="skip_pager_hint">True</property>
@@ -32,6 +33,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">label</property>
+            <property name="wrap">True</property>
+            <property name="ellipsize">end</property>
+            <property name="lines">2</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -58,6 +62,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="label" translatable="yes">label</property>
+            <property name="wrap">True</property>
+            <property name="ellipsize">end</property>
+            <property name="lines">2</property>
           </object>
           <packing>
             <property name="expand">False</property>
