@@ -127,6 +127,17 @@ glade = pkgutil.get_data(__name__,"../share/gauge_notification.glade").decode()
 builder.add_from_string(glade)
 builder.connect_signals(GaugeNotification())
 
+css = b'''
+window { background-color: #2e2e2e; }
+label { color: #ded6d6; font-weight: bold }
+'''
+css_provider = Gtk.CssProvider()
+css_provider.load_from_data(css)
+context = Gtk.StyleContext()
+screen = Gdk.Screen.get_default()
+context.add_provider_for_screen(screen, css_provider,
+                                Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+
 level = builder.get_object("level")
 l_title = builder.get_object("title")
 l_subtitle = builder.get_object("subtitle")
