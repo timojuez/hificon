@@ -83,8 +83,7 @@ class GaugeNotification(_Notification):
 
     @gtk
     def _position(self):
-        width, height = gauge_window.get_size()
-        gauge_window.move(gauge_window.get_screen().get_width()-width-20, 170)
+        gauge_window.move(gauge_window.get_screen().get_width()-gauge_width-50, 170)
 
     @gtk
     def show(self): gauge_window.show_all()
@@ -142,4 +141,5 @@ level = builder.get_object("level")
 l_title = builder.get_object("title")
 l_subtitle = builder.get_object("subtitle")
 gauge_window = builder.get_object("window")
+gauge_width, gauge_height = gauge_window.get_size()
 
