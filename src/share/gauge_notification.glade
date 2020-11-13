@@ -13,6 +13,7 @@
     <property name="accept_focus">False</property>
     <property name="focus_on_map">False</property>
     <property name="gravity">east</property>
+    <signal name="button-release-event" handler="on_click" swapped="no"/>
     <child type="titlebar">
       <placeholder/>
     </child>

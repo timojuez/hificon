@@ -48,27 +48,6 @@ class _Notification(Bindable):
     def set_urgency(self, n): pass
 
 
-class Handler:
-    def onDestroy(self, *args):
-        Gtk.main_quit()
-
-    def onButtonPressed(self, button):
-        print("Hello World!")
-
-
-builder = Gtk.Builder()
-glade = pkgutil.get_data(__name__,"../share/gauge_notification.glade").decode()
-builder.add_from_string(glade)
-builder.connect_signals(Handler())
-
-level = builder.get_object("level")
-l_title = builder.get_object("title")
-l_subtitle = builder.get_object("subtitle")
-
-
-gauge_window = builder.get_object("window")
-
-
 class GUI_Backend:
     def mainloop(self): Gtk.main()
 
@@ -81,6 +60,10 @@ class GaugeNotification(_Notification):
     _title = ""
     _message = ""
     
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._position()
+        
     def set_timeout(self, t): self._timeout = t/1000
     
     def on_click(self, *args): self.hide()
@@ -99,14 +82,15 @@ class GaugeNotification(_Notification):
         level.set_value(value)
 
     @gtk
-    def show(self):
+    def _position(self):
         width, height = gauge_window.get_size()
         gauge_window.move(gauge_window.get_screen().get_width()-width-20, 170)
-        gauge_window.show_all()
 
     @gtk
-    def hide(self):
-        gauge_window.hide()
+    def show(self): gauge_window.show_all()
+
+    @gtk
+    def hide(self): gauge_window.hide()
 
 
 class Notification(_Notification, Notify.Notification):
@@ -137,4 +121,14 @@ class Icon(_Icon):
     
     def connect(self, *args, **xargs): self.icon.connect(*args,**xargs)
     
-    
+
+builder = Gtk.Builder()
+glade = pkgutil.get_data(__name__,"../share/gauge_notification.glade").decode()
+builder.add_from_string(glade)
+builder.connect_signals(GaugeNotification())
+
+level = builder.get_object("level")
+l_title = builder.get_object("title")
+l_subtitle = builder.get_object("subtitle")
+gauge_window = builder.get_object("window")
+
