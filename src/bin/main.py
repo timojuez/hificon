@@ -2,11 +2,11 @@
 import argparse, sys, math, pkgutil, io
 from threading import Thread, Timer
 from PIL import Image
-from .. import Amp, NAME
+from ..amp import features
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
-from .. import ui, amp
 from ..config import config
+from .. import Amp, NAME, ui
 
 
 ui.init(NAME)
@@ -57,7 +57,7 @@ class NotificationMixin(object):
         self.amp.preload_features.add("volume")
     
     def _createNotification(self, feature):
-        if isinstance(feature, amp.features.NumericFeature): N = NumericFeatureNotification
+        if isinstance(feature, features.NumericFeature): N = NumericFeatureNotification
         elif feature is None: N = TextNotification
         else: N = TextFeatureNotification
         n = N(self.amp.name)
@@ -119,7 +119,7 @@ class Tray(object):
         self.icon = ui.Icon()
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
     
-    @amp.features.require("muted","volume","maxvol")
+    @features.require("muted","volume","maxvol")
     def updateIcon(self):
         icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
         volume = 0 if self.amp.muted else self.amp.volume
@@ -140,12 +140,12 @@ class Tray(object):
         icon = Image.open(io.BytesIO(image_data))
         self.icon.set_icon(icon, name)
     
-    @amp.features.require("volume")
+    @features.require("volume")
     def on_scroll_up(self, steps):
         volume = self.amp.volume+self.scroll_delta*steps
         self.amp.volume = volume
 
-    @amp.features.require("volume")
+    @features.require("volume")
     def on_scroll_down(self, steps):
         volume = self.amp.volume-self.scroll_delta*steps
         self.amp.volume = volume
