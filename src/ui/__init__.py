@@ -1,6 +1,5 @@
 import gi
 gi.require_version("Gtk", "3.0")
-gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
 from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3
@@ -96,7 +95,6 @@ class GaugeNotification(GladeGtk, _Notification):
         self.window.move(self.window.get_screen().get_width()-self.width-50, 170)
 
     def show(self):
-        if VolumePopup.instance.window.get_visible(): return
         super().show()
         try: self._timer.cancel()
         except: pass
@@ -126,7 +124,7 @@ class VolumePopup(GladeGtk):
             f.get, f.set, self.scale.get_value, self.set_value)
         f.bind(on_change=on_value_change)
         features.require("volume")(lambda amp:on_value_change())(amp)
-    
+
     def set_value(self, value):
         self.scale.set_value(value)
         self.label.set_text("%0.1f"%value)
@@ -138,6 +136,9 @@ class VolumePopup(GladeGtk):
     def on_change(self, event): self.on_widget_change()
 
     def on_focus_out(self, *args): self.hide()
+    
+    @property
+    def visible(self): return self.window.get_visible()
 
 
 class Notification(_Notification, Notify.Notification):

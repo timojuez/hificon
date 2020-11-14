@@ -35,12 +35,17 @@ class TextFeatureNotification(TextNotification):
 class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
     
     def update(self, feature):
+        self._f = feature
         super().update(
             title=feature.name,
             message=str("%0.1f"%feature.get() if feature.isset() else "..."),
             value=feature.get() if feature.isset() else feature.min,
             min=feature.min,
             max=feature.max)
+            
+    def show(self):
+        if self._f.key == "volume" and ui.VolumePopup.instance.visible: return
+        else: super().show()
 
 
 class Icon:
