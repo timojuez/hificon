@@ -41,7 +41,7 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
     def update(self, feature):
         super().update(
             title=feature.name,
-            message=str(feature.get() if feature.isset() else "..."),
+            message=str("%0.1f"%feature.get() if feature.isset() else "..."),
             value=feature.get() if feature.isset() else feature.min,
             min=feature.min,
             max=feature.max)
@@ -116,7 +116,7 @@ class Tray(object):
         super().__init__(*args,**xargs)
         self.amp.preload_features.update(("volume","muted","maxvol"))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
-        self.icon = ui.Icon()
+        self.icon = ui.Icon(self.amp)
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
     
     @features.require("muted","volume","maxvol")
