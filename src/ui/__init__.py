@@ -88,7 +88,6 @@ class GaugeNotification(GladeGtk, _Notification):
         self.level.set_min_value(min)
         self.level.set_max_value(max)
         self.level.set_value(value)
-        self.show()
 
     @gtk
     def _position(self):

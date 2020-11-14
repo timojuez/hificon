@@ -45,7 +45,8 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
             
     def show(self):
         if self._f.key == "volume" and ui.VolumePopup.instance.visible: return
-        else: super().show()
+        self.update(self._f)
+        super().show()
 
 
 class Icon:
