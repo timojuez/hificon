@@ -15,8 +15,8 @@ setup(name=PKG_NAME,
       package_dir={PKG_NAME: "src"},
       install_requires=["argparse"],
       extras_require={
-        "gnu_desktop": ["PyGObject","pycairo","pulsectl","Pillow","kivy"],
-        "nongnu_desktop": ["PyGObject","pycairo","pynput","Pillow","kivy"],
+        "gnu_desktop": ["PyGObject","pycairo","pulsectl","kivy"],
+        "nongnu_desktop": ["PyGObject","pycairo","pynput","kivy"],
       },
       include_package_data=True,
       entry_points={'console_scripts': [

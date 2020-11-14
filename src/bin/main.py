@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
-import argparse, sys, math, pkgutil, io
+import argparse, sys, math, pkgutil, tempfile
 from threading import Thread, Timer
-from PIL import Image
 from ..amp import features
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
 from .. import Amp, NAME, ui
-
-
-ui.init(NAME)
 
 
 class NotificationWithTitle:
@@ -45,7 +41,51 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
             value=feature.get() if feature.isset() else feature.min,
             min=feature.min,
             max=feature.max)
+
+
+class Icon:
+    """ Functions regarding loading images from src/share """
     
+    _icon_path = tempfile.mktemp()
+
+    def _getCurrentIconName(self):
+        icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
+        volume = 0 if self.amp.muted else self.amp.volume
+
+        #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
+        if self.amp.muted or volume == 0:
+            return "audio-volume-muted"
+        else:
+            icon_idx = math.ceil(volume/self.amp.features["volume"].max *len(icons))-1
+            return icons[icon_idx]
+    
+    def getCurrentIconPath(self):
+        name = self._getCurrentIconName()
+        if getattr(self,"_icon_name",None) == name: return self._icon_path, name
+        self._icon_name = name
+        image_data = pkgutil.get_data(
+            __name__,"../share/icons/scalable/%s-dark.svg"%name)
+        with open(self._icon_path,"wb") as fp: fp.write(image_data)
+        return self._icon_path, name
+
+    def __del__(self):
+        try: os.remove(self._icon_path)
+        except: pass
+
+
+class RelevantAmpEvents(Icon, AmpEvents):
+
+    def on_connect(self): # amp connect
+        super().on_connect()
+        self.updateWidgets()
+
+    def on_feature_change(self, key, value, *args): # bound to amp
+        super().on_feature_change(key,value,*args)
+        if key in ("volume","muted","maxvol"): self.updateWidgets()
+
+    def updateWidgets(self):
+        ui.VolumePopup.instance.set_image(self.getCurrentIconPath()[0])
+
 
 class NotificationMixin(object):
 
@@ -96,49 +136,29 @@ class NotificationMixin(object):
         if self.amp.features["volume"].isset():
             self._notifications["volume"].update(self.amp.features["volume"])
         super().on_scroll_down(*args,**xargs)
-    
 
-class Tray(object):
 
-    def on_connect(self): # amp connect
-        super().on_connect()
-        self.updateIcon()
+class TrayMixin(Icon):
 
-    def on_disconnected(self): # amp disconnect
-        self.icon.hide()
-        super().on_disconnected()
-        
-    def on_feature_change(self, key, value, *args): # bound to amp
-        super().on_feature_change(key,value,*args)
-        if key in ("volume","muted","maxvol"): self.updateIcon()
-            
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
         self.amp.preload_features.update(("volume","muted","maxvol"))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
         self.icon = ui.Icon(self.amp)
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
-    
-    @features.require("muted","volume","maxvol")
-    def updateIcon(self):
-        icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-        volume = 0 if self.amp.muted else self.amp.volume
 
-        #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
-        if self.amp.muted or volume == 0:
-            self._set_icon_by_name("audio-volume-muted")
-        else:
-            icon_idx = math.ceil(volume/self.amp.features["volume"].max *len(icons))-1
-            self._set_icon_by_name(icons[icon_idx])
+    def on_connect(self): # amp connect
+        super().on_connect()
         self.icon.show()
-    
-    def _set_icon_by_name(self, name):
-        if getattr(self,"_icon_name",None) == name: return
-        self._icon_name = name
-        image_data = pkgutil.get_data(
-            __name__,"../share/icons/24/%s-dark.png"%name)
-        icon = Image.open(io.BytesIO(image_data))
-        self.icon.set_icon(icon, name)
+        
+    def on_disconnected(self): # amp disconnect
+        self.icon.hide()
+        super().on_disconnected()
+        
+    @features.require("muted","volume","maxvol")
+    def updateWidgets(self):
+        super().updateWidgets()
+        self.icon.icon.set_icon_full(*self.getCurrentIconPath())
     
     @features.require("volume")
     def on_scroll_up(self, steps):
@@ -151,7 +171,7 @@ class Tray(object):
         self.amp.volume = volume
     
 
-class MainApp(NotificationMixin, VolumeChanger, Tray, AmpEvents, ui.GUI_Backend):
+class MainApp(NotificationMixin, VolumeChanger, TrayMixin, RelevantAmpEvents, ui.GUI_Backend):
     pass
 
 

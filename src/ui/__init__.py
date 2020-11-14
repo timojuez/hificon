@@ -4,19 +4,16 @@ gi.require_version('Gtk', '3.0')
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
 from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3
-import tempfile, os, sys, pkgutil
-from threading import Timer, Thread
+import sys, pkgutil
+from threading import Timer
 from ..util.async_kivy import bind_widget_to_value
 from ..amp import features
 from ..config import config
 from ..util.function_bind import Bindable
-from .. import Amp, NAME
+from .. import NAME
 
 
-def init(name):
-    global _name
-    _name = name
-    Notify.init(name)
+Notify.init(NAME)
 
 
 def gtk(func):
@@ -25,23 +22,11 @@ def gtk(func):
 
 class _Icon(Bindable):
 
-    def __init__(self, *args, **xargs):
-        self._icon_path = tempfile.mktemp()
-        super().__init__(*args,**xargs)
-            
     def set_icon(self, icon, help):
         """ @icon binary """
         with open(self._icon_path,"wb") as fp: icon.save(fp, "PNG")
         self.set_icon_by_path(self._icon_path, help)
         
-    def __del__(self):
-        try: os.remove(self._icon_path)
-        except: pass
-        
-    def on_scroll_up(self, steps): pass
-    
-    def on_scroll_down(self, steps): pass
-
 
 class _Notification(Bindable):
 
@@ -49,6 +34,7 @@ class _Notification(Bindable):
 
 
 class GUI_Backend:
+
     def mainloop(self): Gtk.main()
 
 
@@ -98,23 +84,24 @@ class GaugeNotification(GladeGtk, _Notification):
     
     @gtk
     def update(self, title=None, message=None, value=None, min=None, max=None):
-        try: self._timer.cancel()
-        except: pass
-        self._timer = Timer(self._timeout, self.hide)
-        self._timer.start()
-
         self.title.set_text(title)
         self.subtitle.set_text(message)
         self.level.set_min_value(min)
         self.level.set_max_value(max)
         self.level.set_value(value)
+        self.show()
 
     @gtk
     def _position(self):
         self.window.move(self.window.get_screen().get_width()-self.width-50, 170)
 
     def show(self):
-        if not VolumePopup.instance.window.get_visible(): super().show()
+        if VolumePopup.instance.window.get_visible(): return
+        super().show()
+        try: self._timer.cancel()
+        except: pass
+        self._timer = Timer(self._timeout, self.hide)
+        self._timer.start()
 
 
 class VolumePopup(GladeGtk):
@@ -128,21 +115,23 @@ class VolumePopup(GladeGtk):
         self.width, self.height = self.window.get_size()
         self.scale = self.builder.get_object("scale")
         self.label = self.builder.get_object("label")
+        self.image = self.builder.get_object("image")
         
         f = amp.features["volume"]
         on_value_change, self.on_widget_change = bind_widget_to_value(
             f.get, f.set, self.scale.get_value, self.set_value)
         f.bind(on_change=on_value_change)
-        from ..amp import features
         features.require("volume")(lambda amp:on_value_change())(amp)
-        self.show()
     
     def set_value(self, value):
         self.scale.set_value(value)
         self.label.set_text("%0.1f"%value)
         
-    def on_change(self, event):
-        self.on_widget_change()
+    @gtk
+    def set_image(self, path):
+        self.image.set_from_file(path)
+        
+    def on_change(self, event): self.on_widget_change()
 
     def on_focus_out(self, *args): self.hide()
 
@@ -156,15 +145,19 @@ class Notification(_Notification, Notify.Notification):
     def add_action(self, title, callback): super().add_action("action", title, callback)
 
 
-class Icon(_Icon):
+class Icon(Bindable):
     
     def __init__(self, amp):
         super().__init__()
-        self.icon = AppIndicator3.Indicator.new(_name, _name, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = Popup(amp)
+        self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
+        self.popup = VolumePopup(amp)
         self.icon.connect("scroll-event", self.on_scroll)
         self.icon.set_menu(self.build_menu())
         
+    def on_scroll_up(self, steps): pass
+    
+    def on_scroll_down(self, steps): pass
+
     def build_menu(self):
         menu = Gtk.Menu()
         item_volume = Gtk.MenuItem('Volume')
@@ -186,9 +179,6 @@ class Icon(_Icon):
     
     @gtk
     def hide(self): self.icon.set_status(AppIndicator3.IndicatorStatus.PASSIVE)
-    
-    @gtk
-    def set_icon_by_path(self, path, help): self.icon.set_icon_full(path, help)
     
     def connect(self, *args, **xargs): self.icon.connect(*args,**xargs)
 
