@@ -116,8 +116,12 @@ class VolumePopup(GladeGtk):
         self.scale = self.builder.get_object("scale")
         self.label = self.builder.get_object("label")
         self.image = self.builder.get_object("image")
+        self.adj = self.builder.get_object("adjustment")
         
         f = amp.features["volume"]
+        self.adj.set_lower(f.min)
+        self.adj.set_upper(f.max)
+        self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         on_value_change, self.on_widget_change = bind_widget_to_value(
             f.get, f.set, self.scale.get_value, self.set_value)
         f.bind(on_change=on_value_change)
