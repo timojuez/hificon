@@ -713,6 +713,15 @@ class Display(SelectFeature):
     function = "DIM "
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
+class InputSignal(BoolFeature): #undocumented
+    """ Value seems to indicate if amp is playing something via HDMI """
+    function = "SSINFAISSIG "
+    name = "Input Signal"
+    translation = {"01": False, "02": True}
+    
+    def async_poll(self, *args, **xargs): pass
+    def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
+
 
 features = dict(
         maxvol = Maxvol,
@@ -828,6 +837,7 @@ features = dict(
         front_atmos_right_level = FrontAtmosRightLevel,
         surround_atmos_left_level = SurroundAtmosLeftLevel,
         surround_atmos_right_level = SurroundAtmosRightLevel,
+        input_signal = InputSignal,
         # TODO: implement PV
 )
 

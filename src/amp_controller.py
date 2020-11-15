@@ -28,6 +28,11 @@ class SoundMixin(AmpEvents,_Verbosity):
     """ provide on_amp_idle and may call on_start_playing when connected """
     _soundMixinLock = Lock()
 
+    def on_feature_change(self, key, value, *args): # bound to self.amp by Autobind
+        super().on_feature_change(key, value, *args)
+        if key == "input_signal" and value == True: self.on_start_playing()
+        elif key == "input_signal" and value == False: self.on_stop_playing()
+
     @log_call
     def on_start_playing(self):
         if hasattr(self,"_idle_timer"): self._idle_timer.cancel()
