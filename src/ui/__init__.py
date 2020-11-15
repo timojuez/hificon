@@ -5,7 +5,7 @@ gi.require_version('AppIndicator3', '0.1')
 from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3
 import sys, pkgutil
 from threading import Timer
-from ..util.async_kivy import bind_widget_to_value
+from ..util.async_widget import bind_widget_to_value
 from ..amp import features
 from ..config import config
 from ..util.function_bind import Bindable

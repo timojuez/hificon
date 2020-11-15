@@ -1,7 +1,7 @@
 import argparse, os, pkgutil
 from decimal import Decimal
 from threading import Lock
-from ..util.async_kivy import bind_widget_to_value
+from ..util.async_widget import bind_widget_to_value
 from ..amp import features
 from ..config import config
 from .. import Amp, NAME
