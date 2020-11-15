@@ -86,7 +86,7 @@ class _AbstractAmp(Bindable, AmpType):
         if config["Amp"].get("source"): self.features["source"].set(config["Amp"]["source"], force=True)
         self.power = True
 
-    can_poweroff = property(lambda self: config.getboolean("Amp","control_power_off") 
+    can_poweroff = property(lambda self: self.power and config.getboolean("Amp","control_power_off") 
             and (not config["Amp"].get("source") or self.source == config["Amp"]["source"]))
     
     @require("power","source")
