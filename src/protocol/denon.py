@@ -846,6 +846,10 @@ for zone in range(2,ZONES+1):
             self._from_mainzone = data == "Main Zone"
             if self._from_mainzone: self._resolve_main_zone_source()
             else: return super().store(data)
+        
+        def unset(self):
+            super().unset()
+            self._from_mainzone = False
     
     @addToAmp
     class ZMuted(Zone, Muted):
