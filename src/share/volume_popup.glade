@@ -69,7 +69,7 @@
             <property name="fill_level">50</property>
             <property name="draw_value">False</property>
             <property name="value_pos">right</property>
-            <signal name="value-changed" handler="on_change" after="yes" swapped="yes"/>
+            <signal name="value-changed" handler="on_change" swapped="no"/>
           </object>
           <packing>
             <property name="expand">True</property>
