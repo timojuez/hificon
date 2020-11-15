@@ -189,20 +189,17 @@ class AmpController(AmpController):
         super().__init__(*args, **xargs)
         self._n = ui.Notification()
         self._n.update("Power off %s"%self.amp.name)
-        if hasattr(self._n, "add_action"):
-            self._n.add_action("Cancel", lambda *args,**xargs: self._poweroff_timer.cancel())
+        self._n.add_action("Cancel", lambda *args,**xargs: None)
+        self._n.add_action("OK", lambda *args,**xargs: self.amp.poweroff())
+        self._n.connect("closed", self.closed)
         self._n.set_timeout(self.poweroff_timeout*1000)
     
-    def on_poweroff(self):
-        try: self._n.close()
-        except: pass
-        super().on_poweroff()
+    def closed(self, *args):
+        if self._n.get_closed_reason() == 1: # timeout
+            self.amp.poweroff()
         
     def on_amp_idle(self):
-        if not self.amp.can_poweroff: return
-        self._poweroff_timer = Timer(self.poweroff_timeout, super().on_amp_idle)
-        self._poweroff_timer.start()
-        self._n.show()
+        if self.amp.can_poweroff: self._n.show()
         
 
 def main():    
