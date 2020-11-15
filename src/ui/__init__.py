@@ -153,6 +153,7 @@ class Icon(Bindable):
     
     def __init__(self, amp):
         super().__init__()
+        self.amp = amp
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.popup = VolumePopup(amp)
         self.icon.connect("scroll-event", self.on_scroll)
@@ -161,28 +162,43 @@ class Icon(Bindable):
     def on_scroll_up(self, steps): pass
     
     def on_scroll_down(self, steps): pass
-
+    
     def build_menu(self):
         menu = Gtk.Menu()
+
         item_volume = Gtk.MenuItem('Volume')
         item_volume.connect('activate', lambda event:self.popup.show())
         menu.append(item_volume)
+
+        item_power = Gtk.CheckMenuItem("Power")
+        f = self.amp.features["power"]
+        self.amp.preload_features.add("power")
+        on_value_change, on_widget_change = bind_widget_to_value(
+            f.get, f.set, item_power.get_active, item_power.set_active)
+        f.bind(on_change=gtk(on_value_change))
+        item_power.connect("toggled", lambda event:on_widget_change())
+        menu.append(item_power)
+
         menu.append(Gtk.SeparatorMenuItem())
+
         item_poweron = Gtk.CheckMenuItem("Auto power on")
         item_poweron.set_active(config.getboolean("Amp","control_power_on"))
         item_poweron.connect("toggled", lambda *args:
             config.setboolean("Amp","control_power_on",item_poweron.get_active()))
         menu.append(item_poweron)
+
         item_poweroff = Gtk.CheckMenuItem("Auto power off")
         item_poweroff.set_active(config.getboolean("Amp","control_power_off"))
         item_poweroff.connect("toggled", lambda *args:
             config.setboolean("Amp","control_power_off",item_poweroff.get_active()))
         menu.append(item_poweroff)
+
         menu.append(Gtk.SeparatorMenuItem())
+
         item_quit = Gtk.MenuItem('Quit')
         item_quit.connect('activate', lambda *args: Gtk.main_quit())
         menu.append(item_quit)
-        menu.connect("popped-up", lambda event:self.popup.show())
+
         menu.show_all()
         return menu
             
