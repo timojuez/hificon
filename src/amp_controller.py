@@ -3,7 +3,7 @@ Connects system events to the amp.
 Main class AmpController
 """
 
-from threading import Timer
+from threading import Timer, Lock
 from .util.function_bind import Autobind
 from .util.system_events import SystemEvents
 from .util import log_call
@@ -26,6 +26,7 @@ class AmpEvents(Autobind):
     
 class SoundMixin(AmpEvents,_Verbosity):
     """ provide on_amp_idle and may call on_start_playing when connected """
+    _soundMixinLock = Lock()
 
     @log_call
     def on_start_playing(self):
@@ -35,11 +36,13 @@ class SoundMixin(AmpEvents,_Verbosity):
     @log_call
     def on_stop_playing(self):
         super().on_stop_playing()
-        try: timeout = config.getfloat("Amp","poweroff_after")*60
-        except ValueError: return
-        if not timeout: return
-        self._idle_timer = Timer(timeout, self.on_amp_idle)
-        self._idle_timer.start()
+        with self._soundMixinLock:
+            if hasattr(self,"_idle_timer") and self._idle_timer.is_alive(): return
+            try: timeout = config.getfloat("Amp","poweroff_after")*60
+            except ValueError: return
+            if not timeout: return
+            self._idle_timer = Timer(timeout, self.on_amp_idle)
+            self._idle_timer.start()
     
     @log_call
     def on_amp_idle(self): pass
