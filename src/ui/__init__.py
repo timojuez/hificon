@@ -121,7 +121,7 @@ class VolumePopup(GladeGtk):
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         on_value_change, self.on_widget_change = bind_widget_to_value(
             f.get, f.set, self.scale.get_value, self.set_value)
-        f.bind(on_change=on_value_change)
+        f.bind(on_change=gtk(on_value_change))
         features.require("volume")(lambda amp:on_value_change())(amp)
 
     def set_value(self, value):
