@@ -15,6 +15,9 @@ class ExtendedConfigParser(configparser.ConfigParser):
     def clear_sections(self):
         for s in self.sections(): self[s].clear()
         
+    def setboolean(self, section, option, value):
+        self[section][option] = "yes" if value else "no"
+        
     def getlist(self, section, option):
         return list(map(lambda s:s.strip(), self[section][option].split(",")))
         
