@@ -2,12 +2,12 @@
 ### Free High Freedelity for Your Computer
 
 ## Features
-- Hificon icon*: Master volume control tray icon
+- HiFiCon icon*: Master volume control tray icon
 - Mouse and keyboard volume key support*
 - Amplifier notifications screen overlay: no need to connect a display to your amp's HDMI out
 - Automatic amplifier discovery*
 - Automatic power control*
-	- Switching the amplifier on when sound starts playing
+	- Switching the amplifier on when sound starts playing**
 	- Switching the amplifier off when sound stops or computer shuts down/suspends
 - HiFiSh HiFi Shell: Send custom commands to the amp and program your own hifi script
 - Compatibility: Needs only the amp's telnet interface
@@ -15,6 +15,7 @@
 - Easily control your AVR – even far away from remote control distance
 
 *Currently only supports Denon/Marantz AVR compatible (tested with Denon X1400H)
+**Requires pulseaudio
 
 
 ## Requirements
@@ -118,7 +119,7 @@ If `__return__` is a callable, `$""` will return the received line from the amp 
 ## Development
 
 ### Support for other AVR brands
-It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifish.
+It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifish. Hint: `hifish --protocol .raw_telnet -f --host [IP]` prints all data received from [IP] via telnet.
 
 ### Reverse Engineering Amplifiers
 `hifish -f` opens a shell and prints all received data from the amp. Meanwhile change settings e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
@@ -135,8 +136,7 @@ For testing purposes, there is a Denon AVR software emulator that acts like the 
 You can also emulate a shell on the amp that is being defined in your config's [Amp] protocol: `hifish --protocol .emulator`
 
 
-## Limitations
-- If you do not have a nameserver in your LAN or hificon_setup cannot find your Denon device, add the amp's IP address as "Host = [IP]" under [Amp] to .hificon.cfg in your user directory.
-- This program is currently only controlling the sound channels alltogether. Controlling e.g. left and right channel separately is to be implemented.
+## Troubleshoot
+- If hificon_setup cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to .hificon.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 
