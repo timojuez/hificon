@@ -212,6 +212,9 @@ class Icon(Bindable):
     @gtk
     def hide(self): self.icon.set_status(AppIndicator3.IndicatorStatus.PASSIVE)
     
+    @gtk
+    def set_icon(self, *args): self.icon.set_icon_full(*args)
+    
     def connect(self, *args, **xargs): self.icon.connect(*args,**xargs)
 
 

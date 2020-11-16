@@ -164,7 +164,7 @@ class TrayMixin(Icon):
     @features.require("muted","volume","maxvol")
     def updateWidgets(self):
         super().updateWidgets()
-        self.icon.icon.set_icon_full(*self.getCurrentIconPath())
+        self.icon.set_icon(*self.getCurrentIconPath())
     
     @features.require("volume")
     def on_scroll_up(self, steps):
