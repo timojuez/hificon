@@ -146,8 +146,6 @@ class Notification(_Notification, Notify.Notification):
         try: return super().show(*args,**xargs)
         except GLib.Error as e: print(repr(e), file=sys.stderr)
 
-    def add_action(self, title, callback): super().add_action("action", title, callback)
-
 
 class Icon(Bindable):
     
