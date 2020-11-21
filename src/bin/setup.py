@@ -2,7 +2,24 @@ import sys, os, argparse, pkgutil, socket
 from urllib.parse import urlparse
 from ..util import ssdp
 from ..config import config, FILE
-from .. import NAME, Amp, protocol
+from .. import NAME, PKG_NAME, Amp, protocol
+
+
+def autostart():
+    return autostart_win() if sys.platform.startswith("win") else autostart_gnu()
+
+
+def autostart_win():
+    import getpass
+    bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'%getpass.getuser()
+    with open("%s\\%s.bat"%(bat_path, PKG_NAME), "w") as fp:
+        fp.write(r'start "" %s' % os.path.realpath(__file__)) # TODO: file path
+
+
+def autostart_gnu():
+    desktop = pkgutil.get_data(__name__,"../share/hificon.desktop").decode()
+    with open(os.path.expanduser("~/.config/autostart/%s.desktop"%PKG_NAME), "w") as fp:
+        fp.write(desktop)
 
 
 def set_port():
@@ -74,6 +91,7 @@ def discover_denon():
 arguments = [
     # arg,      func,           help,               default
     ("discover", discover_denon, "Include Denon amp discovery", True),
+    ("autostart", autostart, "Add tray icon to autostart", True),
     ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", False),
     ("source-options-setup", source_options_setup, "Refresh input source list", True),
     ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
