@@ -45,7 +45,7 @@ class PulseListener(ConnectedPulse):
         super().__init__("PulseListener_for_%s"%self._events.__class__.__name__,*args,**xargs)
 
     def sink_input_set(self):
-        comparable = lambda l: set(map(lambda e:e.proplist["application.process.id"], l))
+        comparable = lambda l: set(map(lambda e:frozenset(e.proplist.items()), l))
         try: return comparable(self.sink_input_list())
         except:
             if not self.connected: raise pulsectl.pulsectl.PulseDisconnected()
