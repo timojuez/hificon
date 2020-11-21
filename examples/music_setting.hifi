@@ -1,12 +1,14 @@
 #!/usr/bin/env hifish
 $poweron(force=True)
 $front_speaker_config = 'Large'
-#$subwoofer_mode = 'LFE + Main'
+$subwoofer_mode = 'LFE + Main'
 $display = 'Bright'
 $front_speaker = 'B'
-$source = 'CBL/SAT'
+#$source = 'CBL/SAT'
 $surround = 'Stereo'
 $multi_eq = 'Off'
+$tone_ctrl = True
+$bass = 4
 wait(1)
 $sub_volume = Decimal('0')
 
