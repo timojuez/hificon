@@ -4,7 +4,7 @@ from threading import Thread, Lock
 from contextlib import suppress
 from .util import json_service
 from .amp_controller import AmpEvents
-from . import amp
+from . import amp, PKG_NAME
 from .config import config
 
 
@@ -36,7 +36,14 @@ class VolumeChanger(AmpEvents):
         self.button = None
         self._vol_lock = Lock()
         self.amp.preload_features.add("volume")
-        
+    
+    def mainloop(self):
+        with suppress(Exception):
+            with open("/tmp/%s.port"%PKG_NAME, "w") as fp: fp.write(str(ipc_port()))
+        try: super().mainloop()
+        finally:
+            with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME)
+
     @amp.features.require("volume")
     def on_key_press(self, button):
         """ start sending volume events to amp """

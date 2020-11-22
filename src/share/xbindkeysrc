@@ -1,15 +1,15 @@
 ## HIFICON SETTINGS
 
-"hificon_key_event_handler --down --pressed"
+"echo {\"func\": \"on_key_press\", \"kwargs\": {\"button\": false}} | telnet 127.0.0.1 $(cat /tmp/hificon.port)"
   b:8
   
-"hificon_key_event_handler --down --released"
+"echo {\"func\": \"on_key_release\", \"kwargs\": {\"button\": false}} | telnet 127.0.0.1 $(cat /tmp/hificon.port)"
   b:8 + Release
     
-"hificon_key_event_handler --up --pressed"
+"echo {\"func\": \"on_key_press\", \"kwargs\": {\"button\": true}} | telnet 127.0.0.1 $(cat /tmp/hificon.port)"
   b:9
 
-"hificon_key_event_handler --up --released"
+"echo {\"func\": \"on_key_release\", \"kwargs\": {\"button\": true}} | telnet 127.0.0.1 $(cat /tmp/hificon.port)"
   b:9 + Release
 
 "echo \$volume += 5 | python3 -m hificon.hifish"
