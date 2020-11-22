@@ -4,7 +4,8 @@ import os, configparser, pkgutil, json
 from decimal import Decimal
 from . import PKG_NAME
 
-FILE=os.path.expanduser("~/.%(pkg)s/%(pkg)s.cfg"%dict(pkg=PKG_NAME))
+CONFDIR = os.path.expanduser("~/.%s"%PKG_NAME)
+FILE = os.path.join(CONFDIR, "main.cfg")
 
 
 class ExtendedConfigParser(configparser.ConfigParser):
@@ -57,7 +58,7 @@ class ConfigDiffParser(ExtendedConfigParser):
             self._local.write(f)
 
 
-default = pkgutil.get_data(__name__,"share/hificon.cfg.default").decode()
+default = pkgutil.get_data(__name__,"share/main.cfg.default").decode()
 config = ConfigDiffParser(FILE)
 config.read_string(default)
 config.read([FILE])

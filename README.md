@@ -59,7 +59,7 @@ Ggf remove the lines after ## HIFICON in ~/.xbindkeysrc and restart xbindkeys.
 
 
 ### Configuration
-See configuration options in ~/.hificon.cfg and src/share/hificon.cfg.default.
+See configuration options in ~/.hificon/main.cfg and src/share/main.cfg.default.
 
 
 ## Usage
@@ -138,6 +138,6 @@ You can also emulate a shell on the amp that is being defined in your config's [
 
 
 ## Troubleshoot
-- If hificon_setup cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to .hificon.cfg in your user directory.
+- If hificon_setup cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 
