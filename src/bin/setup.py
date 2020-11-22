@@ -134,7 +134,8 @@ class Setup:
             assert(isinstance(steps,list))
             invalid = set(steps).difference([a[0] for a in arguments])
             if invalid: raise ValueError("Invalid steps: %s"%invalid)
-        if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/N] "%FILE) != "y": return
+        if os.path.exists(FILE) and input("This will modify `%s`. Proceed with setup? [y/N] "%FILE) != "y":
+            return
         with suppress(OSError): os.mkdir(self._dir)
         for arg, func, help, default in arguments:
             if steps and arg not in steps: continue
