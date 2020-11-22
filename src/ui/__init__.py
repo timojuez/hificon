@@ -2,14 +2,14 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
-from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3
+from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio
 import sys, pkgutil
 from threading import Timer
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
 from ..config import config
 from ..util.function_bind import Bindable
-from .. import NAME
+from .. import NAME, AUTHOR, URL, VERSION
 
 
 Notify.init(NAME)
@@ -194,13 +194,30 @@ class Icon(Bindable):
 
         menu.append(Gtk.SeparatorMenuItem())
 
+        item_about = Gtk.MenuItem('About %s'%NAME)
+        item_about.connect('activate', lambda *args: self.build_about_dialog())
+        menu.append(item_about)
+
         item_quit = Gtk.MenuItem('Quit')
         item_quit.connect('activate', lambda *args: Gtk.main_quit())
         menu.append(item_quit)
 
         menu.show_all()
         return menu
-            
+    
+    def build_about_dialog(self):
+        ad = Gtk.AboutDialog()
+        ad.set_program_name(NAME)
+        ad.set_version(VERSION)
+        logo = pkgutil.get_data(__name__, "../share/icons/scalable/logo.svg")
+        pixbuf = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(logo)), None)
+        ad.set_logo(pixbuf)
+        ad.set_copyright("Copyright \xa9 2020 %s"%AUTHOR)
+        ad.set_website(URL)
+        ad.connect("response", lambda *args: ad.destroy())
+        ad.show()
+        return ad
+        
     def on_scroll(self, icon, steps, direction):
         if direction == Gdk.ScrollDirection.UP: self.on_scroll_up(steps)
         elif direction == Gdk.ScrollDirection.DOWN: self.on_scroll_down(steps)
