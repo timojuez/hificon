@@ -2,7 +2,7 @@
 Encoding=UTF-8
 Type=Application
 Name=HiFiCon
-Exec=/usr/bin/env python3 -c 'from hificon.bin.main import main; main()'
+Exec=/usr/bin/env python3 -m hificon
 StartupNotify=false
 Terminal=false
 Hidden=false
