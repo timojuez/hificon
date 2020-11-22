@@ -1,4 +1,5 @@
 import sys, os, argparse, pkgutil, socket
+from contextlib import suppress
 from urllib.parse import urlparse
 from ..util import ssdp
 from ..config import config, FILE
@@ -115,16 +116,34 @@ class Main(object):
             help="" if default else "(default)")
     
     def __call__(self):
+        Setup.setup(steps=[a[0] for a in arguments if getattr(self.args, a[0])])
+
+
+class Setup:
+    _dir = os.path.expanduser("~/.%s"%PKG_NAME)
+
+    @classmethod
+    def configured(self): return os.path.exists(self._dir)
+    
+    @classmethod
+    def setup(self, steps=None):
+        if steps:
+            assert(isinstance(steps,list))
+            invalid = set(steps).difference([a[0] for a in arguments])
+            if invalid: raise ValueError("Invalid steps: %s"%invalid)
         if os.path.exists(FILE) and input("This will modify `%s`. Proceed? [y/N] "%FILE) != "y": return
+        with suppress(OSError): os.mkdir(self._dir)
         for arg, func, help, default in arguments:
-            if not getattr(self.args, arg): continue
+            if steps and arg not in steps: continue
             try: func()
             except Exception as e:
                 print("Exception in %s: %s"%(arg,repr(e)))
             print()
         print("done. The service needs to be (re)started.")
-        
-        
+
+    
+
+
 def main(): Main()()
 if __name__ == "__main__":
     main()
