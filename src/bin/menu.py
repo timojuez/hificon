@@ -1,4 +1,4 @@
-import argparse, os, pkgutil
+import argparse, os, pkgutil, tempfile
 from decimal import Decimal
 from threading import Lock
 from ..util.async_widget import bind_widget_to_value
@@ -241,9 +241,16 @@ menu = Menu(amp)
 
 
 def main():
-    with amp:
-        app = App()
-        app.run()
+    icon_path = tempfile.mktemp()
+    try:
+        with open(icon_path, "wb") as fp:
+            fp.write(pkgutil.get_data(__name__,"../share/icons/scalable/logo.svg"))
+        with amp:
+            app = App()
+            app.icon = icon_path
+            app.run()
+    finally:
+        os.remove(icon_path)
 
 
 if __name__ == "__main__": main()
