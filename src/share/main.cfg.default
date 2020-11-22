@@ -36,8 +36,6 @@ notify_events = all_implemented
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
-# pinned features in menu, separated by ","
-pinned = volume, muted, surround, power
 
 
 [MouseBinding]

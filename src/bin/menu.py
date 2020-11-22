@@ -1,9 +1,9 @@
-import argparse, os, pkgutil, tempfile
+import argparse, os, pkgutil, tempfile, json
 from decimal import Decimal
 from threading import Lock
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
-from ..config import config
+from ..config import config, CONFDIR
 from .. import Amp, NAME, VERSION, AUTHOR
 
 
@@ -78,7 +78,11 @@ class Menu(TabbedPanel):
     def __init__(self, amp, **kwargs):
         super().__init__(**kwargs)
         tabs = {}
-        self.pinned = config.getlist("GUI","pinned")
+        try:
+            with open(os.path.join(CONFDIR,"pinned.json")) as fp:
+                self.pinned = json.load(fp)
+        except FileNotFoundError:
+            self.pinned = json.loads(pkgutil.get_data(__name__,"../share/pinned.json").decode())
         self.features = {}
         for key, f in {**amp.features, **custom_menu}.items():
             print("adding %s"%f.name)
@@ -130,7 +134,8 @@ class Menu(TabbedPanel):
             if self.features[key]["checkboxes"]["lock"].locked(): return
             if active: self.pinned.append(key)
             else: self.pinned.remove(key)
-            config.setlist("GUI", "pinned", self.pinned)
+            with open(os.path.join(CONFDIR,"pinned.json"),"w") as fp:
+                json.dump(self.pinned, fp)
             with self.features[key]["checkboxes"]["lock"]:
                 if active: show_widget(self.features[key]["pinned_row"])
                 else: hide_widget(self.features[key]["pinned_row"])
