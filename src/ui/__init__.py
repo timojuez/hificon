@@ -82,12 +82,13 @@ class GaugeNotification(GladeGtk, _Notification):
     def on_click(self, *args): self.hide()
     
     @gtk
-    def update(self, title=None, message=None, value=None, min=None, max=None):
+    def update(self, title, message, value, min, max):
+        assert(min <= value <= max)
+        diff = max-min
+        value_normalised = (value-min)/diff
         self.title.set_text(title)
         self.subtitle.set_text(message)
-        self.level.set_min_value(min)
-        self.level.set_max_value(max)
-        self.level.set_value(value)
+        self.level.set_value(value_normalised*100)
 
     @gtk
     def _position(self):
