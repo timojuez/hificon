@@ -67,7 +67,7 @@ def RemoteControlService(*args,**xargs):
     if ipc_port() < 0: return
     secure_mode = config.getboolean("Service","secure_mode")
     if not secure_mode: print("[WARNING] Service not running in secure mode", file=sys.stderr)
-    whitelist = ("press","release") if secure_mode else None
+    whitelist = ("on_key_press","on_key_release") if secure_mode else None
     return json_service.RemoteControlService(
         *args,port=ipc_port(),func_whitelist=whitelist,**xargs)
     
