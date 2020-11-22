@@ -12,13 +12,12 @@
 "hificon_key_event_handler --up --released"
   b:9 + Release
 
-"hifish -c MVUP"
+"echo \$volume += 5 | python3 -m hificon.hifish"
   XF86AudioRaiseVolume
 
-"hifish -c MVDOWN"
+"echo \$volume -= 5 | python3 -m hificon.hifish"
   XF86AudioLowerVolume
 
-"hifish -c MUON"
+"echo \$muted = not \$muted | python3 -m hificon.hifish"
   XF86AudioMute
-
 
