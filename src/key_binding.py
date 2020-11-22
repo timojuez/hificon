@@ -7,7 +7,8 @@ from .amp_controller import AmpEvents
 from . import amp
 from .config import config
 
-ipc_port = config.getint("Service","ipc_port")
+
+def ipc_port(): return config.getint("Service","ipc_port")
 
 
 class VolumeChanger(AmpEvents):
@@ -63,12 +64,13 @@ class VolumeChanger(AmpEvents):
 
 
 def RemoteControlService(*args,**xargs):
-    if ipc_port < 0: return
+    if ipc_port() < 0: return
     secure_mode = config.getboolean("Service","secure_mode")
     if not secure_mode: print("[WARNING] Service not running in secure mode", file=sys.stderr)
     whitelist = ("press","release") if secure_mode else None
-    return json_service.RemoteControlService(*args,port=ipc_port,func_whitelist=whitelist,**xargs)
+    return json_service.RemoteControlService(
+        *args,port=ipc_port(),func_whitelist=whitelist,**xargs)
     
 
-send = lambda e: json_service.send(e, port=ipc_port)
-    
+send = lambda e: json_service.send(e, port=ipc_port())
+
