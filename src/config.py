@@ -4,7 +4,7 @@ import os, configparser, pkgutil, json
 from decimal import Decimal
 from . import PKG_NAME
 
-FILE=os.path.expanduser("~/.%s.cfg"%PKG_NAME)
+FILE=os.path.expanduser("~/.%(pkg)s/%(pkg)s.cfg"%dict(pkg=PKG_NAME))
 
 
 class ExtendedConfigParser(configparser.ConfigParser):
