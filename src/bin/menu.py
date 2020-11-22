@@ -4,7 +4,7 @@ from threading import Lock
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
 from ..config import config
-from .. import Amp, NAME
+from .. import Amp, NAME, VERSION, AUTHOR
 
 
 os.environ["KIVY_NO_ARGS"] = "1"
@@ -49,6 +49,12 @@ class SelectFeatureOptions(DropDown): pass
 
 class SelectFeatureOption(Button): pass
 
+class About(TabbedPanelItem):
+    
+    def __init__(self):
+        super().__init__()
+        self.ids.text.text = "%s Version %s\nCopyright (C) 2020 %s"%(NAME, VERSION, AUTHOR)
+
 
 """
 class CustomFeature:
@@ -83,6 +89,7 @@ class Menu(TabbedPanel):
                 f.on_change(None, f.get())
         amp.preload_features = set(amp.features.keys())
         amp.bind(on_feature_change=self.on_feature_change)
+        self.add_widget(About())
 
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
