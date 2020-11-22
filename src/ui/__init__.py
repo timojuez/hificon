@@ -42,12 +42,12 @@ class GladeGtk:
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._init()
+        if not self.__class__.__dict__.get("_inited", False):
+            setattr(self.__class__, "_inited", True)
+            self._init_once()
 
-    def _init(self):
+    def _init_once(self):
         cls = self.__class__
-        if cls.__dict__.get("_inited", False): return
-        setattr(cls, "_inited", True)
         cls.instance = self
         cls.builder = Gtk.Builder()
         cls.builder.add_from_string(pkgutil.get_data(__name__, cls.GLADE).decode())
@@ -68,8 +68,8 @@ class GaugeNotification(GladeGtk, _Notification):
         super().__init__(*args, **xargs)
         self._position()
         
-    def _init(self):
-        super()._init()
+    def _init_once(self):
+        super()._init_once()
         cls = self.__class__
         cls.level = cls.builder.get_object("level")
         cls.title = cls.builder.get_object("title")
