@@ -27,6 +27,5 @@ setup(name=PKG_NAME,
         '%(name)s_setup = %(name)s.bin.setup:main'%dict(name=PKG_NAME),
         '%(name)s_mouse_binding = %(name)s.bin.mouse_binding:main [nongnu_desktop]'%dict(name=PKG_NAME),
       ]},
-      scripts={'src/bin/hificon_key_event_handler'},
 )
 
