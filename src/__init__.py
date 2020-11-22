@@ -3,6 +3,8 @@ import importlib
 NAME = "HiFiCon"
 PKG_NAME = "hificon"
 VERSION = "1.8.45a"
+AUTHOR = "Timo L. Richter"
+URL = 'https://github.com/timojuez/hificon'
 
 
 def Amp_cls(protocol=None, cls="Amp"):

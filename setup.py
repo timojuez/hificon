@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
 from distutils.core import setup
-from src import PKG_NAME, VERSION
+from src import PKG_NAME, VERSION, AUTHOR, URL
 
 
 setup(name=PKG_NAME,
       version=VERSION,
       description='Network Amp Controlling Software',
-      author='Timo Richter',
+      author=AUTHOR,
       author_email='timo.juez@gmail.com',
-      url='https://github.com/timojuez/hificon',
+      url=URL,
       license='GNU General Public License v3 or later (GPLv3+)',
       packages=[PKG_NAME],
       package_dir={PKG_NAME: "src"},

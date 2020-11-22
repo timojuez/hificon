@@ -3,7 +3,7 @@ from code import InteractiveConsole
 from threading import Thread
 from contextlib import suppress
 from decimal import Decimal
-from .. import Amp, amp, VERSION
+from .. import Amp, amp, VERSION, AUTHOR
 try: import readline
 except ImportError: pass
 
@@ -55,7 +55,7 @@ class CLI:
         
     def print_header(self):
         print("$_ HIFI SHELL %s"%VERSION)
-        print("Copyright (c) 2020 Timo L. Richter\n")
+        print("Copyright (c) 2020 %s\n"%AUTHOR)
         print("To get started, write help()\n")
 
     def prompt(self):
