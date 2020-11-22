@@ -15,6 +15,7 @@
 - Easily control your AVR – even far away from remote control distance
 
 *Currently only supports Denon/Marantz AVR compatible (tested with Denon X1400H)
+
 **Requires pulseaudio
 
 
