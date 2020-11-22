@@ -109,7 +109,7 @@ amp = Amp()
 
 | HiFiSh | Python |
 | --- | --- |
-| `$"X"` or `$'X'` | `amp.query(X, __return__); time.sleep(__wait__)` |
+| `$"X"` or `$'X'` | `amp.query("X", __return__); time.sleep(__wait__)` |
 | `$X` | `amp.X` |
 | `wait(X)` | `time.sleep(X)` |
 
