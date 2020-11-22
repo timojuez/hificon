@@ -7,6 +7,7 @@ from .. import NAME, PKG_NAME, Amp, protocol
 
 
 def autostart():
+    if input("Add %s to autostart for current user? [Y/n] "%NAME) == "n": return
     return autostart_win() if sys.platform.startswith("win") else autostart_gnu()
 
 
@@ -50,6 +51,8 @@ def source_options_setup():
 
 
 def setup_xorg_key_binding():
+    if sys.platform != "linux": return
+    if input("Bind mouse keys to volume and modify ~/.xbindkeysrc? [Y/n] ") == "n": return
     xbindkeysrc = os.path.expanduser("~/.xbindkeysrc")
     if not os.path.exists(xbindkeysrc):
         os.system("xbindkeys -d > %s"%xbindkeysrc)
@@ -93,7 +96,7 @@ arguments = [
     # arg,      func,           help,               default
     ("discover", discover_denon, "Include Denon amp discovery", True),
     ("autostart", autostart, "Add tray icon to autostart", True),
-    ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", False),
+    ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
     ("source-options-setup", source_options_setup, "Refresh input source list", True),
     ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
     ("set-port", set_port, "Set a port for inter process communication", True),

@@ -42,7 +42,7 @@ Install the requirements:
 
 Cloning this repository in the current directory and installing via pip:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && hificon_setup --keys`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && hificon_setup`
 
 ### Proprietary OS
 On Mac/Windows, download and install Python3 with Pip.
