@@ -419,8 +419,11 @@ class Surround(SelectFeature):
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "M CH IN+NEURAL:X": "Multi Channel In + DTS Neural:X", "M CH IN+VIRTUAL:X":"Multi Channel In + DTS Virtual:X", "MULTI CH IN":"Multi Channel In", #undocumented
     }
     def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
-    
-    
+    def on_change(self, old, new):
+        super().on_change(old,new)
+        self.amp.send("CV?")
+
+
 class QuickSelect(SelectFeature):
     name = "Quick Select (load)"
     function="MSQUICK"
