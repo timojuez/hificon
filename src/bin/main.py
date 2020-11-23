@@ -45,7 +45,7 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
             max=feature.max)
             
     def show(self):
-        if self._f.key == "volume" and ui.VolumePopup.instance.visible: return
+        if self._f.key == "volume" and ui.VolumePopup().visible: return
         self.update(self._f)
         super().show()
 
@@ -91,7 +91,7 @@ class RelevantAmpEvents(Icon, AmpEvents):
         if key in ("volume","muted","maxvol"): self.updateWidgets()
 
     def updateWidgets(self):
-        ui.VolumePopup.instance.set_image(self.getCurrentIconPath()[0])
+        ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
 
 
 class NotificationMixin(object):

@@ -15,6 +15,14 @@ from .. import NAME, AUTHOR, URL, VERSION
 Notify.init(NAME)
 
 
+class Singleton(type):
+    _instances = {}
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
 def gtk(func):
     return lambda *args,**xargs: GLib.idle_add(lambda:func(*args,**xargs))
 
@@ -37,21 +45,14 @@ class GUI_Backend:
     def mainloop(self): Gtk.main()
 
 
-class GladeGtk:
+class GladeGtk(metaclass=Singleton):
     GLADE = ""
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        if not self.__class__.__dict__.get("_inited", False):
-            setattr(self.__class__, "_inited", True)
-            self._init_once()
-
-    def _init_once(self):
-        cls = self.__class__
-        cls.instance = self
-        cls.builder = Gtk.Builder()
-        cls.builder.add_from_string(pkgutil.get_data(__name__, cls.GLADE).decode())
-        cls.builder.connect_signals(self)
+        self.builder = Gtk.Builder()
+        self.builder.add_from_string(pkgutil.get_data(__name__, self.GLADE).decode())
+        self.builder.connect_signals(self)
 
     @gtk
     def show(self): self.window.show_all()
@@ -67,15 +68,11 @@ class GaugeNotification(GladeGtk, _Notification):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._position()
-        
-    def _init_once(self):
-        super()._init_once()
-        cls = self.__class__
-        cls.level = cls.builder.get_object("level")
-        cls.title = cls.builder.get_object("title")
-        cls.subtitle = cls.builder.get_object("subtitle")
-        cls.window = cls.builder.get_object("window")
-        cls.width, cls.height = cls.window.get_size()
+        self.level = self.builder.get_object("level")
+        self.title = self.builder.get_object("title")
+        self.subtitle = self.builder.get_object("subtitle")
+        self.window = self.builder.get_object("window")
+        self.width, self.height = self.window.get_size()
     
     def set_timeout(self, t): self._timeout = t/1000
     
