@@ -11,6 +11,7 @@ class _Amp(TelnetAmp):
         """
         if not matches: return self.send(cmd)
         class RawFeature(features.Feature):
+            key = None
             call = cmd
             matches = lambda self, data: matches(data)
             def decode(self, cmd): return cmd
@@ -18,5 +19,5 @@ class _Amp(TelnetAmp):
         RawFeature.__name__ = cmd
         return RawFeature(self).poll(force=True)
 
-Amp = make_amp({}, _Amp)
+Amp = make_amp([], _Amp)
 

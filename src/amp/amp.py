@@ -137,7 +137,7 @@ class FeaturesMixin(object):
         self._pending = []
         self.features = {}
         # apply @features to Amp
-        for attr,F in self._feature_classes.items(): F(self,attr)
+        for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
 
     def __setattr__(self, name, value):
@@ -262,21 +262,21 @@ class TelnetAmp(AbstractAmp):
 
 def make_amp(features, base_cls=AbstractAmp):
     """
-    Make a class where all attributes are getters and setters for amp properties
-    features: dict(class_attribute_name=MyFeature)
+    Make an Amp class which contains an attribute f for each feature class F.
+    features: list of MyFeature elements
         where MyFeature inherits from amp_features.Feature
     """
     assert(issubclass(base_cls, AmpType))
-    for name in features.keys(): 
-        if hasattr(base_cls,name):
-            raise KeyError("Key `%s` is ambiguous and may not be used as a feature."%name)
+    for f in features:
+        if hasattr(base_cls, f.key):
+            raise KeyError("Feature.key `%s` is ambiguous and may not be used in this amp."%f.key)
 
     dict_ = {
-        k:property(
-            lambda self,k=k:self.features[k].get(),
-            lambda self,val,k=k:self._set_feature_value(k,val)
+        f.key:property(
+            lambda self,f=f:self.features[f.key].get(),
+            lambda self,val,f=f:self._set_feature_value(f.key,val)
         )
-        for k,v in features.items()
+        for f in features
     }
     dict_["_feature_classes"] = features
 

@@ -9,5 +9,5 @@ $surround = 'Multi Channel In'
 $surround = 'Dolby Digital'
 $multi_eq = 'Flat'
 wait(1)
-$sub_volume = Decimal('-3.5')
+$subwoofer_volume = Decimal('-3.5')
 

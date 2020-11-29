@@ -102,21 +102,29 @@ class FeatureInterface(object):
         raise NotImplementedError()
     
 
-class AsyncFeature(FeatureInterface, Bindable):
+class _MetaFeature(type):
+
+    def __init__(cls, name, bases, dct):
+        if "key" not in dct:
+            cls.key = "%s%s"%(cls.__name__[0].lower(), cls.__name__[1:])
+        if "name" not in dct:
+            cls.name = " ".join(["%s%s"%(x[0].upper(),x[1:]) if len(x)>0 else "" for x in cls.__name__.split("_")])
+
+        
+class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
     An attribute of the amplifier
     High level telnet protocol communication
     """
 
-    def __init__(self, amp, key=None):
+    def __init__(self, amp):
         """ amp instance, connected amp attribute name """
         super().__init__()
         self.amp = amp
-        self.key = key
-        amp.features[key] = self
+        amp.features[self.key] = self
         
     name = property(lambda self:self.__class__.__name__)
-
+    
     def get(self):
         try: return self._val
         except AttributeError: 
