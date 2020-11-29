@@ -124,7 +124,7 @@ class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
     def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
-    def matches(self, data): return data.startswith(self.function) and data[2:].isnumeric()
+    def matches(self, data): return data.startswith(self.function) and data[len(self.function):].isnumeric()
     
 @addToAmp
 class Maxvol(DecimalFeature): #undocumented
@@ -821,6 +821,7 @@ for zone in range(2,ZONES+1):
         key = "zone%s_power"%zone
         function = "Z%s"%zone
         call = "Z%s?"%zone
+        translation = {"ON":True,"OFF":False}
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
     
     @addToAmp
