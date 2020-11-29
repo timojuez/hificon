@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import argparse, sys, math, pkgutil, tempfile
 from threading import Thread, Timer
 from ..amp import features
@@ -98,7 +97,8 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        self._notify_events = config.getlist("GUI","notify_events")
+        self._notification_whitelist = config.getlist("GUI","notification_whitelist")
+        self._notification_blacklist = config.getlist("GUI","notification_blacklist")
         self._notifications = {key:self._createNotification(f)
             for key,f in list(self.amp.features.items())+[(None,None)]}
         self.amp.preload_features.add("volume")
@@ -125,10 +125,10 @@ class NotificationMixin(object):
 
     def on_feature_change(self, key, value, prev): # bound to amp
         if not (key in self.amp.preload_features and prev is None) \
-            and key != "maxvol" and (
-                "all" in self._notify_events
-                or "all_implemented" in self._notify_events and key
-                or key in self._notify_events):
+            and key not in self._notification_blacklist and (
+                "all" in self._notification_whitelist
+                or "all_implemented" in self._notification_whitelist and key
+                or key in self._notification_whitelist):
             self.update_notification(key, value).show()
         super().on_feature_change(key,value,prev)
 
