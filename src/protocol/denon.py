@@ -4,6 +4,7 @@ from ..amp import TelnetAmp, make_amp
 from ..config import config
 from .. import amp
 
+ZONES = 4
 
 features = []
 def addToAmp(cls):
@@ -792,9 +793,17 @@ class Auto_standby(SelectFeature):
     translation = {"OFF":"Off","15M":"15 min","30M":"30 min","60M":"60 min"}
 
 
+@addToAmp
+class Amp_Assign(SelectFeature): #undocumented
+    category = "Speakers"
+    function = "SSPAAMOD "
+    call = "SSPAA ?"
+    translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "front height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
+
+
 # TODO: implement PV
 
-for zone in [2,3,4]:
+for zone in range(2,ZONES+1):
     
     class Zone:
         category = "Zone %s"%zone
