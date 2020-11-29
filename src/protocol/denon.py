@@ -123,7 +123,7 @@ class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
     def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
-    def matches(self, data): return data.startswith(self.function) and "MVMAX" not in data
+    def matches(self, data): return data.startswith(self.function) and data[2:].isnumeric()
     
 @addToAmp
 class Maxvol(DecimalFeature): #undocumented
@@ -785,8 +785,105 @@ class Input_signal(BoolFeature): #undocumented
     def async_poll(self, *args, **xargs): pass
     def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
 
+@addToAmp
+class Auto_standby(SelectFeature):
+    category = "Eco"
+    function = "STBY"
+    translation = {"OFF":"Off","15M":"15 min","30M":"30 min","60M":"60 min"}
+
 
 # TODO: implement PV
+
+for zone in [2,3,4]:
+    
+    class Zone:
+        category = "Zone %s"%zone
+    
+    @addToAmp
+    class ZVolume(Zone, Volume):
+        name = "Zone %s Volume"%zone
+        key = "zone%s_volume"%zone
+        function = "Z%s"%zone
+        call = "Z%s?"%zone
+        
+    @addToAmp
+    class ZPower(Zone, Power):
+        name = "Zone %s Power"%zone
+        key = "zone%s_power"%zone
+        function = "Z%s"%zone
+        call = "Z%s?"%zone
+        def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
+    
+    @addToAmp
+    class ZSource(Zone, Source):
+        name = "Zone %s Source"%zone
+        key = "zone%s_source"%zone
+        function = "Z%s"%zone
+        call = "Z%s?"%zone
+        translation = {**Source.translation, "SOURCE": "Main Zone"}
+        def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
+    
+    @addToAmp
+    class ZMuted(Zone, Muted):
+        name = "Zone %s Muted"%zone
+        key = "zone%s_muted"%zone
+        function = "Z%sMU"%zone
+    
+    @addToAmp
+    class Channel_setting(Zone, SelectFeature):
+        key = "zone%s_channel_setting"%zone
+        function = "Z%sCS"%zone
+        translation = {"MONO":"Mono","ST":"Stereo"}
+    
+    @addToAmp
+    class ZFrontLeftVolume(Zone, Front_left_volume):
+        key = "zone%s_%s"%(zone, Front_left_volume.key)
+        name = Front_left_volume.name
+        function = "Z%sFL "%zone
+        
+    @addToAmp
+    class ZFrontRightVolume(Zone, Front_right_volume):
+        key = "zone%s_%s"%(zone, Front_right_volume.key)
+        name = Front_right_volume.name
+        function = "Z%sFR "%zone
+        
+    @addToAmp
+    class Hpf(Zone, BoolFeature):
+        key = "zone%s_hpf"%zone
+        name = "HPF"
+        function = "Z%sHPF"%zone
+    
+    @addToAmp
+    class ZBass(Zone, RelativeInt):
+        name = "Zone %s Bass"%zone
+        key = "zone%s_bass"%zone
+        function = "Z%sPSBAS "%zone
+        
+    @addToAmp
+    class ZTreble(Zone, RelativeInt):
+        name = "Zone %s Treble"%zone
+        key = "zone%s_treble"%zone
+        function = "Z%sPSTRE "%zone
+        
+    @addToAmp
+    class Mdmi(Zone, SelectFeature):
+        name = "MDMI Out"
+        key = "zone%s_mdmi"%zone
+        function = "Z%sHDA "%zone
+        call = "z%sHDA?"%zone
+        translation = {"THR":"THR", "PCM":"PCM"}
+        
+    @addToAmp
+    class ZSleep(Zone, Sleep):
+        name = "Zone %s Sleep (min.)"%zone
+        key = "zone%s_sleep"%zone
+        function = "Z%sSLP"%zone
+        
+    @addToAmp
+    class Auto_Standby(Zone, SelectFeature):
+        key = "zone%s_auto_standby"%zone
+        function = "Z%sSTBY"%zone
+        translation = {"2H":"2 hours","4H":"4 hours","8H":"8 hours","OFF":"Off"}
 
 
 class DenonAmp(TelnetAmp):
