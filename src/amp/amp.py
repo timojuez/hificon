@@ -79,19 +79,20 @@ class _AbstractAmp(Bindable, AmpType):
     def send(self, cmd):
         if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
 
-    @require("power","source")
+    @require(config.power, config.source)
     def poweron(self, force=False):
-        if not force and not config.getboolean("Amp","control_power_on") or self.power:
+        if not force and not config.getboolean("Amp","control_power_on") or getattr(self, config.power):
             return
-        if config["Amp"].get("source"): self.features["source"].set(config["Amp"]["source"], force=True)
-        self.power = True
+        if config["Amp"].get("source"): self.features[config.source].set(config["Amp"]["source"], force=True)
+        setattr(self, config.power, True)
 
-    can_poweroff = property(lambda self: self.power and config.getboolean("Amp","control_power_off") 
-            and (not config["Amp"].get("source") or self.source == config["Amp"]["source"]))
+    can_poweroff = property(
+        lambda self: getattr(self,config.power) and config.getboolean("Amp","control_power_off")
+        and (not config["Amp"].get("source") or getattr(self,config.source) == config["Amp"]["source"]))
     
-    @require("power","source")
+    @require(config.power, config.source)
     def poweroff(self, force=False):
-        if force or self.can_poweroff: self.power = False
+        if force or self.can_poweroff: setattr(self,config.power,False)
 
     @log_call
     def on_connect(self):

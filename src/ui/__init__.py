@@ -113,14 +113,14 @@ class VolumePopup(GladeGtk):
         self.image = self.builder.get_object("image")
         self.adj = self.builder.get_object("adjustment")
         
-        f = amp.features["volume"]
+        f = amp.features[config.volume]
         self.adj.set_lower(f.min)
         self.adj.set_upper(f.max)
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         on_value_change, self.on_widget_change = bind_widget_to_value(
             f.get, f.set, self.scale.get_value, self.set_value)
         f.bind(on_change=gtk(on_value_change))
-        features.require("volume")(lambda amp:on_value_change())(amp)
+        features.require(config.volume)(lambda amp:on_value_change())(amp)
 
     def set_value(self, value):
         self.scale.set_value(value)
@@ -162,13 +162,14 @@ class Icon(Bindable):
     def build_menu(self):
         menu = Gtk.Menu()
 
-        item_volume = Gtk.MenuItem('Volume')
+        #f = self.amp.features[config.volume]
+        item_volume = Gtk.MenuItem("Volume")
         item_volume.connect('activate', lambda event:self.popup.show())
         menu.append(item_volume)
 
-        item_power = Gtk.CheckMenuItem("Power")
-        f = self.amp.features["power"]
-        self.amp.preload_features.add("power")
+        f = self.amp.features[config.power]
+        item_power = Gtk.CheckMenuItem(f.name)
+        self.amp.preload_features.add(f.key)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item_power.get_active, item_power.set_active)
         f.bind(on_change=gtk(on_value_change))

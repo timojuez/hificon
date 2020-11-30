@@ -44,7 +44,7 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
             max=feature.max)
             
     def show(self):
-        if self._f.key == "volume" and ui.VolumePopup().visible: return
+        if self._f.key == config.volume and ui.VolumePopup().visible: return
         self.update(self._f)
         super().show()
 
@@ -55,14 +55,12 @@ class Icon:
     _icon_path = tempfile.mktemp()
 
     def _getCurrentIconName(self):
-        icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-        volume = 0 if self.amp.muted else self.amp.volume
-
-        #self.icon.set_tooltip_text("Volume: %0.1f\n%s"%(volume,self.amp.name))
-        if self.amp.muted or volume == 0:
+        if getattr(self.amp,config.muted):
             return "audio-volume-muted"
         else:
-            icon_idx = math.ceil(volume/self.amp.features["volume"].max *len(icons))-1
+            icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
+            volume = self.amp.features[config.volume]
+            icon_idx = math.ceil(volume.get()/volume.max*len(icons))-1
             return icons[icon_idx]
     
     def getCurrentIconPath(self):
@@ -87,7 +85,7 @@ class RelevantAmpEvents(Icon, AmpEvents):
 
     def on_feature_change(self, key, value, *args): # bound to amp
         super().on_feature_change(key,value,*args)
-        if key in ("volume","muted","maxvol"): self.updateWidgets()
+        if key in (config.volume,config.muted): self.updateWidgets()
 
     def updateWidgets(self):
         ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
@@ -101,7 +99,7 @@ class NotificationMixin(object):
         self._notification_blacklist = config.getlist("GUI","notification_blacklist")
         self._notifications = {key:self._createNotification(f)
             for key,f in list(self.amp.features.items())+[(None,None)]}
-        self.amp.preload_features.add("volume")
+        self.amp.preload_features.add(config.volume)
     
     def _createNotification(self, feature):
         if isinstance(feature, features.NumericFeature): N = NumericFeatureNotification
@@ -120,7 +118,7 @@ class NotificationMixin(object):
         return n
 
     def on_key_press(self,*args,**xargs):
-        self._notifications["volume"].show()
+        self._notifications[config.volume].show()
         super().on_key_press(*args,**xargs)
 
     def on_feature_change(self, key, value, prev): # bound to amp
@@ -133,15 +131,15 @@ class NotificationMixin(object):
         super().on_feature_change(key,value,prev)
 
     def on_scroll_up(self, *args, **xargs):
-        self._notifications["volume"].show()
-        if self.amp.features["volume"].isset():
-            self._notifications["volume"].update(self.amp.features["volume"])
+        self._notifications[config.volume].show()
+        if self.amp.features[config.volume].isset():
+            self._notifications[config.volume].update(self.amp.features[config.volume])
         super().on_scroll_up(*args,**xargs)
         
     def on_scroll_down(self, *args, **xargs):
-        self._notifications["volume"].show()
-        if self.amp.features["volume"].isset():
-            self._notifications["volume"].update(self.amp.features["volume"])
+        self._notifications[config.volume].show()
+        if self.amp.features[config.volume].isset():
+            self._notifications[config.volume].update(self.amp.features[config.volume])
         super().on_scroll_down(*args,**xargs)
 
 
@@ -149,7 +147,7 @@ class TrayMixin(Icon):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
-        self.amp.preload_features.update(("volume","muted","maxvol"))
+        self.amp.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
         self.icon = ui.Icon(self.amp)
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
@@ -162,20 +160,20 @@ class TrayMixin(Icon):
         self.icon.hide()
         super().on_disconnected()
         
-    @features.require("muted","volume","maxvol")
+    @features.require(config.muted,config.volume)
     def updateWidgets(self):
         super().updateWidgets()
         self.icon.set_icon(*self.getCurrentIconPath())
     
-    @features.require("volume")
+    @features.require(config.volume)
     def on_scroll_up(self, steps):
-        volume = self.amp.volume+self.scroll_delta*steps
-        self.amp.volume = volume
+        new_volume = getattr(self.amp,config.volume)+self.scroll_delta*steps
+        setattr(self.amp, config.volume, new_volume)
 
-    @features.require("volume")
+    @features.require(config.volume)
     def on_scroll_down(self, steps):
-        volume = self.amp.volume-self.scroll_delta*steps
-        self.amp.volume = volume
+        new_volume = getattr(self.amp,config.volume)-self.scroll_delta*steps
+        setattr(self.amp, config.volume, new_volume)
     
 
 class MainApp(NotificationMixin, VolumeChanger, TrayMixin, RelevantAmpEvents, ui.GUI_Backend):

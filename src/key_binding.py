@@ -35,7 +35,7 @@ class VolumeChanger(AmpEvents):
         self.step = config.getdecimal("KeyEventHandling","step")
         self.button = None
         self._vol_lock = Lock()
-        self.amp.preload_features.add("volume")
+        self.amp.preload_features.add(config.volume)
     
     def mainloop(self):
         with suppress(Exception):
@@ -44,7 +44,7 @@ class VolumeChanger(AmpEvents):
         finally:
             with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME)
 
-    @amp.features.require("volume")
+    @amp.features.require(config.volume)
     def on_key_press(self, button):
         """ start sending volume events to amp """
         self.keys_pressed += 1
@@ -54,12 +54,13 @@ class VolumeChanger(AmpEvents):
         while self.keys_pressed > 0:
             self._vol_lock.acquire()
             if self.keys_pressed > 0:
-                self.amp.volume += self.step*(int(self.button)*2-1)
+                setattr(self.amp,config.volume,
+                    getattr(self.amp,config.volume) + self.step*(int(self.button)*2-1))
                 if self.interval: time.sleep(self.interval)
     
     def on_feature_change(self, key, value, *args): # amp change
         super().on_feature_change(key, value, *args)
-        if key != "volume" or self.keys_pressed <= 0: return
+        if key != config.volume or self.keys_pressed <= 0: return
         with suppress(RuntimeError): self._vol_lock.release()
 
     def on_key_release(self, button):

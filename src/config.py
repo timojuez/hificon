@@ -32,7 +32,7 @@ class ExtendedConfigParser(configparser.ConfigParser):
         self[section][option] = json.dumps(value)
 
 
-class ConfigDiffParser(ExtendedConfigParser):
+class ConfigDiffMixin:
     """ Append modified values to @local_path """
     
     def __init__(self,local_path,*args,**xargs):
@@ -58,8 +58,18 @@ class ConfigDiffParser(ExtendedConfigParser):
             self._local.write(f)
 
 
+class ShortcutsMixin:
+    volume = property(lambda self: self.get("Amp","volume_feature_key"))
+    muted = property(lambda self: self.get("Amp","muted_feature_key"))
+    power = property(lambda self: self.get("Amp","power_feature_key"))
+    source = property(lambda self: self.get("Amp","source_feature_key"))
+
+
+class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass
+
+
 default = pkgutil.get_data(__name__,"share/main.cfg.default").decode()
-config = ConfigDiffParser(FILE)
+config = ConfigParser(FILE)
 config.read_string(default)
 config.read([FILE])
 
