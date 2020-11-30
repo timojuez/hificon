@@ -402,7 +402,7 @@ class Surround_atmos_right_level(_Speaker_level): #undocumented
     function = "SSLEVSDR "
 
 @addToAmp
-class Main_zone(BoolFeature): function = "ZM"
+class Main_zone_power(BoolFeature): function = "ZM"
     
 @addToAmp
 class Rec_select(SelectFeature): function = "SR"
@@ -816,12 +816,11 @@ for zone in range(2,ZONES+1):
         call = "Z%s?"%zone
         
     @addToAmp
-    class ZPower(Zone, Power):
+    class ZPower(Zone, BoolFeature):
         name = "Zone %s Power"%zone
         key = "zone%s_power"%zone
         function = "Z%s"%zone
         call = "Z%s?"%zone
-        translation = {"ON":True,"OFF":False}
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
     
     @addToAmp
