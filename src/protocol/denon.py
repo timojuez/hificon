@@ -794,7 +794,7 @@ class Auto_standby(SelectFeature):
 
 
 @addToAmp
-class Amp_Assign(SelectFeature): #undocumented
+class Amp_assign(SelectFeature): #undocumented
     category = "Speakers"
     function = "SSPAAMOD "
     call = "SSPAA ?"
