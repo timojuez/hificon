@@ -890,6 +890,7 @@ for zone in range(2,ZONES+1):
         
     @addToAmp
     class Auto_Standby(Zone, SelectFeature):
+        name = "Zone %s Auto Standby"%zone
         key = "zone%s_auto_standby"%zone
         function = "Z%sSTBY"%zone
         translation = {"2H":"2 hours","4H":"4 hours","8H":"8 hours","OFF":"Off"}
