@@ -153,7 +153,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         """ decode and apply @cmd to this object """
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
-        else: return d and self.store(d)
+        else: return self.store(d)
         
     def store(self, value):
         old = getattr(self,'_val',None)
