@@ -830,7 +830,22 @@ for zone in range(2,ZONES+1):
         function = "Z%s"%zone
         call = "Z%s?"%zone
         translation = {**Source.translation, "SOURCE": "Main Zone"}
+        _from_mainzone = False
+        
+        def __init__(self, *args, **xargs):
+            super().__init__(*args, **xargs)
+            self.amp.features["source"].bind(on_change=lambda old,new:self._resolve_main_zone_source())
+
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
+
+        @amp.features.require("source")
+        def _resolve_main_zone_source(self):
+            if self._from_mainzone: super().store(self.amp.source)
+
+        def store(self, data):
+            self._from_mainzone = data == "Main Zone"
+            if self._from_mainzone: self._resolve_main_zone_source()
+            else: return super().store(data)
     
     @addToAmp
     class ZMuted(Zone, Muted):
