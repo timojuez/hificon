@@ -162,14 +162,8 @@ class FeaturesMixin(object):
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
-        consumed = {key:f.consume(data) for key,f in self.features.items() if f.matches(data)}
-        consumed = {key:values for key,values in consumed.items() if values}
+        consumed = [1 for key,f in self.features.items() if f.matches(data) and f.consume(data)]
         if not consumed: self.on_feature_change(None, data, None)
-        for key,(old,new) in consumed.items():
-            if not self.features[key].isset(): continue
-            if self.verbose > 5 and self._pending: print("[%s] %d pending functions"
-                %(self.__class__.__name__, len(self._pending)), file=sys.stderr)
-            for p in self._pending.copy(): p.has_polled(key) # has_polled() changes self._pending
 
 
 class PreloadMixin:

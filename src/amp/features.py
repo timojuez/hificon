@@ -153,12 +153,16 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         """ decode and apply @cmd to this object """
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
-        else: return self.store(d)
+        else: return d and self.store(d)
         
     def store(self, value):
         old = getattr(self,'_val',None)
         self._val = value
         if self._val != old: self.on_change(old, self._val)
+        if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
+            %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
+        for call in self.amp._pending.copy(): # has_polled() changes _pending
+            call.has_polled(self.key)
         return old, self._val
 
     def on_change(self, old, new):
