@@ -254,10 +254,11 @@ class Source_names(SelectFeature): #undocumented
     def decodeVal(self, val):
         if val.strip() == "END":
             self._ready = True
-            return
-        code, name = val.split(" ",1)
-        self.translation[code] = name
-        self.amp.features["source"].translation[code] = name
+        else:
+            code, name = val.split(" ",1)
+            self.translation[code] = name
+            self.amp.features["source"].translation[code] = name
+        return ""
     def unset(self): self._ready = False
     def get(self): return "(select)"
     def encode(self, value):
