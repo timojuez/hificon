@@ -24,7 +24,6 @@ class _AbstractAmp(Bindable, AmpType):
         mainloop.
     """
     
-    protocol = None
     host = None
     port = None
     name = None
@@ -61,6 +60,9 @@ class _AbstractAmp(Bindable, AmpType):
 
     def disconnect(self): self._stoploop = True
     
+    @property
+    def protocol(self): return self.__class__.__module__
+
     @property
     def prompt(self):
         p = "%s://%s"%(self.protocol,self.host)
@@ -133,6 +135,7 @@ class FeaturesMixin(object):
     features = {}
     _pending = []
     _polled = []
+    _feature_classes = []
 
     def __init__(self,*args,**xargs):
         self._pending = []
@@ -141,6 +144,25 @@ class FeaturesMixin(object):
         # apply @features to Amp
         for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
+
+    @classmethod
+    def add_feature(self, Feature):
+        """
+        This is a decorator to be used on Feature class definitions that belong to the current amp.
+        Example:
+            from amp.feature import Feature
+            @Amp.add_feature
+            class MyFeature(Feature): pass
+        """
+        if hasattr(self, Feature.key):
+            raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
+        setattr(self, Feature.key, property(
+            lambda self,Feature=Feature:self.features[Feature.key].get(),
+            lambda self,val,Feature=Feature:self._set_feature_value(Feature.key,val)
+            #lambda self,val,Feature=Feature:self.features.__setitem__(Feature.key,val))
+        ))
+        setattr(self,"_feature_classes", getattr(self,"_feature_classes",[])+[Feature])
+        return Feature
 
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
@@ -255,28 +277,3 @@ class TelnetAmp(AbstractAmp):
             if not data: return
             self.on_receive_raw_data(data) 
 
-
-def make_amp(features, base_cls=AbstractAmp):
-    """
-    Make an Amp class which contains an attribute f for each feature class F.
-    features: list of MyFeature elements
-        where MyFeature inherits from amp_features.Feature
-    """
-    assert(issubclass(base_cls, AmpType))
-    for f in features:
-        if hasattr(base_cls, f.key):
-            raise KeyError("Feature.key `%s` is ambiguous and may not be used in this amp."%f.key)
-
-    dict_ = {
-        f.key:property(
-            lambda self,f=f:self.features[f.key].get(),
-            lambda self,val,f=f:self._set_feature_value(f.key,val)
-        )
-        for f in features
-    }
-    dict_["_feature_classes"] = features
-
-    with suppress(Exception): dict_["protocol"] = \
-        base_cls.protocol or sys._getframe(1).f_globals['__name__']
-    return type("Amp", (base_cls,), dict_)
-    

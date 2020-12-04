@@ -4,7 +4,7 @@ Dry software run that acts like a real amp
 
 import math
 from decimal import Decimal
-from ..amp import AbstractAmp, features, make_amp
+from ..amp import AbstractAmp, features
 from .. import Amp_cls
 
 
@@ -69,10 +69,12 @@ class DummyAmp:
                 r = get_val(f)
                 break
         return r
-    
 
-def Amp(*args, emulate=None, **xargs):
-    """ extra argument @emulate must be a protocol module """
-    Original_amp = Amp_cls(protocol=emulate)
-    return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
 
+class Amp(AbstractAmp):
+
+    def __new__(self, *args, emulate=None, **xargs):
+        """ extra argument @emulate must be a protocol module """
+        Original_amp = Amp_cls(protocol=emulate)
+        return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
+        

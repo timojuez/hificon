@@ -1,7 +1,7 @@
-from ..amp import features, TelnetAmp, make_amp
+from ..amp import features, TelnetAmp
 
 
-class _Amp(TelnetAmp):
+class Amp(TelnetAmp):
     """ Low level amp """
     protocol = "Raw_telnet"
     
@@ -18,6 +18,4 @@ class _Amp(TelnetAmp):
             def encode(self, value): return value
         RawFeature.__name__ = cmd
         return RawFeature(self).poll(force=True)
-
-Amp = make_amp([], _Amp)
 
