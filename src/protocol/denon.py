@@ -818,7 +818,7 @@ class Amp_assign(SelectFeature): #undocumented
     category = "Speakers"
     function = "SSPAAMOD "
     call = "SSPAA ?"
-    translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "front height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
+    translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "Front Height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
 
 
 # TODO: implement PV
