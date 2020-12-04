@@ -418,7 +418,9 @@ class Surround_atmos_right_level(_Speaker_level): #undocumented
     function = "SSLEVSDR "
 
 @Amp.add_feature
-class Main_zone_power(BoolFeature): function = "ZM"
+class Main_zone_power(BoolFeature):
+    category = "Misc"
+    function = "ZM"
     
 @Amp.add_feature
 class Rec_select(SelectFeature): function = "SR"
