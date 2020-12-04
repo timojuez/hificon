@@ -181,7 +181,7 @@ class FeaturesMixin(object):
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
-        consumed = [1 for key,f in self.features.items() if f.matches(data) and f.consume(data)]
+        consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
         if not consumed: self.on_feature_change(None, data, None)
 
 
