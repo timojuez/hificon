@@ -131,11 +131,12 @@ class _AbstractAmp(Bindable, AmpType):
     
 class FeaturesMixin(object):
     features = {}
-    _pending = None
+    _pending = []
     _polled = []
 
     def __init__(self,*args,**xargs):
         self._pending = []
+        self._polled = []
         self.features = {}
         # apply @features to Amp
         for F in self._feature_classes: F(self)
