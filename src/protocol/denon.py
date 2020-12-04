@@ -572,7 +572,9 @@ class Reference_level(SelectFeature):
 class Dynamic_volume(SelectFeature):
     category = "Audyssey"
     function = "PSDYNVOL "
-    translation = {"NGT":"Midnight", "EVE":"Evening", "DAY":"Day", "OFF":"Off"}
+    options = ["Off","Light","Medium","Heavy"]
+    translation = {"LIT":"Light","MED":"Medium","HEV":"Heavy", #undocumented
+        "NGT":"Heavy", "EVE":"Medium", "DAY":"Light","OFF":"Off"}
     
 @addToAmp
 class Audyssey_dsx(SelectFeature):
