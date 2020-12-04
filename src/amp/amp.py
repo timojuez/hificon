@@ -158,8 +158,7 @@ class FeaturesMixin(object):
             raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
         setattr(self, Feature.key, property(
             lambda self,Feature=Feature:self.features[Feature.key].get(),
-            lambda self,val,Feature=Feature:self._set_feature_value(Feature.key,val)
-            #lambda self,val,Feature=Feature:self.features.__setitem__(Feature.key,val))
+            lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
         ))
         setattr(self,"_feature_classes", getattr(self,"_feature_classes",[])+[Feature])
         return Feature
@@ -175,9 +174,6 @@ class FeaturesMixin(object):
         self._polled.clear()
         for f in self.features.values(): f.unset()
         super().on_connect()
-    
-    def _set_feature_value(self, name, value):
-        self.features[name].set(value)
     
     def mainloop_hook(self):
         super().mainloop_hook()
@@ -196,28 +192,9 @@ class PreloadMixin:
         super().on_connect()
         for key in set(self.preload_features):
             if key in self.features: self.features[key].async_poll()
-        
-
-class SendOnceMixin(object): # TODO: move to Feature so that it affects f.set()
-    """ prevent the same values from being sent to the amp in a row """
-    _block_on_set = None
-    
-    def __init__(self,*args,**xargs):
-        self._block_on_set = {}
-        super().__init__(*args,**xargs)
-        
-    def _set_feature_value(self, name, value):
-        if name in self._block_on_set and self._block_on_set[name] == value:
-            return
-        self._block_on_set[name] = value
-        super()._set_feature_value(name,value)
-        
-    def on_feature_change(self,*args,**xargs):
-        self._block_on_set.clear() # unblock values after amp switches on
-        super().on_feature_change(*args,**xargs)
 
 
-class AbstractAmp(SendOnceMixin, PreloadMixin, FeaturesMixin, _AbstractAmp): pass
+class AbstractAmp(PreloadMixin, FeaturesMixin, _AbstractAmp): pass
 
     
 class TelnetAmp(AbstractAmp):

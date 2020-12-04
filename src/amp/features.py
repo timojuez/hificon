@@ -116,6 +116,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     An attribute of the amplifier
     High level telnet protocol communication
     """
+    _val = None
+    _block_on_set = None
 
     def __init__(self, amp):
         """ amp instance, connected amp attribute name """
@@ -126,19 +128,22 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     name = property(lambda self:self.__class__.__name__)
     
     def get(self):
-        try: return self._val
-        except AttributeError: 
-            raise AttributeError("`%s` not available. Use @require"%self.key)
+        if self._val is None: raise AttributeError("`%s` not available. Use @require"%self.key)
+        else: return self._val
     
     def set(self, value, force=False):
+        assert(value is not None)
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
-        self.amp.send(self.encode(self.type(value)))
+        encoded = self.encode(self.type(value))
+        if not force and self._block_on_set == encoded: return
+        self._block_on_set = encoded
+        self.amp.send(encoded)
 
-    def isset(self): return hasattr(self,'_val')
+    def isset(self): return self._val != None
         
     def unset(self):
-        self.__dict__.pop("_val", None)
+        self._val = None
         with suppress(ValueError): self.amp._polled.remove(self.call)
     
     def async_poll(self, force=False):
@@ -151,12 +156,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
+        for f in self.amp.features.values(): f._block_on_set = None
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.store(d)
         
     def store(self, value):
-        old = getattr(self,'_val',None)
+        assert(value is not None)
+        old = self._val
         self._val = value
         if self._val != old: self.on_change(old, self._val)
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
