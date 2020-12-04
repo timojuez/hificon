@@ -165,6 +165,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         assert(value is not None)
         old = self._val
         self._val = value
+        if not self.isset(): return
         if self._val != old: self.on_change(old, self._val)
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
             %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
