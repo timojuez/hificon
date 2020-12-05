@@ -43,6 +43,8 @@ class _AbstractAmp(Bindable, AmpType):
         self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
+        if config.power in self.features: self.features[config.power].bind(
+            on_change = lambda _,val:self.on_poweron() if val else self.on_poweroff())
     
     def __enter__(self): return self.enter()
 

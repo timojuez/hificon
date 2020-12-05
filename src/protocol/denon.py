@@ -208,17 +208,11 @@ class Subwoofer_speaker_config(_SpeakerConfig): #undocumented
     translation = {"YES":"Yes","NO":"No"}
     
 @Amp.add_feature
-class Power(BoolFeature):
+class Device_power(BoolFeature):
     category = "Misc"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
-    
-    def on_change(self, old, new):
-        super().on_change(old, new)
-        try: func = {True:self.amp.on_poweron, False:self.amp.on_poweroff}[new]
-        except KeyError: return
-        else: return func()
-    
+
 @Amp.add_feature
 class Muted(BoolFeature):
     category = "Volume"
@@ -420,6 +414,7 @@ class Surround_atmos_right_level(_Speaker_level): #undocumented
 
 @Amp.add_feature
 class Main_zone_power(BoolFeature):
+    key = "power"
     category = "Misc"
     function = "ZM"
     
