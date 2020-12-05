@@ -1,4 +1,4 @@
-import sys, os, argparse, pkgutil, socket
+import sys, os, argparse, pkgutil, socket, re
 from contextlib import suppress
 from urllib.parse import urlparse
 from ..util import ssdp
@@ -33,10 +33,10 @@ def set_port():
     
 
 def source_setup():
-    if input("On your amp, select the input source that you want to control "
-        "with this program and press ENTER. [s]kip? ") == "s": return
+    if input("On your amp, select the input source that this device is connected to and press "
+        "ENTER. This setting is used by the auto power function. [s]kip? ") == "s": return
     with Amp() as amp:
-        source = amp.source
+        source = amp.features[config.source].get()
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
     
@@ -63,7 +63,22 @@ def setup_xorg_key_binding():
     print("Restarting xbindkeys...")
     os.system("killall xbindkeys")
     os.system("xbindkeys")
-    
+
+
+def zone_setup():
+    amp = Amp()
+    comp = re.compile("^zone(\d*)_volume$")
+    zones = [match.groups()[0] for key in amp.features.keys()
+        for match in [comp.match(key)] if match]
+    if not zones: return
+    while True:
+        ans = input("Which amp zone do you want to control with the %s icon? [M]ain/%s "
+            %(NAME, "/".join(map(lambda e:"[%s]"%e, zones))))
+        if ans in zones or ans in ("","M","m"):
+            for key in ("power","source","volume","muted"):
+                config["Amp"]["%s_feature_key"%key] = "zone%s_%s"%(ans,key) if ans in zones else key
+            break
+
 
 def discover_denon():
     """
@@ -98,6 +113,7 @@ arguments = [
     ("autostart", autostart, "Add tray icon to autostart", True),
     ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
     ("source-options-setup", source_options_setup, "Refresh input source list", True),
+    ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
     ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
     ("set-port", set_port, "Set a port for inter process communication", True),
 ]
