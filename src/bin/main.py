@@ -55,7 +55,7 @@ class Icon:
     _icon_path = tempfile.mktemp()
 
     def _getCurrentIconName(self):
-        if getattr(self.amp,config.muted):
+        if getattr(self.amp,config.muted) or getattr(self.amp,config.volume) == 0:
             return "audio-volume-muted"
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
@@ -87,6 +87,7 @@ class RelevantAmpEvents(Icon, AmpEvents):
         super().on_feature_change(key,value,*args)
         if key in (config.volume,config.muted): self.updateWidgets()
 
+    @features.require(config.muted,config.volume)
     def updateWidgets(self):
         ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
 
