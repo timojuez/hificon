@@ -55,11 +55,11 @@ class Icon:
     _icon_path = tempfile.mktemp()
 
     def _getCurrentIconName(self):
-        if getattr(self.amp,config.muted) or getattr(self.amp,config.volume) == 0:
+        volume = self.amp.features[config.volume]
+        if getattr(self.amp,config.muted) or volume.get() == volume.min:
             return "audio-volume-muted"
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-            volume = self.amp.features[config.volume]
             icon_idx = math.ceil(volume.get()/volume.max*len(icons))-1
             return icons[icon_idx]
     
