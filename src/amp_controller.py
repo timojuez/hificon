@@ -87,7 +87,7 @@ class AutoPower:
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.preload_features.update(("source","power","video"))
+        self.amp.preload_features.update((config.source, config.power))
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """

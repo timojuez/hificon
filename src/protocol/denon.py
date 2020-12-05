@@ -9,6 +9,7 @@ ZONES = 4
 
 class Amp(TelnetAmp):
     protocol = "Denon"
+    preload_features = {"video_select"}
     
     def query(self, cmd, matches=None):
         """ 
