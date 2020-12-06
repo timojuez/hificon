@@ -24,14 +24,6 @@ def autostart_gnu():
         fp.write(desktop)
 
 
-def set_port():
-    sock = socket.socket()
-    sock.bind(('127.0.0.1', 0))
-    port = sock.getsockname()[1]
-    config["Service"]["ipc_port"] = str(port)
-    print("Set port %d"%port)
-    
-
 def source_setup():
     if input("On your amp, select the input source that this device is connected to and press "
         "ENTER. This setting is used by the auto power function. [s]kip? ") == "s": return
@@ -165,7 +157,6 @@ class IconSetup(BasicSetup):
         ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
         ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
         ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
-        ("set-port", set_port, "Set a port for inter process communication", True),
     ]
 
 

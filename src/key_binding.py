@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, sys
+import time, sys, tempfile, os
 from threading import Thread, Lock
 from contextlib import suppress
 from .util import json_service
@@ -8,7 +8,7 @@ from . import amp, PKG_NAME
 from .config import config
 
 
-def ipc_port(): return config.getint("Service","ipc_port")
+ipc_port_file = os.path.join(tempfile.gettempdir(), "%s.port"%PKG_NAME)
 
 
 class VolumeChanger(AmpEvents):
@@ -37,13 +37,6 @@ class VolumeChanger(AmpEvents):
         self._vol_lock = Lock()
         self.amp.preload_features.add(config.volume)
     
-    def mainloop(self):
-        with suppress(Exception):
-            with open("/tmp/%s.port"%PKG_NAME, "w") as fp: fp.write(str(ipc_port()))
-        try: super().mainloop()
-        finally:
-            with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME)
-
     @amp.features.require(config.volume)
     def on_key_press(self, button):
         """ start sending volume events to amp """
@@ -72,13 +65,21 @@ class VolumeChanger(AmpEvents):
 
 
 def RemoteControlService(*args,**xargs):
-    if ipc_port() < 0: return
+    ipc_port = config.getint("Service","ipc_port")
+    if ipc_port < 0: return
     secure_mode = config.getboolean("Service","secure_mode")
     if not secure_mode: print("[WARNING] Service not running in secure mode", file=sys.stderr)
     whitelist = ("on_key_press","on_key_release") if secure_mode else None
-    return json_service.RemoteControlService(
-        *args,port=ipc_port(),func_whitelist=whitelist,**xargs)
-    
+    rcs = json_service.RemoteControlService(
+        *args,port=ipc_port,func_whitelist=whitelist,**xargs)
+    ipc_port = rcs.sock.getsockname()[1]
+    with suppress(Exception):
+        with open(ipc_port_file, "w") as fp: fp.write(str(ipc_port))
+    #with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME) # TODO: cleanup on close
+    return rcs
 
-send = lambda e: json_service.send(e, port=ipc_port())
+
+def send(e):
+    with open(ipc_port_file) as fp: ipc_port = int(fp.read().strip())
+    return json_service.send(e, port=ipc_port)
 

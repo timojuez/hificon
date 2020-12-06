@@ -20,6 +20,7 @@ class Service(object):
         self._verbose = verbose
         self.sel = selectors.DefaultSelector()
         sock = socket.socket()
+        self.sock = sock
         sock.bind((host, port))
         if self._verbose > 0: print(
             "[%s] Listening on %s:%d"%(self.__class__.__name__,*sock.getsockname()), file=sys.stderr)

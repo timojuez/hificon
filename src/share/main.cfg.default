@@ -32,7 +32,7 @@ step = 1.0
 
 [Service]
 # IPC service port
-ipc_port = -1
+ipc_port = 0
 secure_mode = yes
 
 
