@@ -13,13 +13,6 @@ class FeatureNotification:
     def __init__(self, feature, *args, **xargs):
         super().__init__(*args, **xargs)
         self.f = feature
-        self._notification_whitelist = config.getlist("GUI","notification_whitelist")
-        self._notification_blacklist = config.getlist("GUI","notification_blacklist")
-
-    def show(self):
-        if self.f.key not in self._notification_blacklist and (
-                "*" in self._notification_whitelist or self.f.key in self._notification_whitelist):
-            super().show()
 
 
 class TextNotification(FeatureNotification, ui.Notification):
@@ -36,21 +29,15 @@ class TextNotification(FeatureNotification, ui.Notification):
         super().update("%s: %s"%(self.f.name, val), self.f.amp.name)
 
 
-class GaugeNotification:
-
+class NumericNotification(FeatureNotification):
+    
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._n = ui.GaugeNotification()
         self._n.set_timeout(config.getint("GUI","notification_timeout"))
 
-    def update(self,*args,**xargs): self._n.update(*args,**xargs)
-    def show(self): self._n.show()
-
-
-class NumericNotification(FeatureNotification, GaugeNotification):
-    
     def update(self):
-        super().update(
+        self._n.update(
             title=self.f.name,
             message=str("%0.1f"%self.f.get() if self.f.isset() else "..."),
             value=self.f.get() if self.f.isset() else self.f.min,
@@ -60,7 +47,7 @@ class NumericNotification(FeatureNotification, GaugeNotification):
     def show(self):
         if self.f.key == config.volume and ui.VolumePopup().visible: return
         self.update()
-        super().show()
+        self._n.show()
         
 
 class Icon:
@@ -110,37 +97,34 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        self._notifications = {key:self._createNotification(f)
-            for key,f in list(self.amp.features.items())}
+        notification_whitelist = config.getlist("GUI","notification_whitelist")
+        notification_blacklist = config.getlist("GUI","notification_blacklist")
+        create_notification = lambda f: \
+            NumericNotification(f) if isinstance(f, features.NumericFeature) else TextNotification(f)
+        self._notifications = {key:create_notification(f) for key,f in list(self.amp.features.items())
+            if f.key not in notification_blacklist
+            and ("*" in notification_whitelist or self.f.key in notification_whitelist)}
+        for n in self._notifications.values(): n.update()
         self.amp.preload_features.add(config.volume)
     
-    def _createNotification(self, feature):
-        if isinstance(feature, features.NumericFeature): N = NumericNotification
-        else: N = TextNotification
-        n = N(feature)
-        n.update()
-        return n
+    def show_notification(self, key): key in self._notifications and self._notifications[key].show()
     
     def on_key_press(self,*args,**xargs):
-        self._notifications[config.volume].show()
+        self.show_notification(config.volume)
         super().on_key_press(*args,**xargs)
 
     def on_feature_change(self, key, value, prev): # bound to amp
+        if key in self._notifications: self._notifications[key].update()
         if not (key in self.amp.preload_features and prev is None):
-            self._notifications[key].update()
-            self._notifications[key].show()
+            self.show_notification(key)
         super().on_feature_change(key,value,prev)
 
     def on_scroll_up(self, *args, **xargs):
-        self._notifications[config.volume].show()
-        if self.amp.features[config.volume].isset():
-            self._notifications[config.volume].update(self.amp.features[config.volume])
+        self.show_notification(config.volume)
         super().on_scroll_up(*args,**xargs)
         
     def on_scroll_down(self, *args, **xargs):
-        self._notifications[config.volume].show()
-        if self.amp.features[config.volume].isset():
-            self._notifications[config.volume].update(self.amp.features[config.volume])
+        self.show_notification(config.volume)
         super().on_scroll_down(*args,**xargs)
 
 
@@ -222,8 +206,7 @@ def main():
     try:
         with amp:
             Thread(name="Amp",target=ac.mainloop,daemon=True).start()
-            rcs = RemoteControlService(app,verbose=args.verbose)
-            if rcs: rcs()
+            if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
             app.mainloop()
     finally:
         try: app.icon.__del__()
