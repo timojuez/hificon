@@ -57,7 +57,7 @@ class FunctionCall(object):
             return next(filter(lambda e: isinstance(e,AmpType), (amp,)+args))
         except (StopIteration, IndexError):
             raise TypeError("`%s` cannot be called. @require needs "
-                "AmpType instance as argument"%self._func.__name__, file=sys.stderr)
+                "AmpType instance as argument"%self._func.__name__)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)
