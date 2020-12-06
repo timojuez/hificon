@@ -129,10 +129,9 @@ class Main(object):
 
 
 class Setup:
-    _dir = os.path.expanduser("~/.%s"%PKG_NAME)
 
     @classmethod
-    def configured(self): return os.path.exists(self._dir)
+    def configured(self): return os.path.exists(FILE)
     
     @classmethod
     def getTasks(self): return [task 
@@ -144,7 +143,6 @@ class Setup:
         tasks = tasks or self.getTasks()
         if os.path.exists(FILE) and input("This will modify `%s`. Proceed with setup? [y/N] "%FILE) != "y":
             return
-        with suppress(OSError): os.mkdir(self._dir)
         for arg, func, help, default in tasks:
             try: func()
             except Exception as e:
