@@ -173,6 +173,7 @@ class FeaturesMixin(object):
         else: super().__setattr__(name, value)
 
     def on_connect(self):
+        self._pending.clear()
         self._polled.clear()
         for f in self.features.values(): f.unset()
         super().on_connect()
