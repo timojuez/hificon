@@ -260,14 +260,15 @@ class Source_names(SelectFeature): #undocumented
         return ""
     def unset(self): self._ready = False
     def get(self): return "(select)"
-    def encode(self, value):
-        return "%s%s"%("SI", self.encodeVal(value))
+    def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
+    #def encode(self, value):
+    #    return "%s%s"%("SI", self.encodeVal(value))
 
 
 @Amp.add_feature
 class Denon_name(SelectFeature): #undocumented
     function = "NSFRN "
-    def set(self, val, **xargs): raise RuntimeError("Cannot set value!")
+    def set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 
 class _Channel_volume(RelativeDecimal):
     category = "Volume"

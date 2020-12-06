@@ -11,6 +11,7 @@ from .. import Amp_cls
 default_values = dict(
     denon_name = "Dummy X7800H",
     muted = False,
+    source_names = " END",
 )
 
 
