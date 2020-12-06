@@ -254,16 +254,3 @@ class Constant(PresetValue):
     def store(self,*args,**xargs): pass
 
 
-class Fallback(SelectFeature):
-    """ Matches always, if no other feature matched """
-    
-    def matches(self, data): return False
-    def set(self, val): raise ValueError()
-    def async_poll(self): pass
-
-    def consume(self, data):
-        self._val = data
-        if self.amp.verbose > 1:
-            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        if config.getboolean("Amp","fallback_feature"): self.on_change(None, data)
-

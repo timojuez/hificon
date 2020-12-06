@@ -8,7 +8,7 @@ from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
-from .features import require, Fallback
+from .features import *
 from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
@@ -133,7 +133,6 @@ class _AbstractAmp(Bindable, AmpType):
     
 class FeaturesMixin(object):
     features = {}
-    fallback = None
     _pending = []
     _polled = []
     _feature_classes = []
@@ -144,7 +143,6 @@ class FeaturesMixin(object):
         self.features = {}
         # apply @features to Amp
         for F in self._feature_classes: F(self)
-        self.fallback = Fallback(self)
         super().__init__(*args,**xargs)
 
     @classmethod
@@ -256,4 +254,19 @@ class TelnetAmp(AbstractAmp):
             # receiving
             if not data: return
             self.on_receive_raw_data(data) 
+
+
+@AbstractAmp.add_feature
+class Fallback(SelectFeature):
+    """ Matches always, if no other feature matched """
+    
+    def matches(self, data): return False
+    def set(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def async_poll(self, *args, **xargs): pass
+
+    def consume(self, data):
+        self._val = data
+        if self.amp.verbose > 1:
+            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
+        if config.getboolean("Amp","fallback_feature"): self.on_change(None, data)
 
