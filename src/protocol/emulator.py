@@ -72,6 +72,7 @@ class DummyAmp:
 
 
 class Amp(AbstractAmp):
+    protocol = "Emulator"
 
     def __new__(self, *args, emulate=None, **xargs):
         """ extra argument @emulate must be a protocol module """
