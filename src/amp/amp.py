@@ -8,7 +8,7 @@ from threading import Thread
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
-from .features import require
+from .features import require, Fallback
 from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
@@ -109,9 +109,7 @@ class _AbstractAmp(Bindable, AmpType):
     @log_call
     def on_feature_change(self, key, value, previous_val):
         """ attribute on amplifier has changed """
-        if key == None and self.verbose > 1:
-            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, value))
-        elif key and self.verbose > 2:
+        if key and self.verbose > 2:
             print("[%s] $%s = %s"%(self.__class__.__name__,key,repr(value)))
         
     @log_call
@@ -135,6 +133,7 @@ class _AbstractAmp(Bindable, AmpType):
     
 class FeaturesMixin(object):
     features = {}
+    fallback = None
     _pending = []
     _polled = []
     _feature_classes = []
@@ -145,6 +144,7 @@ class FeaturesMixin(object):
         self.features = {}
         # apply @features to Amp
         for F in self._feature_classes: F(self)
+        self.fallback = Fallback(self)
         super().__init__(*args,**xargs)
 
     @classmethod
@@ -184,7 +184,7 @@ class FeaturesMixin(object):
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
         consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
-        if not consumed: self.on_feature_change(None, data, None)
+        if not consumed: self.features["fallback"].consume(data)
 
 
 class PreloadMixin:

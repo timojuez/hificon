@@ -8,52 +8,60 @@ from .setup import Setup
 from .. import Amp, NAME, ui
 
 
-class NotificationWithTitle:
-    
-    def __init__(self, subtitle, *args, **xargs):
-        self._subtitle = subtitle
+class FeatureNotification:
+
+    def __init__(self, feature, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.f = feature
+        self._notification_whitelist = config.getlist("GUI","notification_whitelist")
+        self._notification_blacklist = config.getlist("GUI","notification_blacklist")
+
+    def show(self):
+        if self.f.key not in self._notification_blacklist and (
+                "*" in self._notification_whitelist or self.f.key in self._notification_whitelist):
+            super().show()
 
 
-class TextNotification(NotificationWithTitle, ui.Notification):
-    
-    def __init__(self,*args,**xargs):
-        super().__init__(*args,**xargs)
-        TextNotification.update(self, "Connecting ...")
-
-    def update(self, text): not text or super().update(text, self._subtitle)
-    
-
-class TextFeatureNotification(TextNotification):
-    
-    def update(self, feature):
-        if feature.isset(): val = {True:"On",False:"Off"}.get(feature.get(), feature.get())
-        else: return
-        super().update("%s: %s"%(feature.name, val))
-
-
-class NumericFeatureNotification(NotificationWithTitle):
+class TextNotification(FeatureNotification, ui.Notification):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._n = ui.GaugeNotification()
+        self.set_urgency(2)
+        self.set_timeout(config.getint("GUI","notification_timeout"))
+        super().update("Connecting ...", self.f.amp.name)
+        
+    def update(self):
+        if self.f.isset(): val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
+        else: return
+        super().update("%s: %s"%(self.f.name, val), self.f.amp.name)
 
-    def update(self, feature):
-        self._f = feature
-        self._n.update(
-            title=feature.name,
-            message=str("%0.1f"%feature.get() if feature.isset() else "..."),
-            value=feature.get() if feature.isset() else feature.min,
-            min=feature.min,
-            max=feature.max)
+
+class GaugeNotification:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._n = ui.GaugeNotification()
+        self._n.set_timeout(config.getint("GUI","notification_timeout"))
+
+    def update(self,*args,**xargs): self._n.update(*args,**xargs)
+    def show(self): self._n.show()
+
+
+class NumericNotification(FeatureNotification, GaugeNotification):
+    
+    def update(self):
+        super().update(
+            title=self.f.name,
+            message=str("%0.1f"%self.f.get() if self.f.isset() else "..."),
+            value=self.f.get() if self.f.isset() else self.f.min,
+            min=self.f.min,
+            max=self.f.max)
             
     def show(self):
-        if self._f.key == config.volume and ui.VolumePopup().visible: return
-        self.update(self._f)
-        self._n.show()
+        if self.f.key == config.volume and ui.VolumePopup().visible: return
+        self.update()
+        super().show()
         
-    def __getattr__(self, key): return getattr(self._n, key)
-
 
 class Icon:
     """ Functions regarding loading images from src/share """
@@ -102,39 +110,25 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        self._notification_whitelist = config.getlist("GUI","notification_whitelist")
-        self._notification_blacklist = config.getlist("GUI","notification_blacklist")
         self._notifications = {key:self._createNotification(f)
-            for key,f in list(self.amp.features.items())+[(None,None)]}
+            for key,f in list(self.amp.features.items())}
         self.amp.preload_features.add(config.volume)
     
     def _createNotification(self, feature):
-        if isinstance(feature, features.NumericFeature): N = NumericFeatureNotification
-        elif feature is None: N = TextNotification
-        else: N = TextFeatureNotification
-        n = N(self.amp.name)
-        n.update(feature)
-        n.set_urgency(2)
-        n.set_timeout(config.getint("GUI","notification_timeout"))
+        if isinstance(feature, features.NumericFeature): N = NumericNotification
+        else: N = TextNotification
+        n = N(feature)
+        n.update()
         return n
     
-    def update_notification(self, key, val=None):
-        n = self._notifications[key]
-        f = self.amp.features.get(key)
-        n.update(f or val)
-        return n
-
     def on_key_press(self,*args,**xargs):
         self._notifications[config.volume].show()
         super().on_key_press(*args,**xargs)
 
     def on_feature_change(self, key, value, prev): # bound to amp
-        if not (key in self.amp.preload_features and prev is None) \
-            and key not in self._notification_blacklist and (
-                "all" in self._notification_whitelist
-                or "all_implemented" in self._notification_whitelist and key
-                or key in self._notification_whitelist):
-            self.update_notification(key, value).show()
+        if not (key in self.amp.preload_features and prev is None):
+            self._notifications[key].update()
+            self._notifications[key].show()
         super().on_feature_change(key,value,prev)
 
     def on_scroll_up(self, *args, **xargs):

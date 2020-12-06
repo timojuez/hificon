@@ -5,6 +5,7 @@ from threading import Event, Lock
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from .amp_type import AmpType
+from ..config import config
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
@@ -247,4 +248,18 @@ class Constant(PresetValue):
     """ Inerhit if feature value may not change """
     def matches(self,*args,**xargs): return False
     def store(self,*args,**xargs): pass
+
+
+class Fallback(SelectFeature):
+    """ Matches always, if no other feature matched """
+    
+    def matches(self, data): return False
+    def set(self, val): raise ValueError()
+    def async_poll(self): pass
+
+    def consume(self, data):
+        self._val = data
+        if self.amp.verbose > 1:
+            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
+        if config.getboolean("Amp","fallback_feature"): self.on_change(None, data)
 

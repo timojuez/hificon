@@ -5,6 +5,8 @@ source_feature_key = source
 volume_feature_key = volume
 muted_feature_key = muted
 
+# Triggers the "fallback" feature change event each time the amp sends uninterpretable data
+fallback_feature = no
 # Switch the Amp on when playing audio
 control_power_on = yes
 # Switch the Amp off on suspend/shutdown/idle
@@ -37,8 +39,8 @@ secure_mode = yes
 
 
 [GUI]
-# values: "all", "all_implemented", "" or list of attributes separated by ","
-notification_whitelist = all_implemented
+# values: "*" (all), "" (none) or list of attributes separated by ","
+notification_whitelist = *
 notification_blacklist = maxvol, input_signal
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
