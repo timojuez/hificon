@@ -3,7 +3,6 @@ from decimal import Decimal
 from threading import Lock
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
-from .setup import BasicSetup
 from ..config import config, CONFDIR
 from .. import Amp, NAME, VERSION, AUTHOR
 
@@ -245,8 +244,6 @@ Builder.load_string(kv)
 
 def main():
     global amp, menu
-    
-    if not BasicSetup.configured(): BasicSetup.setup()
     
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose)
     menu = Menu(amp)
