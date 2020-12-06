@@ -184,18 +184,20 @@ class Menu(TabbedPanel):
 
     def addSelectFeature(self, f):
         dropdown = SelectFeatureOptions()
-        for text in f.options:
-            o = SelectFeatureOption()
-            o.text = text
-            #o.bind(on_release=lambda i: dropdown.select(i.text))
-            o.bind(on_press=lambda i: on_change(o,i.text))
-            dropdown.add_widget(o)
-        
         layout = SelectFeature()
         layout.ids.button.bind(on_release=lambda i: dropdown.open(i))
         
         def get(inst, value): return value
-        def set(value): layout.ids.button.text = value
+        def set(value):
+            layout.ids.button.text = value
+            dropdown.clear_widgets()
+            for text in f.options:
+                o = SelectFeatureOption()
+                o.text = text
+                #o.bind(on_release=lambda i: dropdown.select(i.text))
+                o.bind(on_press=lambda i: on_change(o,i.text))
+                dropdown.add_widget(o)
+            
 
         on_change = self.bind_widget_to_feature(f,get,set)
         #dropdown.bind(on_select=on_change)
