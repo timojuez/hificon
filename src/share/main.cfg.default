@@ -39,7 +39,7 @@ secure_mode = yes
 [GUI]
 # values: "*" (all), "" (none) or list of attributes separated by ","
 notification_whitelist = *
-notification_blacklist = maxvol, input_signal
+notification_blacklist = maxvol, input_signal, source_names
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
