@@ -32,11 +32,15 @@ class TextFeatureNotification(TextNotification):
         super().update("%s: %s"%(feature.name, val))
 
 
-class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
+class NumericFeatureNotification(NotificationWithTitle):
     
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._n = ui.GaugeNotification()
+
     def update(self, feature):
         self._f = feature
-        super().update(
+        self._n.update(
             title=feature.name,
             message=str("%0.1f"%feature.get() if feature.isset() else "..."),
             value=feature.get() if feature.isset() else feature.min,
@@ -46,7 +50,9 @@ class NumericFeatureNotification(NotificationWithTitle, ui.GaugeNotification):
     def show(self):
         if self._f.key == config.volume and ui.VolumePopup().visible: return
         self.update(self._f)
-        super().show()
+        self._n.show()
+        
+    def __getattr__(self, key): return getattr(self._n, key)
 
 
 class Icon:
