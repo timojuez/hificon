@@ -113,7 +113,7 @@ class Main(object):
 
     def __init__(self):
         self.parser = argparse.ArgumentParser(description='%s Setup Tool'%NAME)
-        for args in CompleteSetup.getTasks(): self.add_bool_arg(*args)
+        for args in Setup.getTasks(): self.add_bool_arg(*args)
         self.parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = self.parser.parse_args()
         
@@ -125,10 +125,27 @@ class Main(object):
             help="" if default else "(default)")
     
     def __call__(self):
-        Setup.setup([a for a in CompleteSetup.getTasks() if getattr(self.args, a[0])])
+        Setup.setup([a for a in Setup.getTasks() if getattr(self.args, a[0])])
 
 
-class Setup:
+class BasicSetup:
+    add_tasks = [
+        # arg,      func,           help,               default
+        ("discover", discover_amp_prompt, "Discover amp automatically", True),
+        ("source-options-setup", source_options_setup, "Refresh input source list", True),
+    ]
+    
+
+class IconSetup(BasicSetup):
+    add_tasks = [
+        ("autostart", autostart, "Add tray icon to autostart", True),
+        ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
+        ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
+        ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
+    ]
+
+
+class Setup(IconSetup, BasicSetup):
 
     @classmethod
     def configured(self): return os.path.exists(FILE)
@@ -149,26 +166,6 @@ class Setup:
                 print("Exception in %s: %s"%(arg,repr(e)))
             print()
         print("done. The service needs to be (re)started.")
-
-
-class BasicSetup(Setup):
-    add_tasks = [
-        # arg,      func,           help,               default
-        ("discover", discover_amp_prompt, "Discover amp automatically", True),
-        ("source-options-setup", source_options_setup, "Refresh input source list", True),
-    ]
-    
-
-class IconSetup(BasicSetup):
-    add_tasks = [
-        ("autostart", autostart, "Add tray icon to autostart", True),
-        ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
-        ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
-        ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
-    ]
-
-
-class CompleteSetup(IconSetup, BasicSetup): pass
 
 
 def main(): Main()()
