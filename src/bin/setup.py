@@ -107,23 +107,11 @@ def discover_denon():
         else: print("Cannot connect to host.")
 
 
-arguments = [
-    # arg,      func,           help,               default
-    ("discover", discover_denon, "Include Denon amp discovery", True),
-    ("autostart", autostart, "Add tray icon to autostart", True),
-    ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
-    ("source-options-setup", source_options_setup, "Refresh input source list", True),
-    ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
-    ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
-    ("set-port", set_port, "Set a port for inter process communication", True),
-]
-
-
 class Main(object):
 
     def __init__(self):
         self.parser = argparse.ArgumentParser(description='%s Setup Tool'%NAME)
-        for args in arguments: self.add_bool_arg(*args)
+        for args in CompleteSetup.getTasks(): self.add_bool_arg(*args)
         self.parser.add_argument("-v",'--verbose', default=False, action='store_true', help='Verbose mode')
         self.args = self.parser.parse_args()
         
@@ -135,7 +123,7 @@ class Main(object):
             help="" if default else "(default)")
     
     def __call__(self):
-        Setup.setup(steps=[a[0] for a in arguments if getattr(self.args, a[0])])
+        Setup.setup([a for a in CompleteSetup.getTasks() if getattr(self.args, a[0])])
 
 
 class Setup:
@@ -145,23 +133,43 @@ class Setup:
     def configured(self): return os.path.exists(self._dir)
     
     @classmethod
-    def setup(self, steps=None):
-        if steps:
-            assert(isinstance(steps,list))
-            invalid = set(steps).difference([a[0] for a in arguments])
-            if invalid: raise ValueError("Invalid steps: %s"%invalid)
+    def getTasks(self): return [task 
+        for C in filter(lambda C:"add_tasks" in C.__dict__, reversed(self.__mro__)) for task in C.add_tasks]
+
+    @classmethod
+    def setup(self, tasks=None):
+        """ tasks is in the form of @all_tasks """
+        tasks = tasks or self.getTasks()
         if os.path.exists(FILE) and input("This will modify `%s`. Proceed with setup? [y/N] "%FILE) != "y":
             return
         with suppress(OSError): os.mkdir(self._dir)
-        for arg, func, help, default in arguments:
-            if steps and arg not in steps: continue
+        for arg, func, help, default in tasks:
             try: func()
             except Exception as e:
                 print("Exception in %s: %s"%(arg,repr(e)))
             print()
         print("done. The service needs to be (re)started.")
 
+
+class BasicSetup(Setup):
+    add_tasks = [
+        # arg,      func,           help,               default
+        ("discover", discover_denon, "Include Denon amp discovery", True),
+        ("source-options-setup", source_options_setup, "Refresh input source list", True),
+    ]
     
+
+class IconSetup(BasicSetup):
+    add_tasks = [
+        ("autostart", autostart, "Add tray icon to autostart", True),
+        ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
+        ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
+        ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
+        ("set-port", set_port, "Set a port for inter process communication", True),
+    ]
+
+
+class CompleteSetup(IconSetup, BasicSetup): pass
 
 
 def main(): Main()()

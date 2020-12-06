@@ -3,6 +3,7 @@ from decimal import Decimal
 from threading import Lock
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
+from .setup import BasicSetup
 from ..config import config, CONFDIR
 from .. import Amp, NAME, VERSION, AUTHOR
 
@@ -236,16 +237,20 @@ class App(App):
     def build(self):
         self.title = "%(name)s Control Menu – %(amp)s"%dict(name=NAME, amp=amp.name)
         return menu
-        
 
 
-amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose)
 kv = pkgutil.get_data(__name__,"../share/menu.kv").decode()
 Builder.load_string(kv)
-menu = Menu(amp)
 
 
 def main():
+    global amp, menu
+    
+    if not BasicSetup.configured(): BasicSetup.setup()
+    
+    amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose)
+    menu = Menu(amp)
+
     icon_path = tempfile.mktemp()
     try:
         with open(icon_path, "wb") as fp:

@@ -4,7 +4,7 @@ from ..amp import features
 from ..amp_controller import AmpEvents, AmpController
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
-from .setup import Setup
+from .setup import IconSetup
 from .. import Amp, NAME, ui
 
 
@@ -209,7 +209,7 @@ def main():
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     
-    if not Setup.configured() or args.setup: Setup.setup()
+    if not IconSetup.configured() or args.setup: IconSetup.setup()
     
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
     app = MainApp(amp)
