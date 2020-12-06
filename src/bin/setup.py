@@ -72,31 +72,41 @@ def zone_setup():
             break
 
 
-def discover_denon():
+def check_amp(host):
+    try:
+        with Amp(protocol=".denon", host=host) as amp:
+            name = amp.denon_name
+    except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
+        return False
+    print("Found %s on %s."%(name, host))
+    return host,name,".denon"
+
+
+def discover_amp():
     """
     Search local network for Denon amp
     """
-    def check_amp(host):
-        try:
-            with Amp(protocol=".denon", host=host) as amp:
-                name = amp.denon_name
-        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
-            return False
-        print("Found %s on %s."%(name, host))
-        config["Amp"]["Host"] = host
-        config["Amp"]["Name"] = name
-        config["Amp"]["protocol"] = ".denon"
-        return True
     for response in ssdp.discover():
         if "denon" in response.st.lower() or "marantz" in response.st.lower():
             host = urlparse(response.location).hostname
-            if check_amp(host): return
-    #raise Exception("No Denon amp found. Check if amp is connected or"
-    #    " set IP manually.")
-    while True:
-        host = input("No Denon amp found. Enter IP manually: ")
-        if check_amp(host): return
-        else: print("Cannot connect to host.")
+            if amp_details := check_amp(host): return amp_details
+    raise Exception("No Denon amp found. Check if amp is connected or"
+        " set IP manually.")
+
+
+def discover_amp_prompt():
+    def set_amp(host,name,protocol):
+        config["Amp"]["Host"] = host
+        config["Amp"]["Name"] = name
+        config["Amp"]["protocol"] = protocol
+    try: amp_details = discover_amp()
+    except Exception as e:
+        print("%s: %s"%(type(e).__name__, e))
+        while True:
+            host = input("Enter amp's IP: ")
+            if amp_details := check_amp(host): return set_amp(*amp_details)
+            else: print("Cannot connect to host.")
+    else: set_amp(*amp_details)
 
 
 class Main(object):
@@ -146,7 +156,7 @@ class Setup:
 class BasicSetup(Setup):
     add_tasks = [
         # arg,      func,           help,               default
-        ("discover", discover_denon, "Include Denon amp discovery", True),
+        ("discover", discover_amp_prompt, "Discover amp automatically", True),
         ("source-options-setup", source_options_setup, "Refresh input source list", True),
     ]
     
