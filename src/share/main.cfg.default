@@ -17,8 +17,6 @@ poweroff_after = 2.5
 protocol = .auto
 # Amp input source that this program controls. Important for power control. Empty means "all"
 source = 
-# Input source names in Json format
-source_names = {}
 
 # host = 1.2.3.4
 port = 23

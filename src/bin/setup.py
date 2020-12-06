@@ -31,15 +31,6 @@ def source_setup():
         source = amp.features[config.source].get()
     print("Registered input source `%s`."%source)
     config["Amp"]["source"] = source
-    
-
-def source_options_setup():
-    with Amp() as amp:
-        print("Registered the following input sources:")
-        f = protocol.denon.Source_names(amp)
-        f.poll()
-        for input_ in f.translation.values(): print("\t%s"%input_)
-        config.setdict("Amp", "source_names", f.translation)
 
 
 def setup_xorg_key_binding():
@@ -132,7 +123,6 @@ class BasicSetup:
     add_tasks = [
         # arg,      func,           help,               default
         ("discover", discover_amp_prompt, "Discover amp automatically", True),
-        ("source-options-setup", source_options_setup, "Refresh input source list", True),
     ]
     
 

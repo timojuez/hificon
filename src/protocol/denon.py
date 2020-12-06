@@ -229,9 +229,13 @@ class Source(SelectFeature):
         "FLICKR":"Flickr","IRADIO":"IRadio","SERVER":"Server",
         "FAVORITES":"Favourites","AUX1":"AUX 1","AUX2":"AUX 2","AUX3":"AUX 3",
         "AUX4":"AUX 4","AUX5":"AUX 5","AUX6":"AUX 6","AUX7":"AUX 7","BT":"Bluetooth",
-        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP",
-        **config.getdict("Amp","source_names")}
+        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP"}
     
+    @amp.features.require("source_names")
+    def consume(self, data): return super().consume(data)
+
+
+@Amp.add_feature
 class Source_names(SelectFeature): #undocumented
     """
     SSFUN ?
