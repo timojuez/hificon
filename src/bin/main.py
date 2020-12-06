@@ -201,6 +201,11 @@ class AmpController(AmpController):
     def on_amp_idle(self):
         if self.amp.can_poweroff: self._n.show()
         
+    def on_start_playing(self):
+        super().on_start_playing()
+        try: self._n.close()
+        except: pass
+        
 
 def main():    
     parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
