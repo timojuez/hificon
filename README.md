@@ -42,13 +42,13 @@ Install the requirements:
 
 Cloning this repository in the current directory and installing via pip:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && hificon_setup`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && python3 -m hificon`
 
 ### Proprietary OS
 On Mac/Windows, download and install Python3 with Pip.
 Then execute:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[nongnu_desktop] && rm -R ./hificon && hificon_setup`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[nongnu_desktop] && rm -R ./hificon && python3 -m hificon`
 
 To connect the extra mouse buttons, start `hificon_mouse_binding`. You may want to add the command to autostart.
 
