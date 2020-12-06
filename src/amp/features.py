@@ -43,7 +43,9 @@ class FunctionCall(object):
         self.amp._pending.append(self) #postpone
         try: [f.async_poll() for f in self.missing_features]
         except ConnectionError: self.cancel()
-        
+    
+    def __repr__(self): return "<pending%s>"%self._func
+    
     def _try_call(self):
         if not self.missing_features: 
             try: self._func(*self._args,**self._kwargs)
@@ -170,6 +172,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self._val != old: self.on_change(old, self._val)
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
             %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
+        if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
+            %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
         for call in self.amp._pending.copy(): # has_polled() changes _pending
             call.has_polled(self.key)
         return old, self._val
