@@ -37,7 +37,7 @@ class VolumeChanger(AmpEvents):
         self._volume_step = Lock()
         self._volume_step.acquire()
         self.amp.preload_features.add(config.volume)
-        Thread(target=self.volume_thread, daemon=False, name="key_binding").start()
+        Thread(target=self.volume_thread, daemon=True, name="key_binding").start()
     
     def on_key_press(self, button):
         """ start sending volume events to amp """
@@ -56,12 +56,13 @@ class VolumeChanger(AmpEvents):
         while True:
             self._volume_step.acquire() # wait for on_feature_change
             self.step_volume()
-            if self.interval: time.sleep(self.interval)
     
     @amp.features.require(config.volume)
     def step_volume(self):
-        self.keys_pressed > 0 and setattr(self.amp,config.volume,
-        getattr(self.amp,config.volume) + self.step*(int(self.button)*2-1))
+        if self.keys_pressed > 0:
+            setattr(self.amp,config.volume,
+                getattr(self.amp,config.volume) + self.step*(int(self.button)*2-1))
+            if self.interval: time.sleep(self.interval)
 
     def on_feature_change(self, key, value, *args): # amp change
         super().on_feature_change(key, value, *args)
