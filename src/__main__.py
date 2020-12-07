@@ -1,3 +1,3 @@
-from .bin.main import main
-main()
+from .tray import main
+if __name__ == '__main__': main()
 

@@ -20,12 +20,12 @@ setup(name=PKG_NAME,
       },
       include_package_data=True,
       entry_points={'console_scripts': [
-        'hifish = %(name)s.bin.hifish:main'%dict(name=PKG_NAME),
-        "%(name)s_amp_emulator = %(name)s.bin.amp_emulator:main"%dict(name=PKG_NAME),
-        "%(name)s_menu = %(name)s.bin.menu:main"%dict(name=PKG_NAME),
-        '%(name)s = %(name)s.bin.main:main'%dict(name=PKG_NAME),
-        '%(name)s_setup = %(name)s.bin.setup:main'%dict(name=PKG_NAME),
-        '%(name)s_mouse_binding = %(name)s.bin.mouse_binding:main [nongnu_desktop]'%dict(name=PKG_NAME),
+        'hifish = %(name)s.hifish:main'%dict(name=PKG_NAME),
+        "%(name)s_amp_emulator = %(name)s.amp_emulator:main"%dict(name=PKG_NAME),
+        "%(name)s_menu = %(name)s.menu:main"%dict(name=PKG_NAME),
+        '%(name)s = %(name)s.tray:main'%dict(name=PKG_NAME),
+        '%(name)s_setup = %(name)s.tray.setup:main'%dict(name=PKG_NAME),
+        '%(name)s_mouse_binding = %(name)s.tray.mouse_binding:main [nongnu_desktop]'%dict(name=PKG_NAME),
       ]},
 )
 

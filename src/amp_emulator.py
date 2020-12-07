@@ -1,6 +1,6 @@
 import argparse, sys, time, selectors, traceback
-from ..util.json_service import Service
-from .. import Amp
+from .util.json_service import Service
+from . import Amp
 
 
 class Main(Service):
