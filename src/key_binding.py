@@ -3,7 +3,6 @@ import time, sys, tempfile, os
 from threading import Thread, Lock
 from contextlib import suppress
 from .util import json_service
-from .amp_controller import AmpEvents
 from . import amp, PKG_NAME
 from .config import config
 
@@ -11,7 +10,7 @@ from .config import config
 ipc_port_file = os.path.join(tempfile.gettempdir(), "%s.port"%PKG_NAME)
 
 
-class VolumeChanger(AmpEvents):
+class VolumeChanger:
     """ 
     Class for managing volume up/down while hot key pressed
     when both hot keys are being pressed, last one counts
@@ -37,6 +36,7 @@ class VolumeChanger(AmpEvents):
         self._volume_step = Lock()
         self._volume_step.acquire()
         self.amp.preload_features.add(config.volume)
+        self.amp.bind(on_feature_change = self.on_feature_change)
         Thread(target=self.volume_thread, daemon=True, name="key_binding").start()
     
     def on_key_press(self, button):
@@ -65,7 +65,6 @@ class VolumeChanger(AmpEvents):
             if self.interval: time.sleep(self.interval)
 
     def on_feature_change(self, key, value, *args): # amp change
-        super().on_feature_change(key, value, *args)
         if key != config.volume or self.keys_pressed <= 0: return
         with suppress(RuntimeError): self._volume_step.release()
 
