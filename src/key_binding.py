@@ -37,15 +37,17 @@ class VolumeChanger(AmpEvents):
         self._vol_lock = Lock()
         self.amp.preload_features.add(config.volume)
     
-    @amp.features.require(config.volume)
     def on_key_press(self, button):
         """ start sending volume events to amp """
         self.keys_pressed += 1
         self.button = button
         with suppress(RuntimeError): self._vol_lock.release()
-        if self.keys_pressed != 1: return # run the following once for all keys
+        if self.keys_pressed == 1: self.change_volume() # run once for all keys
+
+    @amp.features.require(config.volume)
+    def change_volume(self):
         while self.keys_pressed > 0:
-            self._vol_lock.acquire()
+            self._vol_lock.acquire() # wait for on_feature_change
             if self.keys_pressed > 0:
                 setattr(self.amp,config.volume,
                     getattr(self.amp,config.volume) + self.step*(int(self.button)*2-1))
