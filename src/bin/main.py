@@ -11,7 +11,7 @@ def main():
     args = parser.parse_args()
     
     if not Setup.configured() or args.setup: Setup.setup()
-    from ..ui.tray import main
+    from ..tray import main
     main(args)
 
 

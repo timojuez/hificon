@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 from pynput.mouse import Listener, Button, Controller
-from ..key_binding import send
+from ..tray.key_binding import send
 from ..config import config
 
 

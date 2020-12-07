@@ -2,9 +2,9 @@
 import time, sys, tempfile, os
 from threading import Thread, Lock
 from contextlib import suppress
-from .util import json_service
-from . import amp, PKG_NAME
-from .config import config
+from ..util import json_service
+from .. import amp, PKG_NAME
+from ..config import config
 
 
 ipc_port_file = os.path.join(tempfile.gettempdir(), "%s.port"%PKG_NAME)

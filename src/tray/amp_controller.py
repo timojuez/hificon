@@ -3,9 +3,9 @@ Connects system events to the amp.
 Main class AmpController
 """
 
-from .util.system_events import SystemEvents
-from .util import log_call
-from .config import config
+from ..util.system_events import SystemEvents
+from ..util import log_call
+from ..config import config
 
 
 class _Base:
