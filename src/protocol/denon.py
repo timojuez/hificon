@@ -1,6 +1,7 @@
 import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
+from ..amp.features import require
 from ..config import config
 from .. import amp
 
@@ -804,8 +805,22 @@ class Input_signal(BoolFeature): #undocumented
     function = "SSINFAISSIG "
     translation = {"01": False, "02": True}
     
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.amp.bind(on_stop_playing = self.on_stop_playing)
+        
     def async_poll(self, *args, **xargs): pass
+
     def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
+
+    def on_change(self, old, new):
+        super().on_change(old, new)
+        self.amp.on_start_playing() if new == True else self.amp.on_stop_playing()
+
+    @require("input_signal")
+    def on_stop_playing(self):
+        if self.get(): self.amp.on_start_playing()
+
 
 @Amp.add_feature
 class Auto_standby(SelectFeature):
