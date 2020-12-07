@@ -4,7 +4,7 @@ Use TelnetAmp or AbstractAmp. Examples in ./protocol
 """
 
 import sys, time, socket
-from threading import Thread
+from threading import Timer, Lock, Thread
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
@@ -93,7 +93,7 @@ class _AbstractAmp(Bindable, AmpType):
     can_poweroff = property(
         lambda self: getattr(self,config.power) and config.getboolean("Amp","control_power_off")
         and (not config["Amp"].get("source") or getattr(self,config.source) == config["Amp"]["source"]))
-    
+
     @require(config.power, config.source)
     def poweroff(self, force=False):
         if force or self.can_poweroff: setattr(self,config.power,False)
@@ -131,6 +131,33 @@ class _AbstractAmp(Bindable, AmpType):
         pass
     
     
+class SoundMixin:
+    """ provide on_start_playing, on_stop_playing, on_idle """
+    _soundMixinLock = Lock()
+    _idle_timer = None
+
+    @log_call
+    def on_start_playing(self):
+        if self._idle_timer: self._idle_timer.cancel()
+
+    @log_call
+    def on_stop_playing(self):
+        with self._soundMixinLock:
+            if self._idle_timer and self._idle_timer.is_alive(): return
+            try: timeout = config.getfloat("Amp","poweroff_after")*60
+            except ValueError: return
+            if not timeout: return
+            self._idle_timer = Timer(timeout, self.on_idle)
+            self._idle_timer.start()
+    
+    @log_call
+    def on_idle(self): pass
+
+    def on_poweroff(self):
+        super().on_poweroff()
+        if self._idle_timer: self._idle_timer.cancel()
+
+
 class FeaturesMixin(object):
     features = {}
     _pending = []
@@ -195,7 +222,7 @@ class PreloadMixin:
             if key in self.features: self.features[key].async_poll()
 
 
-class AbstractAmp(PreloadMixin, FeaturesMixin, _AbstractAmp): pass
+class AbstractAmp(PreloadMixin, FeaturesMixin, SoundMixin, _AbstractAmp): pass
 
     
 class TelnetAmp(AbstractAmp):

@@ -2,7 +2,8 @@ import sys, math, pkgutil, tempfile
 from threading import Thread, Timer
 from .. import Amp
 from ..amp import features
-from ..amp_controller import AmpEvents, AmpController
+from ..amp_controller import AmpController
+from ..util.function_bind import Autobind
 from ..key_binding import RemoteControlService, VolumeChanger
 from ..config import config
 from . import gtk as ui
@@ -78,7 +79,11 @@ class Icon:
         except: pass
 
 
-class RelevantAmpEvents(Icon, AmpEvents):
+class AmpEvents(Icon, Autobind):
+    
+    def __init__(self, obj, *args, **xargs):
+        super().__init__(obj, *args, **xargs)
+        self.amp = obj
 
     def on_connect(self): # amp connect
         super().on_connect()
@@ -161,32 +166,35 @@ class TrayMixin(Icon):
         setattr(self.amp, config.volume, new_volume)
     
 
-class MainApp(NotificationMixin, VolumeChanger, TrayMixin, RelevantAmpEvents, ui.GUI_Backend):
+class MainApp(NotificationMixin, VolumeChanger, TrayMixin, AmpEvents, ui.GUI_Backend):
     pass
 
 
-class AmpController(AmpController):
-    """ Adds a notification warning to poweroff on_amp_idle """
+class PoweroffOnIdle:
+    """ Adds a notification warning to poweroff amp.on_idle """
     poweroff_timeout = 10
 
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
+    def __init__(self, amp):
+        self.amp = amp
+        self.amp.bind(on_idle = self.on_amp_idle)
+        self.amp.bind(on_start_playing = self.close_popup)
+        self.amp.bind(on_poweroff = self.close_popup)
+        self.amp.bind(on_disconnected = self.close_popup)
         self._n = ui.Notification()
         self._n.update("Power off %s"%self.amp.name)
         self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
         self._n.add_action("ok", "OK", lambda *args,**xargs: self.amp.poweroff())
-        self._n.connect("closed", self.closed)
+        self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.poweroff_timeout*1000)
     
-    def closed(self, *args):
+    def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
             self.amp.poweroff()
         
     def on_amp_idle(self):
         if self.amp.can_poweroff: self._n.show()
         
-    def on_start_playing(self):
-        super().on_start_playing()
+    def close_popup(self):
         try: self._n.close()
         except: pass
 
@@ -194,6 +202,7 @@ class AmpController(AmpController):
 def main(args):
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
     app = MainApp(amp)
+    PoweroffOnIdle(amp)
     ac = AmpController(amp, verbose=args.verbose+1)
     try:
         with amp:

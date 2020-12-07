@@ -3,65 +3,38 @@ Connects system events to the amp.
 Main class AmpController
 """
 
-from threading import Timer, Lock
-from .util.function_bind import Autobind
 from .util.system_events import SystemEvents
 from .util import log_call
 from .config import config
 
 
-class _Verbosity(object):
+class _Base:
+
+    def __init__(self, amp, *args, **xargs):
+        self.verbose = xargs.get("verbose",0)
+        self.amp = amp
+        super().__init__(*args, **xargs)
+
+
+class SoundMixin:
+    """ call amp.on_start_playing and amp.on_stop_playing when pulse decides """
     
     def __init__(self, *args, **xargs):
-        self.verbose = xargs.get("verbose",0)
-        super().__init__(*args,**xargs)
-
-
-class AmpEvents(Autobind):
-    
-    def __init__(self, obj, *args, **xargs):
-        super().__init__(obj, *args, **xargs)
-        self.amp = obj
-
-    
-class SoundMixin(AmpEvents,_Verbosity):
-    """ provide on_amp_idle and may call on_start_playing when connected """
-    _soundMixinLock = Lock()
-
-    def on_feature_change(self, key, value, *args): # bound to self.amp by Autobind
-        super().on_feature_change(key, value, *args)
-        if key == "input_signal" and value == True: self.on_start_playing()
-        elif key == "input_signal" and value == False: self.on_stop_playing()
+        super().__init__(*args, **xargs)
+        self.amp.bind(on_connect=self.on_amp_connect)
 
     @log_call
-    def on_start_playing(self):
-        if hasattr(self,"_idle_timer"): self._idle_timer.cancel()
-        super().on_start_playing()
+    def on_start_playing(self): self.amp.on_start_playing()
 
     @log_call
-    def on_stop_playing(self):
-        super().on_stop_playing()
-        with self._soundMixinLock:
-            if hasattr(self,"_idle_timer") and self._idle_timer.is_alive(): return
-            try: timeout = config.getfloat("Amp","poweroff_after")*60
-            except ValueError: return
-            if not timeout: return
-            self._idle_timer = Timer(timeout, self.on_amp_idle)
-            self._idle_timer.start()
+    def on_stop_playing(self): self.amp.on_stop_playing()
     
-    @log_call
-    def on_amp_idle(self): pass
-
-    def on_poweroff(self): # bound to self.amp by Autobind
-        if hasattr(self,"_idle_timer"): self._idle_timer.cancel()
-
-    def on_connect(self): # bound to self.amp by Autobind
-        super().on_connect()
+    def on_amp_connect(self):
         if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
             self.on_start_playing()
 
     
-class KeepConnected(_Verbosity):
+class KeepConnected:
     """ keep amp connected whenever possible """
 
     @log_call
@@ -88,6 +61,8 @@ class AutoPower:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.amp.preload_features.update((config.source, config.power))
+        self.amp.bind(on_start_playing = self.amp.poweron)
+        #self.amp.bind(on_idle = self.amp.poweroff)
         
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
@@ -97,17 +72,9 @@ class AutoPower:
     def on_suspend(self):
         self.amp.poweroff()
         super().on_suspend()
-    
-    def on_start_playing(self):
-        super().on_start_playing()
-        self.amp.poweron()
-
-    def on_amp_idle(self):
-        super().on_amp_idle()
-        self.amp.poweroff()
 
 
-class AmpController(AutoPower, KeepConnected, SoundMixin, SystemEvents):
+class AmpController(AutoPower, KeepConnected, SoundMixin, _Base, SystemEvents):
     """
     Adds system events listener. Keep amp connected whenever possible
     Features: Auto power, auto reconnecting, 
