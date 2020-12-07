@@ -131,7 +131,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     name = property(lambda self:self.__class__.__name__)
     
     def get(self):
-        if self._val is None: raise AttributeError("`%s` not available. Use @require"%self.key)
+        if not self.isset(): raise AttributeError("`%s` not available. Use @require"%self.key)
         else: return self._val
     
     def set(self, value, force=False):
