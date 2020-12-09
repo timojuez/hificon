@@ -255,7 +255,7 @@ class Source_names(SelectFeature): #undocumented
         if val.strip() == "END":
             self._ready = True
             source = self.amp.features["source"]
-            source.on_change(source.get(), source.get())
+            if source.isset(): source.on_change(source.get(), source.get())
         else:
             code, name = val.split(" ",1)
             self.translation[code] = name
