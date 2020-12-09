@@ -5,7 +5,7 @@ Main class AmpController
 
 from ..util.system_events import SystemEvents
 from ..util import log_call
-from ..config import config
+from ..common.config import config
 
 
 class _Base:

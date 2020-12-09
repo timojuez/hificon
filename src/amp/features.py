@@ -5,7 +5,7 @@ from threading import Event, Lock
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from .amp_type import AmpType
-from ..config import config
+from ..common.config import config
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"

@@ -2,7 +2,7 @@ import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
 from ..amp.features import require
-from ..config import config
+from ..common.config import config
 from .. import amp
 
 ZONES = 4

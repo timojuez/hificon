@@ -11,8 +11,8 @@ from .amp_type import AmpType
 from .features import *
 from ..util.function_bind import Bindable
 from ..util import log_call
-from ..config import config
-from ..config import FILE as CONFFILE
+from ..common.config import config
+from ..common.config import FILE as CONFFILE
 from .. import NAME
 
 

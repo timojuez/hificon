@@ -1,8 +1,7 @@
-import sys, os, argparse, pkgutil, socket, re
+import sys, os, argparse, pkgutil, re
 from contextlib import suppress
-from urllib.parse import urlparse
-from ..util import ssdp
-from ..config import config, FILE
+from ..common.config import config, FILE
+from ..common.amp_discovery import discover_amp, check_amp
 from .. import NAME, PKG_NAME, Amp, protocol
 
 
@@ -61,28 +60,6 @@ def zone_setup():
             for key in ("power","source","volume","muted"):
                 config["Amp"]["%s_feature_key"%key] = "zone%s_%s"%(ans,key) if ans in zones else key
             break
-
-
-def check_amp(host):
-    try:
-        with Amp(protocol=".denon", host=host) as amp:
-            name = amp.denon_name
-    except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
-        return False
-    print("Found %s on %s."%(name, host))
-    return host,name,".denon"
-
-
-def discover_amp():
-    """
-    Search local network for Denon amp
-    """
-    for response in ssdp.discover():
-        if "denon" in response.st.lower() or "marantz" in response.st.lower():
-            host = urlparse(response.location).hostname
-            if amp_details := check_amp(host): return amp_details
-    raise Exception("No Denon amp found. Check if amp is connected or"
-        " set IP manually.")
 
 
 def discover_amp_prompt():

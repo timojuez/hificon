@@ -1,9 +1,6 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
-
 from pynput.mouse import Listener, Button, Controller
 from ..tray.key_binding import send
-from ..config import config
+from ..common.config import config
 
 
 VOLUP = getattr(Button,config["MouseBinding"]["vol_up"])

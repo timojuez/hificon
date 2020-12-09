@@ -2,7 +2,7 @@ import importlib
 
 NAME = "HiFiCon"
 PKG_NAME = "hificon"
-VERSION = "1.9.15a"
+VERSION = "1.9.16a"
 AUTHOR = "Timo L. Richter"
 URL = 'https://github.com/timojuez/hificon'
 
@@ -10,7 +10,7 @@ URL = 'https://github.com/timojuez/hificon'
 def Amp_cls(protocol=None, cls="Amp"):
     """ returns amp instance from @protocol module. Read @protocol from config if None """
     from .amp import AmpType
-    from .config import config
+    from .common.config import config
     protocol = protocol or config.get("Amp","protocol")
     try:
         module = importlib.import_module(protocol, "%s.protocol"%__name__)

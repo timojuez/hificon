@@ -1,6 +1,6 @@
 import importlib
 from ..amp import AbstractAmp
-from ..bin.setup import discover_amp
+from ..common.amp_discovery import discover_amp
 
 
 class Amp(AbstractAmp):

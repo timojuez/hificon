@@ -3,7 +3,7 @@ from threading import Thread, Timer
 from .. import Amp
 from ..amp import features
 from ..util.function_bind import Autobind
-from ..config import config
+from ..common.config import config
 from .key_binding import RemoteControlService, VolumeChanger
 from .amp_controller import AmpController
 from . import gtk as ui

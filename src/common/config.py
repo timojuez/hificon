@@ -2,7 +2,7 @@
 
 import os, configparser, pkgutil, json
 from decimal import Decimal
-from . import PKG_NAME
+from .. import PKG_NAME
 
 CONFDIR = os.path.expanduser("~/.%s"%PKG_NAME)
 FILE = os.path.join(CONFDIR, "main.cfg")
@@ -70,7 +70,7 @@ class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass
 
 try: os.mkdir(CONFDIR)
 except OSError: pass
-default = pkgutil.get_data(__name__,"share/main.cfg.default").decode()
+default = pkgutil.get_data(__name__,"../share/main.cfg.default").decode()
 config = ConfigParser(FILE)
 config.read_string(default)
 config.read([FILE])

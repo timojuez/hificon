@@ -7,7 +7,7 @@ import sys, pkgutil
 from threading import Timer
 from ..util.async_widget import bind_widget_to_value
 from ..amp import features
-from ..config import config
+from ..common.config import config
 from ..util.function_bind import Bindable
 from .. import NAME, AUTHOR, URL, VERSION
 

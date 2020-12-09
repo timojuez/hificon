@@ -3,7 +3,7 @@ from decimal import Decimal
 from threading import Lock
 from .util.async_widget import bind_widget_to_value
 from .amp import features
-from .config import config, CONFDIR
+from .common.config import config, CONFDIR
 from . import Amp, NAME, VERSION, AUTHOR
 
 
