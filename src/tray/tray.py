@@ -210,6 +210,6 @@ def main(args):
             if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
             app.mainloop()
     finally:
-        try: app.icon.__del__()
+        try: del app
         except: pass
 
