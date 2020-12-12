@@ -4,7 +4,7 @@ Use TelnetAmp or AbstractAmp. Examples in ./protocol
 """
 
 import sys, time, socket
-from threading import Timer, Lock, Thread
+from threading import Timer, Lock, Thread, Event
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
@@ -215,14 +215,18 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
+    pulse = "# pulse"
     _telnet = None
+    _send_lock = Lock()
+    _pulse_stop = None
     
     def send(self, cmd):
         super().send(cmd)
         try:
-            assert(self.connected and self._telnet.sock)
-            self._telnet.write(("%s\r"%cmd).encode("ascii"))
-            time.sleep(.01)
+            with self._send_lock:
+                assert(self.connected and self._telnet.sock)
+                self._telnet.write(("%s\r"%cmd).encode("ascii"))
+                time.sleep(.01)
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
@@ -256,7 +260,18 @@ class TelnetAmp(AbstractAmp):
         with suppress(AttributeError):
             self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
             self._telnet.close()
-
+    
+    def on_connect(self):
+        super().on_connect()
+        def func():
+            while not self._pulse_stop.wait(2): self.send(self.pulse)
+        self._pulse_stop = Event()
+        if self.pulse: Thread(target=func, daemon=True, name="pulse").start()
+        
+    def on_disconnected(self):
+        super().on_disconnected()
+        self._pulse_stop.set()
+        
     def mainloop_hook(self):
         super().mainloop_hook()
         if not self.connected: self.connect(-1)
