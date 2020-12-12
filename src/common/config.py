@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 import os, configparser, pkgutil, json
+from collections import UserDict
 from decimal import Decimal
 from .. import PKG_NAME
 
@@ -66,6 +67,23 @@ class ShortcutsMixin:
 
 
 class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass
+
+
+class ConfigDict(UserDict):
+    
+    def __init__(self, filename):
+        self._filename = filename
+        if isinstance(filename, dict): return super().__init__(filename)
+        try:
+            with open(os.path.join(CONFDIR, filename)) as fp:
+                return super().__init__(json.load(fp))
+        except FileNotFoundError:
+            dct = json.loads(pkgutil.get_data(__name__,"share/%s"%filename).decode())
+            return super().__init__(dct)
+            
+    def save(self):
+        with open(os.path.join(CONFDIR, self._filename),"w") as fp:
+            json.dump(dict(self), fp)
 
 
 try: os.mkdir(CONFDIR)

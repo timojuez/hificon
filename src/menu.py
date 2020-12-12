@@ -1,9 +1,9 @@
-import argparse, os, pkgutil, tempfile, json
+import argparse, os, pkgutil, tempfile
 from decimal import Decimal
 from threading import Lock
 from .util.async_widget import bind_widget_to_value
 from .amp import features
-from .common.config import config, CONFDIR
+from .common.config import config, ConfigDict, CONFDIR
 from . import Amp, NAME, VERSION, AUTHOR
 
 
@@ -74,15 +74,11 @@ custom_menu = {}
 
 
 class Menu(TabbedPanel):
+    config = ConfigDict("menu.json")
 
     def __init__(self, amp, **kwargs):
         super().__init__(**kwargs)
         tabs = {}
-        try:
-            with open(os.path.join(CONFDIR,"menu.json")) as fp:
-                self.pinned = json.load(fp)["pinned"]
-        except FileNotFoundError:
-            self.pinned = json.loads(pkgutil.get_data(__name__,"share/menu.json").decode())
         self.features = {}
         for key, f in {**amp.features, **custom_menu}.items():
             print("adding %s"%f.name)
@@ -98,7 +94,7 @@ class Menu(TabbedPanel):
     def show_row(self, amp, key, f):
         print("Showing %s"%f.name)
         for w in self.features[key]["rows"]: show_widget(w)
-        if key not in self.pinned: hide_widget(self.features[key]["pinned_row"])
+        if key not in self.config["pinned"]: hide_widget(self.features[key]["pinned_row"])
 
     def _newTab(self, title):
         panel = TabPanel()
@@ -113,7 +109,7 @@ class Menu(TabbedPanel):
         self._addFeatureToTab(key,f,tab)
         self._addFeatureToTab(key,f,self.ids.all.ids.layout)
         with self.features[key]["checkboxes"]["lock"]:
-            for c in self.features[key]["checkboxes"]["objects"]: c.active = key in self.pinned
+            for c in self.features[key]["checkboxes"]["objects"]: c.active = key in self.config["pinned"]
         
     def _addFeatureToTab(self, key, f, tab):
         row = FeatureRow()
@@ -132,10 +128,9 @@ class Menu(TabbedPanel):
         
         def on_checkbox(checkbox, active):
             if self.features[key]["checkboxes"]["lock"].locked(): return
-            if active: self.pinned.append(key)
-            else: self.pinned.remove(key)
-            with open(os.path.join(CONFDIR,"menu.json"),"w") as fp:
-                json.dump({"pinned":self.pinned}, fp)
+            if active: self.config["pinned"].append(key)
+            else: self.config["pinned"].remove(key)
+            self.config.save()
             with self.features[key]["checkboxes"]["lock"]:
                 if active: show_widget(self.features[key]["pinned_row"])
                 else: hide_widget(self.features[key]["pinned_row"])
