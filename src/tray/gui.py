@@ -181,15 +181,15 @@ class Tray:
         menu.append(Gtk.SeparatorMenuItem())
 
         item_poweron = Gtk.CheckMenuItem("Auto power on")
-        item_poweron.set_active(config.getboolean("Amp","control_power_on"))
+        item_poweron.set_active(self.config["control_power_on"])
         item_poweron.connect("toggled", lambda *args:
-            config.setboolean("Amp","control_power_on",item_poweron.get_active()))
+            self.config.__setitem__("control_power_on",item_poweron.get_active()))
         menu.append(item_poweron)
 
         item_poweroff = Gtk.CheckMenuItem("Auto power off")
-        item_poweroff.set_active(config.getboolean("Amp","control_power_off"))
+        item_poweroff.set_active(self.config["control_power_off"])
         item_poweroff.connect("toggled", lambda *args:
-            config.setboolean("Amp","control_power_off",item_poweroff.get_active()))
+            self.config.__setitem__("control_power_off",item_poweroff.get_active()))
         menu.append(item_poweroff)
 
         menu.append(Gtk.SeparatorMenuItem())

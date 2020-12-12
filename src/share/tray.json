@@ -1,0 +1,7 @@
+{
+    "_control_power_on_comment": "Switch the Amp on when playing audio",
+    "control_power_on": true,
+    
+    "_control_power_off_comment": "Switch the Amp off on suspend/shutdown/idle",
+    "control_power_off": true
+}

@@ -7,10 +7,6 @@ muted_feature_key = muted
 
 # Triggers the "fallback" feature change event each time the amp sends uninterpretable data
 fallback_feature = no
-# Switch the Amp on when playing audio
-control_power_on = yes
-# Switch the Amp off on suspend/shutdown/idle
-control_power_off = yes
 # Delay in minutes to power off Amp after last output stopped (float or "no")
 poweroff_after = 2.5
 # module that implements the protocol, e.g. ".denon"

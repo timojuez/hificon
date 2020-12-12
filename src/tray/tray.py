@@ -2,7 +2,7 @@ import sys, math, pkgutil, tempfile
 from threading import Thread, Timer
 from .. import Amp
 from ..amp import features
-from ..common.config import config
+from ..common.config import config, ConfigDict
 from .key_binding import RemoteControlService, VolumeChanger
 from .amp_controller import AmpController
 from . import gui
@@ -118,6 +118,7 @@ class TrayMixin(Icon, gui.Tray):
     """ Tray Icon """
 
     def __init__(self, *args, **xargs):
+        self.config = ConfigDict("tray.json")
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
@@ -148,10 +149,10 @@ class TrayMixin(Icon, gui.Tray):
     
     def poweron(self):
         """ poweron amp """
-        if config.getboolean("Amp","control_power_on"): super().poweron()
+        if self.config["control_power_on"]: super().poweron()
         
     @property # read by poweroff()
-    def can_poweroff(self): return config.getboolean("Amp","control_power_off") and super().can_poweroff
+    def can_poweroff(self): return self.config["control_power_off"] and super().can_poweroff
     
 
 class NotifyPoweroff:
