@@ -113,17 +113,15 @@ class NotificationMixin(object):
         super().on_scroll_down(*args,**xargs)
 
 
-class TrayMixin(Icon):
+class TrayMixin(Icon, gui.Tray):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
-        self.icon = gui.Icon(self.amp)
-        self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
         self.amp.bind(
-            on_connect=self.icon.show,
-            on_disconnected=self.icon.hide)
+            on_connect=self.show,
+            on_disconnected=self.hide)
         self.amp.bind(
             on_connect=self.updateWidgets,
             on_feature_change=self.on_feature_change)
@@ -134,7 +132,7 @@ class TrayMixin(Icon):
     @features.require(config.muted,config.volume)
     def updateWidgets(self):
         gui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
-        self.icon.set_icon(*self.getCurrentIconPath())
+        self.set_icon(*self.getCurrentIconPath())
     
     @features.require(config.volume)
     def on_scroll_up(self, steps):

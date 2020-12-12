@@ -148,13 +148,12 @@ class Notification(_Notification, Notify.Notification):
         except GLib.Error as e: print(repr(e), file=sys.stderr)
 
 
-class Icon(Bindable):
+class Tray:
     
-    def __init__(self, amp):
-        super().__init__()
-        self.amp = amp
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = VolumePopup(amp)
+        self.popup = VolumePopup(self.amp)
         self.icon.connect("scroll-event", self.on_scroll)
         self.icon.set_menu(self.build_menu())
         
@@ -232,8 +231,6 @@ class Icon(Bindable):
     @gtk
     def set_icon(self, *args): self.icon.set_icon_full(*args)
     
-    def connect(self, *args, **xargs): self.icon.connect(*args,**xargs)
-
 
 css = b'''
 window.dark { background-color: #2e2e2e; }
