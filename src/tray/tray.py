@@ -4,7 +4,7 @@ from .. import Amp
 from ..amp import features
 from ..common.config import config, ConfigDict
 from .key_binding import RemoteControlService, VolumeChanger
-from .amp_controller import AmpController
+from ..common.amp_controller import AmpController
 from . import gui
 
 
