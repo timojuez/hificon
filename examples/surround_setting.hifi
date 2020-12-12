@@ -1,5 +1,5 @@
 #!/usr/bin/env -S hifish -vvvvvv
-$poweron(force=True)
+$power = True
 $front_speaker_config = 'Small'
 $subwoofer_mode = 'LFE'
 $display = 'Dark'
