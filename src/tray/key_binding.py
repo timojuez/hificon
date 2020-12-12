@@ -50,7 +50,7 @@ class VolumeChanger:
         self.keys_pressed -= 1
         if self.keys_pressed > 0: self.button = not button
         with suppress(RuntimeError): self._volume_step.release()
-        Thread(target=self.amp.poweron, args=(True,), name="poweron", daemon=False).start()
+        Thread(target=self.poweron, args=(True,), name="poweron", daemon=False).start()
 
     def volume_thread(self):
         while True:

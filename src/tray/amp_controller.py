@@ -5,6 +5,7 @@ Main class AmpController
 
 from ..util.system_events import SystemEvents
 from ..util import log_call
+from ..amp.features import require
 from ..common.config import config
 
 
@@ -14,6 +15,20 @@ class _Base:
         self.verbose = xargs.get("verbose",0)
         self.amp = amp
         super().__init__(*args, **xargs)
+
+    @require(config.power, config.source)
+    def poweron(self):
+        if not config.getboolean("Amp","control_power_on"): return
+        if config["Amp"].get("source"): self.features[config.source].set(config["Amp"]["source"], force=True)
+        setattr(self, config.power, True)
+
+    can_poweroff = property(
+        lambda self: getattr(self,config.power) and config.getboolean("Amp","control_power_off")
+        and (not config["Amp"].get("source") or getattr(self,config.source) == config["Amp"]["source"]))
+
+    @require(config.power, config.source)
+    def poweroff(self, force=False):
+        if force or self.can_poweroff: setattr(self,config.power,False)
 
 
 class SoundMixin:
@@ -61,16 +76,18 @@ class AutoPower:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.amp.preload_features.update((config.source, config.power))
-        self.amp.bind(on_start_playing = self.amp.poweron)
-        #self.amp.bind(on_idle = self.amp.poweroff)
-        
+        self.amp.bind(on_start_playing = self.poweron)
+        self.amp.bind(on_idle = self.on_amp_idle)
+    
+    def on_amp_idle(self): self.amp.poweroff()
+
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        self.amp.poweroff()
+        self.poweroff()
         super().on_shutdown(sig,frame)
         
     def on_suspend(self):
-        self.amp.poweroff()
+        self.poweroff()
         super().on_suspend()
 
 
