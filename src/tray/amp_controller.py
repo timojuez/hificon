@@ -9,7 +9,7 @@ from ..amp.features import require
 from ..common.config import config
 
 
-class _Base:
+class _Base(SystemEvents):
 
     def __init__(self, amp, *args, **xargs):
         self.verbose = xargs.get("verbose",0)
@@ -30,7 +30,7 @@ class _Base:
         if force or self.can_poweroff: setattr(self,config.power,False)
 
 
-class SoundMixin:
+class SoundMixin(_Base):
     """ call amp.on_start_playing and amp.on_stop_playing when pulse decides """
     
     def __init__(self, *args, **xargs):
@@ -48,7 +48,7 @@ class SoundMixin:
             self.on_start_playing()
 
     
-class KeepConnected:
+class KeepConnected(_Base):
     """ keep amp connected whenever possible """
 
     @log_call
@@ -69,7 +69,7 @@ class KeepConnected:
         super().on_resume()
 
 
-class AutoPower:
+class AutoPower(_Base):
     """ implementing actions for automatic power management """
     
     def __init__(self, *args, **xargs):
@@ -90,7 +90,7 @@ class AutoPower:
         super().on_suspend()
 
 
-class AmpController(AutoPower, KeepConnected, SoundMixin, _Base, SystemEvents):
+class AmpController(AutoPower, KeepConnected, SoundMixin, _Base):
     """
     Adds system events listener. Keep amp connected whenever possible
     Features: Auto power, auto reconnecting, 
