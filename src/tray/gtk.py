@@ -43,6 +43,9 @@ class _Notification(Bindable):
 class GUI_Backend:
 
     def mainloop(self): Gtk.main()
+    
+    @classmethod
+    def exit(self): Gtk.main_quit()
 
 
 class GladeGtk(metaclass=Singleton):
