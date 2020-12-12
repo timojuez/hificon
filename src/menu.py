@@ -79,10 +79,10 @@ class Menu(TabbedPanel):
         super().__init__(**kwargs)
         tabs = {}
         try:
-            with open(os.path.join(CONFDIR,"pinned.json")) as fp:
-                self.pinned = json.load(fp)
+            with open(os.path.join(CONFDIR,"menu.json")) as fp:
+                self.pinned = json.load(fp)["pinned"]
         except FileNotFoundError:
-            self.pinned = json.loads(pkgutil.get_data(__name__,"../share/pinned.json").decode())
+            self.pinned = json.loads(pkgutil.get_data(__name__,"share/menu.json").decode())
         self.features = {}
         for key, f in {**amp.features, **custom_menu}.items():
             print("adding %s"%f.name)
@@ -134,8 +134,8 @@ class Menu(TabbedPanel):
             if self.features[key]["checkboxes"]["lock"].locked(): return
             if active: self.pinned.append(key)
             else: self.pinned.remove(key)
-            with open(os.path.join(CONFDIR,"pinned.json"),"w") as fp:
-                json.dump(self.pinned, fp)
+            with open(os.path.join(CONFDIR,"menu.json"),"w") as fp:
+                json.dump({"pinned":self.pinned}, fp)
             with self.features[key]["checkboxes"]["lock"]:
                 if active: show_widget(self.features[key]["pinned_row"])
                 else: hide_widget(self.features[key]["pinned_row"])
@@ -240,7 +240,7 @@ class App(App):
         return menu
 
 
-kv = pkgutil.get_data(__name__,"../share/menu.kv").decode()
+kv = pkgutil.get_data(__name__,"share/menu.kv").decode()
 Builder.load_string(kv)
 
 
@@ -253,7 +253,7 @@ def main():
     icon_path = tempfile.mktemp()
     try:
         with open(icon_path, "wb") as fp:
-            fp.write(pkgutil.get_data(__name__,"../share/icons/scalable/logo.svg"))
+            fp.write(pkgutil.get_data(__name__,"share/icons/scalable/logo.svg"))
         with amp:
             app = App()
             app.icon = icon_path
