@@ -215,7 +215,7 @@ class TelnetAmp(AbstractAmp):
     This class connects to the amp via LAN and executes commands
     @host is the amp's hostname or IP.
     """
-    pulse = "# pulse"
+    pulse = ""
     _telnet = None
     _send_lock = Lock()
     _pulse_stop = None
@@ -264,9 +264,9 @@ class TelnetAmp(AbstractAmp):
     def on_connect(self):
         super().on_connect()
         def func():
-            while not self._pulse_stop.wait(2): self.send(self.pulse)
+            while not self._pulse_stop.wait(10): self.send(self.pulse)
         self._pulse_stop = Event()
-        if self.pulse: Thread(target=func, daemon=True, name="pulse").start()
+        if self.pulse is not None: Thread(target=func, daemon=True, name="pulse").start()
         
     def on_disconnected(self):
         super().on_disconnected()
