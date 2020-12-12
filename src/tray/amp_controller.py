@@ -18,12 +18,11 @@ class _Base:
 
     @require(config.power, config.source)
     def poweron(self):
-        if not config.getboolean("Amp","control_power_on"): return
         if config["Amp"].get("source"): self.features[config.source].set(config["Amp"]["source"], force=True)
         setattr(self, config.power, True)
 
     can_poweroff = property(
-        lambda self: getattr(self,config.power) and config.getboolean("Amp","control_power_off")
+        lambda self: getattr(self,config.power)
         and (not config["Amp"].get("source") or getattr(self,config.source) == config["Amp"]["source"]))
 
     @require(config.power, config.source)

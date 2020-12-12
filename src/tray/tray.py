@@ -79,6 +79,7 @@ class Icon:
 
 
 class NotificationMixin(object):
+    """ Does the graphical notifications """
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
@@ -114,6 +115,7 @@ class NotificationMixin(object):
 
 
 class TrayMixin(Icon, gui.Tray):
+    """ Tray Icon """
 
     def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
@@ -143,6 +145,13 @@ class TrayMixin(Icon, gui.Tray):
     def on_scroll_down(self, steps):
         new_volume = getattr(self.amp,config.volume)-self.scroll_delta*steps
         setattr(self.amp, config.volume, new_volume)
+    
+    def poweron(self):
+        """ poweron amp """
+        if config.getboolean("Amp","control_power_on"): super().poweron()
+        
+    @property # read by poweroff()
+    def can_poweroff(self): return config.getboolean("Amp","control_power_off") and super().can_poweroff
     
 
 class NotifyPoweroff:
