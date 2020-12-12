@@ -2,7 +2,6 @@ import sys, math, pkgutil, tempfile
 from threading import Thread, Timer
 from .. import Amp
 from ..amp import features
-from ..util.function_bind import Autobind
 from ..common.config import config
 from .key_binding import RemoteControlService, VolumeChanger
 from .amp_controller import AmpController
@@ -79,25 +78,6 @@ class Icon:
         except: pass
 
 
-class AmpEvents(Icon, Autobind):
-    
-    def __init__(self, obj, *args, **xargs):
-        super().__init__(obj, *args, **xargs)
-        self.amp = obj
-
-    def on_connect(self): # amp connect
-        super().on_connect()
-        self.updateWidgets()
-
-    def on_feature_change(self, key, value, *args): # bound to amp
-        super().on_feature_change(key,value,*args)
-        if key in (config.volume,config.muted): self.updateWidgets()
-
-    @features.require(config.muted,config.volume)
-    def updateWidgets(self):
-        ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
-
-
 class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
@@ -141,18 +121,19 @@ class TrayMixin(Icon):
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
         self.icon = ui.Icon(self.amp)
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
+        self.amp.bind(
+            on_connect=self.icon.show,
+            on_disconnected=self.icon.hide)
+        self.amp.bind(
+            on_connect=self.updateWidgets,
+            on_feature_change=self.on_feature_change)
 
-    def on_connect(self): # amp connect
-        super().on_connect()
-        self.icon.show()
-        
-    def on_disconnected(self): # amp disconnect
-        self.icon.hide()
-        super().on_disconnected()
-        
+    def on_feature_change(self, key, value, *args): # bound to amp
+        if key in (config.volume,config.muted): self.updateWidgets()
+
     @features.require(config.muted,config.volume)
     def updateWidgets(self):
-        super().updateWidgets()
+        ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
         self.icon.set_icon(*self.getCurrentIconPath())
     
     @features.require(config.volume)
