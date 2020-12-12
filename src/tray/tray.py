@@ -147,47 +147,47 @@ class TrayMixin(Icon):
         setattr(self.amp, config.volume, new_volume)
     
 
-class MainApp(NotificationMixin, VolumeChanger, TrayMixin, AmpEvents, ui.GUI_Backend):
-    pass
-
-
-class PoweroffOnIdle:
+class NotifyPoweroff:
     """ Adds a notification warning to poweroff amp.on_idle """
-    poweroff_timeout = 10
+    notification_timeout = 10
 
-    def __init__(self, amp):
-        self.amp = amp
-        self.amp.bind(on_idle = self.on_amp_idle)
-        self.amp.bind(on_start_playing = self.close_popup)
-        self.amp.bind(on_poweroff = self.close_popup)
-        self.amp.bind(on_disconnected = self.close_popup)
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.amp.bind(
+            on_start_playing = self.close_popup,
+            on_poweroff = self.close_popup,
+            on_disconnected = self.close_popup)
         self._n = ui.Notification()
         self._n.update("Power off %s"%self.amp.name)
         self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
         self._n.add_action("ok", "OK", lambda *args,**xargs: self.amp.poweroff())
         self._n.connect("closed", self.on_popup_closed)
-        self._n.set_timeout(self.poweroff_timeout*1000)
+        self._n.set_timeout(self.notification_timeout*1000)
     
     def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
-            self.amp.poweroff()
+            self.poweroff()
         
     def on_amp_idle(self):
-        if self.amp.can_poweroff: self._n.show()
+        if self.can_poweroff: self._n.show()
         
     def close_popup(self):
         try: self._n.close()
         except: pass
 
 
+class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, ui.GUI_Backend, AmpController):
+    
+    def mainloop(self):
+        Thread(name="AmpController",target=lambda:AmpController.mainloop(self),daemon=True).start()
+        ui.GUI_Backend.mainloop(self)
+
+
 def main(args):
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
-    app = MainApp(amp)
-    PoweroffOnIdle(amp)
-    ac = AmpController(amp, verbose=args.verbose+1)
+    app = Main(amp, verbose=args.verbose+1)
     try:
         with amp:
-            Thread(name="Amp",target=ac.mainloop,daemon=True).start()
             if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
             app.mainloop()
     finally:
