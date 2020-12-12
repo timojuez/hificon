@@ -5,7 +5,7 @@ from ..amp import features
 from ..common.config import config
 from .key_binding import RemoteControlService, VolumeChanger
 from .amp_controller import AmpController
-from . import gtk as ui
+from . import gui
 
 
 class FeatureNotification:
@@ -15,7 +15,7 @@ class FeatureNotification:
         self.f = feature
 
 
-class TextNotification(FeatureNotification, ui.Notification):
+class TextNotification(FeatureNotification, gui.Notification):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -33,7 +33,7 @@ class NumericNotification(FeatureNotification):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._n = ui.GaugeNotification()
+        self._n = gui.GaugeNotification()
         self._n.set_timeout(config.getint("GUI","notification_timeout"))
 
     def update(self):
@@ -45,7 +45,7 @@ class NumericNotification(FeatureNotification):
             max=self.f.max)
             
     def show(self):
-        if self.f.key == config.volume and ui.VolumePopup().visible: return
+        if self.f.key == config.volume and gui.VolumePopup().visible: return
         self.update()
         self._n.show()
         
@@ -119,7 +119,7 @@ class TrayMixin(Icon):
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
-        self.icon = ui.Icon(self.amp)
+        self.icon = gui.Icon(self.amp)
         self.icon.bind(on_scroll_up=self.on_scroll_up, on_scroll_down=self.on_scroll_down)
         self.amp.bind(
             on_connect=self.icon.show,
@@ -133,7 +133,7 @@ class TrayMixin(Icon):
 
     @features.require(config.muted,config.volume)
     def updateWidgets(self):
-        ui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
+        gui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
         self.icon.set_icon(*self.getCurrentIconPath())
     
     @features.require(config.volume)
@@ -157,7 +157,7 @@ class NotifyPoweroff:
             on_start_playing = self.close_popup,
             on_poweroff = self.close_popup,
             on_disconnected = self.close_popup)
-        self._n = ui.Notification()
+        self._n = gui.Notification()
         self._n.update("Power off %s"%self.amp.name)
         self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
         self._n.add_action("ok", "OK", lambda *args,**xargs: self.amp.poweroff())
@@ -176,11 +176,11 @@ class NotifyPoweroff:
         except: pass
 
 
-class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, ui.GUI_Backend, AmpController):
+class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_Backend, AmpController):
     
     def mainloop(self):
         Thread(name="AmpController",target=lambda:AmpController.mainloop(self),daemon=True).start()
-        ui.GUI_Backend.mainloop(self)
+        gui.GUI_Backend.mainloop(self)
 
 
 def main(args):
