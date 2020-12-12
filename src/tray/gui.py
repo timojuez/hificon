@@ -200,7 +200,7 @@ class Icon(Bindable):
         menu.append(item_about)
 
         item_quit = Gtk.MenuItem('Quit')
-        item_quit.connect('activate', lambda *args: (self.amp.exit(), Gtk.main_quit()))
+        item_quit.connect('activate', lambda *args: (self.amp.exit(), GUI_Backend.exit()))
         menu.append(item_quit)
 
         menu.show_all()
