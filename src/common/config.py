@@ -79,10 +79,14 @@ class ConfigDict(UserDict):
                 return super().__init__(json.load(fp))
         except FileNotFoundError:
             try:
-                dct = json.loads(pkgutil.get_data(__name__,"share/%s"%filename).decode())
+                dct = json.loads(pkgutil.get_data(__name__,"../share/%s"%filename).decode())
                 return super().__init__(dct)
-            except FileNotFoundError as e: super().__init__()
-            
+            except FileNotFoundError as e: raise #super().__init__()
+    
+    def __setitem__(self, *args, **xargs):
+        super().__setitem__(*args, **xargs)
+        self.save()
+    
     def save(self):
         with open(os.path.join(CONFDIR, self._filename),"w") as fp:
             json.dump(dict(self), fp)
