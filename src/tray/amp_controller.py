@@ -40,8 +40,8 @@ class KeepConnected:
     @log_call
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
-        super().on_shutdown(sig,frame)
         self.amp.exit()
+        self.exit()
         
     @log_call
     def on_suspend(self):
