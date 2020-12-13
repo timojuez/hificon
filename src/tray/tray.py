@@ -168,7 +168,7 @@ class NotifyPoweroff:
         self._n = gui.Notification()
         self._n.update("Power off %s"%self.amp.name)
         self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
-        self._n.add_action("ok", "OK", lambda *args,**xargs: self.amp.poweroff())
+        self._n.add_action("ok", "OK", lambda *args,**xargs: self.poweroff())
         self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.notification_timeout*1000)
     
