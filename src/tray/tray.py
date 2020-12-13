@@ -147,9 +147,9 @@ class TrayMixin(Icon, gui.Tray):
         new_volume = getattr(self.amp,config.volume)-self.scroll_delta*steps
         setattr(self.amp, config.volume, new_volume)
     
-    def poweron(self):
+    def poweron(self, force=False):
         """ poweron amp """
-        if self.config["control_power_on"]: super().poweron()
+        if force or self.config["control_power_on"]: super().poweron()
         
     @property # read by poweroff()
     def can_poweroff(self): return self.config["control_power_off"] and super().can_poweroff
