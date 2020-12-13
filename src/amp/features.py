@@ -196,7 +196,7 @@ class SynchronousFeature(AsyncFeature):
             try: return super().get()
             except AttributeError:
                 self.poll()
-                return self._val
+                return super().get()
         finally: self._poll_lock.release()
         
     def poll(self, force=False):
