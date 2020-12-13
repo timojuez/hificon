@@ -84,20 +84,21 @@ class FunctionCall(object):
 class FeatureInterface(object):
     name = "Short description"
     category = "Other"
-    call = None
+    call = None # for retrieval, call amp.send(call)
     default_value = None #if no response
     type = object # value data type, e.g. int, bool, str
+    #key = "key" # feature will be available as amp.key; default: key = class name
     
     
-    def matches(self, cmd):
+    def matches(self, data):
         """
-        @cmd: line received from amp
-        return True if cmd shall be parsed with this class
+        @data: line received from amp
+        return True if data shall be parsed with this class
         """
         raise NotImplementedError()
         
-    def decode(self, cmd):
-        """ transform string @cmd to native value """
+    def decode(self, data):
+        """ transform string @data to type self.type """
         raise NotImplementedError()
         
     def encode(self, value):
