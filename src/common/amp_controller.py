@@ -18,7 +18,7 @@ class _Base(SystemEvents):
 
     @require(config.power, config.source)
     def poweron(self):
-        if config["Amp"].get("source"): self.amp.features[config.source].set(config["Amp"]["source"], force=True)
+        if config["Amp"].get("source"): self.amp.features[config.source].set(config["Amp"]["source"])
         setattr(self.amp, config.power, True)
 
     can_poweroff = property(
