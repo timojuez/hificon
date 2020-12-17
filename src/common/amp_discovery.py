@@ -11,7 +11,7 @@ def check_amp(host):
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
         return False
     print("Found %s on %s."%(name, host))
-    return host,name,".denon"
+    return dict(host=host,name=name,protocol=".denon")
 
 
 def discover_amp():

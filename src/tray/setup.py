@@ -63,7 +63,7 @@ def zone_setup():
 
 
 def discover_amp_prompt():
-    def set_amp(host,name,protocol):
+    def set_amp(host,name,protocol,**xargs):
         config["Amp"]["Host"] = host
         config["Amp"]["Name"] = name
         config["Amp"]["protocol"] = protocol
@@ -72,9 +72,9 @@ def discover_amp_prompt():
         print("%s: %s"%(type(e).__name__, e))
         while True:
             host = input("Enter amp's IP: ")
-            if amp_details := check_amp(host): return set_amp(*amp_details)
+            if amp_details := check_amp(host): return set_amp(**amp_details)
             else: print("Cannot connect to host.")
-    else: set_amp(*amp_details)
+    else: set_amp(**amp_details)
 
 
 class Main(object):
