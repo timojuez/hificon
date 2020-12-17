@@ -274,9 +274,7 @@ class TelnetAmp(AbstractAmp):
             try: data = self.read(5)
             except ConnectionError: pass
             else:
-                # receiving
-                if not data: return
-                self.on_receive_raw_data(data) 
+                if data: self.on_receive_raw_data(data)
         else:
             try: self.connect()
             except ConnectionError: return self._stoploop.wait(3)
