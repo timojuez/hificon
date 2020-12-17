@@ -240,20 +240,14 @@ class TelnetAmp(AbstractAmp):
             self.on_disconnected()
             raise BrokenPipeError(e)
     
-    def connect(self, tries=1):
-        """
-        @tries int: -1 for infinite
-        """
+    def connect(self):
         if self.connected: return
-        while tries:
-            if tries > 0: tries -= 1
-            try: self._telnet = Telnet(self.host,self.port,timeout=2)
-            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
-                if tries == 0: raise ConnectionError(e)
-            else:
-                super().connect()
-                return self.on_connect()
-            time.sleep(3)
+        try: self._telnet = Telnet(self.host,self.port,timeout=2)
+        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
+            raise ConnectionError(e)
+        else:
+            super().connect()
+            return self.on_connect()
 
     def disconnect(self):
         super().disconnect()
