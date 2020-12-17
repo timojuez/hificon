@@ -69,7 +69,7 @@ class _AbstractAmp(Bindable, AmpType):
     @property
     def prompt(self):
         p = "%s://%s"%(self.protocol,self.host)
-        if self.port: p = "%s:%d"%(p,self.port)
+        if self.port: p = "%s:%s"%(p,self.port)
         return p
         
     def query(self, cmd, matches=None):
