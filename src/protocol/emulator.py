@@ -28,12 +28,11 @@ def get_val(f):
 
 
 class DummyAmp:
-    host = "dummy"
+    host = "emulator"
     name = "Emulator"
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.protocol = "%s_emulator"%super().protocol
         self.port = None
 
     def connect(self):
