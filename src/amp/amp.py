@@ -35,6 +35,7 @@ class _AbstractAmp(Bindable, AmpType):
 
     def __init__(self, host=None, port=None, name=None, connect=True, verbose=0, **callbacks):
         super().__init__()
+        self._stoploop = Event()
         self._connectOnEnter = connect
         self.verbose = verbose
         self.bind(**callbacks)
@@ -60,7 +61,7 @@ class _AbstractAmp(Bindable, AmpType):
     
     def connect(self, tries=1): self.connected = True
 
-    def disconnect(self): self._stoploop = True
+    def disconnect(self): self._stoploop.set()
     
     @property
     def protocol(self): return self.__class__.__module__
@@ -108,8 +109,8 @@ class _AbstractAmp(Bindable, AmpType):
 
     def mainloop(self):
         """ listens on amp for events and calls on_feature_change. Return when connection closed """
-        self._stoploop = False
-        while not self._stoploop: self.mainloop_hook()
+        self._stoploop.clear()
+        while not self._stoploop.is_set(): self.mainloop_hook()
         
     def mainloop_hook(self):
         """ This will be called regularly by mainloop """
@@ -277,7 +278,7 @@ class TelnetAmp(AbstractAmp):
                 self.on_receive_raw_data(data) 
         else:
             try: self.connect()
-            except ConnectionError: return time.sleep(3)
+            except ConnectionError: return self._stoploop.wait(3)
 
 
 @AbstractAmp.add_feature
