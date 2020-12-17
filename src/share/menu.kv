@@ -26,6 +26,32 @@
     #    text: "Settings"
 
 
+<SettingsTab>:
+    id: settings
+    text: "Connection"
+
+    GridLayout:
+        cols: 2
+
+        Label:
+            text: "Host"
+        TextInput:
+            id: host
+        Label:
+            text: "Port"
+        TextInput:
+            id: port
+        Label:
+            text: "Protocol"
+        Button:
+            id: protocol
+        Label:
+            text: ""
+        Button:
+            text: "Apply"
+            on_press: root.apply()
+
+
 <About>:
     id: about
     text: "About"

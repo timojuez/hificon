@@ -4,6 +4,7 @@ from threading import Lock
 from .util.async_widget import bind_widget_to_value
 from .amp import features
 from .common.config import config, ConfigDict, CONFDIR
+from .protocol import getProtocols
 from . import Amp, NAME, VERSION, AUTHOR
 
 
@@ -44,6 +45,8 @@ class NumericFeature(GridLayout): pass
 
 class Base(StackLayout): pass
 
+class SettingsTab(StackLayout): pass
+
 class Waiting(StackLayout): pass
 
 class BoolFeature(StackLayout): pass
@@ -59,6 +62,38 @@ class About(TabbedPanelItem):
     def __init__(self):
         super().__init__()
         self.ids.text.text = "%s Version %s\nCopyright (C) 2020 %s"%(NAME, VERSION, AUTHOR)
+
+
+class SettingsTab(TabbedPanelItem):
+
+    def __init__(self, parent):
+        super().__init__()
+        self._parent = parent
+        self._protocols = getProtocols()
+
+        dropdown = SelectFeatureOptions()
+        self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
+        for i,(text, module) in enumerate(self._protocols):
+            o = SelectFeatureOption()
+            o.text = text
+            o.bind(on_release=lambda e,i=i: dropdown.select(i))
+            dropdown.add_widget(o)
+        
+        def on_select(e,i): 
+            self.ids.protocol.text, module = self._protocols[i]
+            self.protocol = module.__name__
+        dropdown.bind(on_select=on_select)
+        
+        self.ids.host.text = config.get("Amp","host")
+        self.ids.port.text = config.get("Amp","port")
+        self.ids.protocol.text = config.get("Amp","protocol")
+        self.protocol = config.get("Amp","protocol")
+
+    def apply(self):
+        config["Amp"]["host"] = self.ids.host.text
+        config["Amp"]["port"] = self.ids.port.text
+        config["Amp"]["protocol"] = self.protocol
+        self._parent.change_amp()
 
 
 """
@@ -81,32 +116,35 @@ custom_menu = {}
 class Menu(TabbedPanel):
     config = ConfigDict("menu.json")
 
-    def __init__(self, app, protocol=None, host=None, port=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, app, **kwargs):
+        super().__init__()
+        self.amp = None
         self.app = app
-        self.amp = Amp(connect=False,
-            protocol=protocol or args.protocol, host=host, port=port, verbose=args.verbose)
-        app.title = "%s – %s"%(TITLE, self.amp.name)
-        tabs = {}
-        self.features = {}
-        for key, f in {**self.amp.features, **custom_menu}.items():
-            print("adding %s"%f.name)
-            if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
-            self.addFeature(key, f, tabs[f.category])
-            if f.isset(): # show static features
-                self.show_row(key, f)
-                f.on_change(None, f.get())
-        self.amp.preload_features = set(self.amp.features.keys())
-        self.amp.bind(on_feature_change=self.on_feature_change)
+        try: self.amp = Amp(connect=False, verbose=args.verbose, **kwargs)
+        except Exception as e: print(repr(e))
+        else:
+            app.title = "%s – %s"%(TITLE, self.amp.name)
+            tabs = {}
+            self.features = {}
+            for key, f in {**self.amp.features, **custom_menu}.items():
+                print("adding %s"%f.name)
+                if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
+                self.addFeature(key, f, tabs[f.category])
+                if f.isset(): # show static features
+                    self.show_row(key, f)
+                    f.on_change(None, f.get())
+            self.amp.preload_features = set(self.amp.features.keys())
+            self.amp.bind(on_feature_change=self.on_feature_change)
+        self.add_widget(SettingsTab(self))
         self.add_widget(About())
         app.root.clear_widgets()
         app.root.add_widget(self)
-        self.amp.enter()
+        if self.amp: self.amp.enter()
         
     def change_amp(self, *args, **xargs):
         self.app.clear()
-        self.amp.exit()
-        Menu(self.app, *args, **xargs)
+        if self.amp: self.amp.exit()
+        Clock.schedule_once(lambda *_:Menu(self.app, *args, **xargs), 1)
 
     def show_row(self, key, f):
         print("Showing %s"%f.name)
@@ -254,7 +292,7 @@ class App(App):
         return root
 
     def on_start(self, **xargs):
-        Clock.schedule_once(lambda *args:Menu(self), 1)
+        Clock.schedule_once(lambda *_:Menu(self, protocol=args.protocol), 1)
 
     def clear(self):
         self.root.clear_widgets()
