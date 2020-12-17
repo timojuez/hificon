@@ -248,8 +248,8 @@ class TelnetAmp(AbstractAmp):
         while tries:
             if tries > 0: tries -= 1
             try: self._telnet = Telnet(self.host,self.port,timeout=2)
-            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
-                if tries == 0: raise
+            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
+                if tries == 0: raise ConnectionError(e)
             else:
                 super().connect()
                 return self.on_connect()
@@ -274,13 +274,16 @@ class TelnetAmp(AbstractAmp):
         
     def mainloop_hook(self):
         super().mainloop_hook()
-        if not self.connected: self.connect(-1)
-        try: data = self.read(5)
-        except ConnectionError: pass
+        if self.connected:
+            try: data = self.read(5)
+            except ConnectionError: pass
+            else:
+                # receiving
+                if not data: return
+                self.on_receive_raw_data(data) 
         else:
-            # receiving
-            if not data: return
-            self.on_receive_raw_data(data) 
+            try: self.connect()
+            except ConnectionError: return time.sleep(3)
 
 
 @AbstractAmp.add_feature
