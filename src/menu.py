@@ -7,6 +7,7 @@ from .common.config import config, ConfigDict, CONFDIR
 from . import Amp, NAME, VERSION, AUTHOR
 
 
+TITLE = "%s Control Menu"%NAME
 os.environ["KIVY_NO_ARGS"] = "1"
 parser = argparse.ArgumentParser(description='Control Menu App')
 parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
@@ -16,6 +17,7 @@ args = parser.parse_args()
 
 from kivy.app import App
 from kivy.lang import Builder
+from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.slider import Slider
@@ -25,7 +27,6 @@ from kivy.uix.button import Button
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
-
 
 
 class TabPanel(TabbedPanelItem): pass
@@ -40,6 +41,10 @@ class ScrollViewLayout(StackLayout):
 class FeatureRow(GridLayout): pass
 
 class NumericFeature(GridLayout): pass
+
+class Base(StackLayout): pass
+
+class Waiting(StackLayout): pass
 
 class BoolFeature(StackLayout): pass
 
@@ -76,26 +81,38 @@ custom_menu = {}
 class Menu(TabbedPanel):
     config = ConfigDict("menu.json")
 
-    def __init__(self, amp, **kwargs):
+    def __init__(self, app, protocol=None, host=None, port=None, **kwargs):
         super().__init__(**kwargs)
+        self.app = app
+        self.amp = Amp(connect=False,
+            protocol=protocol or args.protocol, host=host, port=port, verbose=args.verbose)
+        app.title = "%s – %s"%(TITLE, self.amp.name)
         tabs = {}
         self.features = {}
-        for key, f in {**amp.features, **custom_menu}.items():
+        for key, f in {**self.amp.features, **custom_menu}.items():
             print("adding %s"%f.name)
             if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
             self.addFeature(key, f, tabs[f.category])
             if f.isset(): # show static features
-                self.show_row(amp, key, f)
+                self.show_row(key, f)
                 f.on_change(None, f.get())
-        amp.preload_features = set(amp.features.keys())
-        amp.bind(on_feature_change=self.on_feature_change)
+        self.amp.preload_features = set(self.amp.features.keys())
+        self.amp.bind(on_feature_change=self.on_feature_change)
         self.add_widget(About())
+        app.root.clear_widgets()
+        app.root.add_widget(self)
+        self.amp.enter()
+        
+    def change_amp(self, *args, **xargs):
+        self.app.clear()
+        self.amp.exit()
+        Menu(self.app, *args, **xargs)
 
-    def show_row(self, amp, key, f):
+    def show_row(self, key, f):
         print("Showing %s"%f.name)
         for w in self.features[key]["rows"]: show_widget(w)
         if key not in self.config["pinned"]: hide_widget(self.features[key]["pinned_row"])
-
+        
     def _newTab(self, title):
         panel = TabPanel()
         panel.text = title
@@ -201,7 +218,7 @@ class Menu(TabbedPanel):
 
     def on_feature_change(self, key, value, prev):
         if prev == None and key and key in self.features:
-            self.show_row(amp, key, amp.features[key])
+            self.show_row(key, self.amp.features[key])
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
@@ -231,8 +248,17 @@ def hide_widget(w):
 class App(App):
     
     def build(self):
-        self.title = "%(name)s Control Menu – %(amp)s"%dict(name=NAME, amp=amp.name)
-        return menu
+        self.title = TITLE
+        root = Base()
+        root.add_widget(Waiting())
+        return root
+
+    def on_start(self, **xargs):
+        Clock.schedule_once(lambda *args:Menu(self), 1)
+
+    def clear(self):
+        self.root.clear_widgets()
+        self.root.add_widget(Waiting())
 
 
 kv = pkgutil.get_data(__name__,"share/menu.kv").decode()
@@ -240,20 +266,16 @@ Builder.load_string(kv)
 
 
 def main():
-    global amp, menu
-    
-    amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose)
-    menu = Menu(amp)
-
     icon_path = tempfile.mktemp()
     try:
         with open(icon_path, "wb") as fp:
             fp.write(pkgutil.get_data(__name__,"share/icons/scalable/logo.svg"))
-        with amp:
-            app = App()
-            app.icon = icon_path
-            app.run()
+        app = App()
+        app.icon = icon_path
+        app.run()
     finally:
+        try: app.root.children[0].amp.exit()
+        except: pass
         os.remove(icon_path)
 
 
