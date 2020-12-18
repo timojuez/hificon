@@ -14,7 +14,7 @@ protocol = .auto
 # Amp input source that this program controls. Important for power control. Empty means "all"
 source = 
 
-# host = 1.2.3.4
+host = auto
 port = 23
 # name = AVR
 
