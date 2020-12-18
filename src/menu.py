@@ -177,7 +177,7 @@ class Menu1(_Menu):
         super().build()
         self.default_tab = self.pinned_tab
         self.default_tab_text = self.pinned_tab.text
-        if self.amp: self.amp.enter()
+        self.amp.enter()
         
     def show_row(self, key, f):
         print("Showing %s"%f.name)
