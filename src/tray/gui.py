@@ -76,6 +76,7 @@ class GaugeNotification(GladeGtk, _Notification):
         self.subtitle = self.builder.get_object("subtitle")
         self.window = self.builder.get_object("window")
         self.width, self.height = self.window.get_size()
+        self.window.connect('delete-event', lambda w, e: w.hide() or True)
     
     def set_timeout(self, t): self._timeout = t/1000
     
