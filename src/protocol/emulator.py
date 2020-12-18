@@ -74,7 +74,7 @@ class DummyAmp:
 class Amp(AbstractAmp):
     protocol = "Emulator"
 
-    def __new__(self, *args, emulate=None, **xargs):
+    def __new__(self, *args, emulate=".denon", **xargs):
         """ extra argument @emulate must be a protocol module """
         Original_amp = Amp_cls(protocol=emulate)
         return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
