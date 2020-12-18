@@ -219,9 +219,14 @@ class TelnetAmp(AbstractAmp):
     """
     pulse = ""
     _telnet = None
-    _send_lock = Lock()
+    _send_lock = None
     _pulse_stop = None
     
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._send_lock = Lock()
+        self._pulse_stop = Event()
+
     def send(self, cmd):
         super().send(cmd)
         try:
@@ -262,7 +267,7 @@ class TelnetAmp(AbstractAmp):
         super().on_connect()
         def func():
             while not self._pulse_stop.wait(10): self.send(self.pulse)
-        self._pulse_stop = Event()
+        self._pulse_stop.clear()
         if self.pulse is not None: Thread(target=func, daemon=True, name="pulse").start()
         
     def on_disconnected(self):
