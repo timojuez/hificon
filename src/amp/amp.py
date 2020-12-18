@@ -87,7 +87,8 @@ class _AbstractAmp(Bindable, AmpType):
     @log_call
     def on_connect(self):
         """ Execute when connected to amp e.g. after connection aborted """
-        if self.verbose > 0: print("[%s] connected to %s"%(self.__class__.__name__,self.host), file=sys.stderr)
+        if self.verbose > 0:
+            print("[%s] connected to %s"%(self.__class__.__name__, self.prompt), file=sys.stderr)
         
     @log_call
     def on_disconnected(self): self.connected = False
