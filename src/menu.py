@@ -57,6 +57,10 @@ class SelectFeatureOptions(DropDown): pass
 
 class SelectFeatureOption(Button): pass
 
+class PinnedTab(TabPanel): pass
+
+class AllTab(TabPanel): pass
+
 class About(TabbedPanelItem):
     
     def __init__(self):
@@ -113,39 +117,68 @@ custom_menu = dict(_power_on = ControlPowerOn())
 custom_menu = {}
 
 
-class Menu(TabbedPanel):
+def get_menu(app, **kwargs):
+    try: amp = Amp(connect=False, verbose=args.verbose, **kwargs)
+    except Exception as e:
+        print(repr(e))
+        return Menu2(app)
+    else: return Menu1(app, amp=amp)
+
+
+class _Menu(TabbedPanel):
     config = ConfigDict("menu.json")
 
-    def __init__(self, app, **kwargs):
+    def __init__(self, app, amp=None, **kwargs):
         super().__init__()
-        self.amp = None
         self.app = app
-        try: self.amp = Amp(connect=False, verbose=args.verbose, **kwargs)
-        except Exception as e: print(repr(e))
-        else:
-            app.title = "%s – %s"%(TITLE, self.amp.name)
-            tabs = {}
-            self.features = {}
-            for key, f in {**self.amp.features, **custom_menu}.items():
-                print("adding %s"%f.name)
-                if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
-                self.addFeature(key, f, tabs[f.category])
-                if f.isset(): # show static features
-                    self.show_row(key, f)
-                    f.on_change(None, f.get())
-            self.amp.preload_features = set(self.amp.features.keys())
-            self.amp.bind(on_feature_change=self.on_feature_change)
-        self.add_widget(SettingsTab(self))
+        self.amp = amp
+        self.build()
+
+    def build(self):
+        self.settings_tab = SettingsTab(self)
+        self.add_widget(self.settings_tab)
         self.add_widget(About())
-        app.root.clear_widgets()
-        app.root.add_widget(self)
-        if self.amp: self.amp.enter()
-        
+        self.app.root.clear_widgets()
+        self.app.root.add_widget(self)
+
     def change_amp(self, *args, **xargs):
         self.app.clear()
         if self.amp: self.amp.exit()
-        Clock.schedule_once(lambda *_:Menu(self.app, *args, **xargs), 1)
+        Clock.schedule_once(lambda *_:get_menu(self.app, *args, **xargs), 1)
 
+
+class Menu2(_Menu):
+
+    def build(self):
+        super().build()
+        self.default_tab = self.settings_tab
+        self.default_tab_text = self.settings_tab.text
+        
+
+class Menu1(_Menu):
+
+    def build(self):
+        self.app.title = "%s – %s"%(TITLE, self.amp.name)
+        tabs = {}
+        self.features = {}
+        self.pinned_tab = PinnedTab()
+        self.all_tab = AllTab()
+        self.add_widget(self.pinned_tab)
+        self.add_widget(self.all_tab)
+        for key, f in {**self.amp.features, **custom_menu}.items():
+            print("adding %s"%f.name)
+            if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
+            self.addFeature(key, f, tabs[f.category])
+            if f.isset(): # show static features
+                self.show_row(key, f)
+                f.on_change(None, f.get())
+        self.amp.preload_features = set(self.amp.features.keys())
+        self.amp.bind(on_feature_change=self.on_feature_change)
+        super().build()
+        self.default_tab = self.pinned_tab
+        self.default_tab_text = self.pinned_tab.text
+        if self.amp: self.amp.enter()
+        
     def show_row(self, key, f):
         print("Showing %s"%f.name)
         for w in self.features[key]["rows"]: show_widget(w)
@@ -160,9 +193,9 @@ class Menu(TabbedPanel):
     def addFeature(self, key, f, tab):
         self.features[key] = {"rows":[], "pinned_row":None, 
             "checkboxes":{"lock":Lock(),"objects":[]}}
-        self.features[key]["pinned_row"] = self._addFeatureToTab(key,f,self.ids.pinned.ids.layout)
+        self.features[key]["pinned_row"] = self._addFeatureToTab(key,f,self.pinned_tab.ids.layout)
         self._addFeatureToTab(key,f,tab)
-        self._addFeatureToTab(key,f,self.ids.all.ids.layout)
+        self._addFeatureToTab(key,f,self.all_tab.ids.layout)
         with self.features[key]["checkboxes"]["lock"]:
             for c in self.features[key]["checkboxes"]["objects"]: c.active = key in self.config["pinned"]
         
@@ -292,7 +325,7 @@ class App(App):
         return root
 
     def on_start(self, **xargs):
-        Clock.schedule_once(lambda *_:Menu(self, protocol=args.protocol), 1)
+        Clock.schedule_once(lambda *_:get_menu(self, protocol=args.protocol), 1)
 
     def clear(self):
         self.root.clear_widgets()
