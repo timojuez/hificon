@@ -138,7 +138,8 @@ class TabPanel(ScrollView):
         return button
 
     def on_feature_change(self, key, value, prev):
-        if prev == None: self.header.refresh_feature_visibility(self.amp.features[key])
+        if prev == None and isinstance(self.header, TabHeader):
+            self.header.refresh_feature_visibility(self.amp.features[key])
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
