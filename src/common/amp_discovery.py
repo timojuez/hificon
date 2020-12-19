@@ -6,12 +6,12 @@ from .. import Amp
 
 def check_amp(host):
     try:
-        with Amp(protocol=".denon", host=host) as amp:
+        with Amp(protocol=".denon", host=host, port=23) as amp:
             name = amp.denon_name
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
         return False
     print("Found %s on %s."%(name, host))
-    return dict(host=host,name=name,protocol=".denon")
+    return dict(host=host,port=23,name=name,protocol=".denon")
 
 
 def discover_amp():
