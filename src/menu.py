@@ -38,21 +38,25 @@ class TabPanel(ScrollView):
         self.amp = amp
         super().__init__()
         self.features = {}
-        for key, f in self.amp.features.items():
-            print("adding %s"%f.name)
-            self.addFeature(key, f)
-            if f.isset(): # update static features
-                f.on_change(None, f.get())
+        self._features_stack = list(self.amp.features.items())
+        Clock.schedule_once(lambda *_:self.addFeaturesFromStack(chunksize=50), .7)
         self.amp.preload_features = set(self.amp.features.keys())
         self.amp.bind(on_feature_change=self.on_feature_change)
         
     @property
     def header(self): return self.tabbed_panel.current_tab
 
+    def addFeaturesFromStack(self, *_, chunksize=50):
+        chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
+        for key, f in chunk:
+            print("adding %s"%f.name)
+            self.addFeature(key, f)
+            if f.isset(): f.on_change(None, f.get())
+        if self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, .5)
+
     def addFeature(self, key, f):
         #self.features[key] = []
         row = FeatureRow()
-        self.features[key] = [row]
         row.ids.text.text = f.name
         row.ids.checkbox.active = key in self.config["pinned"]
 
@@ -72,6 +76,8 @@ class TabPanel(ScrollView):
             self.config.save()
             self.header.refresh_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
+
+        self.features[key] = [row]
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -132,8 +138,7 @@ class TabPanel(ScrollView):
         return button
 
     def on_feature_change(self, key, value, prev):
-        if prev == None and key and key in self.features:
-            self.header.refresh_feature_visibility(self.amp.features[key])
+        if prev == None: self.header.refresh_feature_visibility(self.amp.features[key])
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
@@ -156,6 +161,7 @@ class TabHeader(TabbedPanelHeader):
         for key, f in self.content.amp.features.items(): self.refresh_feature_visibility(f)
     
     def refresh_feature_visibility(self, f):
+        if f.key not in self.content.features: return
         func = show_widget if f.isset() and self.filter(f) else hide_widget
         try:
             for w in self.content.features[f.key]: func(w)
