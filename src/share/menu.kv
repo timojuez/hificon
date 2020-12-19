@@ -1,18 +1,17 @@
-<Base>:
-    canvas.before:
-        Color:
-            rgba: .1, .1, .1, 1
-        Rectangle:
-            pos: self.pos
-            size: self.size
+<WelcomeScreen>:
+    StackLayout:
+        canvas.before:
+            Color:
+                rgba: .1, .1, .1, 1
+            Rectangle:
+                pos: self.pos
+                size: self.size
+
+        Label:
+            text: "Starting ..."
 
 
-<Waiting>:
-    Label:
-        text: "Starting ..."
-
-
-<Menu>:
+<MenuScreen>:
 
 
 <TabHeader>:

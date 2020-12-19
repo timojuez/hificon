@@ -28,6 +28,7 @@ from kivy.uix.button import Button
 from kivy.uix.tabbedpanel import TabbedPanel
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
+from kivy.uix.screenmanager import ScreenManager, Screen
 
 
 class TabPanel(ScrollView):
@@ -39,20 +40,20 @@ class TabPanel(ScrollView):
         super().__init__()
         self.features = {}
         self._features_stack = list(self.amp.features.items())
-        Clock.schedule_once(lambda *_:self.addFeaturesFromStack(chunksize=50), .7)
+        self.addFeaturesFromStack(chunksize=30, repeat=None)
         self.amp.preload_features = set(self.amp.features.keys())
         self.amp.bind(on_feature_change=self.on_feature_change)
         
     @property
     def header(self): return self.tabbed_panel.current_tab
 
-    def addFeaturesFromStack(self, *_, chunksize=50):
+    def addFeaturesFromStack(self, *_, chunksize=10, repeat=.2):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for key, f in chunk:
             print("adding %s"%f.name)
             self.addFeature(key, f)
             if f.isset(): f.on_change(None, f.get())
-        if self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, .5)
+        if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, key, f):
         #self.features[key] = []
@@ -180,11 +181,11 @@ class FeatureRow(GridLayout): pass
 
 class NumericFeature(GridLayout): pass
 
-class Base(StackLayout): pass
-
 class SettingsTab(StackLayout): pass
 
-class Waiting(StackLayout): pass
+class WelcomeScreen(Screen): pass
+
+class MenuScreen(Screen): pass
 
 class BoolFeature(GridLayout): pass
 
@@ -261,11 +262,12 @@ class _Menu(TabbedPanel):
         self.settings_tab = SettingsTab(self)
         self.add_widget(self.settings_tab)
         self.add_widget(About())
-        self.app.root.clear_widgets()
-        self.app.root.add_widget(self)
+        self.app.menu_screen.clear_widgets()
+        self.app.menu_screen.add_widget(self)
+        self.app.manager.current = "menu_screen"
 
     def change_amp(self, *args, **xargs):
-        self.app.clear()
+        self.app.manager.current = "welcome_screen"
         if self.amp: self.amp.exit()
         Clock.schedule_once(lambda *_:get_menu(self.app, *args, **xargs), 1)
 
@@ -295,6 +297,7 @@ class Menu1(_Menu):
         self.default_tab_text = self.pinned_tab.text
         self.pinned_tab.refresh_panel()
         self.amp.enter()
+        Clock.schedule_once(lambda *_:self.panel.addFeaturesFromStack(), .9)
         
     def _newTab(self, category):
         def filter(f, category=category): return f.category == category
@@ -323,16 +326,14 @@ class App(App):
     
     def build(self):
         self.title = TITLE
-        root = Base()
-        root.add_widget(Waiting())
-        return root
+        self.manager = ScreenManager()
+        self.menu_screen = MenuScreen(name="menu_screen")
+        self.manager.add_widget(WelcomeScreen(name="welcome_screen"))
+        self.manager.add_widget(self.menu_screen)
+        return self.manager
 
     def on_start(self, **xargs):
-        Clock.schedule_once(lambda *_:get_menu(self, protocol=args.protocol), 1)
-
-    def clear(self):
-        self.root.clear_widgets()
-        self.root.add_widget(Waiting())
+        Clock.schedule_once(lambda *_:get_menu(self, protocol=args.protocol), .8)
 
 
 kv = pkgutil.get_data(__name__,"share/menu.kv").decode()
