@@ -42,9 +42,15 @@ class TabPanel(ScrollView):
         self._features_stack = list(self.amp.features.items())
         self.addFeaturesFromStack(chunksize=30, repeat=None)
         self.amp.bind(on_feature_change=self.on_feature_change)
+        self.amp.bind(on_disconnected=self.hide_all)
         
     @property
     def header(self): return self.tabbed_panel.current_tab
+
+    def hide_all(self):
+        for w in self.features.values():
+            try: hide_widget(w)
+            except RuntimeError: pass
 
     def addFeaturesFromStack(self, *_, chunksize=10, repeat=.2):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
@@ -76,7 +82,7 @@ class TabPanel(ScrollView):
             self.header.refresh_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
 
-        self.features[key] = [row]
+        self.features[key] = row
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -162,9 +168,9 @@ class TabHeader(TabbedPanelHeader):
     
     def refresh_feature_visibility(self, f):
         if f.key not in self.content.features: return
+        if not self.content.amp.connected: return
         func = show_widget if f.isset() and self.filter(f) else hide_widget
-        try:
-            for w in self.content.features[f.key]: func(w)
+        try: func(self.content.features[f.key])
         except RuntimeError: pass
         
 
