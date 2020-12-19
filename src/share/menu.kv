@@ -15,12 +15,15 @@
 <Menu>:
 
 
-<PinnedTab>:
-    text: "Pinned"
+<TabHeader>:
+
+
+<TabPanel>:
+    do_scroll_x: False
+    do_scroll_y: True
     
-    
-<AllTab>:
-    text: "All"
+    ScrollViewLayout:
+        id: layout
 
 
 <SettingsTab>:
@@ -55,15 +58,6 @@
         cols: 1
         Label:
             id: text
-
-
-<TabPanel>:
-    ScrollView:
-        do_scroll_x: False
-        do_scroll_y: True
-        
-        ScrollViewLayout:
-            id: layout
 
 
 <ScrollViewLayout>:
