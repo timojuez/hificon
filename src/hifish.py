@@ -30,7 +30,7 @@ class CLI:
         matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
         self.amp = Amp(
-            self.args.host, port=self.args.port, protocol=self.args.protocol, verbose=self.args.verbose)
+            host=self.args.host, port=self.args.port, protocol=self.args.protocol, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
             self.compiler = Compiler(
