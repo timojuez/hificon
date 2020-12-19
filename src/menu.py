@@ -52,7 +52,7 @@ class TabPanel(ScrollView):
             try: hide_widget(w)
             except RuntimeError: pass
 
-    def addFeaturesFromStack(self, *_, chunksize=10, repeat=.2):
+    def addFeaturesFromStack(self, *_, chunksize=15, repeat=.5):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for key, f in chunk:
             print("adding %s"%f.name)
