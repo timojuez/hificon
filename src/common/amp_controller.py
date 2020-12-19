@@ -18,6 +18,7 @@ class _Base(SystemEvents):
 
     @require(config.power, config.source)
     def poweron(self):
+        if getattr(self.amp, config.power): return
         if config["Amp"].get("source"): self.amp.features[config.source].set(config["Amp"]["source"])
         setattr(self.amp, config.power, True)
 
