@@ -67,42 +67,39 @@
 <FeatureRow>:
     cols: 3
     size_hint_y: None
+    spacing: [20, 20]
+    padding: [20, 20]
+    cols_minimum: {2:100}
 
-    AnchorLayout:
-        anchor_y: 'center'
+    Label:
+        id: text
         size_hint: 0.4, None
-        padding: 20
-
-        Label:
-            id: text
-            
-            text_size: self.width, None
-            height: self.texture_size[1]
-            
-            #pos_hint: {'right': 1}
-            #size_hint_x: 0.4
-            #size_hint_x: None
-            #halign: 'left'
-            #on_texture_size: text.setter('size')
-            #on_size: text.setter('size')
-            #text_size: self.size
+        
+        text_size: self.width, None
+        #height: self.texture_size[1]
+        
+        #pos_hint: {'right': 1}
+        #size_hint_x: 0.4
+        #size_hint_x: None
+        #halign: 'left'
+        #on_texture_size: text.setter('size')
+        #on_size: text.setter('size')
+        #text_size: self.size
     BoxLayout:
         id: content
 
-    AnchorLayout:
-        anchor_x: 'center'
-        size_hint_x: 0.4
-        BoxLayout:
+    BoxLayout:
+        size_hint_x: None
+        #size_hint_x: 0.4
+        width: self.minimum_width
+        CheckBox:
+            id: checkbox
             size_hint_x: None
-            width: self.minimum_width
-            CheckBox:
-                id: checkbox
-                size_hint_x: None
-                width: 40
-            Label:
-                text: "Pin"
-                size_hint_x: None
-                size: self.texture_size
+            width: 40
+        Label:
+            text: "Pin"
+            size_hint_x: None
+            size: self.texture_size
 
 
 <NumericFeature>:
@@ -126,11 +123,7 @@
 <SelectFeatureOptions>:
 
 <SelectFeature>:
-    AnchorLayout:
-        anchor_y: 'center'
-        Button:
-            id: button
-            size_hint_y: 0.5
+    id: button
 
 <BoolFeature>:
     AnchorLayout:

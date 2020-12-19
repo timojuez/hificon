@@ -111,12 +111,12 @@ class TabPanel(ScrollView):
 
     def addSelectFeature(self, f):
         dropdown = SelectFeatureOptions()
-        layout = SelectFeature()
-        layout.ids.button.bind(on_release=lambda i: dropdown.open(i))
+        button = SelectFeature()
+        button.bind(on_release=lambda i: dropdown.open(i))
         
         def get(inst, value): return value
         def set(value):
-            layout.ids.button.text = value
+            button.text = value
             dropdown.clear_widgets()
             for text in f.options:
                 o = SelectFeatureOption()
@@ -129,7 +129,7 @@ class TabPanel(ScrollView):
         on_change = self.bind_widget_to_feature(f,get,set)
         #dropdown.bind(on_select=on_change)
 
-        return layout
+        return button
 
     def on_feature_change(self, key, value, prev):
         if prev == None and key and key in self.features:
@@ -181,7 +181,7 @@ class Waiting(StackLayout): pass
 
 class BoolFeature(StackLayout): pass
 
-class SelectFeature(StackLayout): pass
+class SelectFeature(Button): pass
 
 class SelectFeatureOptions(DropDown): pass
 
