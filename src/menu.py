@@ -41,7 +41,6 @@ class TabPanel(ScrollView):
         self.features = {}
         self._features_stack = list(self.amp.features.items())
         self.addFeaturesFromStack(chunksize=30, repeat=None)
-        self.amp.preload_features = set(self.amp.features.keys())
         self.amp.bind(on_feature_change=self.on_feature_change)
         
     @property
@@ -56,7 +55,6 @@ class TabPanel(ScrollView):
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, key, f):
-        #self.features[key] = []
         row = FeatureRow()
         row.ids.text.text = f.name
         row.ids.checkbox.active = key in self.config["pinned"]
@@ -256,7 +254,8 @@ class _Menu(TabbedPanel):
         super().__init__()
         self.app = app
         self.amp = amp
-        self.build()
+        #self.build()
+        Clock.schedule_once(lambda *_:self.build(), .8)
 
     def build(self):
         self.settings_tab = SettingsTab(self)
@@ -281,7 +280,12 @@ class Menu2(_Menu):
         
 
 class Menu1(_Menu):
-
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.amp.preload_features = set(self.amp.features.keys())
+        self.amp.enter()
+        
     def build(self):
         self.app.title = "%s – %s"%(TITLE, self.amp.name)
         tabs = {}
@@ -296,7 +300,6 @@ class Menu1(_Menu):
         self.default_tab = self.pinned_tab
         self.default_tab_text = self.pinned_tab.text
         self.pinned_tab.refresh_panel()
-        self.amp.enter()
         Clock.schedule_once(lambda *_:self.panel.addFeaturesFromStack(), .9)
         
     def _newTab(self, category):
@@ -333,7 +336,7 @@ class App(App):
         return self.manager
 
     def on_start(self, **xargs):
-        Clock.schedule_once(lambda *_:get_menu(self, protocol=args.protocol), .8)
+        get_menu(self, protocol=args.protocol)
 
 
 kv = pkgutil.get_data(__name__,"share/menu.kv").decode()
