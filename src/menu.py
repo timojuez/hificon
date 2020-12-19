@@ -247,11 +247,11 @@ class SettingsTab(TabbedPanelItem):
 
 
 def get_menu(app, **kwargs):
-    try: amp = Amp(connect=False, verbose=args.verbose, **kwargs)
+    try: app.amp = Amp(connect=False, verbose=args.verbose, **kwargs)
     except Exception as e:
         print(repr(e))
         return Menu2(app)
-    else: return Menu1(app, amp=amp)
+    else: return Menu1(app, amp=app.amp)
 
 
 class _Menu(TabbedPanel):
@@ -358,7 +358,7 @@ def main():
         app.icon = icon_path
         app.run()
     finally:
-        try: app.root.children[0].amp.exit()
+        try: app.amp.exit()
         except: pass
         os.remove(icon_path)
 
