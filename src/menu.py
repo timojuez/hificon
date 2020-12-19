@@ -179,7 +179,7 @@ class SettingsTab(StackLayout): pass
 
 class Waiting(StackLayout): pass
 
-class BoolFeature(StackLayout): pass
+class BoolFeature(GridLayout): pass
 
 class SelectFeature(Button): pass
 

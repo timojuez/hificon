@@ -69,37 +69,31 @@
     size_hint_y: None
     spacing: [20, 20]
     padding: [20, 20]
-    cols_minimum: {2:100}
-
+    row_force_default: True
+    row_default_height: 50
+    
     Label:
         id: text
-        size_hint: 0.4, None
-        
+        size_hint_x: 0.4
         text_size: self.width, None
-        #height: self.texture_size[1]
-        
-        #pos_hint: {'right': 1}
-        #size_hint_x: 0.4
-        #size_hint_x: None
-        #halign: 'left'
-        #on_texture_size: text.setter('size')
-        #on_size: text.setter('size')
-        #text_size: self.size
+
     BoxLayout:
         id: content
 
-    BoxLayout:
-        size_hint_x: None
-        #size_hint_x: 0.4
-        width: self.minimum_width
-        CheckBox:
-            id: checkbox
+    AnchorLayout:
+        size_hint_x: 0.4
+        anchor_x: 'center'
+        BoxLayout:
             size_hint_x: None
-            width: 40
-        Label:
-            text: "Pin"
-            size_hint_x: None
-            size: self.texture_size
+            width: self.minimum_width
+            CheckBox:
+                id: checkbox
+                size_hint_x: None
+                width: 40
+            Label:
+                text: "Pin"
+                size_hint_x: None
+                size: self.texture_size
 
 
 <NumericFeature>:
@@ -126,19 +120,15 @@
     id: button
 
 <BoolFeature>:
-    AnchorLayout:
-        anchor_y: 'center'
-        GridLayout:
-            size_hint_y: 0.5
-            cols: 2
-            ToggleButton:
-                id: off
-                text: "OFF"
-                #group: root
-                value: False
-            ToggleButton:
-                id: on
-                text: "ON"
-                #group: root
-                value: True
+    cols: 2
+    ToggleButton:
+        id: off
+        text: "OFF"
+        #group: root
+        value: False
+    ToggleButton:
+        id: on
+        text: "ON"
+        #group: root
+        value: True
 
