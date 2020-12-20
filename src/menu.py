@@ -181,7 +181,9 @@ class ScrollViewLayout(StackLayout):
         self.bind(minimum_height=self.setter('height'))
 
 
-class FeatureRow(GridLayout): pass
+class MyGrid(GridLayout): pass
+
+class FeatureRow(MyGrid): pass
 
 class NumericFeature(GridLayout): pass
 
@@ -240,8 +242,8 @@ class SettingsTab(TabbedPanelItem):
         self.protocol = config.get("Amp","protocol")
 
     def apply(self):
-        config["Amp"]["host"] = self.ids.host.text
-        config["Amp"]["port"] = self.ids.port.text
+        config["Amp"]["host"] = self.ids.host.text.strip()
+        config["Amp"]["port"] = self.ids.port.text.strip()
         config["Amp"]["protocol"] = self.protocol
         self._parent.change_amp()
 

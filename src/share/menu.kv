@@ -25,20 +25,29 @@
         id: layout
 
 
+<MyGrid@GridLayout>:
+    padding: 20
+    spacing: 20
+    row_force_default: True
+    row_default_height: 50
+
+
 <SettingsTab>:
     text: "Connection"
 
-    GridLayout:
+    MyGrid:
         cols: 2
 
         Label:
             text: "Host"
         TextInput:
             id: host
+            multiline: False
         Label:
             text: "Port"
         TextInput:
             id: port
+            multiline: False
         Label:
             text: "Protocol"
         Button:
@@ -66,10 +75,6 @@
 <FeatureRow>:
     cols: 3
     size_hint_y: None
-    spacing: [20, 20]
-    padding: [20, 20]
-    row_force_default: True
-    row_default_height: 50
     
     Label:
         id: text
