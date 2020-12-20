@@ -1,11 +1,12 @@
-import sys, math, pkgutil, tempfile
+import sys, math, pkgutil, os, tempfile
 from threading import Thread, Timer
 from .. import Amp
 from ..amp import features
+from ..util import Bindable
 from ..common.config import config, ConfigDict
-from .key_binding import RemoteControlService, VolumeChanger
 from ..common.amp_controller import AmpController
 from . import gui
+from .key_binding import RemoteControlService, VolumeChanger
 
 
 class FeatureNotification:
@@ -50,10 +51,18 @@ class NumericNotification(FeatureNotification):
         self._n.show()
         
 
-class Icon:
+class Icon(Bindable):
     """ Functions regarding loading images from src/share """
     
-    _icon_path = tempfile.mktemp()
+    def __init__(self, amp):
+        self.amp = amp
+        self._icon_name = None
+        self.amp.bind(
+            on_connect=self.updateWidgets,
+            on_feature_change=self.on_feature_change)
+
+    def on_feature_change(self, key, value, *args): # bound to amp
+        if key in (config.volume,config.muted): self.updateWidgets()
 
     def _getCurrentIconName(self):
         volume = self.amp.features[config.volume]
@@ -64,18 +73,24 @@ class Icon:
             icon_idx = math.ceil(volume.get()/volume.max*len(icons))-1
             return icons[icon_idx]
     
-    def getCurrentIconPath(self):
+    @features.require(config.muted,config.volume)
+    def updateWidgets(self):
         name = self._getCurrentIconName()
-        if getattr(self,"_icon_name",None) == name: return self._icon_path, name
+        if self._icon_name == name: return
         self._icon_name = name
         image_data = pkgutil.get_data(
             __name__,"../share/icons/scalable/%s-dark.svg"%name)
-        with open(self._icon_path,"wb") as fp: fp.write(image_data)
-        return self._icon_path, name
+        with open(self._path, "wb") as fp: fp.write(image_data)
+        self.on_change(self._path, name)
 
-    def __del__(self):
-        try: os.remove(self._icon_path)
-        except: pass
+    def on_change(self, path, name): pass
+    
+    def __enter__(self):
+        self._path = tempfile.mktemp()
+    
+    def __exit__(self, *args):
+        try: os.remove(self._path)
+        except FileNotFoundError: pass
 
 
 class NotificationMixin(object):
@@ -92,6 +107,7 @@ class NotificationMixin(object):
             and ("*" in notification_whitelist or self.f.key in notification_whitelist)}
         for n in self._notifications.values(): n.update()
         self.amp.preload_features.add(config.volume)
+        self.amp.bind(on_feature_change = self.show_notification_on_feature_change)
     
     def show_notification(self, key): key in self._notifications and self._notifications[key].show()
     
@@ -99,11 +115,10 @@ class NotificationMixin(object):
         self.show_notification(config.volume)
         super().on_key_press(*args,**xargs)
 
-    def on_feature_change(self, key, value, prev): # bound to amp
+    def show_notification_on_feature_change(self, key, value, prev): # bound to amp
         if key in self._notifications: self._notifications[key].update()
         if not (key in self.amp.preload_features and prev is None):
             self.show_notification(key)
-        super().on_feature_change(key,value,prev)
 
     def on_scroll_up(self, *args, **xargs):
         self.show_notification(config.volume)
@@ -114,10 +129,10 @@ class NotificationMixin(object):
         super().on_scroll_down(*args,**xargs)
 
 
-class TrayMixin(Icon, gui.Tray):
+class TrayMixin(gui.Tray):
     """ Tray Icon """
 
-    def __init__(self, *args, **xargs):
+    def __init__(self, *args, icon, **xargs):
         self.config = ConfigDict("tray.json")
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
@@ -125,17 +140,11 @@ class TrayMixin(Icon, gui.Tray):
         self.amp.bind(
             on_connect=self.show,
             on_disconnected=self.hide)
-        self.amp.bind(
-            on_connect=self.updateWidgets,
-            on_feature_change=self.on_feature_change)
+        icon.bind(on_change = self.on_icon_change)
 
-    def on_feature_change(self, key, value, *args): # bound to amp
-        if key in (config.volume,config.muted): self.updateWidgets()
-
-    @features.require(config.muted,config.volume)
-    def updateWidgets(self):
-        gui.VolumePopup(self.amp).set_image(self.getCurrentIconPath()[0])
-        self.set_icon(*self.getCurrentIconPath())
+    def on_icon_change(self, path, name):
+        gui.VolumePopup(self.amp).set_image(path)
+        self.set_icon(path, name)
     
     @features.require(config.volume)
     def on_scroll_up(self, steps):
@@ -193,12 +202,9 @@ class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_
 
 def main(args):
     amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
-    app = Main(amp, verbose=args.verbose+1)
-    try:
-        with amp:
-            if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
-            app.mainloop()
-    finally:
-        try: del app
-        except: pass
+    icon = Icon(amp)
+    app = Main(amp, icon=icon, verbose=args.verbose+1)
+    with icon, amp:
+        if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
+        app.mainloop()
 
