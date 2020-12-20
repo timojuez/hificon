@@ -189,7 +189,15 @@ class NumericFeature(GridLayout): pass
 
 class SettingsTab(StackLayout): pass
 
-class WelcomeScreen(Screen): pass
+class WelcomeScreen(Screen):
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        fd, icon_path = tempfile.mkstemp()
+        with open(fd, "wb") as fp:
+            fp.write(pkgutil.get_data(__name__,"share/icons/png/logo.png"))
+        self.ids.image.source = icon_path
+        os.remove(icon_path)
 
 class MenuScreen(Screen): pass
 
@@ -352,9 +360,9 @@ Builder.load_string(kv)
 
 
 def main():
-    icon_path = tempfile.mktemp()
+    fd, icon_path = tempfile.mkstemp()
     try:
-        with open(icon_path, "wb") as fp:
+        with open(fd, "wb") as fp:
             fp.write(pkgutil.get_data(__name__,"share/icons/scalable/logo.svg"))
         app = App()
         app.icon = icon_path
