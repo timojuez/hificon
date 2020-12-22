@@ -14,6 +14,7 @@ class _Base(SystemEvents):
     def __init__(self, amp, *args, **xargs):
         self.verbose = xargs.get("verbose",0)
         self.amp = amp
+        self.amp.preload_features.update((config.source, config.power))
         super().__init__(*args, **xargs)
 
     @require(config.power, config.source)
@@ -75,7 +76,6 @@ class AutoPower(_Base):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.preload_features.update((config.source, config.power))
         self.amp.bind(on_start_playing = self.poweron)
         self.amp.bind(on_idle = self.on_amp_idle)
     
