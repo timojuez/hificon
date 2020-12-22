@@ -10,7 +10,7 @@ from contextlib import suppress
 from .amp_type import AmpType
 from .features import *
 from ..util.function_bind import Bindable
-from ..util import log_call
+from ..util import log_call, AttrDict
 from ..common.config import config
 from ..common.config import FILE as CONFFILE
 from .. import NAME
@@ -144,7 +144,7 @@ class SoundMixin:
 
 
 class FeaturesMixin(object):
-    features = {}
+    features = AttrDict()
     _pending = []
     _polled = []
     _feature_classes = []
@@ -152,7 +152,7 @@ class FeaturesMixin(object):
     def __init__(self,*args,**xargs):
         self._pending = []
         self._polled = []
-        self.features = {}
+        self.features = AttrDict()
         # apply @features to Amp
         for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
