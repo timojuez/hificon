@@ -304,10 +304,14 @@ class Menu1(_Menu):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.amp.preload_features = set(self.amp.features.keys())
+        self.amp.features["name"].bind(on_change=lambda *_:self.set_title())
+        if self.amp.features["name"].isset(): self.set_title()
         self.amp.enter()
-        
-    def build(self):
+    
+    def set_title(self):
         self.app.title = "%s – %s"%(TITLE, self.amp.name)
+    
+    def build(self):
         tabs = {}
         self.panel = TabPanel(self.amp, self)
         self.pinned_tab = PinnedTab(self.panel)

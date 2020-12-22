@@ -26,14 +26,13 @@ class _AbstractAmp(Bindable, AmpType):
     
     host = None
     port = None
-    name = None
     connected = False
     verbose = 0
     _mainloopt = None
     _stoploop = None
     _connectOnEnter = False
 
-    def __init__(self, host=None, port=None, name=None, connect=True, verbose=0, **callbacks):
+    def __init__(self, host=None, port=None, connect=True, verbose=0, **callbacks):
         super().__init__()
         self._stoploop = Event()
         self._connectOnEnter = connect
@@ -41,7 +40,6 @@ class _AbstractAmp(Bindable, AmpType):
         self.bind(**callbacks)
         self.host = host or self.host or config["Amp"].get("Host")
         self.port = port or self.port or config["Amp"].getint("port")
-        self.name = name or self.name or config["Amp"].get("Name") or self.host
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if config.power in self.features: self.features[config.power].bind(
@@ -303,4 +301,15 @@ class Fallback(SelectFeature):
         if self.amp.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
         if config.getboolean("Amp","fallback_feature"): self.on_change(None, data)
+
+
+@AbstractAmp.add_feature
+class Name(SelectFeature):
+    
+    def get(self): return self.amp.prompt
+    def matches(self, data): return False
+    def set(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def async_poll(self, *args, **xargs): pass
+    def isset(self): return True
+    def unset(self): pass
 

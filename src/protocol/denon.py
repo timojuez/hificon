@@ -268,8 +268,8 @@ class Source_names(SelectFeature): #undocumented
     #    return "%s%s"%("SI", self.encodeVal(value))
 
 
-@Amp.add_feature
-class Denon_name(SelectFeature): #undocumented
+@Amp.add_feature(overwrite=True)
+class Name(SelectFeature): #undocumented
     function = "NSFRN "
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 

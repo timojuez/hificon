@@ -16,7 +16,6 @@ source =
 
 host = auto
 port = 23
-# name = AVR
 
 
 [KeyEventHandling]

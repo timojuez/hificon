@@ -14,6 +14,7 @@ class FeatureNotification:
     def __init__(self, feature, *args, **xargs):
         super().__init__(*args, **xargs)
         self.f = feature
+        self.amp = feature.amp
 
 
 class TextNotification(FeatureNotification, gui.Notification):
@@ -22,8 +23,10 @@ class TextNotification(FeatureNotification, gui.Notification):
         super().__init__(*args, **xargs)
         self.set_urgency(2)
         self.set_timeout(config.getint("GUI","notification_timeout"))
-        super().update("Connecting ...", self.f.amp.name)
-        
+        super().update("Connecting ...", self.amp.prompt)
+        self.amp.preload_features.add("name")
+    
+    @features.require("name")
     def update(self):
         if self.f.isset(): val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
         else: return
@@ -170,12 +173,12 @@ class NotifyPoweroff:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.amp.preload_features.add("name")
         self.amp.bind(
             on_start_playing = self.close_popup,
             on_poweroff = self.close_popup,
             on_disconnected = self.close_popup)
         self._n = gui.Notification()
-        self._n.update("Power off %s"%self.amp.name)
         self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
         self._n.add_action("ok", "OK", lambda *args,**xargs: self.poweroff())
         self._n.connect("closed", self.on_popup_closed)
@@ -184,9 +187,12 @@ class NotifyPoweroff:
     def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
             self.poweroff()
-        
+    
+    @features.require("name")
     def on_amp_idle(self):
-        if self.can_poweroff: self._n.show()
+        if self.can_poweroff:
+            self._n.update("Power off %s"%self.amp.name)
+            self._n.show()
         
     def close_popup(self):
         try: self._n.close()

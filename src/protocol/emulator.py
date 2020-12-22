@@ -9,7 +9,7 @@ from .. import Amp_cls
 
 
 default_values = dict(
-    denon_name = "Dummy X7800H",
+    name = "Dummy X7800H",
     muted = False,
     source_names = " END",
 )
@@ -29,7 +29,6 @@ def get_val(f):
 
 class DummyAmp:
     host = "emulator"
-    name = "Emulator"
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
