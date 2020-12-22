@@ -169,6 +169,7 @@ class Tray:
         item_volume = Gtk.MenuItem("Volume")
         item_volume.connect('activate', lambda event:self.popup.show())
         menu.append(item_volume)
+        self.icon.set_secondary_activate_target(item_volume)
 
         f = self.amp.features[config.power]
         item_power = Gtk.CheckMenuItem(f.name)
