@@ -144,17 +144,17 @@ class SoundMixin:
 
 
 class FeaturesMixin(object):
-    _feature_classes = []
     features = AttrDict
     _pending = list
     _polled = list
+    _feature_classes = {}
 
     def __init__(self,*args,**xargs):
         self._pending = self._pending()
         self._polled = self._polled()
         self.features = self.features()
         # apply @features to Amp
-        for F in self._feature_classes: F(self)
+        for F in self._feature_classes.values(): F(self)
         super().__init__(*args,**xargs)
 
     @classmethod
@@ -167,23 +167,29 @@ class FeaturesMixin(object):
             @Amp.add_feature
             class MyFeature(Feature): pass
         """
-        def add(Feature):
-            setattr(self, Feature.key, property(
-                lambda self,Feature=Feature:self.features[Feature.key].get(),
-                lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
-            ))
-            setattr(self,"_feature_classes", getattr(self,"_feature_classes",[])+[Feature])
+        def add(Feature, overwrite=overwrite):
+            if hasattr(self.features, Feature.key):
+                raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
+            if not overwrite and (hasattr(self, Feature.key) or Feature.key in self._feature_classes.keys()):
+                raise KeyError(
+                    "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
+            setattr(self,"_feature_classes", {**getattr(self,"_feature_classes",{}), Feature.key:Feature})
             return Feature
-        if not overwrite and hasattr(self, Feature.key):
-            raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
         return add(Feature) if Feature else add
-
+    
+    def __dir__(self): return sorted(dir(self.__class__)+list(self.features.keys()))
+    
+    def __getattr__(self, name):
+        try: return self.features[name].get()
+        except KeyError: raise AttributeError(name)
+    
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
-        if not hasattr(self, name):
+        if hasattr(self.__class__, name): super().__setattr__(name, value)
+        elif name in self.features: self.features[name].set(value)
+        else:
             raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
                 "use decorator @amp_features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
-        else: super().__setattr__(name, value)
 
     def on_connect(self):
         self._pending.clear()
