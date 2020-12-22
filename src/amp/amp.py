@@ -173,7 +173,7 @@ class FeaturesMixin(object):
             if not overwrite and (hasattr(self, Feature.key) or Feature.key in self._feature_classes.keys()):
                 raise KeyError(
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
-            setattr(self,"_feature_classes", {**getattr(self,"_feature_classes",{}), Feature.key:Feature})
+            self._feature_classes = {**self._feature_classes, Feature.key:Feature}
             return Feature
         return add(Feature) if Feature else add
     
