@@ -8,14 +8,12 @@ from hificon import Amp
 PROMPT = "Enter new volume: "
 
 def on_feature_change(key, value, prev_value):
-    if key:
-        name = amp.features[key].name
+    name = amp.features[key].name
 
-        if prev_value is None: # initial call
-            print("Initially setting %s"%name)
-        else:
-            print("Changed %s to %s."%(name, value))
-    else: print("Received unknown data: %s"%value)
+    if prev_value is None: # initial call
+        print("Initially setting %s"%name)
+    else:
+        print("Changed %s to %s."%(name, value))
     print(PROMPT)
     
 @features.require("volume") # this function uses amp.volume -> async call
