@@ -4,8 +4,8 @@ from threading import Lock
 from .util.async_widget import bind_widget_to_value
 from .amp import features
 from .common.config import config, ConfigDict, CONFDIR
-from .protocol import getProtocols
-from . import Amp, NAME, VERSION, AUTHOR
+from .protocol import protocols
+from . import Amp, Amp_cls, NAME, VERSION, AUTHOR
 
 
 TITLE = "%s Control Menu"%NAME
@@ -229,25 +229,28 @@ class SettingsTab(TabbedPanelItem):
     def __init__(self, parent):
         super().__init__()
         self._parent = parent
-        self._protocols = getProtocols()
+
+        self.protocols = {}
+        for protocol in protocols:
+            try: self.protocols[protocol] = Amp_cls(protocol).protocol
+            except: self.protocols[protocol] = protocol
 
         dropdown = SelectFeatureOptions()
         self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
-        for i,(text, module) in enumerate(self._protocols):
+        for protocol, text in self.protocols.items():
             o = SelectFeatureOption()
             o.text = text
-            o.bind(on_release=lambda e,i=i: dropdown.select(i))
+            o.bind(on_release=lambda e,protocol=protocol: dropdown.select(protocol))
             dropdown.add_widget(o)
         
-        def on_select(e,i): 
-            self.ids.protocol.text, module = self._protocols[i]
-            self.protocol = module.__name__
+        def on_select(e,protocol):
+            self.protocol = protocol
+            self.ids.protocol.text = self.protocols.get(protocol, protocol)
         dropdown.bind(on_select=on_select)
         
         self.ids.host.text = config.get("Amp","host")
         self.ids.port.text = config.get("Amp","port")
-        self.ids.protocol.text = config.get("Amp","protocol")
-        self.protocol = config.get("Amp","protocol")
+        on_select(None, config.get("Amp","protocol"))
 
     def apply(self):
         config["Amp"]["host"] = self.ids.host.text.strip()
