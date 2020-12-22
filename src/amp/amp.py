@@ -160,22 +160,25 @@ class FeaturesMixin(object):
         super().__init__(*args,**xargs)
 
     @classmethod
-    def add_feature(self, Feature):
+    def add_feature(self, Feature=None, overwrite=False):
         """
         This is a decorator to be used on Feature class definitions that belong to the current amp.
+        @overwrite: If true, proceeds if a feature with same key already exists.
         Example:
             from amp.feature import Feature
             @Amp.add_feature
             class MyFeature(Feature): pass
         """
-        if hasattr(self, Feature.key):
+        def add(Feature):
+            setattr(self, Feature.key, property(
+                lambda self,Feature=Feature:self.features[Feature.key].get(),
+                lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
+            ))
+            setattr(self,"_feature_classes", getattr(self,"_feature_classes",[])+[Feature])
+            return Feature
+        if not overwrite and hasattr(self, Feature.key):
             raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
-        setattr(self, Feature.key, property(
-            lambda self,Feature=Feature:self.features[Feature.key].get(),
-            lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
-        ))
-        setattr(self,"_feature_classes", getattr(self,"_feature_classes",[])+[Feature])
-        return Feature
+        return add(Feature) if Feature else add
 
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
