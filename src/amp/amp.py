@@ -293,6 +293,7 @@ class Fallback(SelectFeature):
     def matches(self, data): return False
     def set(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
+    def isset(self): return super().isset() and config.getboolean("Amp","fallback_feature")
 
     def consume(self, data):
         self._val = data
