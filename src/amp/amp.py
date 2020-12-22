@@ -144,15 +144,15 @@ class SoundMixin:
 
 
 class FeaturesMixin(object):
-    features = AttrDict()
-    _pending = []
-    _polled = []
     _feature_classes = []
+    features = AttrDict
+    _pending = list
+    _polled = list
 
     def __init__(self,*args,**xargs):
-        self._pending = []
-        self._polled = []
-        self.features = AttrDict()
+        self._pending = self._pending()
+        self._polled = self._polled()
+        self.features = self.features()
         # apply @features to Amp
         for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
