@@ -285,6 +285,7 @@ class _Menu(TabbedPanel):
         self.app.manager.current = "menu_screen"
 
     def change_amp(self, *args, **xargs):
+        self.app.reset_title()
         self.app.manager.current = "welcome_screen"
         if self.amp: self.amp.exit()
         Clock.schedule_once(lambda *_:get_menu(self.app, *args, **xargs), 1)
@@ -345,9 +346,12 @@ def hide_widget(w):
 
 
 class App(App):
+
+    def reset_title(self):
+        self.title = TITLE
     
     def build(self):
-        self.title = TITLE
+        self.reset_title()
         self.manager = ScreenManager()
         self.menu_screen = MenuScreen(name="menu_screen")
         self.manager.add_widget(WelcomeScreen(name="welcome_screen"))
