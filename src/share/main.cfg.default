@@ -5,7 +5,7 @@ source_feature_key = source
 volume_feature_key = volume
 muted_feature_key = muted
 
-# Triggers the "fallback" feature change event each time the amp sends uninterpretable data
+# The fallback feature matches all data from the amp that is not handled by and other feature
 fallback_feature = no
 # Delay in minutes to power off Amp after last output stopped (float or "no")
 poweroff_after = 2.5
