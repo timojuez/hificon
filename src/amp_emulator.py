@@ -12,10 +12,11 @@ class Main(Service):
         parser.add_argument('--port', type=int, default=0, help='Listen')
         parser.add_argument('--protocol', type=str, default=None, help='Emulate amp protocol')
         parser.add_argument('-n','--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
+        parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
         self._send = {}
         self._break = "\n" if self.args.newline else "\r"
-        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol)
+        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol, verbose=self.args.verbose)
         print("Emulating telnet amplifier")
         print("Protocol is %s."%self.amp.protocol)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
