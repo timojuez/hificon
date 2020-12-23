@@ -1,4 +1,5 @@
 import argparse, sys, time, selectors, traceback
+from threading import Thread
 from .util.json_service import Service
 from . import Amp
 
@@ -22,7 +23,10 @@ class Main(Service):
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
         super().__init__(host=self.args.host, port=self.args.port, verbose=1)
         self.amp.enter()
-        self.mainloop()
+        Thread(target=self.mainloop, daemon=True, name="mainloop").start()
+        while True:
+            cmd = input()
+            self.on_amp_read(cmd)
     
     def connection(self, conn, mask):
         if conn not in self._send: self._send[conn] = b""
