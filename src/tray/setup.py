@@ -29,7 +29,7 @@ def source_setup():
     with Amp() as amp:
         source = amp.features[config.source].get()
     print("Registered input source `%s`."%source)
-    config["Amp"]["source"] = source
+    config.setlist("Amp", "source", [source])
 
 
 def setup_xorg_key_binding():
