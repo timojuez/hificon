@@ -219,22 +219,6 @@ class Muted(BoolFeature):
     category = "Volume"
     function = "MU"
 
-@Amp.add_feature
-class Source(SelectFeature):
-    category = "Input"
-    function = "SI"
-    translation = {"PHONO":"Phono", "CD":"CD", "TUNER":"Tuner", "DVD":"DVD",
-        "BD":"Blu-ray","TV":"TV","SAT/CBL":"CBL/SAT","MPLAY":"Media Player",
-        "GAME":"Game","HDRADIO":"HD Radio","NET":"Heos","PANDORA":"Pandora",
-        "SIRIUSXM":"Sirius XM","SPOTIFY":"Spotify","LASTFM":"Last FM",
-        "FLICKR":"Flickr","IRADIO":"IRadio","SERVER":"Server",
-        "FAVORITES":"Favourites","AUX1":"AUX 1","AUX2":"AUX 2","AUX3":"AUX 3",
-        "AUX4":"AUX 4","AUX5":"AUX 5","AUX6":"AUX 6","AUX7":"AUX 7","BT":"Bluetooth",
-        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP"}
-    
-    @amp.features.require("source_names")
-    def consume(self, data): return super().consume(data)
-
 
 @Amp.add_feature
 class Source_names(SelectFeature): #undocumented
@@ -252,20 +236,48 @@ class Source_names(SelectFeature): #undocumented
 
     def isset(self): return self._ready
     def decodeVal(self, val):
-        if val.strip() in ("END", self.get()):
+        if val.strip() == "END":
             self._ready = True
-            source = self.amp.features["source"]
-            if source.isset(): source.on_change(source.get(), source.get())
+            return "1" # cause self.on_change()
         else:
             code, name = val.split(" ",1)
             self.translation[code] = name
-            self.amp.features["source"].translation[code] = name
-        return ""
+            return "0"
     def unset(self): self._ready = False
     def get(self): return "(select)"
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     #def encode(self, value):
     #    return "%s%s"%("SI", self.encodeVal(value))
+
+
+@Amp.add_feature
+class Source(SelectFeature):
+    category = "Input"
+    function = "SI"
+    translation = {"PHONO":"Phono", "CD":"CD", "TUNER":"Tuner", "DVD":"DVD",
+        "BD":"Blu-ray","TV":"TV","SAT/CBL":"CBL/SAT","MPLAY":"Media Player",
+        "GAME":"Game","HDRADIO":"HD Radio","NET":"Heos","PANDORA":"Pandora",
+        "SIRIUSXM":"Sirius XM","SPOTIFY":"Spotify","LASTFM":"Last FM",
+        "FLICKR":"Flickr","IRADIO":"IRadio","SERVER":"Server",
+        "FAVORITES":"Favourites","AUX1":"AUX 1","AUX2":"AUX 2","AUX3":"AUX 3",
+        "AUX4":"AUX 4","AUX5":"AUX 5","AUX6":"AUX 6","AUX7":"AUX 7","BT":"Bluetooth",
+        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP"}
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.amp.features.source_names.bind(on_change=self.on_source_names_change)
+
+    def on_source_names_change(self, *args, **xargs):
+        if self.isset():
+            encoded = self.encode(self._val)
+            self.translation.update(self.amp.features.source_names.translation)
+            self.consume(encoded)
+            self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
+        else:
+            self.translation.update(self.amp.features.source_names.translation)
+        
+    @amp.features.require("source_names")
+    def consume(self, data): return super().consume(data)
 
 
 @Amp.add_feature(overwrite=True)
@@ -851,14 +863,12 @@ for zone in range(2,ZONES+1):
         name = "Zone %s Volume"%zone
         key = "zone%s_volume"%zone
         function = "Z%s"%zone
-        call = "Z%s?"%zone
         
     @Amp.add_feature
     class ZPower(Zone, BoolFeature):
         name = "Zone %s Power"%zone
         key = "zone%s_power"%zone
         function = "Z%s"%zone
-        call = "Z%s?"%zone
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
     
     @Amp.add_feature
@@ -866,7 +876,6 @@ for zone in range(2,ZONES+1):
         name = "Zone %s Source"%zone
         key = "zone%s_source"%zone
         function = "Z%s"%zone
-        call = "Z%s?"%zone
         translation = {**Source.translation, "SOURCE": "Main Zone"}
         _from_mainzone = False
         
