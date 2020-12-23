@@ -252,7 +252,7 @@ class Source_names(SelectFeature): #undocumented
 
     def isset(self): return self._ready
     def decodeVal(self, val):
-        if val.strip() == "END":
+        if val.strip() in ("END", self.get()):
             self._ready = True
             source = self.amp.features["source"]
             if source.isset(): source.on_change(source.get(), source.get())
