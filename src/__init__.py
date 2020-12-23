@@ -5,6 +5,8 @@ PKG_NAME = "hificon"
 VERSION = "1.9.41a"
 AUTHOR = "Timo L. Richter"
 URL = 'https://github.com/timojuez/hificon'
+COPYRIGHT = ("Copyright \xa9 2021 %s\n"
+    "Icons based on Ubuntu Mono Dark (GNU GPLv3)")%AUTHOR
 
 
 def Amp_cls(protocol=None, cls="Amp"):

@@ -9,7 +9,7 @@ from ..util.async_widget import bind_widget_to_value
 from ..amp import features
 from ..common.config import config
 from ..util.function_bind import Bindable
-from .. import NAME, AUTHOR, URL, VERSION
+from .. import NAME, AUTHOR, URL, VERSION, COPYRIGHT
 
 
 Notify.init(NAME)
@@ -214,7 +214,7 @@ class Tray:
         logo = pkgutil.get_data(__name__, "../share/icons/scalable/logo.svg")
         pixbuf = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(logo)), None)
         ad.set_logo(pixbuf)
-        ad.set_copyright("Copyright \xa9 2020 %s"%AUTHOR)
+        ad.set_copyright(COPYRIGHT)
         ad.set_website(URL)
         ad.connect("response", lambda *args: ad.destroy())
         ad.show()

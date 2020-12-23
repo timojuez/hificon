@@ -5,7 +5,7 @@ from .util.async_widget import bind_widget_to_value
 from .amp import features
 from .common.config import config, ConfigDict, CONFDIR
 from .protocol import protocols
-from . import Amp, Amp_cls, NAME, VERSION, AUTHOR
+from . import Amp, Amp_cls, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = "%s Control Menu"%NAME
@@ -221,7 +221,7 @@ class About(TabbedPanelItem):
     
     def __init__(self):
         super().__init__()
-        self.ids.text.text = "%s Version %s\nCopyright (C) 2020 %s"%(NAME, VERSION, AUTHOR)
+        self.ids.text.text = "%s Version %s\n%s\n"%(NAME, VERSION, COPYRIGHT)
 
 
 class SettingsTab(TabbedPanelItem):
