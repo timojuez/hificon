@@ -13,7 +13,7 @@ class Main(Service):
         parser.add_argument('--protocol', type=str, default=None, help='Emulate amp protocol')
         parser.add_argument('-n','--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
         self.args = parser.parse_args()
-        self._send = b""
+        self._send = {}
         self._break = "\n" if self.args.newline else "\r"
         self.amp = Amp(protocol=".emulator", emulate=self.args.protocol)
         print("Emulating telnet amplifier")
@@ -21,6 +21,10 @@ class Main(Service):
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
         super().__init__(host=self.args.host, port=self.args.port, verbose=1)
         self.mainloop()
+    
+    def connection(self, conn, mask):
+        if conn not in self._send: self._send[conn] = b""
+        return super().connection(conn, mask)
 
     def read(self, data):
         for data in data.strip().decode().replace("\n","\r").split("\r"):
@@ -30,15 +34,17 @@ class Main(Service):
         
     def write(self, conn):
         time.sleep(.05)
-        if not self._send: return
-        l = len(self._send)
-        try: conn.sendall(self._send[:l])
+        if not self._send[conn]: return
+        l = len(self._send[conn])
+        try: conn.sendall(self._send[conn][:l])
         except OSError: pass
-        self._send = self._send[l:]
+        self._send[conn] = self._send[conn][l:]
     
     def on_amp_read(self, data):
         print(data)
-        self._send += ("%s%s"%(data,self._break)).encode("ascii")
+        encoded = ("%s%s"%(data,self._break)).encode("ascii")
+        # send to all connected listeners
+        for conn in self._send: self._send[conn] += encoded
 
 
 main = lambda:Main()
