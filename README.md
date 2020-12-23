@@ -70,7 +70,6 @@ Note that this program is still in development and therefore try it first with a
 Start the HiFi Icon:
 `hificon`
 
-You may want to add the command to autostart.
 
 #### Control Menu
 
@@ -85,7 +84,7 @@ HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiF
 
 #### Starting the shell
 Calling `hifish` without arguments will start the prompt.
-To execute a command from bash, call `hifish -c '[command]'`
+To execute a command from bash, call `hifish -c '[command]'`.
 Hifi scripts can be executed by `hifish FILE.hifi`
 
 See also `hifish -h` and the ./examples/.
@@ -125,16 +124,17 @@ It is possible to implement the support for other AVR brands like Yamaha, Pionee
 ### Reverse Engineering Amplifiers
 `hifish -f` opens a shell and prints all received data from the amp. Meanwhile change settings e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
 
-### Custom amp control software
-It is possible to create a customised controller that keeps your own program synchronised with the amp.
+### Custom Amp Control Software
+It is possible to create an own program that controls the amp and keeps being synchronised with it.
 See ./examples/custom_app.py
 
-If your development only relies on sending commands to the amp, your requirement is purely the hificon package.
+Your requirement is purely the hificon package.
+
 
 ### AVR Emulator
-For testing purposes, there is a Denon AVR software emulator that acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_amp_emulator --port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
+For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_amp_emulator --port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
 
-You can also emulate a shell on the amp that is being defined in your config's [Amp] protocol: `hifish --protocol .emulator`
+You can also emulate the HiFi Shell: `hifish --protocol .emulator`
 
 
 ## Troubleshoot
