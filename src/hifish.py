@@ -99,7 +99,9 @@ class CLI:
     
     def on_disconnected(self):
         print("\nConnection closed", file=sys.stderr)
-        exit()
+        try: os.system('stty sane')
+        except: pass
+        os._exit(1)
 
 
 class AmpCommandTransformation(ast.NodeTransformer):
