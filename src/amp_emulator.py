@@ -21,6 +21,7 @@ class Main(Service):
         print("Protocol is %s."%self.amp.protocol)
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
         super().__init__(host=self.args.host, port=self.args.port, verbose=1)
+        self.amp.enter()
         self.mainloop()
     
     def connection(self, conn, mask):
