@@ -147,14 +147,14 @@ class FeaturesMixin(object):
     features = AttrDict
     _pending = list
     _polled = list
-    _feature_classes = {}
+    _feature_classes = []
 
     def __init__(self,*args,**xargs):
         self._pending = self._pending()
         self._polled = self._polled()
         self.features = self.features()
         # apply @features to Amp
-        for F in self._feature_classes.values(): F(self)
+        for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
 
     @classmethod
@@ -170,23 +170,20 @@ class FeaturesMixin(object):
         def add(Feature, overwrite=overwrite):
             if hasattr(self.features, Feature.key):
                 raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
-            if not overwrite and (hasattr(self, Feature.key) or Feature.key in self._feature_classes.keys()):
+            if not overwrite and hasattr(self, Feature.key):
                 raise KeyError(
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
-            self._feature_classes = {**self._feature_classes, Feature.key:Feature}
+            setattr(self, Feature.key, property(
+                lambda self,Feature=Feature:self.features[Feature.key].get(),
+                lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
+            ))
+            self._feature_classes = self._feature_classes+[Feature]
             return Feature
         return add(Feature) if Feature else add
-    
-    def __dir__(self): return sorted(dir(self.__class__)+list(self.features.keys()))
-    
-    def __getattr__(self, name):
-        try: return self.features[name].get()
-        except KeyError: raise AttributeError(name)
     
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
         if hasattr(self.__class__, name): super().__setattr__(name, value)
-        elif name in self.features: self.features[name].set(value)
         else:
             raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
                 "use decorator @amp_features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
