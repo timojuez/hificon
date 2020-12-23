@@ -47,27 +47,19 @@ class DummyAmp:
     
     def send(self, cmd):
         AbstractAmp.send(self, cmd)
-        return self.query(cmd)
-
-    def query(self, cmd, matches=None):
-        r = None
-
-        # cmd is a request
-        for key, f in self.features.items():
-            if f.call == cmd:
+        called_features = [f for key, f in self.features.items() if f.call == cmd]
+        
+        if called_features:
+            # cmd is a request
+            for f in called_features:
                 encoded = get_val(f)
                 self.on_receive_raw_data(encoded)
-                if matches and matches(encoded) or f.matches(encoded):
-                    if r is None: r = encoded
-        if r is not None: return r
-
-        # cmd is a command
-        for key, f in self.features.items():
-            if matches and matches(cmd) or f.matches(cmd):
-                self.on_receive_raw_data(cmd)
-                r = get_val(f)
-                break
-        return r
+        else:
+            # cmd is a command
+            for key, f in self.features.items():
+                if f.matches(cmd):
+                    self.on_receive_raw_data(cmd)
+                    break
 
 
 class Amp(AbstractAmp):
