@@ -1,6 +1,5 @@
 import argparse, os, pkgutil, tempfile
 from decimal import Decimal
-from threading import Lock
 from .util.async_widget import bind_widget_to_value
 from .amp import features
 from .common.config import config, ConfigDict, CONFDIR
@@ -192,18 +191,6 @@ class NumericFeature(GridLayout): pass
 
 class SettingsTab(StackLayout): pass
 
-class WelcomeScreen(Screen):
-
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        fd, icon_path = tempfile.mkstemp()
-        with open(fd, "wb") as fp:
-            fp.write(pkgutil.get_data(__name__,"share/icons/png/logo.png"))
-        self.ids.image.source = icon_path
-        os.remove(icon_path)
-
-class MenuScreen(Screen): pass
-
 class BoolFeature(GridLayout): pass
 
 class SelectFeature(Button): pass
@@ -229,10 +216,9 @@ class About(TabbedPanelItem):
 
 class SettingsTab(TabbedPanelItem):
 
-    def __init__(self, parent):
+    def __init__(self, app):
         super().__init__()
-        self._parent = parent
-
+        self.app = app
         self.protocols = {}
         for protocol in protocols:
             try: self.protocols[protocol] = Amp_cls(protocol).protocol
@@ -259,50 +245,48 @@ class SettingsTab(TabbedPanelItem):
         config["Amp"]["host"] = self.ids.host.text.strip()
         config["Amp"]["port"] = self.ids.port.text.strip()
         config["Amp"]["protocol"] = self.protocol
-        self._parent.change_amp()
+        self.app.load_screen()
 
 
-def get_menu(app, **kwargs):
-    try: app.amp = Amp(connect=False, verbose=args.verbose, **kwargs)
-    except Exception as e:
-        print(repr(e))
-        return Menu2(app)
-    else: return Menu1(app, amp=app.amp)
+class WelcomeScreen(Screen):
 
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        fd, icon_path = tempfile.mkstemp()
+        with open(fd, "wb") as fp:
+            fp.write(pkgutil.get_data(__name__,"share/icons/png/logo.png"))
+        self.ids.image.source = icon_path
+        os.remove(icon_path)
+        
 
-class _Menu(TabbedPanel):
+class _MenuScreen(Screen):
 
     def __init__(self, app, amp=None, **kwargs):
         super().__init__()
         self.app = app
         self.amp = amp
+        self.tabs = TabbedPanel()
         #self.build()
-        Clock.schedule_once(lambda *_:self.build(), .8)
+        Clock.schedule_once(lambda *_:self.build(), .8) # TODO: instead do this on WelcomeScreen.on_enter
 
     def build(self):
-        self.settings_tab = SettingsTab(self)
-        self.add_widget(self.settings_tab)
-        self.add_widget(About())
-        self.app.menu_screen.clear_widgets()
-        self.app.menu_screen.add_widget(self)
-        self.app.manager.current = "menu_screen"
+        """ is being executed while showing Welcome screen """
+        self.settings_tab = SettingsTab(self.app)
+        self.tabs.add_widget(self.settings_tab)
+        self.tabs.add_widget(About())
+        self.add_widget(self.tabs)
+        self.app.manager.switch_to(self)
+        
 
-    def change_amp(self, *args, **xargs):
-        self.app.reset_title()
-        self.app.manager.current = "welcome_screen"
-        if self.amp: self.amp.exit()
-        Clock.schedule_once(lambda *_:get_menu(self.app, *args, **xargs), 1)
-
-
-class Menu2(_Menu):
+class ErrorScreen(_MenuScreen):
 
     def build(self):
         super().build()
-        self.default_tab = self.settings_tab
-        self.default_tab_text = self.settings_tab.text
+        self.tabs.default_tab = self.settings_tab
+        self.tabs.default_tab_text = self.settings_tab.text
         
 
-class Menu1(_Menu):
+class MenuScreen(_MenuScreen):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -315,25 +299,28 @@ class Menu1(_Menu):
         self.app.title = "%s – %s"%(TITLE, self.amp.name)
     
     def build(self):
-        tabs = {}
-        self.panel = TabPanel(self.amp, self)
+        headers = {}
+        self.panel = TabPanel(self.amp, self.tabs)
         self.pinned_tab = PinnedTab(self.panel)
         self.all_tab = AllTab(self.panel)
-        self.add_widget(self.pinned_tab)
-        self.add_widget(self.all_tab)
+        self.tabs.add_widget(self.pinned_tab)
+        self.tabs.add_widget(self.all_tab)
         for key, f in self.amp.features.items():
-            if f.category not in tabs: tabs[f.category] = self._newTab(f.category)
+            if f.category not in headers: headers[f.category] = self._newTab(f.category)
         super().build()
-        self.default_tab = self.pinned_tab
-        self.default_tab_text = self.pinned_tab.text
+        self.tabs.default_tab = self.pinned_tab
+        self.tabs.default_tab_text = self.pinned_tab.text
         self.pinned_tab.refresh_panel()
-        Clock.schedule_once(lambda *_:self.panel.addFeaturesFromStack(), 0)
-        
+    
     def _newTab(self, category):
         def filter(f, category=category): return f.category == category
         header = TabHeader(self.panel, text=category, filter=filter)
-        self.add_widget(header)
+        self.tabs.add_widget(header)
         return header
+
+    def on_enter(self): self.panel.addFeaturesFromStack()
+        
+    def on_leave(self): self.amp.exit()
 
 
 def show_widget(w):
@@ -354,19 +341,19 @@ def hide_widget(w):
 
 class App(App):
 
-    def reset_title(self):
+    def load_screen(self, **xargs):
         self.title = TITLE
-    
-    def build(self):
-        self.reset_title()
-        self.manager = ScreenManager()
-        self.menu_screen = MenuScreen(name="menu_screen")
-        self.manager.add_widget(WelcomeScreen(name="welcome_screen"))
-        self.manager.add_widget(self.menu_screen)
-        return self.manager
+        self.manager.switch_to(WelcomeScreen())
+        try: self.amp = Amp(connect=False, verbose=args.verbose, **xargs)
+        except Exception as e:
+            print(repr(e))
+            ErrorScreen(self)
+        else: MenuScreen(self, self.amp)
 
-    def on_start(self, **xargs):
-        get_menu(self, protocol=args.protocol)
+    def build(self):
+        self.manager = ScreenManager()
+        self.load_screen(protocol = args.protocol)
+        return self.manager
 
 
 kv = pkgutil.get_data(__name__,"share/menu.kv").decode()
