@@ -52,7 +52,7 @@ class TabPanel(ScrollView):
             try: hide_widget(w)
             except RuntimeError: pass
 
-    def addFeaturesFromStack(self, *_, chunksize=15, repeat=.5):
+    def addFeaturesFromStack(self, *_, chunksize=15, repeat=.2):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for key, f in chunk:
             print("adding %s"%f.name)
@@ -128,6 +128,9 @@ class TabPanel(ScrollView):
         def get(inst, value): return value
         def set(value):
             button.text = value
+            Clock.schedule_once(lambda *_:update_options(), 0)
+        
+        def update_options():
             dropdown.clear_widgets()
             for text in f.options:
                 o = SelectFeatureOption()
@@ -324,7 +327,7 @@ class Menu1(_Menu):
         self.default_tab = self.pinned_tab
         self.default_tab_text = self.pinned_tab.text
         self.pinned_tab.refresh_panel()
-        Clock.schedule_once(lambda *_:self.panel.addFeaturesFromStack(), .9)
+        Clock.schedule_once(lambda *_:self.panel.addFeaturesFromStack(), 0)
         
     def _newTab(self, category):
         def filter(f, category=category): return f.category == category
