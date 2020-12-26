@@ -947,7 +947,7 @@ for zone in range(2,ZONES+1):
         name = "MDMI Out"
         key = "zone%s_mdmi"%zone
         function = "Z%sHDA "%zone
-        call = "z%sHDA?"%zone
+        call = "Z%sHDA?"%zone
         translation = {"THR":"THR", "PCM":"PCM"}
         
     @Amp.add_feature
