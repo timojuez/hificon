@@ -267,7 +267,7 @@ class _MenuScreen(Screen):
         self.amp = amp
         self.tabs = TabbedPanel()
         #self.build()
-        Clock.schedule_once(lambda *_:self.build(), .8) # TODO: instead do this on WelcomeScreen.on_enter
+        Clock.schedule_once(lambda *_:self.build(), .8) # TODO: instead do this on WelcomeScreen.on_enter. must be executed by Clock!
 
     def build(self):
         """ is being executed while showing Welcome screen """
