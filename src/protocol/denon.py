@@ -915,12 +915,14 @@ for zone in range(2,ZONES+1):
         key = "zone%s_%s"%(zone, Front_left_volume.key)
         name = Front_left_volume.name
         function = "Z%sFL "%zone
+        call = "Z%sCV?"%zone
         
     @Amp.add_feature
     class ZFrontRightVolume(Zone, Front_right_volume):
         key = "zone%s_%s"%(zone, Front_right_volume.key)
         name = Front_right_volume.name
         function = "Z%sFR "%zone
+        call = "Z%sCV?"%zone
         
     @Amp.add_feature
     class Hpf(Zone, BoolFeature):
