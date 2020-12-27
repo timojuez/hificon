@@ -815,9 +815,13 @@ class Display(SelectFeature):
 
 @Amp.add_feature
 class Input_signal(BoolFeature): #undocumented
-    """ Value seems to indicate if amp is playing something via HDMI """
+    """
+    Information on Audio Input Signal
+    Value seems to indicate if amp is playing something via HDMI
+    """
+    category = "Input"
     function = "SSINFAISSIG "
-    translation = {"01": False, "02": True}
+    translation = {"01": False, "02": True} #01: analog, 02: PCM
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -833,7 +837,15 @@ class Input_signal(BoolFeature): #undocumented
 
     @require("input_signal")
     def on_stop_playing(self):
+        # undo amp.on_stop_playing() if self.get() == True
         if self.get(): self.amp.on_start_playing()
+
+
+@Amp.add_feature
+class Sample_rate(SelectFeature): #undocumented
+    """ Information on Audio Input Signal Sample Rate """
+    category = "Input"
+    function = "SSINFAISFV "
 
 
 @Amp.add_feature
@@ -849,6 +861,118 @@ class Amp_assign(SelectFeature): #undocumented
     function = "SSPAAMOD "
     call = "SSPAA ?"
     translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "Front Height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
+
+
+@Amp.add_feature
+class Volume_OSD(SelectFeature): #undocumented
+    category = "Video"
+    function = "SSOSDVOL "
+    translation = {"TOP":"Top","BOT":"Bottom","OFF":"Off"}
+
+
+@Amp.add_feature
+class Info_OSD(BoolFeature): #undocumented
+    category = "Video"
+    function = "SSOSDTXT "
+
+
+@Amp.add_feature
+class Hdmi_rc_select(SelectFeature): #undocumented
+    category = "Video"
+    function = "SSHOSRSS "
+    translation = {"POS":"Power On + Source", "SSO":"Only Source"}
+
+
+@Amp.add_feature
+class Hdmi_control(SelectFeature): #undocumented
+    category = "Video"
+    function = "SSHOSCON "
+    call = "SSHOS ?"
+    translation = {"ON":"On","OFF":"Off"}
+
+
+@Amp.add_feature
+class Language(SelectFeature): #undocumented
+    category = "Other"
+    function = "SSLAN "
+    translation = {"DEU":"German", "ENG":"English", "ESP":"Spanish", "POL":"Polish", "RUS": "Russian"}
+
+
+@Amp.add_feature
+class Eco_mode(SelectFeature): #undocumented
+    category = "Eco"
+    function = "ECO"
+    translation = {"AUTO":"Auto","ON":"On","OFF":"Off"}
+
+
+class _InputVisibility(BoolFeature): #undocumented
+    category = "Input"
+    call = "SSSOD ?"
+    translation = {"USE":True, "DEL":False}
+
+@Amp.add_feature #undocumented
+class Enable_dvd(_InputVisibility): function = "SSSODDVD "
+
+@Amp.add_feature #undocumented
+class Enable_bluray(_InputVisibility): function = "SSSODBD "
+
+@Amp.add_feature #undocumented
+class Enable_tv(_InputVisibility): function = "SSSODTV "
+
+@Amp.add_feature #undocumented
+class Enable_cbl(_InputVisibility): function = "SSSODSAT/CBL "
+
+@Amp.add_feature #undocumented
+class Enable_media_player(_InputVisibility): function = "SSSODMPLAY "
+
+@Amp.add_feature #undocumented
+class Enable_game(_InputVisibility): function = "SSSODGAME "
+
+@Amp.add_feature #undocumented
+class Enable_aux1(_InputVisibility): function = "SSSODAUX1 "
+
+@Amp.add_feature #undocumented
+class Enable_tuner(_InputVisibility): function = "SSSODTUNER "
+
+@Amp.add_feature #undocumented
+class Enable_net(_InputVisibility): function = "SSSODNET "
+
+
+class _SourceVolumeLevel(RelativeInt): #undocumented
+    category = "Input"
+    min = -12
+    max = 12
+    call = "SSSLV ?"
+    def set(self, *args, **xargs):
+        super().set(*args, **xargs)
+        self.async_poll(force=True) #Denon workaround: missing echo
+
+@Amp.add_feature #undocumented
+class Dvd_volume_level(_SourceVolumeLevel): function = "SSSLVDVD "
+
+@Amp.add_feature #undocumented
+class Bluray_volume_level(_SourceVolumeLevel): function = "SSSLVBD "
+
+@Amp.add_feature #undocumented
+class Tv_volume_level(_SourceVolumeLevel): function = "SSSLVTV "
+
+@Amp.add_feature #undocumented
+class Cbl_volume_level(_SourceVolumeLevel): function = "SSSLVSAT/CBL "
+
+@Amp.add_feature #undocumented
+class Media_player_volume_level(_SourceVolumeLevel): function = "SSSLVMPLAY "
+
+@Amp.add_feature #undocumented
+class Game_volume_level(_SourceVolumeLevel): function = "SSSLVGAME "
+
+@Amp.add_feature #undocumented
+class Aux1_volume_level(_SourceVolumeLevel): function = "SSSLVAUX1 "
+
+@Amp.add_feature #undocumented
+class Tuner_volume_level(_SourceVolumeLevel): function = "SSSLVTUNER "
+
+@Amp.add_feature #undocumented
+class Net_volume_level(_SourceVolumeLevel): function = "SSSLVNET "
 
 
 # TODO: implement PV
