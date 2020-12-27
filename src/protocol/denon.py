@@ -1,3 +1,7 @@
+"""
+Compatible with Denon Firmware Version 4600-6121-1061-3085
+"""
+
 import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
@@ -832,7 +836,8 @@ class Hdmi_control(SelectFeature): #undocumented
 class Language(SelectFeature): #undocumented
     category = "Other"
     function = "SSLAN "
-    translation = {"DEU":"German", "ENG":"English", "ESP":"Spanish", "POL":"Polish", "RUS": "Russian"}
+    translation = {"DEU":"German", "ENG":"English", "ESP":"Spanish", "POL":"Polish", "RUS": "Russian",
+        "FRA":"French", "ITA":"Italian", "NER":"Dutch", "SVE":"Swedish"}
 
 
 @Amp.add_feature
@@ -922,6 +927,48 @@ for code, name in speakers.items():
         max = 1800
         call = "SSSDE ?"
         function = f"SSSDE{code}"
+
+
+@Amp.add_feature
+class Serial_number(SelectFeature):
+    call = "VIALL?"
+    function = "VIALLS/N."
+
+
+@Amp.add_feature
+class Volume_scale(SelectFeature):
+    category = "Volume"
+    function = "SSVCTZMADIS "
+    call = "SSVCTZMA ?"
+    translation = {"REL":"-79-18 dB", "ABS":"0-98"}
+
+
+@Amp.add_feature
+class Power_on_level(LooseIntFeature):
+    category = "Volume"
+    key = "power_on_level_numeric"
+    function = "SSVCTZMAPON "
+    call = "SSVCTZMA ?"
+
+
+@Amp.add_feature
+class Power_on_level(SelectFeature):
+    category = "Volume"
+    function = "SSVCTZMAPON "
+    call = "SSVCTZMA ?"
+    translation = {"MUT":"Muted", "LAS":"Unchanged"}
+    def on_change(self, val, prev):
+        super().on_change(val, prev)
+        power_on_level_numeric = getattr(self.amp.features, "power_on_level_numeric")
+        if not power_on_level_numeric.isset(): power_on_level_numeric.store(0)
+
+
+@Amp.add_feature
+class Mute(SelectFeature):
+    category = "Volume"
+    function = "SSVCTZMAMLV "
+    call = "SSVCTZMA ?"
+    translation = {"MUT":"Full", "040":"-40 dB", "060":"-20 dB"}
 
 
 # TODO: implement PV
