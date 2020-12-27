@@ -234,7 +234,7 @@ class Subwoofer_speaker_config(_SpeakerConfig): #undocumented
     
 @Amp.add_feature
 class Device_power(BoolFeature):
-    category = "Misc"
+    category = "General"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
 
@@ -376,7 +376,7 @@ for code, name in speakers.items():
 @Amp.add_feature
 class Main_zone_power(BoolFeature):
     key = "power"
-    category = "Misc"
+    category = "General"
     function = "ZM"
     
 @Amp.add_feature
@@ -414,7 +414,7 @@ class Sleep(IntFeature):
 @Amp.add_feature
 class Surround(SelectFeature):
     name = "Surround Mode"
-    category = "Misc"
+    category = "General"
     function = "MS"
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual",
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "M CH IN+NEURAL:X": "Multi Channel In + DTS Neural:X", "M CH IN+VIRTUAL:X":"Multi Channel In + DTS Virtual:X", "MULTI CH IN":"Multi Channel In", #undocumented
@@ -485,7 +485,7 @@ class Video_processing_mode(SelectFeature):
     
 @Amp.add_feature
 class Tone_control(BoolFeature):
-    category = "Misc"
+    category = "General"
     function = "PSTONE CTRL "
     
 @Amp.add_feature
@@ -566,12 +566,12 @@ class Stage_height(IntFeature): function = "PSSTH "
     
 @Amp.add_feature
 class Bass(RelativeInt):
-    category = "Misc"
+    category = "General"
     function = "PSBAS "
     
 @Amp.add_feature
 class Treble(RelativeInt):
-    category = "Misc"
+    category = "General"
     function = "PSTRE "
     
 @Amp.add_feature
@@ -819,14 +819,12 @@ class Info_OSD(BoolFeature): #undocumented
 
 @Amp.add_feature
 class Hdmi_rc_select(SelectFeature): #undocumented
-    category = "Video"
     function = "SSHOSRSS "
     translation = {"POS":"Power On + Source", "SSO":"Only Source"}
 
 
 @Amp.add_feature
 class Hdmi_control(SelectFeature): #undocumented
-    category = "Video"
     function = "SSHOSCON "
     call = "SSHOS ?"
     translation = {"ON":"On","OFF":"Off"}
@@ -834,7 +832,6 @@ class Hdmi_control(SelectFeature): #undocumented
 
 @Amp.add_feature
 class Language(SelectFeature): #undocumented
-    category = "Other"
     function = "SSLAN "
     translation = {"DEU":"German", "ENG":"English", "ESP":"Spanish", "POL":"Polish", "RUS": "Russian",
         "FRA":"French", "ITA":"Italian", "NER":"Dutch", "SVE":"Swedish"}

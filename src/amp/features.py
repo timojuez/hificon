@@ -83,7 +83,7 @@ class FunctionCall(object):
 
 class FeatureInterface(object):
     name = "Short description"
-    category = "Other"
+    category = "Misc"
     call = None # for retrieval, call amp.send(call)
     default_value = None #if no response
     type = object # value data type, e.g. int, bool, str
