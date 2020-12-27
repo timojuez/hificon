@@ -171,6 +171,9 @@ class TabHeader(TabbedPanelHeader):
     def refresh_feature_visibility(self, f):
         if f.key not in self.content.features: return
         if not self.content.amp.connected: return
+        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), 0)
+        
+    def _refresh_feature_visibility(self, f):
         func = show_widget if f.isset() and self.filter(f) else hide_widget
         try: func(self.content.features[f.key])
         except RuntimeError: pass
