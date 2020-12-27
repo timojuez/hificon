@@ -837,7 +837,7 @@ class Eco_mode(SelectFeature): #undocumented
 for code, key, name in INPUTS:
     @Amp.add_feature
     class InputVisibility(BoolFeature): #undocumented
-        name = f"Enable {name}"
+        name = f"Enable {name} Input"
         key = f"enable_{key}"
         category = "Input"
         call = "SSSOD ?"
