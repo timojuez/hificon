@@ -10,27 +10,65 @@ from ..common.config import config
 from .. import amp
 
 ZONES = 4
-speakers = dict(
-    FL="Front Left",
-    FR="Front Right",
-    C="Center",
-    SW="Subwoofer",
-    SL="Surround Left",
-    SR="Surround Right",
-    SBL="Surround Back L",
-    SBR="Surround Back R",
-    SB="Surround Back",
-    FHL="Front Height L",
-    FHR="Front Height R",
-    TFL="Top Front L",
-    TFR="Top Front R",
-    TML="Top Middle L",
-    TMR="Top Middle R",
-    FDL="Front Atmos L",
-    FDR="Front Atmos R",
-    SDL="Surround Atmos L",
-    SDR="Surround Atmos R",
-)
+
+SPEAKERS = [
+    ('FL', 'front_left', 'Front Left'),
+    ('FR', 'front_right', 'Front Right'),
+    ('C', 'center', 'Center'),
+    ('SW', 'subwoofer', 'Subwoofer'),
+    ('SL', 'surround_left', 'Surround Left'),
+    ('SR', 'surround_right', 'Surround Right'),
+    ('SBL', 'surround_back_l', 'Surround Back L'),
+    ('SBR', 'surround_back_r', 'Surround Back R'),
+    ('SB', 'surround_back', 'Surround Back'),
+    ('FHL', 'front_height_l', 'Front Height L'),
+    ('FHR', 'front_height_r', 'Front Height R'),
+    ('TFL', 'top_front_l', 'Top Front L'),
+    ('TFR', 'top_front_r', 'Top Front R'),
+    ('TML', 'top_middle_l', 'Top Middle L'),
+    ('TMR', 'top_middle_r', 'Top Middle R'),
+    ('FDL', 'front_atmos_l', 'Front Atmos L'),
+    ('FDR', 'front_atmos_r', 'Front Atmos R'),
+    ('SDL', 'surround_atmos_l', 'Surround Atmos L'),
+    ('SDR', 'surround_atmos_r', 'Surround Atmos R')
+]
+
+INPUTS = [
+    ('PHONO', 'phono', 'Phono'),
+    ('CD', 'cd', 'CD'),
+    ('TUNER', 'tuner', 'Tuner'),
+    ('DVD', 'dvd', 'DVD'),
+    ('BD', 'bluray', 'Blu-ray'),
+    ('TV', 'tv', 'TV'),
+    ('SAT/CBL', 'cbl', 'CBL/SAT'),
+    ('MPLAY', 'mediaplayer', 'Media Player'),
+    ('GAME', 'game', 'Game'),
+    ('HDRADIO', 'hdradio', 'HD Radio'),
+    ('NET', 'heos', 'Heos'),
+    ('PANDORA', 'pandora', 'Pandora'),
+    ('SIRIUSXM', 'siriusxm', 'Sirius XM'),
+    ('SPOTIFY', 'spotify', 'Spotify'),
+    ('LASTFM', 'lastfm', 'Last FM'),
+    ('FLICKR', 'flickr', 'Flickr'),
+    ('IRADIO', 'iradio', 'IRadio'),
+    ('SERVER', 'server', 'Server'),
+    ('FAVORITES', 'favourites', 'Favourites'),
+    ('AUX1', 'aux1', 'AUX 1'),
+    ('AUX2', 'aux2', 'AUX 2'),
+    ('AUX3', 'aux3', 'AUX 3'),
+    ('AUX4', 'aux4', 'AUX 4'),
+    ('AUX5', 'aux5', 'AUX 5'),
+    ('AUX6', 'aux6', 'AUX 6'),
+    ('AUX7', 'aux7', 'AUX 7'),
+    ('BT', 'bluetooth', 'Bluetooth'),
+    ('USB/IPOD', 'usbipod', 'USB/Ipod'),
+    ('USB', 'usb', 'USB'),
+    ('IPD', 'ipd', 'IPD'),
+    ('IRP', 'irp', 'IRP'),
+    ('FVP', 'fvp', 'FVP')
+]
+
+
 
 class Amp(TelnetAmp):
     protocol = "Denon"
@@ -278,14 +316,7 @@ class Source_names(SelectFeature): #undocumented
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    translation = {"PHONO":"Phono", "CD":"CD", "TUNER":"Tuner", "DVD":"DVD",
-        "BD":"Blu-ray","TV":"TV","SAT/CBL":"CBL/SAT","MPLAY":"Media Player",
-        "GAME":"Game","HDRADIO":"HD Radio","NET":"Heos","PANDORA":"Pandora",
-        "SIRIUSXM":"Sirius XM","SPOTIFY":"Spotify","LASTFM":"Last FM",
-        "FLICKR":"Flickr","IRADIO":"IRadio","SERVER":"Server",
-        "FAVORITES":"Favourites","AUX1":"AUX 1","AUX2":"AUX 2","AUX3":"AUX 3",
-        "AUX4":"AUX 4","AUX5":"AUX 5","AUX6":"AUX 6","AUX7":"AUX 7","BT":"Bluetooth",
-        "USB/IPOD":"USB/Ipod","USB":"USB","IPD":"IPD","IRP":"IRP","FVP":"FVP"}
+    translation = {code: name for code, key, name in INPUTS}
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -367,14 +398,14 @@ class Front_wide_right_volume(_Channel_volume):
     name = "Front Wide R Volume"
     function = "CVFWR "
 
-for code, name in speakers.items():
+for code, key, name in SPEAKERS:
     @Amp.add_feature
     class Speaker_level(RelativeDecimal): #undocumented
-        name = "%s Level"%name
+        name = f"{name} Level"
+        key = f"{key}_level"
         category = "Speakers"
-        key = "%s_level"%(name.replace(" ","_").lower())
         call = "SSLEV ?"
-        function = "SSLEV%s "%code
+        function = f"SSLEV{code} "
 
 @Amp.add_feature
 class Main_zone_power(BoolFeature):
@@ -847,81 +878,37 @@ class Eco_mode(SelectFeature): #undocumented
     translation = {"AUTO":"Auto","ON":"On","OFF":"Off"}
 
 
-class _InputVisibility(BoolFeature): #undocumented
-    category = "Input"
-    call = "SSSOD ?"
-    translation = {"USE":True, "DEL":False}
-
-@Amp.add_feature #undocumented
-class Enable_dvd(_InputVisibility): function = "SSSODDVD "
-
-@Amp.add_feature #undocumented
-class Enable_bluray(_InputVisibility): function = "SSSODBD "
-
-@Amp.add_feature #undocumented
-class Enable_tv(_InputVisibility): function = "SSSODTV "
-
-@Amp.add_feature #undocumented
-class Enable_cbl(_InputVisibility): function = "SSSODSAT/CBL "
-
-@Amp.add_feature #undocumented
-class Enable_media_player(_InputVisibility): function = "SSSODMPLAY "
-
-@Amp.add_feature #undocumented
-class Enable_game(_InputVisibility): function = "SSSODGAME "
-
-@Amp.add_feature #undocumented
-class Enable_aux1(_InputVisibility): function = "SSSODAUX1 "
-
-@Amp.add_feature #undocumented
-class Enable_tuner(_InputVisibility): function = "SSSODTUNER "
-
-@Amp.add_feature #undocumented
-class Enable_net(_InputVisibility): function = "SSSODNET "
+for code, key, name in INPUTS:
+    @Amp.add_feature
+    class InputVisibility(BoolFeature): #undocumented
+        name = f"Enable {name}"
+        key = f"enable_{key}"
+        category = "Input"
+        call = "SSSOD ?"
+        function = f"SSSOD{code} "
+        translation = {"USE":True, "DEL":False}
 
 
-class _SourceVolumeLevel(RelativeInt): #undocumented
-    category = "Input"
-    min = -12
-    max = 12
-    call = "SSSLV ?"
-    def set(self, *args, **xargs):
-        super().set(*args, **xargs)
-        self.async_poll(force=True) #Denon workaround: missing echo
-
-@Amp.add_feature #undocumented
-class Dvd_volume_level(_SourceVolumeLevel): function = "SSSLVDVD "
-
-@Amp.add_feature #undocumented
-class Bluray_volume_level(_SourceVolumeLevel): function = "SSSLVBD "
-
-@Amp.add_feature #undocumented
-class Tv_volume_level(_SourceVolumeLevel): function = "SSSLVTV "
-
-@Amp.add_feature #undocumented
-class Cbl_volume_level(_SourceVolumeLevel): function = "SSSLVSAT/CBL "
-
-@Amp.add_feature #undocumented
-class Media_player_volume_level(_SourceVolumeLevel): function = "SSSLVMPLAY "
-
-@Amp.add_feature #undocumented
-class Game_volume_level(_SourceVolumeLevel): function = "SSSLVGAME "
-
-@Amp.add_feature #undocumented
-class Aux1_volume_level(_SourceVolumeLevel): function = "SSSLVAUX1 "
-
-@Amp.add_feature #undocumented
-class Tuner_volume_level(_SourceVolumeLevel): function = "SSSLVTUNER "
-
-@Amp.add_feature #undocumented
-class Net_volume_level(_SourceVolumeLevel): function = "SSSLVNET "
+for code, key, name in INPUTS:
+    @Amp.add_feature
+    class SourceVolumeLevel(RelativeInt): #undocumented
+        name = f"{name} Volume Level"
+        key = f"{key}_volume_level"
+        category = "Input"
+        min = -12
+        max = 12
+        call = "SSSLV ?"
+        function = f"SSSLV{code} "
+        def set(self, *args, **xargs):
+            super().set(*args, **xargs)
+            self.async_poll(force=True) #Denon workaround: missing echo
 
 
-for code, name in speakers.items():
+for code, key, name in SPEAKERS:
     @Amp.add_feature
     class SpeakerDistance(IntFeature): #undocumented
         name = f"{name} Distance"
-        key = f"{name.replace(' ','_').lower()}_distance"
+        key = f"{key}_distance"
         category = "Speakers"
         min = 0
         max = 1800
