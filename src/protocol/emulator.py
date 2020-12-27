@@ -10,7 +10,6 @@ from .. import Amp_cls
 
 default_values = dict(
     name = "Dummy X7800H",
-    muted = False,
     source_names = " END",
 )
 
@@ -22,7 +21,7 @@ def get_val(f):
     elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
     elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
     elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
-    elif isinstance(f, features.BoolFeature): val = True
+    elif isinstance(f, features.BoolFeature): val = False
     else: raise TypeError("Feature type %s not known."%f)
     return f.encode(val)
 
