@@ -1,4 +1,4 @@
-import sys, traceback
+import sys, traceback, re
 from contextlib import suppress
 from decimal import Decimal
 from threading import Event, Lock
@@ -110,7 +110,7 @@ class _MetaFeature(type):
 
     def __init__(cls, name, bases, dct):
         if "key" not in dct:
-            cls.key = "%s%s"%(cls.__name__[0].lower(), cls.__name__[1:])
+            cls.key = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
         if "name" not in dct:
             cls.name = " ".join(["%s%s"%(x[0].upper(),x[1:]) if len(x)>0 else "" for x in cls.__name__.split("_")])
 

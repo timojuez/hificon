@@ -808,14 +808,14 @@ class Amp_assign(SelectFeature): #undocumented
 
 
 @Amp.add_feature
-class Volume_OSD(SelectFeature): #undocumented
+class Volume_osd(SelectFeature): #undocumented
     category = "Video"
     function = "SSOSDVOL "
     translation = {"TOP":"Top","BOT":"Bottom","OFF":"Off"}
 
 
 @Amp.add_feature
-class Info_OSD(BoolFeature): #undocumented
+class Info_osd(BoolFeature): #undocumented
     category = "Video"
     function = "SSOSDTXT "
 
