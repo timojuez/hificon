@@ -23,6 +23,8 @@ SPEAKERS = [
     ('SB', 'surround_back', 'Surround Back'),
     ('FHL', 'front_height_l', 'Front Height L'),
     ('FHR', 'front_height_r', 'Front Height R'),
+    ('FWL', 'front_wide_l', 'Front Wide L'),
+    ('FWR', 'front_wide_r', 'Front Wide R'),
     ('TFL', 'top_front_l', 'Top Front L'),
     ('TFR', 'top_front_r', 'Top Front R'),
     ('TML', 'top_middle_l', 'Top Middle L'),
@@ -30,7 +32,7 @@ SPEAKERS = [
     ('FDL', 'front_atmos_l', 'Front Atmos L'),
     ('FDR', 'front_atmos_r', 'Front Atmos R'),
     ('SDL', 'surround_atmos_l', 'Surround Atmos L'),
-    ('SDR', 'surround_atmos_r', 'Surround Atmos R')
+    ('SDR', 'surround_atmos_r', 'Surround Atmos R'),
 ]
 
 INPUTS = [
@@ -343,62 +345,15 @@ class Name(SelectFeature): #undocumented
     function = "NSFRN "
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 
-class _Channel_volume(RelativeDecimal):
-    category = "Volume"
-    call = "CV?"
-
-@Amp.add_feature
-class Front_left_volume(_Channel_volume): function = "CVFL "
-
-@Amp.add_feature
-class Front_right_volume(_Channel_volume): function = "CVFR "
-
-@Amp.add_feature
-class Center_volume(_Channel_volume): function = "CVC "
-
-@Amp.add_feature
-class Subwoofer_volume(_Channel_volume): function = "CVSW "
-    
-@Amp.add_feature
-class Surround_left_volume(_Channel_volume): function = "CVSL "
-    
-@Amp.add_feature
-class Surround_right_volume(_Channel_volume): function = "CVSR "
-    
-@Amp.add_feature
-class Surround_back_left_volume(_Channel_volume):
-    name = "Surround Back L Volume"
-    function = "CVSBL "
-    
-@Amp.add_feature
-class Surround_back_right_volume(_Channel_volume):
-    name = "Surround Back R Volume"
-    function = "CVSBR "
-    
-@Amp.add_feature
-class Surround_back_volume(_Channel_volume): function = "CVSB "
-
-@Amp.add_feature
-class Front_height_left_volume(_Channel_volume):
-    name = "Front Height L Volume"
-    function = "CVFHL "
-
-@Amp.add_feature
-class Front_height_right_volume(_Channel_volume):
-    name = "Front Height R Volume"
-    function = "CVFHR "
-
-@Amp.add_feature
-class Front_wide_left_volume(_Channel_volume):
-    name = "Front Wide L Volume"
-    function = "CVFWL "
-
-@Amp.add_feature
-class Front_wide_right_volume(_Channel_volume):
-    name = "Front Wide R Volume"
-    function = "CVFWR "
-
 for code, key, name in SPEAKERS:
+    @Amp.add_feature
+    class Channel_volume(RelativeDecimal):
+        name = f"{name} Volume"
+        key = f"{key}_volume"
+        category = "Volume"
+        call = "CV?"
+        function = f"CV{code} "
+
     @Amp.add_feature
     class Speaker_level(RelativeDecimal): #undocumented
         name = f"{name} Level"
@@ -406,6 +361,7 @@ for code, key, name in SPEAKERS:
         category = "Speakers"
         call = "SSLEV ?"
         function = f"SSLEV{code} "
+
 
 @Amp.add_feature
 class Main_zone_power(BoolFeature):
@@ -913,7 +869,7 @@ for code, key, name in SPEAKERS:
         min = 0
         max = 1800
         call = "SSSDE ?"
-        function = f"SSSDE{code}"
+        function = f"SSSDE{code} "
 
 
 @Amp.add_feature
@@ -1018,16 +974,16 @@ for zone in range(2,ZONES+1):
         translation = {"MONO":"Mono","ST":"Stereo"}
     
     @Amp.add_feature
-    class ZFrontLeftVolume(Zone, Front_left_volume):
-        key = "zone%s_%s"%(zone, Front_left_volume.key)
-        name = Front_left_volume.name
+    class ZFrontLeftVolume(Zone, RelativeDecimal):
+        key = "zone%s_front_left_volume"%zone
+        name = "Front Left Volume"
         function = "Z%sFL "%zone
         call = "Z%sCV?"%zone
         
     @Amp.add_feature
-    class ZFrontRightVolume(Zone, Front_right_volume):
-        key = "zone%s_%s"%(zone, Front_right_volume.key)
-        name = Front_right_volume.name
+    class ZFrontRightVolume(Zone, RelativeDecimal):
+        key = "zone%s_front_right_volume"%zone
+        name = "Front Right Volume"
         function = "Z%sFR "%zone
         call = "Z%sCV?"%zone
         
