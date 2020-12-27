@@ -6,7 +6,27 @@ from ..common.config import config
 from .. import amp
 
 ZONES = 4
-
+speakers = dict(
+    FL="Front Left",
+    FR="Front Right",
+    C="Center",
+    SW="Subwoofer",
+    SL="Surround Left",
+    SR="Surround Right",
+    SBL="Surround Back L",
+    SBR="Surround Back R",
+    SB="Surround Back",
+    FHL="Front Height L",
+    FHR="Front Height R",
+    TFL="Top Front L",
+    TFR="Top Front R",
+    TML="Top Middle L",
+    TMR="Top Middle R",
+    FDL="Front Atmos L",
+    FDR="Front Atmos R",
+    SDL="Surround Atmos L",
+    SDR="Surround Atmos R",
+)
 
 class Amp(TelnetAmp):
     protocol = "Denon"
@@ -340,97 +360,14 @@ class Front_wide_right_volume(_Channel_volume):
     name = "Front Wide R Volume"
     function = "CVFWR "
 
-class _Speaker_level(RelativeDecimal):
-    category = "Speakers"
-    call = "SSLEV ?"
-
-@Amp.add_feature
-class Front_left_level(_Speaker_level): #undocumented
-    function = "SSLEVFL "
-
-@Amp.add_feature
-class Front_right_level(_Speaker_level): #undocumented
-    function = "SSLEVFR "
-
-@Amp.add_feature
-class Center_level(_Speaker_level): #undocumented
-    function = "SSLEVC "
-
-@Amp.add_feature
-class Subwoofer_level(_Speaker_level): #undocumented
-    function = "SSLEVSW "
-    
-@Amp.add_feature
-class Surround_left_level(_Speaker_level): #undocumented
-    function = "SSLEVSL "
-    
-@Amp.add_feature
-class Surround_right_level(_Speaker_level): #undocumented
-    function = "SSLEVSR "
-    
-@Amp.add_feature
-class Surround_back_left_level(_Speaker_level): #undocumented
-    name = "Surround Back L Level"
-    function = "SSLEVSBL "
-    
-@Amp.add_feature
-class Surround_back_right_level(_Speaker_level): #undocumented
-    name = "Surround Back R Level"
-    function = "SSLEVSBR "
-    
-@Amp.add_feature
-class Surround_back_level(_Speaker_level): #undocumented
-    function = "SSLEVSB "
-
-@Amp.add_feature
-class Front_height_left_level(_Speaker_level): #undocumented
-    name = "Front Height L Level"
-    function = "SSLEVFHL "
-
-@Amp.add_feature
-class Front_height_right_level(_Speaker_level): #undocumented
-    name = "Front Height R Level"
-    function = "SSLEVFHR "
-
-@Amp.add_feature
-class Top_front_left_level(_Speaker_level): #undocumented
-    name = "Top Front L Level"
-    function = "SSLEVTFL "
-
-@Amp.add_feature
-class Top_front_right_level(_Speaker_level): #undocumented
-    name = "Top Front R Level"
-    function = "SSLEVTFR "
-
-@Amp.add_feature
-class Top_middle_left_level(_Speaker_level): #undocumented
-    name = "Top Middle L Level"
-    function = "SSLEVTML "
-
-@Amp.add_feature
-class Top_middle_right_level(_Speaker_level): #undocumented
-    name = "Top Middle R Level"
-    function = "SSLEVTMR "
-
-@Amp.add_feature
-class Front_atmos_left_level(_Speaker_level): #undocumented
-    name = "Front Atmos L Level"
-    function = "SSLEVFDL "
-
-@Amp.add_feature
-class Front_atmos_right_level(_Speaker_level): #undocumented
-    name = "Front Atmos R Level"
-    function = "SSLEVFDR "
-
-@Amp.add_feature
-class Surround_atmos_left_level(_Speaker_level): #undocumented
-    name = "Surround Atmos L Level"
-    function = "SSLEVSDL "
-
-@Amp.add_feature
-class Surround_atmos_right_level(_Speaker_level): #undocumented
-    name = "Surround Atmos R Level"
-    function = "SSLEVSDR "
+for code, name in speakers.items():
+    @Amp.add_feature
+    class Speaker_level(RelativeDecimal): #undocumented
+        name = "%s Level"%name
+        category = "Speakers"
+        key = "%s_level"%(name.replace(" ","_").lower())
+        call = "SSLEV ?"
+        function = "SSLEV%s "%code
 
 @Amp.add_feature
 class Main_zone_power(BoolFeature):
@@ -973,6 +910,18 @@ class Tuner_volume_level(_SourceVolumeLevel): function = "SSSLVTUNER "
 
 @Amp.add_feature #undocumented
 class Net_volume_level(_SourceVolumeLevel): function = "SSSLVNET "
+
+
+for code, name in speakers.items():
+    @Amp.add_feature
+    class SpeakerDistance(IntFeature): #undocumented
+        name = f"{name} Distance"
+        key = f"{name.replace(' ','_').lower()}_distance"
+        category = "Speakers"
+        min = 0
+        max = 1800
+        call = "SSSDE ?"
+        function = f"SSSDE{code}"
 
 
 # TODO: implement PV
