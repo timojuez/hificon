@@ -216,9 +216,8 @@ class About(TabbedPanelItem):
 
 class SettingsTab(TabbedPanelItem):
 
-    def __init__(self, app):
+    def __init__(self):
         super().__init__()
-        self.app = app
         self.protocols = {}
         for protocol in protocols:
             try: self.protocols[protocol] = Amp_cls(protocol).protocol
@@ -245,7 +244,7 @@ class SettingsTab(TabbedPanelItem):
         config["Amp"]["host"] = self.ids.host.text.strip()
         config["Amp"]["port"] = self.ids.port.text.strip()
         config["Amp"]["protocol"] = self.protocol
-        self.app.load_screen()
+        App.get_running_app().load_screen()
 
 
 class WelcomeScreen(Screen):
@@ -261,9 +260,8 @@ class WelcomeScreen(Screen):
 
 class _MenuScreen(Screen):
 
-    def __init__(self, app, amp=None, **kwargs):
+    def __init__(self, amp=None, **kwargs):
         super().__init__()
-        self.app = app
         self.amp = amp
         self.tabs = TabbedPanel()
         #self.build()
@@ -271,11 +269,11 @@ class _MenuScreen(Screen):
 
     def build(self):
         """ is being executed while showing Welcome screen """
-        self.settings_tab = SettingsTab(self.app)
+        self.settings_tab = SettingsTab()
         self.tabs.add_widget(self.settings_tab)
         self.tabs.add_widget(About())
         self.add_widget(self.tabs)
-        self.app.manager.switch_to(self)
+        App.get_running_app().manager.switch_to(self)
         
 
 class ErrorScreen(_MenuScreen):
@@ -296,7 +294,7 @@ class MenuScreen(_MenuScreen):
         self.amp.enter()
     
     def set_title(self):
-        self.app.title = "%s – %s"%(TITLE, self.amp.name)
+        App.get_running_app().title = "%s – %s"%(TITLE, self.amp.name)
     
     def build(self):
         headers = {}
@@ -347,8 +345,8 @@ class App(App):
         try: self.amp = Amp(connect=False, verbose=args.verbose, **xargs)
         except Exception as e:
             print(repr(e))
-            ErrorScreen(self)
-        else: MenuScreen(self, self.amp)
+            ErrorScreen()
+        else: MenuScreen(self.amp)
 
     def build(self):
         self.manager = ScreenManager()
