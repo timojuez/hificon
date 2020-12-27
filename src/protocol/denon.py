@@ -302,6 +302,9 @@ class Source(SelectFeature):
         
     @amp.features.require("source_names")
     def consume(self, data): return super().consume(data)
+    
+    @amp.features.require("source_names")
+    def set(self, *args, **xargs): return super().set(*args, **xargs)
 
 
 @Amp.add_feature(overwrite=True)
