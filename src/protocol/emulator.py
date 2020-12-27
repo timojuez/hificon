@@ -16,8 +16,8 @@ default_values = dict(
 
 
 def get_val(f):
-    if f.isset(): val = f.get()
-    elif f.key in default_values: val = default_values[f.key]
+    if f.key in default_values: val = default_values[f.key]
+    elif f.isset(): val = f.get()
     elif getattr(f, "default_value", None): val = f.default_value
     elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
     elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
@@ -47,6 +47,7 @@ class DummyAmp:
     
     def send(self, cmd):
         AbstractAmp.send(self, cmd)
+        if not self.connected: raise BrokenPipeError("Not connected")
         called_features = [f for key, f in self.features.items() if f.call == cmd]
         
         if called_features:
