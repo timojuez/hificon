@@ -32,6 +32,9 @@ class TextNotification(FeatureNotification, gui.Notification):
         else: return
         super().update("%s: %s"%(self.f.name, val), self.f.amp.name)
 
+    @features.require("name")
+    def show(self): super().show()
+
 
 class NumericNotification(FeatureNotification):
     
@@ -108,7 +111,6 @@ class NotificationMixin(object):
         self._notifications = {key:create_notification(f) for key,f in list(self.amp.features.items())
             if f.key not in notification_blacklist
             and ("*" in notification_whitelist or self.f.key in notification_whitelist)}
-        for n in self._notifications.values(): n.update()
         self.amp.preload_features.add(config.volume)
         self.amp.bind(on_feature_change = self.show_notification_on_feature_change)
     
