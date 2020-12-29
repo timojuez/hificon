@@ -146,8 +146,16 @@ class TabPanel(ScrollView):
         if prev == None: self.refresh_feature_visibility(self.amp.features[key])
 
     def refresh_feature_visibility(self, f):
-        if isinstance(self.header, TabHeader): self.header.refresh_feature_visibility(f)
-            
+        if not isinstance(self.header, TabHeader): return
+        if f.key not in self.features: return
+        if not self.amp.connected: return
+        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), -1)
+        
+    def _refresh_feature_visibility(self, f):
+        func = show_widget if f.isset() and self.header.filter(f) else hide_widget
+        try: func(self.features[f.key])
+        except RuntimeError: pass
+        
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
         on_value_change, on_widget_change = bind_widget_to_value(
@@ -166,18 +174,8 @@ class TabHeader(TabbedPanelHeader):
         self.bind(on_release = lambda *_: self.refresh_panel())
         
     def refresh_panel(self):
-        for key, f in self.content.amp.features.items(): self.refresh_feature_visibility(f)
-    
-    def refresh_feature_visibility(self, f):
-        if f.key not in self.content.features: return
-        if not self.content.amp.connected: return
-        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), -1)
-        
-    def _refresh_feature_visibility(self, f):
-        func = show_widget if f.isset() and self.filter(f) else hide_widget
-        try: func(self.content.features[f.key])
-        except RuntimeError: pass
-        
+        for key, f in self.content.amp.features.items(): self.content.refresh_feature_visibility(f)
+
 
 class ScrollViewLayout(StackLayout):
 
