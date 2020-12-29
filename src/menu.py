@@ -59,6 +59,7 @@ class TabPanel(ScrollView):
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, key, f):
+        f.async_poll()
         row = FeatureRow()
         row.ids.text.text = f.name
         row.ids.checkbox.active = key in self.config["pinned"]
@@ -289,7 +290,6 @@ class MenuScreen(_MenuScreen):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.preload_features = set(self.amp.features.keys())
         self.amp.features.name.register_observer(self.set_title)
         self.amp.enter()
     
