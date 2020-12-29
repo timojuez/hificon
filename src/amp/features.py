@@ -112,7 +112,8 @@ class _MetaFeature(type):
         if "key" not in dct:
             cls.key = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
         if "name" not in dct:
-            cls.name = " ".join(["%s%s"%(x[0].upper(),x[1:]) if len(x)>0 else "" for x in cls.__name__.split("_")])
+            cls.name = re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
+            cls.name = " ".join(["%s%s"%(x[0].upper(),x[1:]) if len(x)>0 else "" for x in cls.name.split("_")])
 
         
 class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
