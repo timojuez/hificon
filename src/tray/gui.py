@@ -148,19 +148,8 @@ class Notification(_Notification, Notify.Notification):
         except GLib.Error as e: print(repr(e), file=sys.stderr)
 
 
-class Tray:
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = VolumePopup(self.amp)
-        self.icon.connect("scroll-event", self.on_scroll)
-        self.icon.set_menu(self.build_menu())
-        
-    def on_scroll_up(self, steps): pass
-    
-    def on_scroll_down(self, steps): pass
-    
+class MenuMixin:
+
     def build_menu(self):
         menu = Gtk.Menu()
 
@@ -169,15 +158,10 @@ class Tray:
         item_volume.connect('activate', lambda event:self.popup.show())
         menu.append(item_volume)
         self.icon.set_secondary_activate_target(item_volume)
-
-        f = self.amp.features[config.power]
-        item_power = Gtk.CheckMenuItem(f.name)
-        self.amp.preload_features.add(f.key)
-        on_value_change, on_widget_change = bind_widget_to_value(
-            f.get, f.set, item_power.get_active, item_power.set_active)
-        f.register_observer(gtk(on_value_change))
-        item_power.connect("toggled", lambda event:on_widget_change())
-        menu.append(item_power)
+        
+        menu.append(self.add_feature(config.power))
+        menu.append(self.add_feature("surround"))
+        menu.append(self.add_feature(config.source))
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -205,6 +189,56 @@ class Tray:
 
         menu.show_all()
         return menu
+    
+    def add_feature(self, key):
+        f = getattr(self.amp.features, key, None)
+        if f is None: return
+        elif isinstance(f, features.BoolFeature): return self._add_bool_feature(f)
+        elif isinstance(f, features.SelectFeature): return self._add_select_feature(f)
+        else: raise RuntimeError("Unsupported feature type: %s"%f.type)
+
+    def _add_bool_feature(self, f):
+        item = Gtk.CheckMenuItem(f.name)
+        self.amp.preload_features.add(f.key)
+        on_value_change, on_widget_change = bind_widget_to_value(
+            f.get, f.set, item.get_active, item.set_active)
+        f.register_observer(gtk(on_value_change))
+        item.connect("toggled", lambda event:on_widget_change())
+        return item
+
+    def _add_select_feature(self, f):
+        main_item = Gtk.MenuItem(f.name)
+        self.amp.preload_features.add(f.key)
+        f.register_observer(gtk(main_item.set_label))
+        submenu = Gtk.Menu()
+        def update_options(*args):
+            for c in submenu.get_children(): submenu.remove(c)
+            submenu.append(Gtk.MenuItem(f.name, sensitive=False))
+            submenu.append(Gtk.SeparatorMenuItem())
+            f_get = f.get()
+            for o in f.options:
+                item = Gtk.RadioMenuItem(o)
+                item.set_active(f_get == o)
+                item.connect("activate", lambda event, o=o: f.set(o))
+                submenu.append(item)
+            submenu.show_all()
+        f.register_observer(gtk(update_options))
+        main_item.set_submenu(submenu)
+        return main_item
+
+
+class Tray(MenuMixin):
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
+        self.popup = VolumePopup(self.amp)
+        self.icon.connect("scroll-event", self.on_scroll)
+        self.icon.set_menu(self.build_menu())
+        
+    def on_scroll_up(self, steps): pass
+    
+    def on_scroll_down(self, steps): pass
     
     def build_about_dialog(self):
         ad = Gtk.AboutDialog()
