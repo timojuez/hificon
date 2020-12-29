@@ -217,7 +217,7 @@ class Maxvol(DecimalFeature): #undocumented
     def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
 
 @Amp.add_feature
-class Volume_limit(SelectFeature): #undocumented
+class VolumeLimit(SelectFeature): #undocumented
     category = "Volume"
     function="SSVCTZMALIM "
     call = "SSVCTZMA ?"
@@ -416,14 +416,14 @@ class Surround(SelectFeature):
 
 
 @Amp.add_feature
-class Quick_select(SelectFeature):
+class QuickSelect(SelectFeature):
     name = "Quick Select (load)"
     function="MSQUICK"
     call="MSQUICK ?"
     translation = {"0":"(None)", **{str(n+1):str(n+1) for n in range(5)}}
 
 @Amp.add_feature
-class Quick_select_store(amp.features.Constant, Quick_select):
+class Quick_select_store(amp.features.Constant, QuickSelect):
     name = "Quick Select (save)"
     value = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
