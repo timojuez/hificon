@@ -153,7 +153,7 @@ class TabPanel(ScrollView):
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, widget_getter, widget_setter)
         
-        f.bind(on_change=on_value_change)
+        f.register_observer(on_value_change)
         return on_widget_change
         
 
@@ -292,12 +292,11 @@ class MenuScreen(_MenuScreen):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.amp.preload_features = set(self.amp.features.keys())
-        self.amp.features["name"].bind(on_change=lambda *_:self.set_title())
-        if self.amp.features["name"].isset(): self.set_title()
+        self.amp.features.name.register_observer(self.set_title)
         self.amp.enter()
     
-    def set_title(self):
-        App.get_running_app().title = "%s – %s"%(TITLE, self.amp.name)
+    def set_title(self, name):
+        App.get_running_app().title = "%s – %s"%(TITLE, name)
     
     def build(self):
         headers = {}

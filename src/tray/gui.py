@@ -122,7 +122,7 @@ class VolumePopup(GladeGtk):
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         on_value_change, self.on_widget_change = bind_widget_to_value(
             f.get, f.set, self.scale.get_value, self.set_value)
-        f.bind(on_change=gtk(on_value_change))
+        f.register_observer(gtk(on_value_change))
         features.require(config.volume)(lambda amp:on_value_change())(amp)
 
     def set_value(self, value):
@@ -175,7 +175,7 @@ class Tray:
         self.amp.preload_features.add(f.key)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item_power.get_active, item_power.set_active)
-        f.bind(on_change=gtk(on_value_change))
+        f.register_observer(gtk(on_value_change))
         item_power.connect("toggled", lambda event:on_widget_change())
         menu.append(item_power)
 

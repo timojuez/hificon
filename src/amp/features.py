@@ -127,6 +127,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         """ amp instance, connected amp attribute name """
         super().__init__()
         self.amp = amp
+        self._lock = Lock()
         amp.features[self.key] = self
         
     name = property(lambda self:self.__class__.__name__)
@@ -168,10 +169,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         
     def store(self, value):
         assert(value is not None)
-        old = self._val
-        self._val = value
-        if not self.isset(): return
-        if self._val != old: self.on_change(old, self._val)
+        with self._lock:
+            old = self._val
+            self._val = value
+            if not self.isset(): return
+            if self._val != old: self.on_change(old, self._val)
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
             %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
         if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
@@ -182,6 +184,13 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
 
     def on_change(self, old, new):
         self.amp.on_feature_change(self.key, new, old)
+    
+    def register_observer(self, setter):
+        """ Synchronise an entity's setter with the feature's value.
+        setter(value) is a callable """
+        with self._lock:
+            if self.isset(): setter(self.get())
+            self.bind(on_change = lambda old, new: setter(new))
 
 
 class SynchronousFeature(AsyncFeature):

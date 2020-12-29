@@ -322,7 +322,7 @@ class Source(SelectFeature):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.features.source_names.bind(on_change=self.on_source_names_change)
+        self.amp.features.source_names.register_observer(self.on_source_names_change)
 
     def on_source_names_change(self, *args, **xargs):
         if self.isset():
@@ -944,7 +944,7 @@ for zone in range(2,ZONES+1):
         
         def __init__(self, *args, **xargs):
             super().__init__(*args, **xargs)
-            self.amp.features["source"].bind(on_change=lambda old,new:self._resolve_main_zone_source())
+            self.amp.features.source.register_observer(lambda *_:self._resolve_main_zone_source())
 
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
