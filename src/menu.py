@@ -147,13 +147,14 @@ class TabPanel(ScrollView):
         if prev == None: self.update_feature_visibility(self.amp.features[key])
 
     def update_feature_visibility(self, f):
-        if not isinstance(self.header, TabHeader): return
         if f.key not in self.features: return
         if not self.amp.connected: return
         Clock.schedule_once(lambda *_,f=f: self._update_feature_visibility(f), -1)
         
     def _update_feature_visibility(self, f):
-        func = show_widget if f.isset() and self.header.filter(f) else hide_widget
+        filter = getattr(self.header, "filter", None)
+        if filter is None: return
+        func = show_widget if f.isset() and filter(f) else hide_widget
         try: func(self.features[f.key])
         except RuntimeError: pass
         
