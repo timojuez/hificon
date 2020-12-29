@@ -39,7 +39,7 @@ class TabPanel(ScrollView):
         super().__init__()
         self.features = {}
         self._features_stack = list(self.amp.features.items())
-        self.addFeaturesFromStack(chunksize=30, repeat=None)
+        self.addFeaturesFromStack(chunksize=50, repeat=None)
         self.amp.bind(on_feature_change=self.on_feature_change)
         self.amp.bind(on_disconnected=self.hide_all)
         
