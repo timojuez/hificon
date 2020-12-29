@@ -5,8 +5,8 @@ $subwoofer_mode = 'LFE'
 $display = 'Dark'
 $front_speaker = 'A'
 #$source = 'CBL/SAT'
-$surround = 'Multi Channel In'
-$surround = 'Dolby Digital'
+$sound_mode = 'Multi Channel In'
+$sound_mode = 'Dolby Digital'
 $multi_eq = 'Flat'
 wait(1)
 $subwoofer_volume = Decimal('-3.5')

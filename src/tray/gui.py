@@ -160,7 +160,7 @@ class MenuMixin:
         self.icon.set_secondary_activate_target(item_volume)
         
         menu.append(self.add_feature(config.power))
-        menu.append(self.add_feature("surround"))
+        menu.append(self.add_feature("sound_mode"))
         menu.append(self.add_feature(config.source))
 
         menu.append(Gtk.SeparatorMenuItem())
