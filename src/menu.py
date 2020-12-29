@@ -56,7 +56,6 @@ class TabPanel(ScrollView):
         for key, f in chunk:
             print("adding %s"%f.name)
             self.addFeature(key, f)
-            if f.isset(): f.on_change(None, f.get())
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, key, f):
@@ -71,17 +70,16 @@ class TabPanel(ScrollView):
         else: raise RuntimeError("Not implemented: Type '%s'"%f.type)
         if w: row.ids.content.add_widget(w)
         
-        hide_widget(row)
-        self.ids.layout.add_widget(row)
-        
         def on_checkbox(checkbox, active):
             if active: self.config["pinned"].append(key)
             else: self.config["pinned"].remove(key)
             self.config.save()
-            self.header.refresh_feature_visibility(f)
+            self.refresh_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[key] = row
+        self.refresh_feature_visibility(f)
+        self.ids.layout.add_widget(row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -145,8 +143,10 @@ class TabPanel(ScrollView):
         return button
 
     def on_feature_change(self, key, value, prev):
-        if prev == None and isinstance(self.header, TabHeader):
-            self.header.refresh_feature_visibility(self.amp.features[key])
+        if prev == None: self.refresh_feature_visibility(self.amp.features[key])
+
+    def refresh_feature_visibility(self, f):
+        if isinstance(self.header, TabHeader): self.header.refresh_feature_visibility(f)
             
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
@@ -171,7 +171,7 @@ class TabHeader(TabbedPanelHeader):
     def refresh_feature_visibility(self, f):
         if f.key not in self.content.features: return
         if not self.content.amp.connected: return
-        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), 0)
+        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), -1)
         
     def _refresh_feature_visibility(self, f):
         func = show_widget if f.isset() and self.filter(f) else hide_widget
