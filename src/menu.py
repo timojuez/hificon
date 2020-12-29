@@ -74,11 +74,11 @@ class TabPanel(ScrollView):
             if active: self.config["pinned"].append(key)
             else: self.config["pinned"].remove(key)
             self.config.save()
-            self.refresh_feature_visibility(f)
+            self.update_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[key] = row
-        self.refresh_feature_visibility(f)
+        self.update_feature_visibility(f)
         self.ids.layout.add_widget(row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
@@ -143,15 +143,15 @@ class TabPanel(ScrollView):
         return button
 
     def on_feature_change(self, key, value, prev):
-        if prev == None: self.refresh_feature_visibility(self.amp.features[key])
+        if prev == None: self.update_feature_visibility(self.amp.features[key])
 
-    def refresh_feature_visibility(self, f):
+    def update_feature_visibility(self, f):
         if not isinstance(self.header, TabHeader): return
         if f.key not in self.features: return
         if not self.amp.connected: return
-        Clock.schedule_once(lambda *_,f=f: self._refresh_feature_visibility(f), -1)
+        Clock.schedule_once(lambda *_,f=f: self._update_feature_visibility(f), -1)
         
-    def _refresh_feature_visibility(self, f):
+    def _update_feature_visibility(self, f):
         func = show_widget if f.isset() and self.header.filter(f) else hide_widget
         try: func(self.features[f.key])
         except RuntimeError: pass
@@ -174,7 +174,7 @@ class TabHeader(TabbedPanelHeader):
         self.bind(on_release = lambda *_: self.refresh_panel())
         
     def refresh_panel(self):
-        for key, f in self.content.amp.features.items(): self.content.refresh_feature_visibility(f)
+        for key, f in self.content.amp.features.items(): self.content.update_feature_visibility(f)
 
 
 class ScrollViewLayout(StackLayout):
