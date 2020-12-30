@@ -306,35 +306,28 @@ class Source_names(SelectFeature): #undocumented
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.translation = self.translation.copy()
-
-    def isset(self): return self._ready
-    def decodeVal(self, val):
-        if val.strip() == "END":
-            self._ready = True
-            return "1" # cause self.on_change()
-        else:
-            try: code, name = val.split(" ",1)
-            except:
-                print(val)
-                raise
-            self.translation[code] = name
-            return "0"
-    
-    def encode(self, d):
-        return "\n".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
-
-    def store(self, value):
-        if value == self.default_value:
-            self.translation = value
-            self._ready = True
-            super().store("-1")
-        else: super().store(value)
-
-    def unset(self): self._ready = False
     def get(self): return "(select)"
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
-    #def encode(self, value):
-    #    return "%s%s"%("SI", self.encodeVal(value))
+    def unset(self): self._ready = False
+    def isset(self): return self._ready
+    def encode(self, d):
+        return "\n".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
+    def decodeVal(self, x): return x
+    def store(self, value):
+        if value == self.default_value:
+            self.translation = value.copy()
+            self._ready = True
+            super().store("0")
+        elif value.strip() == "END":
+            self._ready = True
+            super().store("1") # cause self.on_change()
+        else:
+            try: code, name = value.split(" ",1)
+            except:
+                print(value)
+                raise
+            self.translation[code] = name
+            super().store("2")
 
 
 @Amp.add_feature
