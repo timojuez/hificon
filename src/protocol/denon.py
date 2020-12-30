@@ -302,6 +302,10 @@ class Source_names(SelectFeature): #undocumented
     translation = {}
     default_value = {code: name for code, key, name in SOURCES}
     _ready = False
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.translation = self.translation.copy()
 
     def isset(self): return self._ready
     def decodeVal(self, val):
@@ -341,6 +345,7 @@ class Source(SelectFeature):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.translation = self.translation.copy()
         self.amp.features.source_names.register_observer(self.on_source_names_change)
 
     def on_source_names_change(self, *args, **xargs):
