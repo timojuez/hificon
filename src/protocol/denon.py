@@ -308,7 +308,10 @@ class Source_names(SelectFeature): #undocumented
             self._ready = True
             return "1" # cause self.on_change()
         else:
-            code, name = val.split(" ",1)
+            try: code, name = val.split(" ",1)
+            except:
+                print(val)
+                raise
             self.translation[code] = name
             return "0"
     def unset(self): self._ready = False
