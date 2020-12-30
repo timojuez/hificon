@@ -341,7 +341,7 @@ class Source_names(SelectFeature): #undocumented
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    translation = {code: name for code, key, name in SOURCES}
+    translation = {"NET":"Heos", "BT":"Bluetooth", "USB":"USB"}
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
