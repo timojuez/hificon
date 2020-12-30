@@ -14,8 +14,8 @@ default_values = dict(
 
 
 def get_val(f):
-    if f.key in default_values: val = default_values[f.key]
-    elif f.isset(): val = f.get()
+    if f.isset(): val = f.get()
+    elif f.key in default_values: val = default_values[f.key]
     elif getattr(f, "default_value", None): val = f.default_value
     elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
     elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
