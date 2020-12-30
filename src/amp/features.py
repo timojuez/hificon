@@ -216,9 +216,9 @@ class SynchronousFeature(AsyncFeature):
         require(self.key)(poll_event)(self)
         self.async_poll(force)
         if not e.wait(timeout=MAX_CALL_DELAY):
-            if self.default_value: return self.store(self.default_value)
+            if self.default_value: self.store(self.default_value)
             else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
-        else: return self.get()
+        return super().get()
     
 
 Feature = SynchronousFeature
