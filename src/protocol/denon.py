@@ -163,7 +163,6 @@ class BoolFeature(_Translation, DenonFeature, amp.features.BoolFeature):
 class RelativeInt(IntFeature):
     min = -6
     max = 6
-    default_value = 0
     
     def encodeVal(self, val): return super().encodeVal(val+50)
     def decodeVal(self, val): return super().decodeVal(val)-50
@@ -172,7 +171,6 @@ class RelativeInt(IntFeature):
 class RelativeDecimal(DecimalFeature):
     min = -12
     max = 12
-    default_value = 0
     
     def encodeVal(self, val): return super().encodeVal(val+50)
     def decodeVal(self, val): return super().decodeVal(val)-50
@@ -348,6 +346,7 @@ class Source(SelectFeature):
 
 @Amp.add_feature(overwrite=True)
 class Name(SelectFeature): #undocumented
+    default_value = "Denon AVR"
     function = "NSFRN "
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 
