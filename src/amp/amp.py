@@ -200,8 +200,9 @@ class FeaturesMixin(object):
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
-        consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
-        if not consumed: self.features.fallback.consume(data)
+        for line in data.split("\n"):
+            consumed = [f.consume(line) for key,f in self.features.items() if f.matches(line)]
+            if not consumed: self.features.fallback.consume(line)
 
 
 class PreloadMixin:

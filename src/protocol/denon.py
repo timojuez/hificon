@@ -316,6 +316,9 @@ class Source_names(SelectFeature): #undocumented
             self.translation[code] = name
             return "0"
     
+    def encode(self, d):
+        return "\n".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
+
     def store(self, value):
         if value == self.default_value:
             self.translation = value

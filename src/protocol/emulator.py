@@ -10,7 +10,6 @@ from .. import Amp_cls
 
 default_values = dict(
     name = "Dummy X7800H",
-    source_names = " END",
 )
 
 
