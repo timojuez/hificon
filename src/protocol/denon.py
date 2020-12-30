@@ -300,6 +300,7 @@ class Source_names(SelectFeature): #undocumented
     function = "SSFUN"
     call = "SSFUN ?"
     translation = {}
+    default_value = {code: name for code, key, name in SOURCES}
     _ready = False
 
     def isset(self): return self._ready
@@ -314,6 +315,14 @@ class Source_names(SelectFeature): #undocumented
                 raise
             self.translation[code] = name
             return "0"
+    
+    def store(self, value):
+        if value == self.default_value:
+            self.translation = value
+            self._ready = True
+            super().store("-1")
+        else: super().store(value)
+
     def unset(self): self._ready = False
     def get(self): return "(select)"
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
