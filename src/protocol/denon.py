@@ -224,7 +224,7 @@ class VolumeLimit(SelectFeature): #undocumented
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
     def on_change(self, old, new):
         super().on_change(old, new)
-        self.amp.features["maxvol"].async_poll(force=True)
+        self.amp.features.maxvol.async_poll(force=True)
 
 class _SpeakerConfig(SelectFeature):
     category = "Speakers"
@@ -901,8 +901,8 @@ class Power_on_level(SelectFeature):
     translation = {"MUT":"Muted", "LAS":"Unchanged"}
     def on_change(self, val, prev):
         super().on_change(val, prev)
-        power_on_level_numeric = getattr(self.amp.features, "power_on_level_numeric")
-        if not power_on_level_numeric.isset(): power_on_level_numeric.store(0)
+        if not self.amp.features.power_on_level_numeric.isset():
+            self.amp.features.power_on_level_numeric.store(0)
 
 
 @Amp.add_feature

@@ -238,8 +238,8 @@ class SelectFeature(Feature):
 
     def set(self, value, force=False):
         if not force and value not in self.options:
-            raise ValueError("Value must be one of %s or try amp.features[%s].set(value, force=True)"
-                %(self.options, repr(self.key)))
+            raise ValueError("Value must be one of %s or try amp.features.%s.set(value, force=True)"
+                %(self.options, self.key))
         return super().set(value, force)
     
 
