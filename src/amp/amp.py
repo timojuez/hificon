@@ -174,8 +174,8 @@ class FeaturesMixin(object):
                 raise KeyError(
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
             setattr(self, Feature.key, property(
-                lambda self,Feature=Feature:self.features[Feature.key].get(),
-                lambda self,val,Feature=Feature:self.features[Feature.key].set(val)
+                lambda self:self.features[Feature.key].get(),
+                lambda self,val:self.features[Feature.key].set(val)
             ))
             self._feature_classes = self._feature_classes+[Feature]
             return Feature
@@ -186,7 +186,7 @@ class FeaturesMixin(object):
         if hasattr(self.__class__, name): super().__setattr__(name, value)
         else:
             raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
-                "use decorator @amp_features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
+                "use decorator @amp.features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
 
     def on_connect(self):
         self._pending.clear()
