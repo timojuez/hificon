@@ -70,6 +70,12 @@ SOURCES = [
     ('FVP', 'fvp', 'FVP')
 ]
 
+INPUTS = {
+    ("ANA", "AN", "analog", "Analog"),
+    ("DIN", "OP", "digital", "Digital"),
+    ("VDO", "VD", "video", "Video"),
+    ("HDM", "HD", "hdmi", "HDMI"),
+}
 
 
 class Amp(TelnetAmp):
@@ -911,6 +917,19 @@ class Mute(SelectFeature):
     function = "SSVCTZMAMLV "
     call = "SSVCTZMA ?"
     translation = {"MUT":"Full", "040":"-40 dB", "060":"-20 dB"}
+
+
+for source_code, source_key, source_name in SOURCES:
+    for input_code, input_value_code, input_key, input_name in INPUTS:
+        @Amp.add_feature
+        class SourceInputAssign(SelectFeature):
+            name = f"{source_name} {input_name} Input"
+            key = f"input_{source_key}_{input_key}"
+            category = "Input"
+            function = f"SS{input_code}{source_code} "
+            call = f"SS{input_code} ?"
+            translation = {"OFF":"None", "FRO":"Front",
+                **{f"{input_value_code}{i}":f"{input_name} {i}" for i in range(7)}}
 
 
 # TODO: implement PV
