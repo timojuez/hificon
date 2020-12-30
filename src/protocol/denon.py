@@ -35,7 +35,7 @@ SPEAKERS = [
     ('SDR', 'surround_atmos_r', 'Surround Atmos R'),
 ]
 
-INPUTS = [
+SOURCES = [
     ('PHONO', 'phono', 'Phono'),
     ('CD', 'cd', 'CD'),
     ('TUNER', 'tuner', 'Tuner'),
@@ -318,7 +318,7 @@ class Source_names(SelectFeature): #undocumented
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
-    translation = {code: name for code, key, name in INPUTS}
+    translation = {code: name for code, key, name in SOURCES}
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -833,7 +833,7 @@ class Eco_mode(SelectFeature): #undocumented
     translation = {"AUTO":"Auto","ON":"On","OFF":"Off"}
 
 
-for code, key, name in INPUTS:
+for code, key, name in SOURCES:
     @Amp.add_feature
     class InputVisibility(BoolFeature): #undocumented
         name = f"Enable {name} Input"
@@ -844,7 +844,7 @@ for code, key, name in INPUTS:
         translation = {"USE":True, "DEL":False}
 
 
-for code, key, name in INPUTS:
+for code, key, name in SOURCES:
     @Amp.add_feature
     class SourceVolumeLevel(RelativeInt): #undocumented
         name = f"{name} Volume Level"
