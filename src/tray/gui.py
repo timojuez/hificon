@@ -207,9 +207,13 @@ class MenuMixin:
         f = getattr(self.amp.features, key, None)
         if f is None: return
         self.amp.preload_features.add(f.key)
-        if isinstance(f, features.BoolFeature): return self._add_bool_feature(f, show_name)
-        elif isinstance(f, features.SelectFeature): return self._add_select_feature(f, show_name)
+        if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, show_name)
+        elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
+        item.set_no_show_all(True)
+        if f.isset(): item.show()
+        f.bind(on_change = lambda old,new: old is None and item.show())
+        return item
 
     def _add_bool_feature(self, f, show_name):
         item = Gtk.CheckMenuItem(f.name)
