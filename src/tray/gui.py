@@ -161,7 +161,7 @@ class MenuMixin:
         
         for key in config.getlist("GUI","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
-            menu.append(self.add_feature(key))
+            menu.append(self.add_feature(key, False))
 
         menu.append(Gtk.SeparatorMenuItem())
 
@@ -190,31 +190,31 @@ class MenuMixin:
         menu.show_all()
         return menu
     
-    def add_feature(self, key):
+    def add_feature(self, key, show_name=True):
         f = getattr(self.amp.features, key, None)
         if f is None: return
-        elif isinstance(f, features.BoolFeature): return self._add_bool_feature(f)
-        elif isinstance(f, features.SelectFeature): return self._add_select_feature(f)
+        self.amp.preload_features.add(f.key)
+        if isinstance(f, features.BoolFeature): return self._add_bool_feature(f, show_name)
+        elif isinstance(f, features.SelectFeature): return self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
 
-    def _add_bool_feature(self, f):
+    def _add_bool_feature(self, f, show_name):
         item = Gtk.CheckMenuItem(f.name)
-        self.amp.preload_features.add(f.key)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item.get_active, item.set_active)
         f.register_observer(gtk(on_value_change))
         item.connect("toggled", lambda event:on_widget_change())
         return item
 
-    def _add_select_feature(self, f):
+    def _add_select_feature(self, f, show_name):
         main_item = Gtk.MenuItem(f.name)
-        self.amp.preload_features.add(f.key)
-        f.register_observer(gtk(main_item.set_label))
+        if not show_name: f.register_observer(gtk(main_item.set_label))
         submenu = Gtk.Menu()
         def update_options(*args):
             for c in submenu.get_children(): submenu.remove(c)
-            submenu.append(Gtk.MenuItem(f.name, sensitive=False))
-            submenu.append(Gtk.SeparatorMenuItem())
+            if not show_name:
+                submenu.append(Gtk.MenuItem(f.name, sensitive=False))
+                submenu.append(Gtk.SeparatorMenuItem())
             f_get = f.get()
             for o in f.options:
                 item = Gtk.RadioMenuItem(o)
