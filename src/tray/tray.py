@@ -122,8 +122,7 @@ class NotificationMixin(object):
 
     def show_notification_on_feature_change(self, key, value, prev): # bound to amp
         if key in self._notifications: self._notifications[key].update()
-        if not (key in self.amp.preload_features and prev is None):
-            self.show_notification(key)
+        if prev is not None: self.show_notification(key)
 
     def on_scroll_up(self, *args, **xargs):
         self.show_notification(config.volume)
