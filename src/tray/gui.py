@@ -163,6 +163,19 @@ class MenuMixin:
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
             menu.append(self.add_feature(key, False))
 
+        item_more = Gtk.MenuItem("Options")
+        submenu = Gtk.Menu()
+        submenus = {f.category: Gtk.Menu() for f in self.amp.features.values()}
+        for category, menu_ in submenus.items():
+            item = Gtk.MenuItem(category)
+            submenu.append(item)
+            item.set_submenu(menu_)
+        for key, f in self.amp.features.items():
+            try: submenus[f.category].append(self.add_feature(key, True))
+            except RuntimeError: pass
+        item_more.set_submenu(submenu)
+        menu.append(item_more)
+
         menu.append(Gtk.SeparatorMenuItem())
 
         item_poweron = Gtk.CheckMenuItem("Auto power on")
