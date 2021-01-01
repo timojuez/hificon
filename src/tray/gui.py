@@ -161,7 +161,8 @@ class MenuMixin:
         
         for key in config.getlist("GUI","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
-            menu.append(self.add_feature(key, False))
+            f = getattr(self.amp.features, key, None)
+            if f: menu.append(self.add_feature(f, False))
 
         item_more = Gtk.MenuItem("Options")
         submenu = Gtk.Menu()
@@ -171,7 +172,7 @@ class MenuMixin:
             submenu.append(item)
             item.set_submenu(menu_)
         for key, f in self.amp.features.items():
-            try: submenus[f.category].append(self.add_feature(key, True))
+            try: submenus[f.category].append(self.add_feature(f, True))
             except RuntimeError: pass
         item_more.set_submenu(submenu)
         menu.append(item_more)
@@ -203,9 +204,7 @@ class MenuMixin:
         menu.show_all()
         return menu
     
-    def add_feature(self, key, show_name=True):
-        f = getattr(self.amp.features, key, None)
-        if f is None: return
+    def add_feature(self, f, show_name=True):
         self.amp.preload_features.add(f.key)
         if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, show_name)
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
