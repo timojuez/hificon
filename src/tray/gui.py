@@ -159,9 +159,9 @@ class MenuMixin:
         menu.append(item_volume)
         self.icon.set_secondary_activate_target(item_volume)
         
-        menu.append(self.add_feature(config.power))
-        menu.append(self.add_feature("sound_mode"))
-        menu.append(self.add_feature(config.source))
+        for key in config.getlist("GUI","tray_menu_features"):
+            key = config.get("Amp", key[1:]) if key.startswith("@") else key
+            menu.append(self.add_feature(key))
 
         menu.append(Gtk.SeparatorMenuItem())
 
