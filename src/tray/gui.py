@@ -163,6 +163,7 @@ class MenuMixin:
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
             f = getattr(self.amp.features, key, None)
             if f: menu.append(self.add_feature(f, False))
+            if f: self.amp.preload_features.add(key)
 
         item_more = Gtk.MenuItem("Options")
         submenu = Gtk.Menu()
@@ -174,6 +175,11 @@ class MenuMixin:
         for key, f in self.amp.features.items():
             try: submenus[f.category].append(self.add_feature(f, True))
             except RuntimeError: pass
+        def poll_all():
+            try:
+                for f in self.amp.features.values(): f.async_poll()
+            except ConnectionError: pass
+        self.amp.bind(on_connect=lambda:Timer(1, poll_all).start())
         item_more.set_submenu(submenu)
         menu.append(item_more)
 
@@ -205,7 +211,6 @@ class MenuMixin:
         return menu
     
     def add_feature(self, f, show_name=True):
-        self.amp.preload_features.add(f.key)
         if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, show_name)
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
