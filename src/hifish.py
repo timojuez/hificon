@@ -41,7 +41,7 @@ class CLI:
                 Decimal = Decimal,
                 amp = self.amp,
                 help = self.print_help,
-                help_attr = self.print_help_attr,
+                help_features = self.print_help_features,
             )
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
@@ -72,19 +72,20 @@ class CLI:
         print(
             "Internal functions:\n"
             "\thelp()\tShow help\n"
+            "\thelp_features()\tShow features list\n"
             "\twait(seconds)\tSleep given amount of seconds\n"
             "\texit()\tQuit\n"
             "\n"
             "High level functions (protocol independent)\n"
-            "\t$attribute\tVariable that contains amp's attribute, potentially read and writeable\n"
-            "\tTo see a list of attributes, type help_attr()\n"
+            "\t$feature\tVariable that contains amp's attribute, potentially read and writeable\n"
+            "\tTo see a list of features, type help_features()\n"
             "\n"
             "Low level functions (protocol dependent)\n"
             "\tCMD or $'CMD'\tSend CMD to the amp and return answer\n"
         )
 
-    def print_help_attr(self):
-        print("Current protocol supports these attributes:\n")
+    def print_help_features(self):
+        print("Current protocol supports these features:\n")
         for key, f in sorted([(F.key, self.amp.features[F.key]) for F in type(self.amp)._feature_classes]):
             print(f"\t${f.key}  {f.name}  {f.type.__name__} ", end="")
             if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
