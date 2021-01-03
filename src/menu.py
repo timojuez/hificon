@@ -221,14 +221,12 @@ class SettingsTab(TabbedPanelItem):
 
     def __init__(self):
         super().__init__()
-        self.protocols = {}
-        for protocol in protocols:
-            try: self.protocols[protocol] = Amp_cls(protocol).protocol
-            except: self.protocols[protocol] = protocol
+        protocol_names = {protocol_: getattr(Amp_cls(protocol_), "protocol", protocol_)
+            for protocol_ in protocols}
 
         dropdown = SelectFeatureOptions()
         self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
-        for protocol, text in self.protocols.items():
+        for protocol, text in protocol_names.items():
             o = SelectFeatureOption()
             o.text = text
             o.bind(on_release=lambda e,protocol=protocol: dropdown.select(protocol))
@@ -236,7 +234,7 @@ class SettingsTab(TabbedPanelItem):
         
         def on_select(e,protocol):
             self.protocol = protocol
-            self.ids.protocol.text = self.protocols.get(protocol, protocol)
+            self.ids.protocol.text = protocol_names.get(protocol, protocol)
         dropdown.bind(on_select=on_select)
         
         self.ids.host.text = config.get("Amp","host")
