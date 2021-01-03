@@ -8,7 +8,8 @@ $front_speaker = 'B'
 $sound_mode = 'Stereo'
 $multi_eq = 'Off'
 $tone_control = True
-$bass = 4
+$bass = 5
+$treble = 4
 wait(1)
 $subwoofer_volume = Decimal('0')
 
