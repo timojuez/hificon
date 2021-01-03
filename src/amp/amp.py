@@ -24,6 +24,7 @@ class _AbstractAmp(Bindable, AmpType):
         mainloop.
     """
     
+    protocol = None
     host = None
     port = None
     connected = False
@@ -61,12 +62,12 @@ class _AbstractAmp(Bindable, AmpType):
 
     def disconnect(self): self._stoploop.set()
     
-    @property
-    def protocol(self): return self.__class__.__module__
+    @classmethod
+    def get_protocol(self): return self.protocol or self.__module__
 
     @property
     def prompt(self):
-        p = "%s://%s"%(self.protocol,self.host)
+        p = "%s://%s"%(self.get_protocol(),self.host)
         if self.port: p = "%s:%s"%(p,self.port)
         return p
         

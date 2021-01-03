@@ -221,7 +221,7 @@ class SettingsTab(TabbedPanelItem):
 
     def __init__(self):
         super().__init__()
-        protocol_names = {protocol_: getattr(Amp_cls(protocol_), "protocol", protocol_)
+        protocol_names = {protocol_: Amp_cls(protocol_).protocol or protocol_
             for protocol_ in protocols}
 
         dropdown = SelectFeatureOptions()
