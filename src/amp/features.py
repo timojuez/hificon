@@ -139,7 +139,6 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def set(self, value, force=False):
         assert(value is not None)
-        if not force and value == self._val: return
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
         encoded = self.encode(self.type(value))
