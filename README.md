@@ -89,13 +89,13 @@ Hifi scripts can be executed by `hifish FILE.hifi`
 
 See also `hifish -h` and the ./examples/.
 
-#### Raw commands
-Raw commands can be sent to the amp like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
-
 #### High level commands
-High level attributes are not protocol (amp manufacturer) specific and start with a `$`. 
+High level attributes are not protocol (resp. amp manufacturer) specific and start with a `$`. 
 Example: `$volume=40`
 To see what attributes are being supported, type `help()` or call `hifish --protocol .emulator -c 'help()'`
+
+#### Raw commands
+Raw commands can be sent to the amp like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
 
 #### PyFiHiFi Language
 HiFiSh compiles the code into Python as described below. The Python code assumes the following:
