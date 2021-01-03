@@ -95,7 +95,7 @@ Raw commands can be sent to the amp like `MV50` or `PWON`. If your command conta
 #### High level commands
 High level attributes are not protocol (amp manufacturer) specific and start with a `$`. 
 Example: `$volume=40`
-To see what attributes are being supported, type `help()` or call `hifish -c 'help()'`
+To see what attributes are being supported, type `help()` or call `hifish --protocol .emulator -c 'help()'`
 
 #### PyFiHiFi Language
 HiFiSh compiles the code into Python as described below. The Python code assumes the following:
