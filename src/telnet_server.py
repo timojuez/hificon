@@ -8,25 +8,31 @@ class Main(Service):
     EVENTS = selectors.EVENT_READ | selectors.EVENT_WRITE
     
     def __init__(self):
-        parser = argparse.ArgumentParser(description='Start a telnet server for interacting on an emulated dummy amp')
-        parser.add_argument('--host', type=str, default="127.0.0.1", help='Listen')
-        parser.add_argument('--port', type=int, default=0, help='Listen')
-        parser.add_argument('--protocol', type=str, default=None, help='Emulate amp protocol')
-        parser.add_argument('-n','--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
+        parser = argparse.ArgumentParser(description='Start a telnet server for interacting on an amp instance')
+        parser.add_argument('--listen-host', type=str, default="127.0.0.1", help='Host (listening)')
+        parser.add_argument('--listen-port', type=int, default=0, help='Port (listening)')
+        parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
+        parser.add_argument('--host', type=str, default=None, help='Amp host')
+        parser.add_argument('--port', type=int, default=None, help='Amp port')
+        parser.add_argument('-e', '--emulate', default=False, action="store_true", help='Use emulator')
+        parser.add_argument('-n', '--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
         self._send = {}
         self._break = "\n" if self.args.newline else "\r"
-        self.amp = Amp(protocol=".emulator", emulate=self.args.protocol, verbose=self.args.verbose)
-        print("Emulating telnet amplifier")
-        print("Protocol is %s."%self.amp.get_protocol())
+        if self.args.emulate: ampargs = {"protocol": ".emulator", "emulate": self.args.protocol}
+        else: ampargs = {"protocol": self.args.protocol}
+        self.amp = Amp(host=self.args.host, port=self.args.port, verbose=self.args.verbose, **ampargs)
+        print("Starting telnet amplifier")
+        print(f"Operating on {self.amp.prompt}")
+        print()
         self.amp.bind(on_receive_raw_data = self.on_amp_read)
-        super().__init__(host=self.args.host, port=self.args.port, verbose=1)
-        self.amp.enter()
-        Thread(target=self.mainloop, daemon=True, name="mainloop").start()
-        while True:
-            cmd = input()
-            self.on_amp_read(cmd)
+        super().__init__(host=self.args.listen_host, port=self.args.listen_port, verbose=1)
+        with self.amp:
+            Thread(target=self.mainloop, daemon=True, name="mainloop").start()
+            while True:
+                cmd = input()
+                self.on_amp_read(cmd)
     
     def connection(self, conn, mask):
         if conn not in self._send: self._send[conn] = b""
