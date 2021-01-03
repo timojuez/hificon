@@ -9,12 +9,12 @@ class Main(Service):
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Start a telnet server for interacting on an amp instance')
-        parser.add_argument('--listen-host', type=str, default="127.0.0.1", help='Host (listening)')
-        parser.add_argument('--listen-port', type=int, default=0, help='Port (listening)')
+        parser.add_argument('--listen-host', metavar="HOST", type=str, default="127.0.0.1", help='Host (listening)')
+        parser.add_argument('--listen-port', metavar="PORT", type=int, default=0, help='Port (listening)')
         parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
         parser.add_argument('--host', type=str, default=None, help='Amp host')
         parser.add_argument('--port', type=int, default=None, help='Amp port')
-        parser.add_argument('-e', '--emulate', default=False, action="store_true", help='Use emulator')
+        parser.add_argument('-e', '--emulate', default=False, action="store_true", help='Use emulator (dry run)')
         parser.add_argument('-n', '--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
