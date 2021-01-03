@@ -67,5 +67,7 @@ class Amp(AbstractAmp):
     def __new__(self, *args, emulate=None, **xargs):
         """ extra argument @emulate must be a protocol module """
         Original_amp = Amp_cls(protocol=emulate)
+        if issubclass(Original_amp, Amp): # do not emulate Emulator and avoid RecursionError
+            Original_amp = Amp_cls(protocol=".denon")
         return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
         
