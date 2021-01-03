@@ -85,9 +85,8 @@ class CLI:
 
     def print_help_attr(self):
         print("Current protocol supports these attributes:\n")
-        features = filter(lambda e:e[0], self.amp.features.items())
-        for name, f in sorted(features, key=lambda e:e[0]):
-            print("\t$%(name)s  %(title)s  %(type)s "%dict(name=name, type=f.type.__name__, title=f.name), end="")
+        for key, f in sorted([(F.key, self.amp.features[F.key]) for F in type(self.amp)._feature_classes]):
+            print(f"\t${f.key}  {f.name}  {f.type.__name__} ", end="")
             if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
                 print("[%s..%s] "%(f.min,f.max), end="")
             elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature): 
