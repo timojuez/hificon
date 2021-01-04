@@ -21,6 +21,7 @@ class CLI:
         group.add_argument("file", metavar="HIFI FILE", type=str, nargs="?", help='Run hifi script')
         
         parser.add_argument("-c", "--command", default=[], metavar="CMD", nargs="+", help='Execute commands')
+        parser.add_argument('-q', '--quiet', action='store_true', default=False, help='Less output')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         self.args = parser.parse_args()
         assert(not (self.args.ret and self.args.follow))
@@ -65,6 +66,7 @@ class CLI:
         ic.interact(banner="", exitmsg="")
 
     def parse_file(self):
+        if not self.args.quiet: self.amp.verbose += 3
         with open(self.args.file) as fp:
             self.compiler.run(fp.read(),self.args.file,"exec")
             
