@@ -32,9 +32,12 @@ class DummyAmp:
         super().__init__(*args, **xargs)
         self.port = None
 
-    def connect(self): AbstractAmp.connect(self)
+    def connect(self):
+        AbstractAmp.connect(self)
+        self.on_connect()
 
-    def disconnect(self): AbstractAmp.disconnect(self)
+    def disconnect(self):
+        AbstractAmp.disconnect(self)
 
     def mainloop(self):
         if not self.connected: self.connect()

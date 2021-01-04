@@ -64,7 +64,7 @@ class _AbstractAmp(Bindable, AmpType):
         self.disconnect()
         self._mainloopt.join()
     
-    def connect(self): self.on_connect()
+    def connect(self): self.connected = True
 
     def disconnect(self):
         with self._connect_lock:
@@ -94,7 +94,6 @@ class _AbstractAmp(Bindable, AmpType):
     @log_call
     def on_connect(self):
         """ Execute when connected to amp e.g. after connection aborted """
-        self.connected = True
         if self.verbose > 0:
             print("[%s] connected to %s"%(self.__class__.__name__, self.prompt), file=sys.stderr)
         
@@ -270,7 +269,9 @@ class TelnetAmp(AbstractAmp):
         try: self._telnet = Telnet(self.host,self.port,timeout=2)
         except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
             raise ConnectionError(e)
-        else: super().connect()
+        else:
+            super().connect()
+            return self.on_connect()
 
     def disconnect(self):
         with suppress(AttributeError, OSError):
