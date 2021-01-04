@@ -43,17 +43,16 @@ class NumericNotification(FeatureNotification):
         self._n = gui.GaugeNotification()
         self._n.set_timeout(config.getint("GUI","notification_timeout"))
 
-    def update(self):
+    def update(self): pass
+
+    def show(self):
+        if self.f.key == config.volume and gui.VolumePopup().visible: return
         self._n.update(
             title=self.f.name,
             message=str("%0.1f"%self.f.get() if self.f.isset() else "..."),
             value=self.f.get() if self.f.isset() else self.f.min,
             min=self.f.min,
             max=self.f.max)
-            
-    def show(self):
-        if self.f.key == config.volume and gui.VolumePopup().visible: return
-        self.update()
         self._n.show()
         
 
