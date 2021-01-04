@@ -31,11 +31,13 @@ class _AbstractAmp(Bindable, AmpType):
     verbose = 0
     _mainloopt = None
     _stoploop = None
+    _connect_lock = None
     _connectOnEnter = False
 
     def __init__(self, host=None, port=None, connect=True, verbose=0, **callbacks):
         super().__init__()
         self._stoploop = Event()
+        self._connect_lock = Lock()
         self._connectOnEnter = connect
         self.verbose = verbose
         self.bind(**callbacks)
@@ -52,16 +54,22 @@ class _AbstractAmp(Bindable, AmpType):
 
     def enter(self):
         if self._connectOnEnter: self.connect()
+        self._stoploop.clear()
         self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
         self._mainloopt.start()
         return self
 
-    def exit(self): self.disconnect(); self._mainloopt.join()
+    def exit(self):
+        self._stoploop.set()
+        self.disconnect()
+        self._mainloopt.join()
     
     def connect(self, tries=1): self.connected = True
 
-    def disconnect(self): self._stoploop.set()
-    
+    def disconnect(self):
+        with self._connect_lock:
+            if self.connected: self.on_disconnected()
+
     @classmethod
     def get_protocol(self): return self.protocol or self.__module__
 
@@ -109,8 +117,10 @@ class _AbstractAmp(Bindable, AmpType):
 
     def mainloop(self):
         """ listens on amp for events and calls on_feature_change. Return when connection closed """
-        self._stoploop.clear()
-        while not self._stoploop.is_set(): self.mainloop_hook()
+        while True:
+            with self._connect_lock:
+                if self._stoploop.is_set(): break
+                self.mainloop_hook()
         
     def mainloop_hook(self):
         """ This will be called regularly by mainloop """
@@ -264,11 +274,10 @@ class TelnetAmp(AbstractAmp):
             return self.on_connect()
 
     def disconnect(self):
-        super().disconnect()
-        self._pulse_stop.set()
         with suppress(AttributeError, OSError):
             self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
             self._telnet.close()
+        super().disconnect()
     
     def on_connect(self):
         super().on_connect()

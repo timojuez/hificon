@@ -38,7 +38,6 @@ class DummyAmp:
 
     def disconnect(self):
         AbstractAmp.disconnect(self)
-        self.on_disconnected()
 
     def mainloop(self):
         if not self.connected: self.connect()
