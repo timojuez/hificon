@@ -201,11 +201,11 @@ class FeaturesMixin(object):
             raise AttributeError(("%s object has no attribute %s. To rely on optional features, "
                 "use decorator @amp.features.require('attribute')")%(repr(self.__class__.__name__),repr(name)))
 
-    def on_connect(self):
+    def on_disconnected(self):
+        super().on_disconnected()
         self._pending.clear()
         self._polled.clear()
         for f in self.features.values(): f.unset()
-        super().on_connect()
     
     def mainloop_hook(self):
         super().mainloop_hook()
