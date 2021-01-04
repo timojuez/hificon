@@ -57,12 +57,15 @@ class _AbstractAmp(Bindable, AmpType):
         self._mainloopt.start()
         return self
 
-    def exit(self): self.disconnect(); self._mainloopt.join()
+    def exit(self):
+        self._stoploop.set()
+        self.disconnect()
+        self._mainloopt.join()
     
     def connect(self): pass
 
-    def disconnect(self): self._stoploop.set()
-    
+    def disconnect(self): pass
+
     @classmethod
     def get_protocol(self): return self.protocol or self.__module__
 
