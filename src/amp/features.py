@@ -149,9 +149,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def isset(self): return self._val != None
         
     def unset(self):
-        self._val = None
+        with self._lock:
+            self._val = None
+            self.on_unset()
         with suppress(ValueError): self.amp._polled.remove(self.call)
-    
+
     def async_poll(self, force=False):
         """ poll feature value if not polled before or force is True """
         if self.call in self.amp._polled and not force: return
@@ -173,6 +175,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             old = self._val
             self._val = value
             if not self.isset(): return
+            if old == None: self.on_set()
             if self._val != old: self.on_change(old, self._val)
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
             %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
@@ -182,16 +185,26 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             call.has_polled(self.key)
         return old, self._val
 
+    def register_observer(self, on_change=None, on_set=None, on_unset=None):
+        """ Register an observer with bind() and call the callback as soon as possible
+        to stay synchronised """
+        with self._lock:
+            if self.isset():
+                if on_change: on_change(self.get())
+                if on_set: on_set()
+            elif on_unset: on_unset()
+            
+            if on_change: super().bind(on_change = lambda old, new: on_change(new))
+            if on_set: super().bind(on_set = on_set)
+            if on_unset: super().bind(on_unset = on_unset)
+            
     def on_change(self, old, new):
         self.amp.on_feature_change(self.key, new, old)
     
-    def register_observer(self, setter):
-        """ Synchronise an entity's setter with the feature's value.
-        setter(value) is a callable """
-        with self._lock:
-            if self.isset(): setter(self.get())
-            self.bind(on_change = lambda old, new: setter(new))
-
+    def on_set(self): pass
+    
+    def on_unset(self): pass
+    
 
 class SynchronousFeature(AsyncFeature):
 

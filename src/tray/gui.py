@@ -215,8 +215,8 @@ class MenuMixin:
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
         item.set_no_show_all(True)
-        if f.isset(): item.show()
-        f.bind(on_change = lambda old,new: old is None and gtk(item.show)())
+        f.register_observer(on_set = gtk(item.show))
+        f.register_observer(on_unset = gtk(item.hide))
         return item
 
     def _add_bool_feature(self, f, show_name):

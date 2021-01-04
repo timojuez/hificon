@@ -40,16 +40,9 @@ class TabPanel(ScrollView):
         self.features = {}
         self._features_stack = list(self.amp.features.items())
         self.addFeaturesFromStack(chunksize=50, repeat=None)
-        self.amp.bind(on_feature_change=self.on_feature_change)
-        self.amp.bind(on_disconnected=self.hide_all)
         
     @property
     def header(self): return self.tabbed_panel.current_tab
-
-    def hide_all(self):
-        for w in self.features.values():
-            try: hide_widget(w)
-            except RuntimeError: pass
 
     def addFeaturesFromStack(self, *_, chunksize=15, repeat=.2):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
@@ -79,7 +72,8 @@ class TabPanel(ScrollView):
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[key] = row
-        self.update_feature_visibility(f)
+        f.register_observer(on_set=lambda: self.update_feature_visibility(f))
+        f.register_observer(on_unset=lambda: self.update_feature_visibility(f))
         self.ids.layout.add_widget(row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
@@ -143,12 +137,7 @@ class TabPanel(ScrollView):
 
         return button
 
-    def on_feature_change(self, key, value, prev):
-        if prev == None: self.update_feature_visibility(self.amp.features[key])
-
     def update_feature_visibility(self, f):
-        if f.key not in self.features: return
-        if not self.amp.connected: return
         Clock.schedule_once(lambda *_,f=f: self._update_feature_visibility(f), -1)
         
     def _update_feature_visibility(self, f):
@@ -176,7 +165,8 @@ class TabHeader(TabbedPanelHeader):
         self.bind(on_release = lambda *_: self.refresh_panel())
         
     def refresh_panel(self):
-        for key, f in self.content.amp.features.items(): self.content.update_feature_visibility(f)
+        for key in self.content.features.keys():
+            self.content.update_feature_visibility(self.content.amp.features[key])
 
 
 class ScrollViewLayout(StackLayout):
