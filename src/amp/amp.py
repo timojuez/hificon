@@ -64,7 +64,7 @@ class _AbstractAmp(Bindable, AmpType):
         self.disconnect()
         self._mainloopt.join()
     
-    def connect(self, tries=1): self.connected = True
+    def connect(self): self.connected = True
 
     def disconnect(self):
         with self._connect_lock:
