@@ -61,6 +61,7 @@ class _AbstractAmp(Bindable, AmpType):
         self._stoploop.set()
         self.disconnect()
         self._mainloopt.join()
+        if self.connected: self.on_disconnected()
     
     def connect(self): pass
 
@@ -268,7 +269,6 @@ class TelnetAmp(AbstractAmp):
 
     def disconnect(self):
         super().disconnect()
-        self._pulse_stop.set()
         with suppress(AttributeError, OSError):
             self._telnet.sock.shutdown(socket.SHUT_WR) # break read()
             self._telnet.close()
