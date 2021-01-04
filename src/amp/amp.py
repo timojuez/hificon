@@ -154,6 +154,8 @@ class FeaturesMixin(object):
         self._pending = self._pending()
         self._polled = self._polled()
         self.features = self.features()
+        def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
+        self.add_feature = disable_add_feature
         # apply @features to Amp
         for F in self._feature_classes: F(self)
         super().__init__(*args,**xargs)
