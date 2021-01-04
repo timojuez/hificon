@@ -86,7 +86,7 @@ class CLI:
 
     def print_help_features(self):
         print("Current protocol supports these features:\n")
-        for key, f in sorted([(F.key, self.amp.features[F.key]) for F in type(self.amp)._feature_classes]):
+        for key, f in [(key, self.amp.features[key]) for key in sorted(self.amp.__class__.features.keys())]:
             print(f"\t${f.key}  {f.name}  {f.type.__name__} ", end="")
             if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
                 print("[%s..%s] "%(f.min,f.max), end="")

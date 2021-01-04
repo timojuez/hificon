@@ -145,23 +145,22 @@ class SoundMixin:
 
 
 class FeaturesMixin(object):
-    features = AttrDict
+    features = {}
     _pending = list
     _polled = list
-    _feature_classes = []
 
     def __init__(self,*args,**xargs):
         self._pending = self._pending()
         self._polled = self._polled()
-        self.features = self.features()
+        self.features = AttrDict()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
         self.add_feature = disable_add_feature
         # apply @features to Amp
-        for F in self._feature_classes: F(self)
+        for F in self.__class__.features.values(): F(self)
         super().__init__(*args,**xargs)
 
     @classmethod
-    def add_feature(self, Feature=None, overwrite=False):
+    def add_feature(cls, Feature=None, overwrite=False):
         """
         This is a decorator to be used on Feature class definitions that belong to the current amp.
         @overwrite: If true, proceeds if a feature with same key already exists.
@@ -171,16 +170,16 @@ class FeaturesMixin(object):
             class MyFeature(Feature): pass
         """
         def add(Feature, overwrite=overwrite):
-            if hasattr(self.features, Feature.key):
+            if hasattr(cls.features.__class__, Feature.key):
                 raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
-            if not overwrite and hasattr(self, Feature.key):
+            if not overwrite and hasattr(cls, Feature.key):
                 raise KeyError(
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
-            setattr(self, Feature.key, property(
+            setattr(cls, Feature.key, property(
                 lambda self:self.features[Feature.key].get(),
                 lambda self,val:self.features[Feature.key].set(val)
             ))
-            self._feature_classes = self._feature_classes+[Feature]
+            cls.features = {**cls.features, Feature.key: Feature}
             return Feature
         return add(Feature) if Feature else add
     
