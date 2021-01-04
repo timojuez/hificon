@@ -52,6 +52,7 @@ class _AbstractAmp(Bindable, AmpType):
 
     def enter(self):
         if self._connectOnEnter: self.connect()
+        self._stoploop.clear()
         self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
         self._mainloopt.start()
         return self
@@ -109,7 +110,6 @@ class _AbstractAmp(Bindable, AmpType):
 
     def mainloop(self):
         """ listens on amp for events and calls on_feature_change. Return when connection closed """
-        self._stoploop.clear()
         while not self._stoploop.is_set(): self.mainloop_hook()
         
     def mainloop_hook(self):
