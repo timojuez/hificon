@@ -175,14 +175,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             old = self._val
             self._val = value
             if not self.isset(): return
-            if old == None: self.on_set()
             if self._val != old: self.on_change(old, self._val)
-        if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
-            %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
-        if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
-            %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
-        for call in self.amp._pending.copy(): # has_polled() changes _pending
-            call.has_polled(self.key)
+            if old == None: self.on_set()
         return old, self._val
 
     def register_observer(self, on_change=None, on_set=None, on_unset=None):
@@ -201,7 +195,13 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def on_change(self, old, new):
         self.amp.on_feature_change(self.key, new, old)
     
-    def on_set(self): pass
+    def on_set(self):
+        if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
+            %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
+        if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
+            %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
+        for call in self.amp._pending.copy(): # has_polled() changes _pending
+            call.has_polled(self.key)
     
     def on_unset(self): pass
     
