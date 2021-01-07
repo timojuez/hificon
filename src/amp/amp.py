@@ -284,7 +284,7 @@ class TelnetAmp(AbstractAmp):
         self._pulse_stop.set()
         
     def on_receive_raw_data(self, data):
-        for line in data.split("\n"): super().on_receive_raw_data(line)
+        for line in data.split("\r"): super().on_receive_raw_data(line)
 
     def mainloop_hook(self):
         super().mainloop_hook()

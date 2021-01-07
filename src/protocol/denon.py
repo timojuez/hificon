@@ -307,7 +307,7 @@ class Source_names(SelectFeature): #undocumented
     def get(self): return "(select)"
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def encode(self, d):
-        return "\n".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
+        return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
     def decodeVal(self, x): return x
     def store(self, value):
         if value == self.default_value:
