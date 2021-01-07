@@ -1,6 +1,8 @@
 import argparse, os, sys, time, re, ast, traceback
 from code import InteractiveConsole
 from threading import Thread
+from itertools import groupby
+from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
 from . import Amp, amp, VERSION, AUTHOR
@@ -87,15 +89,20 @@ class CLI:
         )
 
     def print_help_features(self):
-        print("Current protocol supports these features:\n")
-        for key, f in [(key, self.amp.features[key]) for key in sorted(self.amp.__class__.features.keys())]:
-            print(f"\t${f.key}  {f.name}  {f.type.__name__} ", end="")
-            if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
-                print("[%s..%s] "%(f.min,f.max), end="")
-            elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature): 
-                print(f.options, end="")
+        tw = TextWrapper(initial_indent=" "*4, subsequent_indent=" "*8)
+        print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
+        features = map(self.amp.features.get, self.amp.__class__.features.keys())
+        features = sorted(features, key=lambda f: (f.category, f.key))
+        for category, ff in groupby(features, key=lambda f:f.category):
+            print(category)
+            for f in ff:
+                s = f"${f.key}  {f.name}  {f.type.__name__}  "
+                if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
+                    s += "[%s..%s]"%(f.min,f.max)
+                elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature):
+                    s += str(f.options)
+                print(tw.fill(s))
             print()
-        print()
     
     def receive(self, data): print(data)
     
