@@ -61,7 +61,7 @@ class CLI:
         return r
         
     def print_header(self):
-        print("$_ HIFI SHELL %s"%VERSION)
+        print(bright("$_ HIFI SHELL %s"%VERSION))
         print("Copyright (c) 2020 %s\n"%AUTHOR)
         print("To get started, write help()\n")
 
