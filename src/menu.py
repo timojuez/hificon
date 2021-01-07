@@ -52,7 +52,8 @@ class TabPanel(ScrollView):
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, key, f):
-        f.async_poll()
+        try: f.async_poll()
+        except ConnectionError: pass
         row = FeatureRow()
         row.ids.text.text = f.name
         row.ids.checkbox.active = key in self.config["pinned"]

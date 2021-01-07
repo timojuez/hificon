@@ -2,7 +2,7 @@ import importlib
 
 NAME = "HiFiCon"
 PKG_NAME = "hificon"
-VERSION = "1.9.73a"
+VERSION = "1.9.74a"
 AUTHOR = "Timo L. Richter"
 URL = 'https://github.com/timojuez/hificon'
 COPYRIGHT = ("Copyright \xa9 2021 %s\n"
