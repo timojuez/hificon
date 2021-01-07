@@ -207,9 +207,8 @@ class FeaturesMixin(object):
     
     def on_receive_raw_data(self, data):
         super().on_receive_raw_data(data)
-        for line in data.split("\n"):
-            consumed = [f.consume(line) for key,f in self.features.items() if f.matches(line)]
-            if not consumed: self.features.fallback.consume(line)
+        consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
+        if not consumed: self.features.fallback.consume(data)
 
 
 class PreloadMixin:
@@ -284,6 +283,9 @@ class TelnetAmp(AbstractAmp):
         super().on_disconnected()
         self._pulse_stop.set()
         
+    def on_receive_raw_data(self, data):
+        for line in data.split("\n"): super().on_receive_raw_data(line)
+
     def mainloop_hook(self):
         super().mainloop_hook()
         if self.connected:
