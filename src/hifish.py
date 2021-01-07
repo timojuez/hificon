@@ -89,16 +89,19 @@ class CLI:
         )
 
     def print_help_features(self):
-        tw = TextWrapper(initial_indent=" "*4, subsequent_indent=" "*8)
+        tw = TextWrapper(initial_indent=" "*8, subsequent_indent=" "*12)
+        bright = lambda s: f"\033[1m{s}\033[0m" if sys.platform == "linux" else s
+        dim = lambda s: f"\033[2m{s}\033[0m" if sys.platform == "linux" else s
         print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
         features = map(self.amp.features.get, self.amp.__class__.features.keys())
         features = sorted(features, key=lambda f: (f.category, f.key))
         for category, ff in groupby(features, key=lambda f:f.category):
-            print(category)
+            print(bright(category.upper()))
             for f in ff:
-                s = f"${f.key}  {f.name}  {f.type.__name__}  "
+                print(bright(f"    ${f.key}"))
+                s = f"{(f.name)}  {(f.type.__name__)}  "
                 if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
-                    s += "[%s..%s]"%(f.min,f.max)
+                    s += f"[{f.min}..{f.max}]"
                 elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature):
                     s += str(f.options)
                 print(tw.fill(s))
