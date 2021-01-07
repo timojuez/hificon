@@ -10,6 +10,10 @@ try: import readline
 except ImportError: pass
 
 
+bright = lambda s: f"\033[1m{s}\033[0m" if sys.platform == "linux" else s
+dim = lambda s: f"\033[2m{s}\033[0m" if sys.platform == "linux" else s
+
+
 class CLI:
     
     def __init__(self):
@@ -73,25 +77,28 @@ class CLI:
             self.compiler.run(fp.read(),self.args.file,"exec")
             
     def print_help(self):
-        print(
-            "Internal functions:\n"
-            "\thelp()\tShow help\n"
-            "\thelp_features()\tShow features list\n"
-            "\twait(seconds)\tSleep given amount of seconds\n"
-            "\texit()\tQuit\n"
-            "\n"
-            "High level functions (protocol independent)\n"
-            "\t$feature\tVariable that contains amp's attribute, potentially read and writeable\n"
-            "\tTo see a list of features, type help_features()\n"
-            "\n"
-            "Low level functions (protocol dependent)\n"
-            "\tCMD or $'CMD'\tSend CMD to the amp and return answer\n"
-        )
+        help = [
+            ("Internal functions:", [
+                ("help()","Show help"),
+                ("help_features()", "Show features list"),
+                ("wait(seconds)","Sleep given amount of seconds"),
+                ("exit()","Quit")]),
+            ("High level functions (protocol independent)", [
+                ("$feature", "Variable that contains amp's attribute, potentially read and writeable"),
+                "To see a list of features, type help_features()"]),
+            ("Low level functions (protocol dependent)",
+                [("CMD or $'CMD'", "Send CMD to the amp and return answer")])
+        ]
+        tw = TextWrapper(initial_indent=" "*4, subsequent_indent=" "*(20+4))
+        for header, l in help:
+            print(bright(header.upper()))
+            for e in l:
+                if isinstance(e, str): print(tw.fill(e))
+                else: print(tw.fill("%-20s%s"%e))
+            print()
 
     def print_help_features(self):
         tw = TextWrapper(initial_indent=" "*8, subsequent_indent=" "*12)
-        bright = lambda s: f"\033[1m{s}\033[0m" if sys.platform == "linux" else s
-        dim = lambda s: f"\033[2m{s}\033[0m" if sys.platform == "linux" else s
         print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
         features = map(self.amp.features.get, self.amp.__class__.features.keys())
         features = sorted(features, key=lambda f: (f.category, f.key))
