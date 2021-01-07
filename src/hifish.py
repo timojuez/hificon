@@ -85,16 +85,14 @@ class CLI:
                 ("exit()","Quit")]),
             ("High level functions (protocol independent)", [
                 ("$feature", "Variable that contains amp's attribute, potentially read and writeable"),
-                "To see a list of features, type help_features()"]),
+                ("To see a list of features, type help_features()","")]),
             ("Low level functions (protocol dependent)",
                 [("CMD or $'CMD'", "Send CMD to the amp and return answer")])
         ]
         tw = TextWrapper(initial_indent=" "*4, subsequent_indent=" "*(20+4))
         for header, l in help:
             print(bright(header.upper()))
-            for e in l:
-                if isinstance(e, str): print(tw.fill(e))
-                else: print(tw.fill("%-20s%s"%e))
+            for e in l: print(tw.fill("%-20s%s"%e))
             print()
 
     def print_help_features(self):
