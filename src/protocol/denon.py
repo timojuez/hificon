@@ -917,7 +917,7 @@ class Power_on_level(SelectFeature):
 
 
 @Amp.add_feature
-class Mute(SelectFeature):
+class MuteMode(SelectFeature):
     category = "Volume"
     function = "SSVCTZMAMLV "
     call = "SSVCTZMA ?"
