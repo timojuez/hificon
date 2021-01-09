@@ -108,22 +108,19 @@ class VolumePopup(GladeGtk):
     def __init__(self, amp, *args, **xargs):
         super().__init__(*args, **xargs)
         self.amp = amp
+        self._current_feature = None
 
         self.window = self.builder.get_object("window")
         self.width, self.height = self.window.get_size()
         self.scale = self.builder.get_object("scale")
         self.label = self.builder.get_object("label")
+        self.title = self.builder.get_object("title")
         self.image = self.builder.get_object("image")
         self.adj = self.builder.get_object("adjustment")
-        
-        f = amp.features[config.volume]
-        self.adj.set_lower(f.min)
-        self.adj.set_upper(f.max)
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
-        on_value_change, self.on_widget_change = bind_widget_to_value(
-            f.get, f.set, self.scale.get_value, self.set_value)
-        f.register_observer(gtk(on_value_change))
-        features.require(config.volume)(lambda amp:on_value_change())(amp)
+        
+        for f in self.amp.features.values(): f.register_observer(
+            lambda *args, f=f, **xargs: f==self._current_feature and gtk(self.on_value_change)(*args,**xargs))
 
     def set_value(self, value):
         self.scale.set_value(value)
@@ -134,11 +131,23 @@ class VolumePopup(GladeGtk):
         self.image.set_from_file(path)
         
     def on_change(self, event): self.on_widget_change()
-
+    
     def on_focus_out(self, *args): self.hide()
     
     @property
     def visible(self): return self.window.get_visible()
+    
+    @gtk
+    def show(self, f):
+        self.on_value_change, self.on_widget_change = bind_widget_to_value(
+            f.get, f.set, self.scale.get_value,
+            lambda value: f==self._current_feature and self.set_value(value))
+        self.title.set_text(f.name)
+        self.adj.set_lower(f.min)
+        self.adj.set_upper(f.max)
+        self._current_feature = f
+        self.on_value_change()
+        super().show()
 
 
 class Notification(_Notification, Notify.Notification):
@@ -153,12 +162,6 @@ class MenuMixin:
     def build_menu(self):
         menu = Gtk.Menu()
 
-        #f = self.amp.features[config.volume]
-        item_volume = Gtk.MenuItem("Volume")
-        item_volume.connect('activate', lambda event:self.popup.show())
-        menu.append(item_volume)
-        self.icon.set_secondary_activate_target(item_volume)
-        
         for key in config.getlist("GUI","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
             f = getattr(self.amp.features, key, None)
@@ -212,6 +215,7 @@ class MenuMixin:
     
     def add_feature(self, f, show_name=True):
         if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, show_name)
+        elif isinstance(f, features.NumericFeature): item = self._add_numeric_feature(f, show_name)
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
         item.set_no_show_all(True)
@@ -225,6 +229,13 @@ class MenuMixin:
             f.get, f.set, item.get_active, item.set_active)
         f.register_observer(gtk(on_value_change))
         item.connect("toggled", lambda event:on_widget_change())
+        return item
+
+    def _add_numeric_feature(self, f, show_name):
+        item = Gtk.MenuItem(f.name)
+        def set(value): item.set_label(f"{f.name}: {value}")
+        f.register_observer(gtk(set))
+        item.connect("activate", lambda event:self.popup.show(f))
         return item
 
     def _add_select_feature(self, f, show_name):

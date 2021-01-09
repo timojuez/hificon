@@ -46,7 +46,7 @@ class NumericNotification(FeatureNotification):
     def update(self): pass
 
     def show(self):
-        if self.f.key == config.volume and gui.VolumePopup().visible: return
+        if gui.VolumePopup()._current_feature == self.f and gui.VolumePopup().visible: return
         self._n.update(
             title=self.f.name,
             message=str("%0.1f"%self.f.get() if self.f.isset() else "..."),
