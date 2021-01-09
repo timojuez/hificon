@@ -1,7 +1,7 @@
 import sys, traceback, re
 from contextlib import suppress
 from decimal import Decimal
-from threading import Event, Lock
+from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from .amp_type import AmpType
@@ -158,7 +158,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         """ poll feature value if not polled before or force is True """
         if self.call in self.amp._polled and not force: return
         self.amp._polled.append(self.call)
+        if self.default_value is not None:
+            self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
+            self._timer_store_default.start()
         return self.amp.send(self.call)
+    
+    def _store_default(self):
+        with self._lock:
+            if not self.isset(): self._store(self.default_value)
     
     def resend(self): return self.set(self._val)
     
@@ -170,13 +177,15 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         else: return self.store(d)
         
     def store(self, value):
+        with self._lock: return self._store(value)
+    
+    def _store(self, value):
         assert(value is not None)
-        with self._lock:
-            old = self._val
-            self._val = value
-            if not self.isset(): return
-            if self._val != old: self.on_change(old, self._val)
-            if old == None: self.on_set()
+        old = self._val
+        self._val = value
+        if not self.isset(): return
+        if self._val != old: self.on_change(old, self._val)
+        if old == None: self.on_set()
         return old, self._val
 
     def register_observer(self, on_change=None, on_set=None, on_unset=None):
@@ -196,6 +205,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.amp.on_feature_change(self.key, new, old)
     
     def on_set(self):
+        try: self._timer_store_default.cancel()
+        except: pass
         if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
             %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
         if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
@@ -203,8 +214,10 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         for call in self.amp._pending.copy(): # has_polled() changes _pending
             call.has_polled(self.key)
     
-    def on_unset(self): pass
-    
+    def on_unset(self):
+        try: self._timer_store_default.cancel()
+        except: pass
+
 
 class SynchronousFeature(AsyncFeature):
 
@@ -227,9 +240,8 @@ class SynchronousFeature(AsyncFeature):
         def poll_event(self): e.set()
         require(self.key)(poll_event)(self)
         self.async_poll(force)
-        if not e.wait(timeout=MAX_CALL_DELAY):
-            if self.default_value: self.store(self.default_value)
-            else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
+        if not e.wait(timeout=MAX_CALL_DELAY+.1):
+            raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
         return super().get()
     
 
