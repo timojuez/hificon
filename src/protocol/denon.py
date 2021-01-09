@@ -82,7 +82,7 @@ class Amp(TelnetAmp):
     protocol = "Denon"
     
     def query(self, cmd, matches=None):
-        """ 
+        """
         Send command to amp
         @cmd str: function[?|param]
         @matches callable: return received line where matches(line) is True
@@ -440,7 +440,7 @@ class Quick_select_store(amp.features.Constant, QuickSelect):
 
 @Amp.add_feature
 class Hdmi_monitor(SelectFeature):
-    name =" HDMI Monitor auto detection"
+    name = "HDMI Monitor auto detection"
     category = "Video"
     function = "VSMONI"
     call = "VSMONI ?"
