@@ -18,8 +18,8 @@ def autostart_win():
 
 
 def autostart_gnu():
-    desktop = pkgutil.get_data(__name__,"../share/hificon.desktop").decode()
-    with open(os.path.expanduser("~/.config/autostart/%s.desktop"%PKG_NAME), "w") as fp:
+    desktop = pkgutil.get_data(__name__,"../share/hificon_tray.desktop").decode()
+    with open(os.path.expanduser("~/.config/autostart/%s_tray.desktop"%PKG_NAME), "w") as fp:
         fp.write(desktop)
 
 
