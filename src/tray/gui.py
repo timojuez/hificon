@@ -124,7 +124,7 @@ class VolumePopup(GladeGtk):
 
     def set_value(self, value):
         self.scale.set_value(value)
-        self.label.set_text("%0.1f"%value)
+        self.label.set_text(str(self._current_feature))
         
     @gtk
     def set_image(self, path):
@@ -233,7 +233,7 @@ class MenuMixin:
 
     def _add_numeric_feature(self, f, show_name):
         item = Gtk.MenuItem(f.name)
-        def set(value): item.set_label(f"{f.name}: {value}")
+        def set(value): item.set_label(f"{f.name}: {f}")
         f.register_observer(gtk(set))
         item.connect("activate", lambda event:self.popup.show(f))
         return item

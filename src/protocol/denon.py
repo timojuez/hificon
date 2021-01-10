@@ -104,7 +104,7 @@ class DenonFeature:
     
     function = None #str, Amp function command
     call = property(lambda self: "%s?"%self.function)
-
+    
     def encode(self, value):
         return "%s%s"%(self.function, self.encodeVal(value))
     
@@ -132,6 +132,8 @@ class _Translation:
 class SelectFeature(_Translation, DenonFeature, amp.features.SelectFeature): pass
 
 class DecimalFeature(DenonFeature, amp.features.DecimalFeature):
+
+    def __str__(self): return "%0.1f"%self.get() if self.isset() else super().__str__()
 
     @staticmethod
     def _roundVolume(vol): return Decimal('.5')*round(vol/Decimal('.5'))
