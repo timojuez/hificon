@@ -120,7 +120,7 @@ class VolumePopup(GladeGtk):
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         
         for f in self.amp.features.values(): f.register_observer(
-            lambda *args, f=f, **xargs: f==self._current_feature and gtk(self.on_value_change)(*args,**xargs))
+            gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
 
     def set_value(self, value):
         self.scale.set_value(value)
