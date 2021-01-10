@@ -70,14 +70,14 @@ Note that this program is still in development and therefore try it first with a
 
 ### Tray Control
 Start the HiFi Icon:
-`hificon`
+`python3 -m hificon.tray`
 
 
 ### Control Menu
 
 The menu lets you control all available amplifier attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your amp).
 
-`hificon_menu`
+`python3 -m hificon.menu`
 
 
 
