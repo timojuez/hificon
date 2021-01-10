@@ -102,8 +102,8 @@ class GaugeNotification(GladeGtk, _Notification):
         self._timer.start()
 
 
-class VolumePopup(GladeGtk):
-    GLADE = "../share/volume_popup.glade"
+class ScalePopup(GladeGtk):
+    GLADE = "../share/scale_popup.glade"
     
     def __init__(self, amp, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -266,7 +266,7 @@ class Tray(MenuMixin):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = VolumePopup(self.amp)
+        self.popup = ScalePopup(self.amp)
         self.icon.connect("scroll-event", self.on_scroll)
         self.icon.set_menu(self.build_menu())
         

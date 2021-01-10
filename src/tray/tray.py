@@ -46,7 +46,7 @@ class NumericNotification(FeatureNotification):
     def update(self): pass
 
     def show(self):
-        if gui.VolumePopup()._current_feature == self.f and gui.VolumePopup().visible: return
+        if gui.ScalePopup()._current_feature == self.f and gui.ScalePopup().visible: return
         self._n.update(
             title=self.f.name,
             message=str(self.f),
@@ -146,7 +146,7 @@ class TrayMixin(gui.Tray):
         icon.bind(on_change = self.on_icon_change)
 
     def on_icon_change(self, path, name):
-        gui.VolumePopup(self.amp).set_image(path)
+        gui.ScalePopup(self.amp).set_image(path)
         self.set_icon(path, name)
     
     @features.require(config.volume)
