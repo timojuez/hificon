@@ -543,7 +543,7 @@ class Dynamic_eq(BoolFeature):
 class Reference_level(SelectFeature):
     category = "Audyssey"
     function = "PSREFLEV "
-    translation = {"0":"0dB","5":"5dB","10":"10dB","15":"15dB"}
+    translation = {"0":"0 dB","5":"5 dB","10":"10 dB","15":"15 dB"}
     
 @Amp.add_feature
 class Dynamic_volume(SelectFeature):
