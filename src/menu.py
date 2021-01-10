@@ -73,8 +73,8 @@ class TabPanel(ScrollView):
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[key] = row
-        f.register_observer(on_set=lambda: self.update_feature_visibility(f))
-        f.register_observer(on_unset=lambda: self.update_feature_visibility(f))
+        f.bind(on_set=lambda: self.update_feature_visibility(f))
+        f.bind(on_unset=lambda: self.update_feature_visibility(f))
         self.ids.layout.add_widget(row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
@@ -152,8 +152,7 @@ class TabPanel(ScrollView):
         """ @f Feature object """
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, widget_getter, widget_setter)
-        
-        f.register_observer(on_value_change)
+        f.bind(on_value_change)
         return on_widget_change
         
 
@@ -280,7 +279,7 @@ class MenuScreen(_MenuScreen):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.features.name.register_observer(self.set_title)
+        self.amp.features.name.bind(self.set_title)
         self.amp.enter()
     
     def set_title(self, name):

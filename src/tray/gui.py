@@ -119,7 +119,7 @@ class VolumePopup(GladeGtk):
         self.adj = self.builder.get_object("adjustment")
         self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
         
-        for f in self.amp.features.values(): f.register_observer(
+        for f in self.amp.features.values(): f.bind(
             gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
 
     def set_value(self, value):
@@ -219,28 +219,28 @@ class MenuMixin:
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
         item.set_no_show_all(True)
-        f.register_observer(on_set = gtk(item.show))
-        f.register_observer(on_unset = gtk(item.hide))
+        f.bind(on_set = gtk(item.show))
+        f.bind(on_unset = gtk(item.hide))
         return item
 
     def _add_bool_feature(self, f, show_name):
         item = Gtk.CheckMenuItem(f.name)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item.get_active, item.set_active)
-        f.register_observer(gtk(on_value_change))
+        f.bind(gtk(on_value_change))
         item.connect("toggled", lambda event:on_widget_change())
         return item
 
     def _add_numeric_feature(self, f, show_name):
         item = Gtk.MenuItem(f.name)
         def set(value): item.set_label(f"{f.name}   {f}")
-        f.register_observer(gtk(set))
+        f.bind(gtk(set))
         item.connect("activate", lambda event:self.popup.show(f))
         return item
 
     def _add_select_feature(self, f, show_name):
         main_item = Gtk.MenuItem(f.name)
-        if not show_name: f.register_observer(gtk(main_item.set_label))
+        if not show_name: f.bind(gtk(main_item.set_label))
         submenu = Gtk.Menu()
         def update_options(*args):
             for c in submenu.get_children(): submenu.remove(c)
@@ -256,7 +256,7 @@ class MenuMixin:
                     submenu.append(item)
             else: submenu.append(Gtk.MenuItem(f_get, sensitive=False))
             submenu.show_all()
-        f.register_observer(gtk(update_options))
+        f.bind(gtk(update_options))
         main_item.set_submenu(submenu)
         return main_item
 

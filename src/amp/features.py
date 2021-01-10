@@ -190,7 +190,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if old == None: self.on_set()
         return old, self._val
 
-    def register_observer(self, on_change=None, on_set=None, on_unset=None):
+    def bind(self, on_change=None, on_set=None, on_unset=None):
         """ Register an observer with bind() and call the callback as soon as possible
         to stay synchronised """
         with self._lock:
