@@ -276,7 +276,7 @@ class Tray(MenuMixin):
     
     def build_about_dialog(self):
         ad = Gtk.AboutDialog()
-        ad.set_program_name(NAME)
+        ad.set_program_name(f"{NAME} Tray Control")
         ad.set_version(VERSION)
         logo = pkgutil.get_data(__name__, "../share/icons/scalable/logo.svg")
         pixbuf = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(logo)), None)
