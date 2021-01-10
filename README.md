@@ -2,15 +2,17 @@
 ### Free High Freedelity for Your Computer
 
 ## Features
-- HiFiCon icon*: Master volume control tray icon
-- Mouse and keyboard volume key support*
-- Amplifier notifications screen overlay: no need to connect a display to your amp's HDMI out
-- Automatic amplifier discovery*
-- Automatic power control*
-	- Switching the amplifier on when sound starts playing**
-	- Switching the amplifier off when sound stops or computer shuts down/suspends
+- HiFiCon Tray Control*
+    - Amplifier control via tray icon
+    - Mouse and keyboard volume key support
+    - Amplifier notifications OSD
+    - Automatic amp power control
+	    - Switching the amplifier on when sound starts playing**
+	    - Switching the amplifier off when sound stops or computer shuts down/suspends
+- HiFiCon Control Menu*
+    - Manipulate many of the amp's attributes
 - HiFiSh HiFi Shell: Send custom commands to the amp and program your own hifi script
-- Compatibility: Needs only the amp's telnet interface
+- Automatic amplifier discovery*
 - Platform independent
 - Easily control your AVR – even far away from remote control distance
 
@@ -66,12 +68,12 @@ See configuration options in ~/.hificon/main.cfg and src/share/main.cfg.default.
 
 Note that this program is still in development and therefore try it first with all sound output stopped.
 
-### Graphical Main Application
+### Tray Control
 Start the HiFi Icon:
 `hificon`
 
 
-#### Control Menu
+### Control Menu
 
 The menu lets you control all available amplifier attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your amp).
 
