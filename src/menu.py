@@ -204,7 +204,7 @@ class About(TabbedPanelItem):
     
     def __init__(self):
         super().__init__()
-        self.ids.text.text = "%s Version %s\n%s\n"%(NAME, VERSION, COPYRIGHT)
+        self.ids.text.text = f"{NAME} Control Menu\nVersion {VERSION}\n{COPYRIGHT}\n"
 
 
 class SettingsTab(TabbedPanelItem):
