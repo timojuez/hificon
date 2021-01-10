@@ -233,7 +233,7 @@ class MenuMixin:
 
     def _add_numeric_feature(self, f, show_name):
         item = Gtk.MenuItem(f.name)
-        def set(value): item.set_label(f"{f.name}: {f}")
+        def set(value): item.set_label(f"{f.name}   {f}")
         f.register_observer(gtk(set))
         item.connect("activate", lambda event:self.popup.show(f))
         return item
