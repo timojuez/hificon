@@ -170,14 +170,18 @@ class MenuMixin:
 
         item_more = Gtk.MenuItem("Options")
         submenu = Gtk.Menu()
-        submenus = {f.category: Gtk.Menu() for f in self.amp.features.values()}
-        for category, menu_ in submenus.items():
-            item = Gtk.MenuItem(category)
-            submenu.append(item)
-            item.set_submenu(menu_)
+        categories = list(dict.fromkeys([f.category for f in self.amp.features.values()]))
+        categories = {cat: {"menu":Gtk.Menu(), "item":Gtk.MenuItem(cat, no_show_all=True)}
+            for cat in categories}
+        for d in categories.values():
+            submenu.append(d["item"])
+            d["item"].set_submenu(d["menu"])
+            self.amp.bind(on_disconnected=gtk(lambda i=d["item"]: i.hide()))
         for key, f in self.amp.features.items():
-            try: submenus[f.category].append(self.add_feature(f, True))
+            d = categories[f.category]
+            try: d["menu"].append(self.add_feature(f, True))
             except RuntimeError: pass
+            else: f.bind(on_set = gtk(lambda i=d["item"]: i.show()))
         def poll_all():
             try:
                 for f in self.amp.features.values(): f.async_poll()
