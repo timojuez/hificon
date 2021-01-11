@@ -432,7 +432,8 @@ class QuickSelect(SelectFeature):
     name = "Quick Select (load)"
     function="MSQUICK"
     call="MSQUICK ?"
-    translation = {"0":"(None)", **{str(n+1):str(n+1) for n in range(5)}}
+    translation = {str(n+1):str(n+1) for n in range(5)}
+    def get(self): return "(None)" if super().get() == "0" else super().get()
 
 @Amp.add_feature
 class Quick_select_store(amp.features.Constant, QuickSelect):
