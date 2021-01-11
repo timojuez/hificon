@@ -142,5 +142,5 @@ You can also emulate the HiFi Shell: `hifish --protocol .emulator`
 ## Troubleshoot
 - If HiFiCon cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `hificon_telnet_server --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `hificon_telnet_server --protocol .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
 
