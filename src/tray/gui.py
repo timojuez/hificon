@@ -259,13 +259,12 @@ class MenuMixin:
                 submenu.append(Gtk.MenuItem(f.name, sensitive=False))
                 submenu.append(Gtk.SeparatorMenuItem())
             f_get = f.get()
-            if f.options:
-                for o in f.options:
-                    item = Gtk.RadioMenuItem(o)
-                    item.set_active(f_get == o)
-                    item.connect("activate", lambda event, o=o: f.set(o))
-                    submenu.append(item)
-            else: submenu.append(Gtk.MenuItem(f_get, sensitive=False))
+            if f_get not in f.options:
+                submenu.append(Gtk.RadioMenuItem(f_get, sensitive=False, active=True))
+            for o in f.options:
+                item = Gtk.RadioMenuItem(o, active = f_get==o)
+                item.connect("activate", lambda event, o=o: f.set(o))
+                submenu.append(item)
             submenu.show_all()
         f.bind(gtk(update_options))
         main_item.set_submenu(submenu)
