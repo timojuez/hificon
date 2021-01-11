@@ -168,7 +168,9 @@ class MenuMixin:
             if f: menu.append(self.add_feature(f, False))
             if f: self.amp.preload_features.add(key)
 
-        item_more = Gtk.MenuItem("Options")
+        item_more = Gtk.MenuItem("Options", no_show_all=True)
+        self.amp.bind(on_connect = gtk(item_more.show))
+        self.amp.bind(on_disconnected = gtk(item_more.hide))
         submenu = Gtk.Menu()
         categories = list(dict.fromkeys([f.category for f in self.amp.features.values()]))
         categories = {cat: {"menu":Gtk.Menu(), "item":Gtk.MenuItem(cat, no_show_all=True)}
