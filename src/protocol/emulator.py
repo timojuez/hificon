@@ -19,8 +19,8 @@ def get_val(f):
     elif getattr(f, "default_value", None): val = f.default_value
     elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
     elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
-    elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
     elif isinstance(f, features.BoolFeature): val = False
+    elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
     else: raise TypeError("Feature type %s not known."%f)
     return f.encode(val)
 

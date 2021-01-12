@@ -105,9 +105,9 @@ class CLI:
             for f in ff:
                 print(bright(f"    ${f.key}"))
                 s = f"{(f.name)}  {(f.type.__name__)}  "
-                if isinstance(f,amp.features.IntFeature) or isinstance(f,amp.features.DecimalFeature):
+                if isinstance(f,amp.features.NumericFeature):
                     s += f"[{f.min}..{f.max}]"
-                elif isinstance(f,amp.features.SelectFeature) or isinstance(f,amp.features.BoolFeature):
+                elif isinstance(f,amp.features.SelectFeature):
                     s += str(f.options)
                 print(tw.fill(s))
             print()

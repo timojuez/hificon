@@ -255,8 +255,6 @@ class NumericFeature(Feature):
     max=99
 
 
-class BoolFeature(Feature): type=bool
-
 class IntFeature(NumericFeature): type=int
 
 class SelectFeature(Feature):
@@ -269,6 +267,11 @@ class SelectFeature(Feature):
                 %(self.options, self.key))
         return super().set(value, force)
     
+
+class BoolFeature(SelectFeature):
+    type=bool
+    options = [True, False]
+
 
 class DecimalFeature(NumericFeature):
     type=Decimal
