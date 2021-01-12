@@ -253,31 +253,32 @@ class MenuMixin:
         return item
 
     def _add_select_feature(self, f, compact):
-        main_item = Gtk.MenuItem(f.name)
+        item = Gtk.MenuItem(f.name)
         if compact: f.bind(gtk(item.set_label))
-        submenu = Gtk.Menu()
-        def update_options(*args):
-            for c in submenu.get_children(): submenu.remove(c)
-            if not compact:
-                submenu.append(Gtk.MenuItem(f.name, sensitive=False))
-                submenu.append(Gtk.SeparatorMenuItem())
-            f_get = f.get()
-            if f_get not in f.options:
-                submenu.append(Gtk.CheckMenuItem(f_get, sensitive=False, active=True, draw_as_radio=True))
-            for o in f.options:
-                active = f_get==o
-                item = Gtk.CheckMenuItem(o, active=active, draw_as_radio=True)
-                def on_activate(item, o=o, active=active):
-                    if item.get_active() != active:
-                        item.set_active(active)
-                        f.set(o)
-                item.connect("activate", on_activate)
-                submenu.append(item)
-            submenu.show_all()
-        f.bind(gtk(update_options))
-        main_item.set_submenu(submenu)
-        return main_item
+        f.bind(gtk(lambda _:self._set_submenu(f, item, compact)))
+        return item
 
+    def _set_submenu(self, f, parent_item, compact):
+        submenu = Gtk.Menu()
+        if compact:
+            submenu.append(Gtk.MenuItem(f.name, sensitive=False))
+            submenu.append(Gtk.SeparatorMenuItem())
+        f_get = f.get()
+        if f_get not in f.options:
+            submenu.append(Gtk.CheckMenuItem(f_get, sensitive=False, active=True, draw_as_radio=True))
+        for o in f.options:
+            active = f_get==o
+            label = {True: "On", False: "Off"}.get(o, o)
+            item = Gtk.CheckMenuItem(label, active=active, draw_as_radio=True)
+            def on_activate(item, o=o, active=active):
+                if item.get_active() != active:
+                    item.set_active(active)
+                    f.set(o)
+            item.connect("activate", on_activate)
+            submenu.append(item)
+        submenu.show_all()
+        parent_item.set_submenu(submenu)
+    
 
 class Tray(MenuMixin):
     
