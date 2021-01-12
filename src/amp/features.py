@@ -204,6 +204,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             if on_unset: super().bind(on_unset = on_unset)
             
     def on_change(self, old, new):
+        """ This event is being called when self.options or the return value of self.get() changes """
         self.amp.on_feature_change(self.key, new, old)
     
     def on_set(self):
