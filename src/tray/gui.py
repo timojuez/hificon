@@ -237,6 +237,7 @@ class MenuMixin:
         return item
 
     def _add_bool_feature(self, f, compact):
+        if not compact: return self._add_select_feature(f, compact)
         item = Gtk.CheckMenuItem(f.name)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item.get_active, item.set_active)
