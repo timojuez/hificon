@@ -823,14 +823,14 @@ class Info_osd(BoolFeature): #undocumented
 @Amp.add_feature
 class Hdmi_rc_select(SelectFeature): #undocumented
     function = "SSHOSRSS "
+    call = "SSHOS ?"
     translation = {"POS":"Power On + Source", "SSO":"Only Source"}
 
 
 @Amp.add_feature
-class Hdmi_control(SelectFeature): #undocumented
+class Hdmi_control(BoolFeature): #undocumented
     function = "SSHOSCON "
     call = "SSHOS ?"
-    translation = {"ON":"On","OFF":"Off"}
 
 
 @Amp.add_feature
