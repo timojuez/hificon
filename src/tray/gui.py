@@ -166,7 +166,7 @@ class MenuMixin:
         for key in config.getlist("GUI","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
             f = getattr(self.amp.features, key, None)
-            if f: menu.append(self.add_feature(f, False))
+            if f: menu.append(self.add_feature(f, True))
             if f: self.amp.preload_features.add(key)
 
         item_disconnected = Gtk.MenuItem("Connecting ...", sensitive=False)
@@ -186,7 +186,7 @@ class MenuMixin:
             self.amp.bind(on_disconnected=gtk(lambda i=d["item"]: i.hide()))
         for key, f in self.amp.features.items():
             d = categories[f.category]
-            try: d["menu"].append(self.add_feature(f, True))
+            try: d["menu"].append(self.add_feature(f, False))
             except RuntimeError: pass
             else: f.bind(on_set = gtk(lambda i=d["item"]: i.show()))
         def poll_all():
@@ -224,17 +224,19 @@ class MenuMixin:
         menu.show_all()
         return menu
     
-    def add_feature(self, f, show_name=True):
-        if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, show_name)
-        elif isinstance(f, features.NumericFeature): item = self._add_numeric_feature(f, show_name)
-        elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, show_name)
+    def add_feature(self, f, compact=True):
+        """ compact: If true, SelectFeatures show the value in the label.
+        and BoolFeatures are Checkboxes without submenus. """
+        if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, compact)
+        elif isinstance(f, features.NumericFeature): item = self._add_numeric_feature(f, compact)
+        elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, compact)
         else: raise RuntimeError("Unsupported feature type: %s"%f.type)
         item.set_no_show_all(True)
         f.bind(on_set = gtk(item.show))
         f.bind(on_unset = gtk(item.hide))
         return item
 
-    def _add_bool_feature(self, f, show_name):
+    def _add_bool_feature(self, f, compact):
         item = Gtk.CheckMenuItem(f.name)
         on_value_change, on_widget_change = bind_widget_to_value(
             f.get, f.set, item.get_active, item.set_active)
@@ -242,20 +244,20 @@ class MenuMixin:
         item.connect("toggled", lambda event:on_widget_change())
         return item
 
-    def _add_numeric_feature(self, f, show_name):
+    def _add_numeric_feature(self, f, compact):
         item = Gtk.MenuItem(f.name)
         def set(value): item.set_label(f"{f.name}   {f}")
         f.bind(gtk(set))
         item.connect("activate", lambda event:self.popup.show(f))
         return item
 
-    def _add_select_feature(self, f, show_name):
+    def _add_select_feature(self, f, compact):
         main_item = Gtk.MenuItem(f.name)
-        if not show_name: f.bind(gtk(main_item.set_label))
+        if not compact: f.bind(gtk(main_item.set_label))
         submenu = Gtk.Menu()
         def update_options(*args):
             for c in submenu.get_children(): submenu.remove(c)
-            if not show_name:
+            if not compact:
                 submenu.append(Gtk.MenuItem(f.name, sensitive=False))
                 submenu.append(Gtk.SeparatorMenuItem())
             f_get = f.get()
