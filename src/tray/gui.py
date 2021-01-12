@@ -253,7 +253,7 @@ class MenuMixin:
 
     def _add_select_feature(self, f, compact):
         main_item = Gtk.MenuItem(f.name)
-        if not compact: f.bind(gtk(main_item.set_label))
+        if compact: f.bind(gtk(item.set_label))
         submenu = Gtk.Menu()
         def update_options(*args):
             for c in submenu.get_children(): submenu.remove(c)
