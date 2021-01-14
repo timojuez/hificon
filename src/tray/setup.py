@@ -64,9 +64,9 @@ def zone_setup():
 
 def discover_amp_prompt():
     def set_amp(host,port,protocol,**xargs):
-        config["Amp"]["Host"] = host
-        config["Amp"]["port"] = str(port)
-        config["Amp"]["protocol"] = protocol
+        config["Connection"]["Host"] = host
+        config["Connection"]["port"] = str(port)
+        config["Connection"]["protocol"] = protocol
     try: amp_details = discover_amp()
     except Exception as e:
         print("%s: %s"%(type(e).__name__, e))

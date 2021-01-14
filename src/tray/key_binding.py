@@ -30,8 +30,8 @@ class VolumeChanger:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.interval = config.getfloat("KeyEventHandling","interval")/1000
-        self.step = config.getdecimal("KeyEventHandling","step")
+        self.interval = config.getfloat("MouseBinding","interval")/1000
+        self.step = config.getdecimal("MouseBinding","step")
         self.button = None
         self._volume_step = Lock()
         self._volume_step.acquire()

@@ -227,14 +227,14 @@ class SettingsTab(TabbedPanelItem):
             self.ids.protocol.text = protocol_names.get(protocol, protocol)
         dropdown.bind(on_select=on_select)
         
-        self.ids.host.text = config.get("Amp","host")
-        self.ids.port.text = config.get("Amp","port")
-        on_select(None, config.get("Amp","protocol"))
+        self.ids.host.text = config.get("Connection","host")
+        self.ids.port.text = config.get("Connection","port")
+        on_select(None, config.get("Connection","protocol"))
 
     def apply(self):
-        config["Amp"]["host"] = self.ids.host.text.strip()
-        config["Amp"]["port"] = self.ids.port.text.strip()
-        config["Amp"]["protocol"] = self.protocol
+        config["Connection"]["host"] = self.ids.host.text.strip()
+        config["Connection"]["port"] = self.ids.port.text.strip()
+        config["Connection"]["protocol"] = self.protocol
         App.get_running_app().load_screen()
 
 

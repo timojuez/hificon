@@ -22,7 +22,7 @@ class TextNotification(FeatureNotification, gui.Notification):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.set_urgency(2)
-        self.set_timeout(config.getint("GUI","notification_timeout"))
+        self.set_timeout(config.getint("Tray","notification_timeout"))
         super().update("Connecting ...", self.amp.prompt)
         self.amp.preload_features.add("name")
     
@@ -41,7 +41,7 @@ class NumericNotification(FeatureNotification):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._n = gui.GaugeNotification()
-        self._n.set_timeout(config.getint("GUI","notification_timeout"))
+        self._n.set_timeout(config.getint("Tray","notification_timeout"))
 
     def update(self): pass
 
@@ -103,8 +103,8 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        notification_whitelist = config.getlist("GUI","notification_whitelist")
-        notification_blacklist = config.getlist("GUI","notification_blacklist")
+        notification_whitelist = config.getlist("Tray","notification_whitelist")
+        notification_blacklist = config.getlist("Tray","notification_blacklist")
         create_notification = lambda f: \
             NumericNotification(f) if isinstance(f, features.NumericFeature) else TextNotification(f)
         self._notifications = {key:create_notification(f) for key,f in list(self.amp.features.items())
@@ -139,7 +139,7 @@ class TrayMixin(gui.Tray):
         self.config = ConfigDict("tray.json")
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
-        self.scroll_delta = config.getdecimal("GUI","tray_scroll_delta")
+        self.scroll_delta = config.getdecimal("Tray","tray_scroll_delta")
         self.amp.bind(
             on_connect=self.show,
             on_disconnected=self.hide)

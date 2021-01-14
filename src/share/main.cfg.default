@@ -1,28 +1,10 @@
-[Amp]
-# Feature keys to be controlled by this program:
-power_feature_key = power
-source_feature_key = source
-volume_feature_key = volume
-muted_feature_key = muted
-
-# The fallback feature matches all data from the amp that is not handled by and other feature
-fallback_feature = no
-# Delay in minutes to power off Amp after last output stopped (float or "no")
-poweroff_after = 2.5
+[Connection]
 # module that implements the protocol, e.g. ".denon"
 protocol = .auto
-# Amp input source that this program controls. Important for power control. Empty means "all"
-source = 
-
 host = auto
 port = 23
-
-
-[KeyEventHandling]
-# Wait @interval milliseconds after each @step volume steps
-interval = 30
-# volume steps while key is pressed
-step = 1.0
+# The fallback feature matches all data from the amp that is not handled by any other feature
+fallback_feature = no
 
 
 [Service]
@@ -31,7 +13,21 @@ ipc_port = 0
 secure_mode = yes
 
 
-[GUI]
+[Amp]
+# Feature keys to be controlled by this program:
+power_feature_key = power
+source_feature_key = source
+volume_feature_key = volume
+muted_feature_key = muted
+
+# Amp input source that this program controls. Important for power control. Empty means "all"
+source = 
+
+# Delay in minutes to power off Amp after last output stopped (float or "no")
+poweroff_after = 2.5
+
+
+[Tray]
 # values: "*" (all), "" (none) or list of attributes separated by ","
 notification_whitelist = *
 notification_blacklist = maxvol, input_signal, source_names
@@ -45,4 +41,8 @@ tray_menu_features = @volume_feature_key, @power_feature_key, sound_mode, @sourc
 # mouse_binding options, see also your ~/.xbindkeysrc
 vol_up = button9
 vol_down = button8
+# Wait @interval milliseconds after each @step volume steps
+interval = 30
+# volume steps while key is pressed
+step = 1.0
 

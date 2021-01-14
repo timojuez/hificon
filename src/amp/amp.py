@@ -39,8 +39,8 @@ class _AbstractAmp(Bindable, AmpType):
         self._connectOnEnter = connect
         self.verbose = verbose
         self.bind(**callbacks)
-        self.host = host or self.host or config["Amp"].get("Host")
-        self.port = port or self.port or config["Amp"].getint("port")
+        self.host = host or self.host or config["Connection"].get("Host")
+        self.port = port or self.port or config["Connection"].getint("port")
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if config.power in self.features: self.features[config.power].bind(
@@ -305,13 +305,13 @@ class Fallback(SelectFeature):
     def matches(self, data): return False
     def set(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
-    def isset(self): return super().isset() and config.getboolean("Amp","fallback_feature")
+    def isset(self): return super().isset() and config.getboolean("Connection","fallback_feature")
 
     def consume(self, data):
         self._val = data
         if self.amp.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        if config.getboolean("Amp","fallback_feature"): self.on_change(None, data)
+        if config.getboolean("Connection","fallback_feature"): self.on_change(None, data)
 
 
 @AbstractAmp.add_feature

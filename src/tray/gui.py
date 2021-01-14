@@ -117,7 +117,7 @@ class ScalePopup(GladeGtk):
         self.title = self.builder.get_object("title")
         self.image = self.builder.get_object("image")
         self.adj = self.builder.get_object("adjustment")
-        self.adj.set_page_increment(config.getdecimal("GUI","tray_scroll_delta"))
+        self.adj.set_page_increment(config.getdecimal("Tray","tray_scroll_delta"))
         
         for f in self.amp.features.values(): f.bind(
             gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
@@ -163,7 +163,7 @@ class MenuMixin:
         menu = Gtk.Menu()
 
         # header features
-        for key in config.getlist("GUI","tray_menu_features"):
+        for key in config.getlist("Tray","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
             f = getattr(self.amp.features, key, None)
             if f: menu.append(self.add_feature(f, True))
