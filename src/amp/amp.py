@@ -19,11 +19,13 @@ class AbstractProtocol(Bindable, AmpType):
     protocol = None
     verbose = 0
     features = {}
+    _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
         #self.bind(**callbacks)
         self.features = AttrDict()
+        self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
         self.add_feature = disable_add_feature
         # apply @features to Amp
@@ -130,25 +132,20 @@ class AbstractServer(AbstractProtocol):
 
     def on_receive_raw_data(self, data):
         called_features = [f for key, f in self.features.items() if f.call == data]
-        
         if called_features:
             # data is a request
-            for f in called_features:
-                encoded = self.get_value(f)
-                self.send(encoded)
+            for f in called_features: self.poll_feature(f)
         else:
             # data is a command
             super().on_receive_raw_data(data)
 
 
 class _FeaturesMixin:
-    _pending = list
     _polled = list
     preload_features = set() # feature keys to be polled on_connect
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._pending = self._pending()
         self._polled = self._polled()
 
     def on_connect(self):
