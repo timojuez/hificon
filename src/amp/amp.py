@@ -91,6 +91,8 @@ class AbstractProtocol(Bindable, AmpType):
         if key and self.verbose > 2:
             print("[%s] $%s = %s"%(self.__class__.__name__,key,repr(value)))
         
+    def send(self, data): raise NotImplementedError()
+
     def on_receive_raw_data(self, data):
         if self.verbose > 4: print(data, file=sys.stderr)
         consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
