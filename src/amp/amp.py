@@ -128,7 +128,7 @@ class AbstractServer(AbstractProtocol):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        for f in self.features.values(): not f.key=="fallback" and f.bind(on_change=lambda *_,f=f:f.resend())
+        for f in self.features.values(): not f.key=="fallback" and f.bind(on_store=lambda *_,f=f:f.resend())
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
 
