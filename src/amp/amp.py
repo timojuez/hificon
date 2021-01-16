@@ -177,7 +177,7 @@ class _FeaturesMixin:
         f.poll_on_client()
 
 
-class AbstractClient(_FeaturesMixin, AbstractProtocol):
+class _AbstractClient(AbstractProtocol):
     """
     Abstract Client
     Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop
@@ -254,6 +254,9 @@ class AbstractClient(_FeaturesMixin, AbstractProtocol):
         """ This will be called regularly by mainloop """
         pass
     
+
+class AbstractClient(_FeaturesMixin, _AbstractClient): pass
+
 
 class AbstractTelnetProtocol(AbstractProtocol):
     
