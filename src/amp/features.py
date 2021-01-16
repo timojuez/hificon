@@ -193,20 +193,23 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not self.isset(): return
         if self._val != old: self.on_change(old, self._val)
         if old == None: self.on_set()
+        self.on_store(value)
         return old, self._val
 
-    def bind(self, on_change=None, on_set=None, on_unset=None):
+    def bind(self, on_change=None, on_set=None, on_unset=None, on_store=None):
         """ Register an observer with bind() and call the callback as soon as possible
         to stay synchronised """
         with self._lock:
             if self.isset():
                 if on_change: on_change(self.get())
                 if on_set: on_set()
+                if on_store: on_store(self.get())
             elif on_unset: on_unset()
             
             if on_change: super().bind(on_change = lambda old, new: on_change(new))
             if on_set: super().bind(on_set = on_set)
             if on_unset: super().bind(on_unset = on_unset)
+            if on_store: super().bind(on_store = on_store)
             
     def on_change(self, old, new):
         """ This event is being called when self.options or the return value of self.get() changes """
@@ -226,6 +229,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def on_unset(self):
         try: self._timer_store_default.cancel()
         except: pass
+    
+    def on_store(self, value):
+        """ This event is being called each time the feature is being set to a value
+        even if the value is the same as the previous one """
+        pass
 
 
 class SynchronousFeature(AsyncFeature):
