@@ -37,7 +37,7 @@ class ServerAdapterClient:
         self.port = None
         self._server = server
         assert(isinstance(server, AbstractServer))
-        server.bind(send = self.on_receive_raw_data)
+        server.bind(send = lambda data: self.on_receive_raw_data(data))
 
     def connect(self):
         super().connect()
