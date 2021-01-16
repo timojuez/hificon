@@ -1,7 +1,7 @@
 import sys, traceback, re
 from contextlib import suppress
 from decimal import Decimal
-from threading import Event, Lock
+from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from ..common.config import config
@@ -89,6 +89,9 @@ class FeatureInterface(object):
     type = object # value data type, e.g. int, bool, str
     #key = "key" # feature will be available as amp.key; default: key = class name
     
+    def poll_on_server(self):
+        """ This is being executed on server side and must call self.store(some value) """
+        raise NotImplementedError()
     
     def matches(self, data):
         """
@@ -159,6 +162,13 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         #with suppress(ValueError): self.amp._polled.remove(self.call)
 
     def async_poll(self, *args, **xargs): self.amp.poll_feature(self, *args, **xargs)
+    
+    def poll_on_client(self):
+        """ async_poll() executed on client side """
+        if self.default_value is not None:
+            self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
+            self._timer_store_default.start()
+        self.amp.send(self.call)
     
     def _store_default(self):
         with self._lock:

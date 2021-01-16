@@ -4,7 +4,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 """
 
 import sys, time, socket
-from threading import Lock, Thread, Event, Timer
+from threading import Lock, Thread, Event
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
@@ -130,6 +130,8 @@ class AbstractServer(AbstractProtocol):
         super().__init__(*args, **xargs)
         for f in self.features.values(): not f.key=="fallback" and f.bind(on_change=lambda *_,f=f:f.resend())
 
+    def poll_feature(self, f, *args, **xargs): f.poll_on_server()
+
     def send(self, data): pass
 
     def on_receive_raw_data(self, data):
@@ -169,10 +171,7 @@ class _FeaturesMixin:
         """ poll feature value if not polled before or force is True """
         if f.call in self._polled and not force: return
         self._polled.append(f.call)
-        if f.default_value is not None:
-            f._timer_store_default = Timer(MAX_CALL_DELAY, f._store_default)
-            f._timer_store_default.start()
-        return self.send(f.call)
+        f.poll_on_client()
 
 
 class AbstractClient(_FeaturesMixin, AbstractProtocol):
