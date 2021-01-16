@@ -151,7 +151,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self._block_on_set = encoded
         self.amp.send(encoded)
     
-    _send = set
+    send = set
     
     def isset(self): return self._val != None
         
@@ -174,7 +174,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             if not self.isset(): self._store(self.default_value)
     
-    def resend(self): return self._send(self._val, force=True)
+    def resend(self): return self.send(self._val, force=True)
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
