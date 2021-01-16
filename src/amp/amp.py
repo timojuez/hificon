@@ -24,7 +24,6 @@ class AbstractProtocol(Bindable, AmpType):
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
-        #self.bind(**callbacks)
         self.features = AttrDict()
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
@@ -245,8 +244,6 @@ class AbstractClient(_FeaturesMixin, AbstractProtocol):
 
 class AbstractTelnetProtocol(AbstractProtocol):
     
-    #@classmethod
-    #def Server(self, *args, **xargs): raise NotImplementedError()
     @classmethod
     def Client(self, *args, **xargs): return type("Client", (self, TelnetClient), {})(*args, **xargs)
 
