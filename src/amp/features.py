@@ -1,7 +1,7 @@
 import sys, traceback, re
 from contextlib import suppress
 from decimal import Decimal
-from threading import Event, Lock, Timer
+from threading import Event, Lock
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from ..common.config import config
@@ -158,14 +158,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             self.on_unset()
         #with suppress(ValueError): self.amp._polled.remove(self.call)
 
-    def async_poll(self, force=False):
-        """ poll feature value if not polled before or force is True """
-        if self.call in self.amp._polled and not force: return
-        self.amp._polled.append(self.call)
-        if self.default_value is not None:
-            self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
-            self._timer_store_default.start()
-        return self.amp.send(self.call)
+    def async_poll(self, *args, **xargs): self.amp.poll_feature(self, *args, **xargs)
     
     def _store_default(self):
         with self._lock:

@@ -4,7 +4,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 """
 
 import sys, time, socket
-from threading import Lock, Thread, Event
+from threading import Lock, Thread, Event, Timer
 from telnetlib import Telnet
 from contextlib import suppress
 from .amp_type import AmpType
@@ -82,6 +82,8 @@ class AbstractProtocol(Bindable, AmpType):
             cls.features = {**cls.features, Feature.key: Feature}
             return Feature
         return add(Feature) if Feature else add
+    
+    def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
     
     @log_call
     def on_feature_change(self, key, value, previous_val):
@@ -163,6 +165,15 @@ class _FeaturesMixin:
         super().mainloop_hook()
         for p in self._pending: p.check_expiration()
     
+    def poll_feature(self, f, force=False):
+        """ poll feature value if not polled before or force is True """
+        if f.call in self._polled and not force: return
+        self._polled.append(f.call)
+        if f.default_value is not None:
+            f._timer_store_default = Timer(MAX_CALL_DELAY, f._store_default)
+            f._timer_store_default.start()
+        return self.send(f.call)
+
 
 class AbstractClient(_FeaturesMixin, AbstractProtocol):
     """
