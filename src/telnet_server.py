@@ -1,33 +1,40 @@
 import argparse, sys, time, selectors, traceback
 from threading import Thread
+from .amp import AbstractServer, AbstractClient
 from .util.json_service import Service
-from . import Amp
+from . import Amp_cls
 
 
-class Main(Service):
+class ClientRepeater(AbstractServer):
+    client = None
+    
+    def __init__(self, client, *args, **xargs):
+        assert(isinstance(client, AbstractClient))
+        self.client = client
+        client.bind(on_receive_raw_data = lambda data:self.send(data))
+        super().__init__(*args, **xargs)
+    
+    def enter(self, *args, **xargs): return self.client.enter(*args, **xargs)
+    def exit(self, *args, **xargs): return self.client.exit(*args, **xargs)
+
+    @property
+    def prompt(self): return self.client.prompt
+    
+    def on_receive_raw_data(self, data): self.client.send(data)
+
+
+class TelnetServer(Service):
     EVENTS = selectors.EVENT_READ | selectors.EVENT_WRITE
     
-    def __init__(self):
-        parser = argparse.ArgumentParser(description='Start a telnet server for interacting on an amp instance')
-        parser.add_argument('--listen-host', metavar="HOST", type=str, default="127.0.0.1", help='Host (listening)')
-        parser.add_argument('--listen-port', metavar="PORT", type=int, default=0, help='Port (listening)')
-        parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
-        parser.add_argument('--host', type=str, default=None, help='Amp host')
-        parser.add_argument('--port', type=int, default=None, help='Amp port')
-        parser.add_argument('-e', '--emulate', default=False, action="store_true", help='Use emulator (dry run)')
-        parser.add_argument('-n', '--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
-        parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
-        self.args = parser.parse_args()
+    def __init__(self, amp, listen_host, listen_port, linebreak="\r"):
         self._send = {}
-        self._break = "\n" if self.args.newline else "\r"
-        if self.args.emulate: ampargs = {"protocol": ".emulator", "emulate": self.args.protocol}
-        else: ampargs = {"protocol": self.args.protocol}
-        self.amp = Amp(host=self.args.host, port=self.args.port, verbose=self.args.verbose, **ampargs)
+        self.amp = amp
+        self._break = linebreak
         print("Starting telnet amplifier")
         print(f"Operating on {self.amp.prompt}")
         print()
         self.amp.bind(send = self.on_amp_send)
-        super().__init__(host=self.args.listen_host, port=self.args.listen_port, verbose=1)
+        super().__init__(host=listen_host, port=listen_port, verbose=1)
         with self.amp:
             Thread(target=self.mainloop, daemon=True, name="mainloop").start()
             while True:
@@ -59,7 +66,25 @@ class Main(Service):
         for conn in self._send: self._send[conn] += encoded
 
 
-main = lambda:Main()
+def main():
+    parser = argparse.ArgumentParser(description='Start a telnet server for interacting on an amp instance')
+    parser.add_argument('--listen-host', metavar="HOST", type=str, default="127.0.0.1", help='Host (listening)')
+    parser.add_argument('--listen-port', metavar="PORT", type=int, default=0, help='Port (listening)')
+    parser.add_argument('--protocol', type=str, default=None, help='Protocol')
+    group = parser.add_mutually_exclusive_group(required=False)
+    group.add_argument('--host', type=str, default=None, help='Repeat other amp')
+    parser.add_argument('--port', type=int, default=None, help='Amp port')
+    group.add_argument('-e', '--server', default=False, action="store_true", help='Server mode')
+    parser.add_argument('-n', '--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
+    args = parser.parse_args()
+    Amp = Amp_cls(protocol=args.protocol)
+    xargs = dict(verbose=args.verbose)
+    amp = Amp.Server(**xargs) if args.server \
+        else ClientRepeater(Amp.Client(host=args.host, port=args.port, **xargs))
+    TelnetServer(amp, args.listen_host, args.listen_port, "\n" if args.newline else "\r")
+
+
 if __name__ == "__main__":
     main()
 
