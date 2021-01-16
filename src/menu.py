@@ -1,4 +1,4 @@
-import argparse, os, pkgutil, tempfile
+import argparse, os, pkgutil, tempfile, sys
 from decimal import Decimal
 from .util.async_widget import bind_widget_to_value
 from .amp import features
@@ -62,7 +62,7 @@ class TabPanel(ScrollView):
         elif f.type == str: w = self.addSelectFeature(f)
         elif f.type == int: w = self.addIntFeature(f)
         elif f.type == Decimal: w = self.addDecimalFeature(f)
-        else: raise RuntimeError("Not implemented: Type '%s'"%f.type)
+        else: return print("WARNING: Not implemented: Feature type '%s'"%f.type, file=sys.stderr)
         if w: row.ids.content.add_widget(w)
         
         def on_checkbox(checkbox, active):
