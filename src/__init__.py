@@ -2,7 +2,7 @@ import importlib
 
 NAME = "HiFiCon"
 PKG_NAME = "hificon"
-VERSION = "1.9.87a"
+VERSION = "1.10.0a"
 AUTHOR = "Timo L. Richter"
 URL = 'https://github.com/timojuez/hificon'
 COPYRIGHT = ("Copyright \xa9 2021 %s\n"
@@ -24,5 +24,5 @@ def Amp_cls(protocol=None, cls="Amp"):
 
 
 def Amp(*args, protocol=None, cls="Amp", **xargs):
-    return Amp_cls(protocol, cls)(*args,**xargs)
+    return Amp_cls(protocol, cls).Client(*args,**xargs)
     

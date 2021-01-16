@@ -4,8 +4,8 @@ from decimal import Decimal
 from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
-from .amp_type import AmpType
 from ..common.config import config
+from .amp_type import AmpType
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
@@ -13,7 +13,7 @@ MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 
 def require(*features, timeout=MAX_CALL_DELAY):
     """
-    Decorator that states which amp features have to be loaded before calling the function.
+    Decorator that states which features have to be loaded before calling the function.
     Call might be delayed until the feature values have been set.
     Skip call if delay is longer than @timeout seconds.
     Can be used in Amp or AmpEvents.
@@ -154,7 +154,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             self._val = None
             self.on_unset()
-        with suppress(ValueError): self.amp._polled.remove(self.call)
+        #with suppress(ValueError): self.amp._polled.remove(self.call)
 
     def async_poll(self, force=False):
         """ poll feature value if not polled before or force is True """
@@ -169,7 +169,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             if not self.isset(): self._store(self.default_value)
     
-    def resend(self): return self.set(self._val)
+    def resend(self): return self.set(self._val, force=True)
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
@@ -210,13 +210,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def on_set(self):
         try: self._timer_store_default.cancel()
         except: pass
-        if self.amp.verbose > 5 and self.amp._pending: print("[%s] %d pending functions"
-            %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
-        if self.amp.verbose > 6 and self.amp._pending: print("[%s] pending functions: %s"
-            %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
-        for call in self.amp._pending.copy(): # has_polled() changes _pending
-            call.has_polled(self.key)
-    
+        if getattr(self.amp, "_pending", None):
+            if self.amp.verbose > 5: print("[%s] %d pending functions"
+                %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
+            if self.amp.verbose > 6: print("[%s] pending functions: %s"
+                %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
+            for call in self.amp._pending.copy(): # has_polled() changes _pending
+                call.has_polled(self.key)
+        
     def on_unset(self):
         try: self._timer_store_default.cancel()
         except: pass
