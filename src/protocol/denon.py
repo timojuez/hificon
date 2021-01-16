@@ -302,6 +302,7 @@ class Source_names(SelectFeature): #undocumented
     call = "SSFUN ?"
     translation = {}
     default_value = {code: name for code, key, name in SOURCES}
+    type = dict
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -310,19 +311,21 @@ class Source_names(SelectFeature): #undocumented
     def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def encode(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
+    def decode(self, x): return [super(Source_names, self).decode(e) for e in x.split("\r")]
     def decodeVal(self, x): return x
     def store(self, value):
         if value == self.default_value:
             self.translation = value.copy()
-            super().store(self.translation)
-        elif value.strip() == "END":
-            super().store(self.translation) # cause self.on_change()
-        else:
-            try: code, name = value.split(" ",1)
-            except:
-                print(value)
-                raise
-            self.translation[code] = name
+            return super().store(self.translation)
+        for line in value:
+            if line.strip() == "END":
+                super().store(self.translation) # cause self.on_change()
+            else:
+                try: code, name = line.split(" ",1)
+                except:
+                    print(line)
+                    raise
+                self.translation[code] = name
 
 
 @Amp.add_feature
