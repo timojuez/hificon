@@ -216,6 +216,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.amp.on_feature_change(self.key, new, old)
     
     def on_set(self):
+        """ Event is fired on initial set """
         try: self._timer_store_default.cancel()
         except: pass
         if getattr(self.amp, "_pending", None):
