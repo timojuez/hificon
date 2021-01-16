@@ -4,7 +4,7 @@ Dry software run that acts like a real amp
 
 import math
 from decimal import Decimal
-from ..amp import AbstractAmp, features
+from ..amp import AbstractProtocol, AbstractServer, AbstractClient, features
 from .. import Amp_cls
 
 
@@ -13,61 +13,58 @@ default_values = dict(
 )
 
 
-def get_val(f):
-    if f.isset(): val = f.get()
-    elif f.key in default_values: val = default_values[f.key]
-    elif getattr(f, "default_value", None): val = f.default_value
-    elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
-    elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
-    elif isinstance(f, features.BoolFeature): val = False
-    elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
-    else: raise TypeError("Feature type %s not known."%f)
-    return f.encode(val)
-
-
-class DummyAmp:
-    host = "emulator"
+class DummyServer:
     
-    def __init__(self, *args, **xargs):
+    def poll_feature(self, f, *args, **xargs):
+        if f.isset(): val = f.get()
+        elif f.key in default_values: val = default_values[f.key]
+        elif getattr(f, "default_value", None): val = f.default_value
+        elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
+        elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
+        elif isinstance(f, features.BoolFeature): val = False
+        elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
+        else: raise TypeError("Feature type %s not known."%f)
+        f.store(val)
+
+
+class ServerAdapterClient:
+    """ This client class connects to an internal server instance """
+    host = "emulator"
+    _server = None
+    
+    def __init__(self, server, *args, **xargs):
         super().__init__(*args, **xargs)
         self.port = None
+        self._server = server
+        assert(isinstance(server, AbstractServer))
+        server.bind(send = self.on_receive_raw_data)
 
     def connect(self):
-        AbstractAmp.connect(self)
+        super().connect()
         self.on_connect()
 
     def disconnect(self):
-        AbstractAmp.disconnect(self)
+        super().disconnect()
         self.on_disconnected()
 
     def mainloop(self):
         if not self.connected: self.connect()
     
-    def send(self, cmd):
-        AbstractAmp.send(self, cmd)
+    def send(self, data):
+        super().send(data)
         if not self.connected: raise BrokenPipeError("Not connected")
-        called_features = [f for key, f in self.features.items() if f.call == cmd]
-        
-        if called_features:
-            # cmd is a request
-            for f in called_features:
-                encoded = get_val(f)
-                self.on_receive_raw_data(encoded)
-        else:
-            # cmd is a command
-            for key, f in self.features.items():
-                if f.matches(cmd):
-                    self.on_receive_raw_data(cmd)
-                    break
+        return self._server.on_receive_raw_data(data)
 
 
-class Amp(AbstractAmp):
+class Amp(AbstractProtocol):
     protocol = "Emulator"
 
-    def __new__(self, *args, emulate=None, **xargs):
+    def __new__(self, *args, emulate=None, verbose=0, **xargs):
         """ extra argument @emulate must be a protocol module """
-        Original_amp = Amp_cls(protocol=emulate)
-        if issubclass(Original_amp, Amp): # do not emulate Emulator and avoid RecursionError
-            Original_amp = Amp_cls(protocol=".denon")
-        return type("Amp",(DummyAmp,Original_amp,AbstractAmp),{})(*args, **xargs)
-        
+        OriginalClass = Amp_cls(protocol=emulate)
+        if issubclass(OriginalClass, Amp): # do not emulate Emulator and avoid RecursionError
+            OriginalClass = Amp_cls(protocol=".denon")
+        Server = type("Server",(DummyServer, OriginalClass, AbstractServer),{})
+        Client = type("Client",(ServerAdapterClient, OriginalClass, AbstractClient), {})
+        return Client(*args, server=Server(), **xargs)
+
