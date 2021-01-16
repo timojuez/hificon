@@ -1,4 +1,5 @@
 from threading import Lock
+import traceback, sys
 
 
 def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_setter):
@@ -29,7 +30,7 @@ def bind_widget_to_value(value_getter, value_setter, widget_getter, widget_sette
             if candidate_value == Actual.value: return # skip calls caused by widget_setter
         widget_setter(Actual.value)
         try: value_setter(candidate_value)
-        except Exception as e: print(repr(e))
+        except: print(traceback.format_exc(), file=sys.stderr)
 
     def on_value_change(*args, **xargs):
         with lock:
