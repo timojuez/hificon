@@ -445,6 +445,7 @@ class Quick_select_store(amp.features.Constant, QuickSelect):
     name = "Quick Select (save)"
     value = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
+    def send(self, *args, **xargs): pass
 
 @Amp.add_feature
 class Hdmi_monitor(SelectFeature):
