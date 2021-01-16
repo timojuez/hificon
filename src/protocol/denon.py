@@ -341,10 +341,12 @@ class Source(SelectFeature):
 
     def on_source_names_change(self, *args, **xargs):
         if self.isset():
-            encoded = self.encode(self._val)
+            old = self._val
+            encoded = self.encode(old)
             self.translation.update(self.amp.features.source_names.translation)
-            self.consume(encoded)
-            self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
+            new = self.decode(encoded)
+            #self.consume(encoded) # might cause deadlock
+            self.on_change(old, new) # cause listeners to update from self.translation
         else:
             self.translation.update(self.amp.features.source_names.translation)
         
