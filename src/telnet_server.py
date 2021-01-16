@@ -26,13 +26,13 @@ class Main(Service):
         print("Starting telnet amplifier")
         print(f"Operating on {self.amp.prompt}")
         print()
-        self.amp.bind(on_receive_raw_data = self.on_amp_read)
+        self.amp.bind(send = self.on_amp_send)
         super().__init__(host=self.args.listen_host, port=self.args.listen_port, verbose=1)
         with self.amp:
             Thread(target=self.mainloop, daemon=True, name="mainloop").start()
             while True:
                 cmd = input()
-                self.on_amp_read(cmd)
+                self.on_amp_send(cmd)
     
     def connection(self, conn, mask):
         if conn not in self._send: self._send[conn] = b""
@@ -41,7 +41,7 @@ class Main(Service):
     def read(self, data):
         for data in data.strip().decode().replace("\n","\r").split("\r"):
             print("%s $ %s"%(self.amp.prompt,data))
-            try: self.amp.send(data)
+            try: self.amp.on_receive_raw_data(data)
             except Exception as e: print(traceback.format_exc())
         
     def write(self, conn):
@@ -52,7 +52,7 @@ class Main(Service):
         except OSError: pass
         self._send[conn] = self._send[conn][l:]
     
-    def on_amp_read(self, data):
+    def on_amp_send(self, data):
         print(data)
         encoded = ("%s%s"%(data,self._break)).encode("ascii")
         # send to all connected listeners
