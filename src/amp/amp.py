@@ -18,6 +18,7 @@ from ..common.config import FILE as CONFFILE
 class AbstractProtocol(Bindable, AmpType):
     protocol = None
     verbose = 0
+    connected = True
     features = {}
     _pending = list
 
