@@ -59,7 +59,7 @@ class ServerAdapterClient:
 class Amp(AbstractProtocol):
     protocol = "Emulator"
 
-    def __new__(self, *args, emulate=None, verbose=0, **xargs):
+    def __new__(self, *args, emulate=None, **xargs):
         """ extra argument @emulate must be a protocol module """
         OriginalClass = Amp_cls(protocol=emulate)
         if issubclass(OriginalClass, Amp): # do not emulate Emulator and avoid RecursionError
