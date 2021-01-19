@@ -2,7 +2,7 @@ import argparse, sys, time, selectors, traceback
 from threading import Thread
 from .amp import AbstractServer, AbstractClient
 from .util.json_service import Service
-from . import Amp_cls
+from . import Server, Client
 
 
 class ClientRepeater(AbstractServer):
@@ -78,10 +78,9 @@ def main():
     parser.add_argument('-n', '--newline', action="store_true", help='Print \\n after each line (not native bahaviour)')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
-    Amp = Amp_cls(protocol=args.protocol)
-    xargs = dict(verbose=args.verbose)
-    amp = Amp.Server(**xargs) if args.server \
-        else ClientRepeater(Amp.Client(host=args.host, port=args.port, **xargs))
+    xargs = dict(protocol=args.protocol, verbose=args.verbose)
+    amp = Server(**xargs) if args.server \
+        else ClientRepeater(Client(host=args.host, port=args.port, **xargs))
     TelnetServer(amp, args.listen_host, args.listen_port, "\n" if args.newline else "\r")
 
 

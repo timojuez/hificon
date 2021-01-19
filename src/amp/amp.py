@@ -15,7 +15,7 @@ from ..common.config import config
 from ..common.config import FILE as CONFFILE
 
 
-class AbstractProtocol(Bindable, AmpType):
+class ProtocolBase(Bindable, AmpType):
     protocol = None
     verbose = 0
     connected = True
@@ -46,12 +46,6 @@ class AbstractProtocol(Bindable, AmpType):
     def enter(self): return self
     
     def exit(self): pass
-    
-    @classmethod
-    def Server(self, *args, **xargs): return type("Server", (self, AbstractServer), {})(*args, **xargs)
-    
-    @classmethod
-    def Client(self, *args, **xargs): return type("Client", (self, AbstractClient), {})(*args, **xargs)
     
     @classmethod
     def get_protocol(self): return self.protocol or self.__module__
@@ -99,7 +93,7 @@ class AbstractProtocol(Bindable, AmpType):
         if not consumed: self.features.fallback.consume(data)
 
 
-@AbstractProtocol.add_feature
+@ProtocolBase.add_feature
 class Fallback(SelectFeature):
     """ Matches always, if no other feature matched """
     
@@ -115,7 +109,7 @@ class Fallback(SelectFeature):
         if config.getboolean("Connection","fallback_feature"): self.on_change(None, data)
 
 
-@AbstractProtocol.add_feature
+@ProtocolBase.add_feature
 class Name(SelectFeature):
     
     def get(self): return self.amp.prompt
@@ -127,7 +121,7 @@ class Name(SelectFeature):
     def send(self, *args, **xargs): pass
 
 
-class AbstractServer(AbstractProtocol):
+class AbstractServer(ProtocolBase):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -177,7 +171,7 @@ class _FeaturesMixin:
         f.poll_on_client()
 
 
-class _AbstractClient(AbstractProtocol):
+class _AbstractClient(ProtocolBase):
     """
     Abstract Client
     Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop
@@ -258,10 +252,9 @@ class _AbstractClient(AbstractProtocol):
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
-class AbstractTelnetProtocol(AbstractProtocol):
-    
-    @classmethod
-    def Client(self, *args, **xargs): return type("Client", (self, TelnetClient), {})(*args, **xargs)
+class AbstractProtocol(ProtocolBase):
+    Server = AbstractServer
+    Client = AbstractClient
 
 
 class TelnetClient(AbstractClient):
@@ -336,6 +329,11 @@ class TelnetClient(AbstractClient):
             except ConnectionError: return self._stoploop.wait(3)
 
 
+class AbstractTelnetProtocol(AbstractProtocol):
+    #Server = None
+    Client = TelnetClient
+
+
 """
 Common abstract amplifier classes for creating an amp protocol.
 Examples in src/protocol
@@ -346,7 +344,7 @@ from ..common.config import config
 from ..util import log_call
 
 
-class AbstractAmp(AbstractProtocol):
+class AbstractAmp(ProtocolBase):
     """ provide on_start_playing, on_stop_playing, on_idle, on_poweron and on_poweroff """
     _soundMixinLock = Lock()
     _idle_timer = None

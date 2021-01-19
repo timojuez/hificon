@@ -23,6 +23,30 @@ def Amp_cls(protocol=None, cls="Amp"):
     return Protocol
 
 
-def Amp(*args, protocol=None, cls="Amp", **xargs):
-    return Amp_cls(protocol, cls).Client(*args,**xargs)
+class Client:
+
+    def __new__(cls, *args, protocol=None, **xargs):
+        """ returns amp instance from @protocol module. Read @protocol from config if None """
+        Protocol = Amp_cls(protocol=protocol)
+        Client = type("Client", (cls, Protocol, Protocol.Client), {})
+        return Protocol.__new__(Client)
     
+    def __init__(self, *args, protocol=None, **xargs): super().__init__(*args, **xargs)
+
+
+class Server:
+
+    def __new__(cls, *args, protocol=None, **xargs):
+        """ returns amp instance from @protocol module. Read @protocol from config if None """
+        Protocol = Amp_cls(protocol=protocol)
+        Server = type("Server", (cls, Protocol, Protocol.Server), {})
+        return Protocol.__new__(Server)
+    
+    def __init__(self, *args, protocol=None, **xargs): super().__init__(*args, **xargs)
+
+
+class DummyServer(DummyServer, Server): pass
+
+
+Amp = Client
+
