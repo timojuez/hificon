@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
+import os
 from distutils.core import setup
-from src import PKG_NAME, VERSION, AUTHOR, URL
 
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
+with open(f"{script_dir}/src/info.py") as fp: exec(fp.read())
 
 setup(name=PKG_NAME,
       version=VERSION,

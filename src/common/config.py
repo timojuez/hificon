@@ -3,7 +3,8 @@
 import os, configparser, pkgutil, json
 from collections import UserDict
 from decimal import Decimal
-from .. import PKG_NAME
+from ..info import PKG_NAME
+
 
 CONFDIR = os.path.expanduser("~/.%s"%PKG_NAME)
 FILE = os.path.join(CONFDIR, "main.cfg")
