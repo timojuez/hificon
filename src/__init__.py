@@ -18,9 +18,9 @@ def Amp_cls(protocol=None, cls="Amp"):
         module = importlib.import_module(protocol, "%s.protocol"%__name__)
     except ImportError:
         raise ValueError("Amp protocol `%s` not found."%protocol)
-    Amp = getattr(module, cls)
-    assert(issubclass(Amp, AmpType))
-    return Amp
+    Protocol = getattr(module, cls)
+    assert(issubclass(Protocol, AmpType))
+    return Protocol
 
 
 def Amp(*args, protocol=None, cls="Amp", **xargs):
