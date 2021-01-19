@@ -45,7 +45,7 @@ class Server:
     def __init__(self, *args, protocol=None, **xargs): super().__init__(*args, **xargs)
 
 
-class DummyServer(DummyServer, Server): pass
+#class DummyServer(DummyServer, Server): pass
 
 
 Amp = Client
