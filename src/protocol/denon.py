@@ -208,7 +208,7 @@ class LooseBoolFeature(BoolFeature):
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
-    def set(self, value, **xargs): super().set(min(max(self.min,value),self.max), **xargs)
+    def send(self, value, **xargs): super().send(min(max(self.min,value),self.max), **xargs)
     def matches(self, data): return data.startswith(self.function) and data[len(self.function):].isnumeric()
     
 @Amp.add_feature
@@ -218,7 +218,7 @@ class Maxvol(DecimalFeature): #undocumented
     function="MVMAX "
     call="MV?"
     default_value = 98
-    def set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
+    def send(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
 
 @Amp.add_feature
 class VolumeLimit(SelectFeature): #undocumented
@@ -307,7 +307,7 @@ class Source_names(SelectFeature): #undocumented
         super().__init__(*args, **xargs)
         self.translation = self.translation.copy()
     def get(self): return "(select)"
-    def set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
+    def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def encode(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
     def decode(self, x): return [super(Source_names, self).decode(e) for e in x.split("\r")]
@@ -353,14 +353,14 @@ class Source(SelectFeature):
     def consume(self, data): return super().consume(data)
     
     @features.require("source_names")
-    def set(self, *args, **xargs): return super().set(*args, **xargs)
+    def send(self, *args, **xargs): return super().send(*args, **xargs)
 
 
 @Amp.add_feature(overwrite=True)
 class Name(SelectFeature): #undocumented
     default_value = "Denon AVR"
     function = "NSFRN "
-    def set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
+    def send(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 
 for code, key, name in SPEAKERS:
     @Amp.add_feature
@@ -873,8 +873,8 @@ for code, key, name in SOURCES:
         max = 12
         call = "SSSLV ?"
         function = f"SSSLV{code} "
-        def set(self, *args, **xargs):
-            super().set(*args, **xargs)
+        def send(self, *args, **xargs):
+            super().send(*args, **xargs)
             self.async_poll(force=True) #Denon workaround: missing echo
 
 

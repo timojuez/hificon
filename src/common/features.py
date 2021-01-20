@@ -125,7 +125,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     High level telnet protocol communication
     """
     _val = None
-    _block_on_set = None
+    _block_on_send = None
 
     def __init__(self, amp):
         """ amp instance, connected amp attribute name """
@@ -142,16 +142,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not self.isset(): raise AttributeError("`%s` not available. Use @require"%self.key)
         else: return self._val
     
-    def set(self, value, force=False):
+    def send(self, value, force=False):
         assert(value is not None)
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
         encoded = self.encode(self.type(value))
-        if not force and self._block_on_set == encoded: return
-        self._block_on_set = encoded
+        if not force and self._block_on_send == encoded: return
+        self._block_on_send = encoded
         self.amp.send(encoded)
-    
-    send = set
     
     def isset(self): return self._val != None
         
@@ -174,11 +172,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             if not self.isset(): self._store(self.default_value)
     
-    def resend(self): return self.send(self._val, force=True)
+    def resend(self): return AsyncFeature.send(self, self._val, force=True)
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
-        for f in self.amp.features.values(): f._block_on_set = None
+        for f in self.amp.features.values(): f._block_on_send = None
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.store(d)
@@ -276,11 +274,11 @@ class SelectFeature(Feature):
     type=str
     options = []
 
-    def set(self, value, force=False):
+    def send(self, value, force=False):
         if not force and value not in self.options:
-            raise ValueError("Value must be one of %s or try amp.features.%s.set(value, force=True)"
+            raise ValueError("Value must be one of %s or try amp.features.%s.send(value, force=True)"
                 %(self.options, self.key))
-        return super().set(value, force)
+        return super().send(value, force)
     
 
 class BoolFeature(SelectFeature):
@@ -291,8 +289,8 @@ class BoolFeature(SelectFeature):
 class DecimalFeature(NumericFeature):
     type=Decimal
     
-    def set(self, value, force=False):
-        return super().set((Decimal(value) if isinstance(value, int) else value), force)
+    def send(self, value, force=False):
+        return super().send((Decimal(value) if isinstance(value, int) else value), force)
 
 
 class PresetValue:

@@ -102,7 +102,7 @@ class Fallback(features.SelectFeature):
     """ Matches always, if no other feature matched """
     
     def matches(self, data): return False
-    def set(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
     def isset(self): return super().isset() and config.getboolean("Connection","fallback_feature")
 
@@ -118,7 +118,7 @@ class Name(features.SelectFeature):
     
     def get(self): return self.amp.prompt
     def matches(self, data): return False
-    def set(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
     def isset(self): return True
     def unset(self): pass
@@ -201,7 +201,7 @@ class _AbstractClient(ProtocolBase):
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
     
-    def _setfattr(self, key, val): return self.features[key].set(val)
+    def _setfattr(self, key, val): return self.features[key].send(val)
 
     def enter(self):
         if self._connectOnEnter: self.connect()
