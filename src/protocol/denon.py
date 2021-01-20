@@ -448,7 +448,7 @@ class Quick_select_store(QuickSelect):
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
     def encodeVal(self, value): return f"{value} MEMORY"
-    def decodeVal(self, data): return data[0]
+    def decodeVal(self, data): return data.split(" ",1)[0]
     
     def on_change(self, old, new):
         super().on_change(old, new)
