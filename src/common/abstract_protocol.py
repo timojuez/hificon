@@ -8,7 +8,7 @@ from threading import Thread, Event
 from ..util.function_bind import Bindable
 from ..util import log_call, AttrDict
 from .amp_type import AmpType
-from .features import *
+from . import features
 from .config import config
 from .config import FILE as CONFFILE
 
@@ -34,7 +34,7 @@ class ProtocolBase(Bindable, AmpType):
         """ @name must match an existing attribute """
         if hasattr(self.__class__, name): super().__setattr__(name, value)
         else: raise AttributeError(("%s object has no attribute %s. To rely on "
-            "optional features, use decorator @client.features.require('attribute')")
+            "optional features, use decorator @features.require('attribute')")
             %(repr(self.__class__.__name__),repr(name)))
 
     def __enter__(self): return self.enter()
@@ -62,6 +62,8 @@ class ProtocolBase(Bindable, AmpType):
             class MyFeature(Feature): pass
         """
         def add(Feature, overwrite=overwrite):
+            if not issubclass(Feature, features.Feature):
+                raise TypeError(f"Feature must be of type {features.Feature}")
             if hasattr(cls.features.__class__, Feature.key):
                 raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
             if not overwrite and hasattr(cls, Feature.key):
@@ -92,7 +94,7 @@ class ProtocolBase(Bindable, AmpType):
 
 
 @ProtocolBase.add_feature
-class Fallback(SelectFeature):
+class Fallback(features.SelectFeature):
     """ Matches always, if no other feature matched """
     
     def matches(self, data): return False
@@ -108,7 +110,7 @@ class Fallback(SelectFeature):
 
 
 @ProtocolBase.add_feature
-class Name(SelectFeature):
+class Name(features.SelectFeature):
     
     def get(self): return self.amp.prompt
     def matches(self, data): return False
