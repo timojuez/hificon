@@ -1,7 +1,7 @@
 import argparse, os, pkgutil, tempfile, sys
 from decimal import Decimal
 from .util.async_widget import bind_widget_to_value
-from .amp import features
+from .common import features
 from .common.config import config, ConfigDict, CONFDIR
 from .protocol import protocols
 from . import Amp, Amp_cls, NAME, VERSION, AUTHOR, COPYRIGHT

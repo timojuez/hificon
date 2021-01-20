@@ -3,7 +3,7 @@ Dry software run that acts like a real amp
 """
 
 from .. import DummyClient
-from ..amp import AbstractProtocol
+from ..common import AbstractProtocol
 
 
 class Amp(AbstractProtocol):

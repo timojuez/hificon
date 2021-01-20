@@ -5,8 +5,7 @@ Compatible with Denon Firmware Version 4600-6121-1061-3085
 import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
-from ..amp.features import require
-from ..common.config import config
+from ..common import config, features
 from .. import amp
 
 ZONES = 4
@@ -129,9 +128,9 @@ class _Translation:
 
 ######### Data Types
 
-class SelectFeature(_Translation, DenonFeature, amp.features.SelectFeature): pass
+class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
 
-class DecimalFeature(DenonFeature, amp.features.DecimalFeature):
+class DecimalFeature(DenonFeature, features.DecimalFeature):
 
     def __str__(self): return "%0.1f"%self.get() if self.isset() else super().__str__()
 
@@ -145,7 +144,7 @@ class DecimalFeature(DenonFeature, amp.features.DecimalFeature):
         return "%02d"%val if val%1 == 0 else "%03d"%(val*10)
 
 
-class IntFeature(DenonFeature, amp.features.IntFeature):
+class IntFeature(DenonFeature, features.IntFeature):
     min = 0
     max = 99
     
@@ -157,7 +156,7 @@ class IntFeature(DenonFeature, amp.features.IntFeature):
     def decodeVal(self, val): return int(val)
         
 
-class BoolFeature(_Translation, DenonFeature, amp.features.BoolFeature):
+class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
     translation = {"ON":True,"OFF":False}
     
 
@@ -350,10 +349,10 @@ class Source(SelectFeature):
         else:
             self.translation.update(self.amp.features.source_names.translation)
         
-    @amp.features.require("source_names")
+    @features.require("source_names")
     def consume(self, data): return super().consume(data)
     
-    @amp.features.require("source_names")
+    @features.require("source_names")
     def set(self, *args, **xargs): return super().set(*args, **xargs)
 
 
@@ -441,7 +440,7 @@ class QuickSelect(SelectFeature):
     def get(self): return "(None)" if super().get() == "0" else super().get()
 
 @Amp.add_feature
-class Quick_select_store(amp.features.Constant, QuickSelect):
+class Quick_select_store(features.Constant, QuickSelect):
     name = "Quick Select (save)"
     value = "(select)"
     def encode(self, value): return "QUICK%s MEMORY"%value
@@ -785,7 +784,7 @@ class Input_signal(BoolFeature): #undocumented
         super().on_change(old, new)
         self.amp.on_start_playing() if new == True else self.amp.on_stop_playing()
 
-    @require("input_signal")
+    @features.require("input_signal")
     def on_stop_playing(self):
         # undo amp.on_stop_playing() if self.get() == True
         if self.get(): self.amp.on_start_playing()
@@ -980,7 +979,7 @@ for zone in range(2,ZONES+1):
 
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
-        @amp.features.require("source")
+        @features.require("source")
         def _resolve_main_zone_source(self):
             if self._from_mainzone: super().store(self.amp.source)
 

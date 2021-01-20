@@ -3,8 +3,8 @@ import time, sys, tempfile, os
 from threading import Thread, Lock
 from contextlib import suppress
 from ..util import json_service
-from .. import amp, PKG_NAME
-from ..common.config import config
+from ..info import PKG_NAME
+from ..common import features, config
 
 
 ipc_port_file = os.path.join(tempfile.gettempdir(), "%s.port"%PKG_NAME)
@@ -57,7 +57,7 @@ class VolumeChanger:
             self._volume_step.acquire() # wait for on_feature_change
             self.step_volume()
     
-    @amp.features.require(config.volume)
+    @features.require(config.volume)
     def step_volume(self):
         if self.keys_pressed > 0:
             setattr(self.amp,config.volume,

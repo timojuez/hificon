@@ -5,7 +5,8 @@ from itertools import groupby
 from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
-from . import Amp, amp, VERSION, AUTHOR
+from . import Amp, VERSION, AUTHOR
+from .common import features
 try: import readline
 except ImportError: pass
 
@@ -105,9 +106,9 @@ class CLI:
             for f in ff:
                 print(bright(f"    ${f.key}"))
                 s = f"{(f.name)}  {(f.type.__name__)}  "
-                if isinstance(f,amp.features.NumericFeature):
+                if isinstance(f,features.NumericFeature):
                     s += f"[{f.min}..{f.max}]"
-                elif isinstance(f,amp.features.SelectFeature):
+                elif isinstance(f,features.SelectFeature):
                     s += str(f.options)
                 print(tw.fill(s))
             print()

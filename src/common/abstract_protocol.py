@@ -5,12 +5,12 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 
 import sys
 from threading import Thread, Event
-from .amp_type import AmpType
-from .features import *
 from ..util.function_bind import Bindable
 from ..util import log_call, AttrDict
-from ..common.config import config
-from ..common.config import FILE as CONFFILE
+from .amp_type import AmpType
+from .features import *
+from .config import config
+from .config import FILE as CONFFILE
 
 
 class ProtocolBase(Bindable, AmpType):

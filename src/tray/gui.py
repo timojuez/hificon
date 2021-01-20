@@ -6,10 +6,9 @@ from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio
 import sys, pkgutil
 from threading import Timer
 from ..util.async_widget import bind_widget_to_value
-from ..amp import features
-from ..common.config import config
+from ..common import features, config
 from ..util.function_bind import Bindable
-from .. import NAME, AUTHOR, URL, VERSION, COPYRIGHT
+from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
 
 
 Notify.init(NAME)

@@ -4,13 +4,11 @@ Examples in src/protocol
 """
 
 from threading import Timer, Lock
-from ..common.config import config
 from ..util import log_call
-from .abstract_protocol import ProtocolBase
-from .telnet import AbstractTelnetProtocol
+from ..common import config, AbstractProtocol, AbstractTelnetProtocol
 
 
-class AbstractAmp(ProtocolBase):
+class AbstractAmp(AbstractProtocol):
     """ provide on_start_playing, on_stop_playing, on_idle, on_poweron and on_poweroff """
     _soundMixinLock = Lock()
     _idle_timer = None

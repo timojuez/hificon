@@ -5,8 +5,7 @@ Main class AmpController
 
 from ..util.system_events import SystemEvents
 from ..util import log_call
-from ..amp.features import require
-from ..common.config import config
+from ..common import config, features
 
 
 class _Base(SystemEvents):
@@ -17,7 +16,7 @@ class _Base(SystemEvents):
         self.amp.preload_features.update((config.source, config.power))
         super().__init__(*args, **xargs)
 
-    @require(config.power, config.source)
+    @features.require(config.power, config.source)
     def poweron(self):
         if getattr(self.amp, config.power): return
         if config["Amp"].get("source"): self.amp.features[config.source].set(config.getlist("Amp","source")[0])
@@ -27,7 +26,7 @@ class _Base(SystemEvents):
         lambda self: getattr(self.amp,config.power)
         and (not config["Amp"]["source"] or getattr(self.amp,config.source) in config.getlist("Amp","source")))
 
-    @require(config.power, config.source)
+    @features.require(config.power, config.source)
     def poweroff(self, force=False):
         if force or self.can_poweroff: setattr(self.amp,config.power,False)
 

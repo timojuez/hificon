@@ -1,14 +1,12 @@
 import importlib
 import math
 from decimal import Decimal
-from .amp import AbstractProtocol, AbstractServer, AbstractClient, features
+from .common import AmpType, config, AbstractProtocol, AbstractServer, AbstractClient, features
 from .info import *
 
 
 def Amp_cls(protocol=None, cls="Amp"):
     """ returns amp instance from @protocol module. Read @protocol from config if None """
-    from .amp import AmpType
-    from .common.config import config
     protocol = protocol or config.get("Connection","protocol")
     try:
         module = importlib.import_module(protocol, "%s.protocol"%__name__)
