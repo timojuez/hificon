@@ -440,11 +440,24 @@ class QuickSelect(SelectFeature):
     def get(self): return "(None)" if super().get() == "0" else super().get()
 
 @Amp.add_feature
-class Quick_select_store(features.Constant, QuickSelect):
+class Quick_select_store(QuickSelect):
     name = "Quick Select (save)"
-    value = "(select)"
-    def encode(self, value): return "QUICK%s MEMORY"%value
-    def send(self, *args, **xargs): pass
+
+    def get(self): return "(select)" # for client
+    
+    # for server:
+    def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
+    def encodeVal(self, value): return f"{value} MEMORY"
+    def decodeVal(self, data): return data[0]
+    
+    def on_change(self, old, new):
+        super().on_change(old, new)
+        self.amp.features.quick_select.store(new)
+        
+    @features.require("quick_select")
+    def resend(self):
+        self.amp.features.quick_select.resend()
+
 
 @Amp.add_feature
 class Hdmi_monitor(SelectFeature):
