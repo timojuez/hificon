@@ -153,6 +153,7 @@ class _FeaturesMixin:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.preload_features = self.preload_features.copy()
         self._polled = self._polled()
 
     def on_connect(self):
