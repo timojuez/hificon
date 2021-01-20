@@ -37,6 +37,10 @@ class ProtocolBase(Bindable, AmpType):
             "optional features, use decorator @features.require('attribute')")
             %(repr(self.__class__.__name__),repr(name)))
 
+    def _setfattr(self, key, value):
+        """ This is being called by setattr(self, f, value) if getattr(self, f) is a Feature type """
+        raise NotImplementedError()
+        
     def __enter__(self): return self.enter()
 
     def __exit__(self, type, value, tb): self.exit()
@@ -71,7 +75,7 @@ class ProtocolBase(Bindable, AmpType):
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
             setattr(cls, Feature.key, property(
                 lambda self:self.features[Feature.key].get(),
-                lambda self,val:self.features[Feature.key].set(val)
+                lambda self,val:self._setfattr(Feature.key, val)
             ))
             cls.features = {**cls.features, Feature.key: Feature}
             return Feature
@@ -126,6 +130,8 @@ class AbstractServer(ProtocolBase):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         for f in self.features.values(): not f.key=="fallback" and f.bind(on_store=lambda *_,f=f:f.resend())
+
+    def _setfattr(self, key, val): return self.features[key].store(val)
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
 
@@ -195,6 +201,8 @@ class _AbstractClient(ProtocolBase):
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
     
+    def _setfattr(self, key, val): return self.features[key].set(val)
+
     def enter(self):
         if self._connectOnEnter: self.connect()
         self._stoploop.clear()
