@@ -440,6 +440,7 @@ class QuickSelect(_QuickSelect):
     name = "Quick Select (load)"
     call="MSQUICK ?"
     def get(self): return "(None)" if super().get() == "0" else super().get()
+    def matches(self, data): return super().matches(data) and not data.endswith("MEMORY")
 
 @Amp.add_feature
 class Quick_select_store(_QuickSelect):
