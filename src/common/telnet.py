@@ -1,8 +1,9 @@
-import time, socket
+import time, socket, time, selectors
 from telnetlib import Telnet
 from threading import Lock, Thread, Event
 from contextlib import suppress
-from .abstract_protocol import AbstractProtocol, AbstractClient
+from ..util.json_service import Service
+from .abstract_protocol import AbstractProtocol, AbstractClient, AbstractServer
 
 
 class TelnetClient(AbstractClient):
@@ -77,8 +78,58 @@ class TelnetClient(AbstractClient):
             except ConnectionError: return self._stoploop.wait(3)
 
 
+class _TelnetServer(Service):
+    EVENTS = selectors.EVENT_READ | selectors.EVENT_WRITE
+    
+    def __init__(self, amp, listen_host, listen_port, linebreak="\r"):
+        self._send = {}
+        self.amp = amp
+        self._break = linebreak
+        print("Starting telnet amplifier")
+        print(f"Operating on {self.amp.prompt}")
+        print()
+        self.amp.bind(send = self.on_amp_send)
+        super().__init__(host=listen_host, port=listen_port, verbose=1)
+        with self.amp:
+            Thread(target=self.mainloop, daemon=True, name="mainloop").start()
+            while True:
+                cmd = input()
+                self.on_amp_send(cmd)
+    
+    def connection(self, conn, mask):
+        if conn not in self._send: self._send[conn] = b""
+        return super().connection(conn, mask)
+
+    def read(self, data):
+        for data in data.strip().decode().replace("\n","\r").split("\r"):
+            print("%s $ %s"%(self.amp.prompt,data))
+            try: self.amp.on_receive_raw_data(data)
+            except Exception as e: print(traceback.format_exc())
+        
+    def write(self, conn):
+        time.sleep(.05)
+        if not self._send[conn]: return
+        l = len(self._send[conn])
+        try: conn.sendall(self._send[conn][:l])
+        except OSError: pass
+        self._send[conn] = self._send[conn][l:]
+    
+    def on_amp_send(self, data):
+        print(data)
+        encoded = ("%s%s"%(data,self._break)).encode("ascii")
+        # send to all connected listeners
+        for conn in self._send: self._send[conn] += encoded
+
+
+class TelnetServer(AbstractServer):
+    
+    def __init__(self, *args, listen_host, listen_port, linebreak="\r", **xargs):
+        super().__init__(*args, **xargs)
+        _TelnetServer(self, listen_host, listen_port, linebreak)
+
+
 class TelnetProtocol(AbstractProtocol):
-    #Server = None
+    Server = TelnetServer
     Client = TelnetClient
 
 

@@ -1,4 +1,4 @@
-# HiFiCon Network Amp Controlling Software
+# HiFiCon Network Amp Software
 ### Free High Freedelity for Your Computer
 
 ## Features
@@ -15,13 +15,14 @@
 - Automatic amplifier discovery*
 - Platform independent
 - Easily control your AVR – even far away from remote control distance
+- Amp server software
 
 *Currently only supports Denon/Marantz AVR compatible (tested with Denon X1400H)
 
 **Requires pulseaudio
 
 
-## Requirements
+## Requirements on the Client
 - Amplifier connected via LAN/Wifi
 - Python 3 and Pip
 
@@ -33,6 +34,9 @@ Optional:
 
 **For mouse and keyboard volume key support**
 - Any platform
+
+## Requirements on Server
+- Python 3 and Pip
 
 
 ## Install
@@ -118,6 +122,12 @@ amp = Amp()
 If `__return__` is a callable, `$""` will return the received line from the amp where `__return__(line) == True`.
 
 
+### Server Software
+You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --protocol PROTOCOL.MODULE`
+
+The switch `-e` starts a dummy server for testing. You can connect to it using the clients mentioned above.
+
+
 ## Development
 
 ### Support for other AVR brands
@@ -134,7 +144,7 @@ Your requirement is purely the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `hificon_telnet_server -e --listen-port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
+For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `python3 -m hificon.telnet_server -e --listen-port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
 
 You can also emulate the HiFi Shell: `hifish --protocol .emulator`
 
@@ -142,5 +152,5 @@ You can also emulate the HiFi Shell: `hifish --protocol .emulator`
 ## Troubleshoot
 - If HiFiCon cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `hificon_telnet_server --protocol .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --protocol .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
 
