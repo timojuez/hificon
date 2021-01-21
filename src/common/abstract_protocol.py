@@ -68,6 +68,7 @@ class ProtocolBase(Bindable, AmpType):
         def add(Feature, overwrite=overwrite):
             if not issubclass(Feature, features.Feature):
                 raise TypeError(f"Feature must be of type {features.Feature}")
+            if Feature.key.startswith("_"): raise KeyError("Feature.key may not start with '_'")
             if hasattr(cls.features.__class__, Feature.key):
                 raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
             if not overwrite and hasattr(cls, Feature.key):
