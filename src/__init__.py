@@ -17,29 +17,28 @@ def Amp_cls(protocol=None, cls="Amp"):
     return Protocol
 
 
-class Client:
+class _ProtocolInheritance(type):
+    """ Adds first parameter @protocol (str) to __init__ and will inherit a class cls from
+    (Protocol, cls._parent(Protocol)) where @protocol points at Protocol module.
+    Read @protocol from config if None """
 
-    def __new__(cls, *args, protocol=None, **xargs):
-        """ returns amp instance from @protocol module. Read @protocol from config if None """
+    def __call__(cls, *args, protocol=None, **xargs):
         Protocol = Amp_cls(protocol=protocol)
-        Client = type("Client", (cls, Protocol, Protocol.Client), {})
-        return Protocol.__new__(Client)
-    
-    def __init__(self, *args, protocol=None, **xargs): super().__init__(*args, **xargs)
+        Complete = type(cls.__name__, (cls, Protocol, cls._parent(Protocol)), {})
+        return super(_ProtocolInheritance, Complete).__call__(*args, **xargs)
 
 
-class Server:
-
-    def __new__(cls, *args, protocol=None, **xargs):
-        """ returns amp instance from @protocol module. Read @protocol from config if None """
-        Protocol = Amp_cls(protocol=protocol)
-        Server = type("Server", (cls, Protocol, Protocol.Server), {})
-        return Protocol.__new__(Server)
-    
-    def __init__(self, *args, protocol=None, **xargs): super().__init__(*args, **xargs)
+class Client(metaclass=_ProtocolInheritance):
+    _parent = staticmethod(lambda Protocol: Protocol.Client)
 
 
-class _DummyServer:
+class Server(metaclass=_ProtocolInheritance):
+    _parent = staticmethod(lambda Protocol: Protocol.Server)
+
+
+class DummyServer(Server):
+    """ Server class that fills feature values with some values """
+
     default_values = dict(
         name = "Dummy X7800H",
     )
@@ -56,27 +55,29 @@ class _DummyServer:
         f.store(val)
 
 
-class DummyServer(_DummyServer, Server): pass
+class LocalDummyServer(DummyServer):
+    """ DummyServer that acts only inside the process like a variable """
+    _parent = staticmethod(lambda Protocol: AbstractServer)
 
 
-class DummyClient:
+class _ConnectLocalDummyServer(_ProtocolInheritance):
+
+    def __call__(cls, *args, protocol=None, **xargs):
+        client = super().__call__(*args, protocol=None, **xargs)
+        server = LocalDummyServer(protocol=protocol)
+        client.bind(send = lambda data: server.on_receive_raw_data(data))
+        server.bind(send = lambda data: client.on_receive_raw_data(data))
+        return client
+
+
+class DummyClient(metaclass=_ConnectLocalDummyServer):
     """ This client class connects to an internal server instance """
     host = "emulator"
-    _server = None
+    _parent = staticmethod(lambda Protocol: AbstractClient)
 
-    def __new__(cls, *args, protocol=None, **xargs):
-        """ returns amp instance from @protocol module. Read @protocol from config if None """
-        Protocol = Amp_cls(protocol)
-        Client = type("Client",(cls, Protocol, AbstractClient), {})
-        return Protocol.__new__(Client, *args, **xargs)
-
-    def __init__(self, *args, protocol=None, **xargs):
+    def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        Server = type("Server",(_DummyServer, Amp_cls(protocol), AbstractServer),{})
-        self._server = Server()
         self.port = None
-        assert(isinstance(self._server, AbstractServer))
-        self._server.bind(send = lambda data: self.on_receive_raw_data(data))
 
     def connect(self):
         super().connect()
@@ -92,7 +93,6 @@ class DummyClient:
     def send(self, data):
         super().send(data)
         if not self.connected: raise BrokenPipeError("Not connected")
-        return self._server.on_receive_raw_data(data)
 
 
 Amp = Client
