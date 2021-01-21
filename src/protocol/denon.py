@@ -431,16 +431,18 @@ class SoundMode(SelectFeature):
         self.amp.send("CV?")
 
 
-@Amp.add_feature
-class QuickSelect(SelectFeature):
-    name = "Quick Select (load)"
+class _QuickSelect(SelectFeature):
     function="MSQUICK"
-    call="MSQUICK ?"
     translation = {str(n+1):str(n+1) for n in range(5)}
+
+@Amp.add_feature
+class QuickSelect(_QuickSelect):
+    name = "Quick Select (load)"
+    call="MSQUICK ?"
     def get(self): return "(None)" if super().get() == "0" else super().get()
 
 @Amp.add_feature
-class Quick_select_store(QuickSelect):
+class Quick_select_store(_QuickSelect):
     name = "Quick Select (save)"
 
     def get(self): return "(select)" # for client
