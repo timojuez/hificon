@@ -447,7 +447,9 @@ class Quick_select_store(_QuickSelect):
     name = "Quick Select (save)"
     call = None
 
-    def get(self): return "(select)" # for client
+    # for client
+    def get(self): return "(select)"
+    def isset(self): return True
     
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
