@@ -5,7 +5,7 @@ Examples in src/protocol
 
 from threading import Timer, Lock
 from ..util import log_call
-from ..common import config, AbstractProtocol, AbstractTelnetProtocol
+from ..common import config, AbstractProtocol, TelnetProtocol
 
 
 class AbstractAmp(AbstractProtocol):
@@ -43,6 +43,6 @@ class AbstractAmp(AbstractProtocol):
         if self._idle_timer: self._idle_timer.cancel()
 
 
-class TelnetAmp(AbstractAmp, AbstractTelnetProtocol): pass
+class TelnetAmp(AbstractAmp, TelnetProtocol): pass
 
 

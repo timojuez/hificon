@@ -1,7 +1,7 @@
-from ..common import features, AbstractTelnetProtocol
+from ..common import features, TelnetProtocol
 
 
-class Amp(AbstractTelnetProtocol):
+class Amp(TelnetProtocol):
     """ Low level amp """
     protocol = "Raw_telnet"
     

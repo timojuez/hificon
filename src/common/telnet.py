@@ -77,7 +77,7 @@ class TelnetClient(AbstractClient):
             except ConnectionError: return self._stoploop.wait(3)
 
 
-class AbstractTelnetProtocol(AbstractProtocol):
+class TelnetProtocol(AbstractProtocol):
     #Server = None
     Client = TelnetClient
 
