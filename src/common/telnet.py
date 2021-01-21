@@ -10,7 +10,7 @@ class TelnetClient(AbstractClient):
     This class connects to the server via LAN and executes commands
     @host is the server's hostname or IP.
     """
-    pulse = ""
+    _pulse = "" # this is being sent regularly to keep connection
     _telnet = None
     _send_lock = None
     _pulse_stop = None
@@ -57,9 +57,9 @@ class TelnetClient(AbstractClient):
     def on_connect(self):
         super().on_connect()
         def func():
-            while not self._pulse_stop.wait(10): self.send(self.pulse)
+            while not self._pulse_stop.wait(10): self.send(self._pulse)
         self._pulse_stop.clear()
-        if self.pulse is not None: Thread(target=func, daemon=True, name="pulse").start()
+        if self._pulse is not None: Thread(target=func, daemon=True, name="pulse").start()
         
     def on_disconnected(self):
         super().on_disconnected()
