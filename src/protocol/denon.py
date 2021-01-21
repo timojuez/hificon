@@ -445,6 +445,7 @@ class QuickSelect(_QuickSelect):
 @Amp.add_feature
 class Quick_select_store(_QuickSelect):
     name = "Quick Select (save)"
+    call = None
 
     def get(self): return "(select)" # for client
     

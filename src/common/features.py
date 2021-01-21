@@ -166,7 +166,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self.default_value is not None:
             self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
             self._timer_store_default.start()
-        self.amp.send(self.call)
+        if self.call is not None: self.amp.send(self.call)
     
     def _store_default(self):
         with self._lock:
