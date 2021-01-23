@@ -122,14 +122,14 @@ class _TelnetServer(Service):
 
 
 class TelnetServer(AbstractServer):
+    _server = None
     
     def __init__(self, *args, listen_host, listen_port, linebreak="\r", **xargs):
         super().__init__(*args, **xargs)
-        _TelnetServer(self, listen_host, listen_port, linebreak)
+        self._server = _TelnetServer(self, listen_host, listen_port, linebreak)
 
 
 class TelnetProtocol(AbstractProtocol):
     Server = TelnetServer
     Client = TelnetClient
-
 
