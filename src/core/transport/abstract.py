@@ -16,7 +16,7 @@ from . import features
 class ProtocolBase(Bindable, AmpType):
     protocol = None
     verbose = 0
-    connected = True
+    connected = False
     features = {}
     _pending = list
 
@@ -131,7 +131,10 @@ class AbstractServer(ProtocolBase):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         for f in self.features.values(): not f.key=="fallback" and f.bind(on_store=lambda *_,f=f:f.resend())
-
+    
+    def enter(self): self.connected = True
+    def exit(self): self.connected = False
+    
     def _setfattr(self, key, val): return self.features[key].store(val)
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
