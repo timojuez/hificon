@@ -41,8 +41,10 @@ def main():
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     xargs = dict(protocol=args.protocol, listen_host=args.listen_host, listen_port=args.listen_port, linebreak=args.newline, verbose=args.verbose)
-    if args.repeat: ClientRepeater(host=args.host, port=args.port, **xargs)
-    else: args.server(**xargs)
+    if args.repeat: server = ClientRepeater(host=args.host, port=args.port, **xargs)
+    else: server = args.server(**xargs)
+    with server:
+        while True: server.send(input())
 
 
 if __name__ == "__main__":

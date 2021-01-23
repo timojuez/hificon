@@ -89,11 +89,11 @@ class _TelnetServer(Service):
         print(f"Operating on {self.amp.prompt}")
         print()
         super().__init__(host=listen_host, port=listen_port, verbose=1)
-        with self.amp:
-            Thread(target=self.mainloop, daemon=True, name="mainloop").start()
-            while True:
-                cmd = input()
-                self.on_amp_send(cmd)
+
+    def enter(self):
+        Thread(target=self.mainloop, daemon=True, name="mainloop").start()
+
+    def exit(self): pass #FIXME: stop thread
     
     def connection(self, conn, mask):
         if conn not in self._send: self._send[conn] = b""
@@ -127,6 +127,8 @@ class TelnetServer(AbstractServer):
         super().__init__(*args, **xargs)
         self._server = _TelnetServer(self, listen_host, listen_port, linebreak)
 
+    def enter(self): self._server.enter()
+    def exit(self): self._server.exit()
     def send(self, data): return self._server.on_amp_send(data)
 
 
