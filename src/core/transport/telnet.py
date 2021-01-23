@@ -81,13 +81,15 @@ class TelnetClient(AbstractClient):
 class _TelnetServer(Service):
     EVENTS = selectors.EVENT_READ | selectors.EVENT_WRITE
     
-    def __init__(self, amp, listen_host, listen_port, linebreak="\r"):
+    def __init__(self, amp, listen_host, listen_port, linebreak="\r", verbose=0):
         self._send = {}
+        self.verbose = verbose
         self.amp = amp
         self._break = linebreak
-        print("Starting telnet amplifier")
-        print(f"Operating on {self.amp.prompt}")
-        print()
+        if self.verbose >= 0:
+            print("Starting telnet amplifier")
+            print(f"Operating on {self.amp.prompt}")
+            print()
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
     def enter(self):
@@ -101,7 +103,7 @@ class _TelnetServer(Service):
 
     def read(self, data):
         for data in data.strip().decode().replace("\n","\r").split("\r"):
-            print("%s $ %s"%(self.amp.prompt,data))
+            if self.verbose >= 1: print("%s $ %s"%(self.amp.prompt,data))
             try: self.amp.on_receive_raw_data(data)
             except Exception as e: print(traceback.format_exc())
         
@@ -114,7 +116,7 @@ class _TelnetServer(Service):
         self._send[conn] = self._send[conn][l:]
     
     def on_amp_send(self, data):
-        print(data)
+        if self.verbose >= 1: print(data)
         encoded = ("%s%s"%(data,self._break)).encode("ascii")
         # send to all connected listeners
         for conn in self._send: self._send[conn] += encoded
@@ -123,9 +125,9 @@ class _TelnetServer(Service):
 class TelnetServer(AbstractServer):
     _server = None
     
-    def __init__(self, *args, listen_host, listen_port, linebreak="\r", **xargs):
-        super().__init__(*args, **xargs)
-        self._server = _TelnetServer(self, listen_host, listen_port, linebreak)
+    def __init__(self, *args, listen_host, listen_port, linebreak="\r", verbose=0, **xargs):
+        super().__init__(*args, verbose=min(0, verbose-1), **xargs)
+        self._server = _TelnetServer(self, listen_host, listen_port, linebreak, verbose=verbose)
 
     def enter(self): self._server.enter()
     def exit(self): self._server.exit()
