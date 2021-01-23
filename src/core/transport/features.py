@@ -252,10 +252,10 @@ class SynchronousFeature(AsyncFeature):
         
     def poll(self, force=False):
         """ synchronous poll """
+        self.async_poll(force)
         e = Event()
         def poll_event(self): e.set()
         require(self.key)(poll_event)(self)
-        self.async_poll(force)
         if not e.wait(timeout=MAX_CALL_DELAY+.1):
             raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
         return super().get()
