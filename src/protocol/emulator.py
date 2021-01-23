@@ -8,6 +8,7 @@ from ..core import AbstractProtocol
 
 class Amp(AbstractProtocol):
     protocol = "Emulator"
+    Server = None
     
     def __new__(cls, *args, emulate=None, **xargs):
         return DummyClient(*args, protocol=emulate, **xargs)
