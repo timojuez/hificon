@@ -88,7 +88,6 @@ class _TelnetServer(Service):
         print("Starting telnet amplifier")
         print(f"Operating on {self.amp.prompt}")
         print()
-        self.amp.bind(send = self.on_amp_send)
         super().__init__(host=listen_host, port=listen_port, verbose=1)
         with self.amp:
             Thread(target=self.mainloop, daemon=True, name="mainloop").start()
@@ -127,6 +126,8 @@ class TelnetServer(AbstractServer):
     def __init__(self, *args, listen_host, listen_port, linebreak="\r", **xargs):
         super().__init__(*args, **xargs)
         self._server = _TelnetServer(self, listen_host, listen_port, linebreak)
+
+    def send(self, data): return self._server.on_amp_send(data)
 
 
 class TelnetProtocol(AbstractProtocol):
