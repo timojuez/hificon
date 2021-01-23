@@ -236,48 +236,48 @@ class _SpeakerConfig(SelectFeature):
     translation = {"SMA":"Small","LAR":"Large","NON":"None"}
 
 @Amp.add_feature
-class Front_speaker_config(_SpeakerConfig): #undocumented
+class FrontSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRO "
     
 @Amp.add_feature
-class Surround_speaker_config(_SpeakerConfig): #undocumented
+class SurroundSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSUA "
     
 @Amp.add_feature
-class Center_speaker_config(_SpeakerConfig): #undocumented
+class CenterSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCCEN "
     
 @Amp.add_feature
-class Surround_back_speaker_config(_SpeakerConfig): #undocumented
+class SurroundBackSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSBK "
     
 @Amp.add_feature
-class Front_height_speaker_config(_SpeakerConfig): #undocumented
+class FrontHeightSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRH "
     
 @Amp.add_feature
-class Top_front_speaker_config(_SpeakerConfig): #undocumented
+class TopFrontSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCTFR "
     
 @Amp.add_feature
-class Top_middle_speaker_config(_SpeakerConfig): #undocumented
+class TopMiddleSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCTPM "
     
 @Amp.add_feature
-class Front_atmos_speaker_config(_SpeakerConfig): #undocumented
+class FrontAtmosSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRD "
     
 @Amp.add_feature
-class Surround_atmos_speaker_config(_SpeakerConfig): #undocumented
+class SurroundAtmosSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSUD "
     
 @Amp.add_feature
-class Subwoofer_speaker_config(_SpeakerConfig): #undocumented
+class SubwooferSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSWF "
     translation = {"YES":"Yes","NO":"No"}
     
 @Amp.add_feature
-class Device_power(BoolFeature):
+class DevicePower(BoolFeature):
     category = "General"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
@@ -289,7 +289,7 @@ class Muted(BoolFeature):
 
 
 @Amp.add_feature
-class Source_names(SelectFeature): #undocumented
+class SourceNames(SelectFeature): #undocumented
     """
     SSFUN ?
     SSFUNSAT/CBL CBL/SAT
@@ -310,7 +310,7 @@ class Source_names(SelectFeature): #undocumented
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def encode(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
-    def decode(self, x): return [super(Source_names, self).decode(e) for e in x.split("\r")]
+    def decode(self, x): return [super(SourceNames, self).decode(e) for e in x.split("\r")]
     def decodeVal(self, x): return x
     def store(self, value):
         if value == self.default_value:
@@ -364,7 +364,7 @@ class Name(SelectFeature): #undocumented
 
 for code, key, name in SPEAKERS:
     @Amp.add_feature
-    class Channel_volume(RelativeDecimal):
+    class ChannelVolume(RelativeDecimal):
         name = f"{name} Volume"
         key = f"{key}_volume"
         category = "Volume"
@@ -372,7 +372,7 @@ for code, key, name in SPEAKERS:
         function = f"CV{code} "
 
     @Amp.add_feature
-    class Speaker_level(RelativeDecimal): #undocumented
+    class SpeakerLevel(RelativeDecimal): #undocumented
         name = f"{name} Level"
         key = f"{key}_level"
         category = "Speakers"
@@ -381,28 +381,28 @@ for code, key, name in SPEAKERS:
 
 
 @Amp.add_feature
-class Main_zone_power(BoolFeature):
+class MainZonePower(BoolFeature):
     key = "power"
     category = "General"
     function = "ZM"
     
 @Amp.add_feature
-class Rec_select(SelectFeature): function = "SR"
+class RecSelect(SelectFeature): function = "SR"
 
 @Amp.add_feature
-class Input_mode(SelectFeature):
+class InputMode(SelectFeature):
     category = "Input"
     translation = {"AUTO":"Auto", "HDMI":"HDMI", "DIGITAL":"Digital", "ANALOG": "Analog"}
     function = "SD"
 
 @Amp.add_feature
-class Digital_input(SelectFeature):
+class DigitalInput(SelectFeature):
     category = "Input"
     function = "DC"
     translation = {"AUTO":"Auto", "PCM": "PCM", "DTS":"DTS"}
     
 @Amp.add_feature
-class Video_select(SelectFeature):
+class VideoSelect(SelectFeature):
     name = "Video Select Mode"
     category = "Video"
     function = "SV"
@@ -443,7 +443,7 @@ class QuickSelect(_QuickSelect):
     def matches(self, data): return super().matches(data) and not data.endswith("MEMORY")
 
 @Amp.add_feature
-class Quick_select_store(_QuickSelect):
+class QuickSelectStore(_QuickSelect):
     name = "Quick Select (save)"
     call = None
 
@@ -466,7 +466,7 @@ class Quick_select_store(_QuickSelect):
 
 
 @Amp.add_feature
-class Hdmi_monitor(SelectFeature):
+class HdmiMonitor(SelectFeature):
     name = "HDMI Monitor auto detection"
     category = "Video"
     function = "VSMONI"
@@ -491,39 +491,39 @@ class Resolution(_Resolution):
     def matches(self, data): return super().matches(data) and not data.startswith("VSSCH")
     
 @Amp.add_feature
-class Hdmi_resolution(_Resolution):
+class HdmiResolution(_Resolution):
     name = "HDMI Resolution"
     function = "VSSCH"
     call = "VSSCH ?"
 
 @Amp.add_feature
-class Hdmi_audio_output(SelectFeature):
+class HdmiAudioOutput(SelectFeature):
     name = "HDMI Audio Output"
     category = "Video"
     function = "VSAUDIO "
     translation = {"AMP":"to Amp", "TV": "to TV"}
     
 @Amp.add_feature
-class Video_processing_mode(SelectFeature):
+class VideoProcessingMode(SelectFeature):
     category = "Video"
     function = "VSVPM"
     call = "VSVPM ?"
     translation = {"AUTO":"Auto", "GAME":"Game", "MOVI": "Movie"}
     
 @Amp.add_feature
-class Tone_control(BoolFeature):
+class ToneControl(BoolFeature):
     category = "General"
     function = "PSTONE CTRL "
     
 @Amp.add_feature
-class Surround_back_mode(SelectFeature):
+class SurroundBackMode(SelectFeature):
     name = "Surround Back SP Mode"
     function = "PSSB:"
     call = "PSSB: ?"
     translation = {"MTRX ON": "Matrix", "PL2x CINEMA":"Cinema", "PL2x MUSIC": "Music", "ON":"On", "OFF":"Off"}
     
 @Amp.add_feature
-class Cinema_eq(BoolFeature):
+class CinemaEq(BoolFeature):
     name = "Cinema Eq."
     function = "PSCINEMA EQ."
     call = "PSCINEMA EQ. ?"
@@ -535,7 +535,7 @@ class Mode(SelectFeature):
     translation = {"MUSIC":"Music","CINEMA":"Cinema","GAME":"Game","PRO LOGIC":"Pro Logic"}
     
 @Amp.add_feature
-class Front_height(BoolFeature):
+class FrontHeight(BoolFeature):
     function = "PSFH:"
     call = "PSFH: ?"
 
@@ -546,13 +546,13 @@ class Pl2hg(SelectFeature):
     translation = {"LOW":"Low","MID":"Medium","HI":"High"}
     
 @Amp.add_feature
-class Speaker_output(SelectFeature):
+class SpeakerOutput(SelectFeature):
     function = "PSSP:"
     call = "PSSP: ?"
     translation = {"FH":"F. Height", "FW":"F. Wide", "SB":"S. Back"}
     
 @Amp.add_feature
-class Multi_eq(SelectFeature):
+class MultiEq(SelectFeature):
     name = "MultiEQ XT mode"
     category = "Audyssey"
     function = "PSMULTEQ:"
@@ -560,18 +560,18 @@ class Multi_eq(SelectFeature):
     translation = {"AUDYSSEY":"Audyssey", "BYP.LR":"L/R Bypass", "FLAT":"Flat", "MANUAL":"Manual", "OFF":"Off"}
     
 @Amp.add_feature
-class Dynamic_eq(BoolFeature):
+class DynamicEq(BoolFeature):
     category = "Audyssey"
     function = "PSDYNEQ "
     
 @Amp.add_feature
-class Reference_level(SelectFeature):
+class ReferenceLevel(SelectFeature):
     category = "Audyssey"
     function = "PSREFLEV "
     translation = {"0":"0 dB","5":"5 dB","10":"10 dB","15":"15 dB"}
     
 @Amp.add_feature
-class Dynamic_volume(SelectFeature):
+class DynamicVolume(SelectFeature):
     category = "Audyssey"
     function = "PSDYNVOL "
     options = ["Off","Light","Medium","Heavy"]
@@ -579,17 +579,17 @@ class Dynamic_volume(SelectFeature):
         "NGT":"Heavy", "EVE":"Medium", "DAY":"Light","OFF":"Off"}
     
 @Amp.add_feature
-class Audyssey_dsx(SelectFeature):
+class AudysseyDsx(SelectFeature):
     name = "Audyssey DSX"
     category = "Audyssey"
     function = "PSDSX "
     translation = {"ONH":"On (Height)", "ONW":"On (Wide)","OFF":"Off"}
     
 @Amp.add_feature
-class Stage_width(IntFeature): function = "PSSTW "
+class StageWidth(IntFeature): function = "PSSTW "
 
 @Amp.add_feature
-class Stage_height(IntFeature): function = "PSSTH "
+class StageHeight(IntFeature): function = "PSSTH "
     
 @Amp.add_feature
 class Bass(RelativeInt):
@@ -607,7 +607,7 @@ class Drc(SelectFeature):
     translation = {"AUTO":"Auto", "LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
 @Amp.add_feature
-class Dynamic_compression(SelectFeature):
+class DynamicCompression(SelectFeature):
     function = "PSDCO "
     translation = {"LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
@@ -622,7 +622,7 @@ class Lfe(IntFeature):
     def encodeVal(self, val): return super().encodeVal(val*-1)
 
 @Amp.add_feature
-class Effect_level(IntFeature): function = "PSEFF "
+class EffectLevel(IntFeature): function = "PSEFF "
     
 @Amp.add_feature
 class Delay(IntFeature):
@@ -642,46 +642,46 @@ class Panorama(BoolFeature): function = "PSPAN "
 class Dimension(IntFeature): function = "PSDIM "
 
 @Amp.add_feature
-class Center_width(IntFeature): function = "PSCEN "
+class CenterWidth(IntFeature): function = "PSCEN "
     
 @Amp.add_feature
-class Center_image(IntFeature): function = "PSCEI "
+class CenterImage(IntFeature): function = "PSCEI "
     
 @Amp.add_feature
 class Subwoofer(BoolFeature):
     category = "Bass"
     function = "PSSWR "
 
-class _Subwoofer_adjustment: #undocumented
+class _SubwooferAdjustment: #undocumented
     category = "Bass"
     #category = "Audio"
     function = "PSSWL "
     name = "Subwoofer Adjustment"
 
 @Amp.add_feature
-class Subwoofer_adjustment_switch(_Subwoofer_adjustment, LooseBoolFeature): pass
+class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
 
 @Amp.add_feature
-class Subwoofer_adjustment(_Subwoofer_adjustment, LooseDecimalFeature): pass
+class SubwooferAdjustment(_SubwooferAdjustment, LooseDecimalFeature): pass
 
-class _Dialog_level: #undocumented
+class _DialogLevel: #undocumented
     category = "Audio"
     function = "PSDIL "
     name = "Dialog Level"
 
 @Amp.add_feature
-class Dialog_level_switch(_Dialog_level, LooseBoolFeature): pass
+class DialogLevelSwitch(_DialogLevel, LooseBoolFeature): pass
 
 @Amp.add_feature
-class Dialog_level(_Dialog_level, LooseDecimalFeature): pass
+class DialogLevel(_DialogLevel, LooseDecimalFeature): pass
 
 @Amp.add_feature
-class Room_size(SelectFeature):
+class RoomSize(SelectFeature):
     function = "PSRSZ "
     translation = {e:e for e in ["S","MS","M","ML","L"]}
     
 @Amp.add_feature
-class Audio_delay(IntFeature):
+class AudioDelay(IntFeature):
     category = "Audio"
     max = 999
     function  ="PSDELAY "
@@ -694,7 +694,7 @@ class Restorer(SelectFeature):
     translation = {"OFF":"Off", "MODE1":"Mode 1", "MODE2":"Mode 2", "MODE3":"Mode 3"}
     
 @Amp.add_feature
-class Front_speaker(SelectFeature):
+class FrontSpeaker(SelectFeature):
     function = "PSFRONT"
     translation = {" SPA":"A"," SPB":"B"," A+B":"A+B"}
     
@@ -713,63 +713,63 @@ class _Crossover(SelectFeature): #undocumented
         for x in ["040","060","080","090","100","110","120","150","200","250"]}
 
 @Amp.add_feature
-class Crossover_all(_Crossover): #undocumented
+class CrossoverAll(_Crossover): #undocumented
     name = "Crossover (all)"
     function = "SSCFRALL "
     
 @Amp.add_feature
-class Crossover_front(_Crossover): #undocumented
+class CrossoverFront(_Crossover): #undocumented
     name = "Crossover (front)"
     function = "SSCFRFRO "
     
 @Amp.add_feature
-class Crossover_surround(_Crossover): #undocumented
+class CrossoverSurround(_Crossover): #undocumented
     name = "Crossover (surround)"
     function = "SSCFRSUA "
 
 @Amp.add_feature
-class Crossover_center(_Crossover): #undocumented
+class CrossoverCenter(_Crossover): #undocumented
     name = "Crossover (center)"
     function = "SSCFRCEN "
 
 @Amp.add_feature
-class Crossover_surround_back(_Crossover): #undocumented
+class CrossoverSurroundBack(_Crossover): #undocumented
     name = "Crossover (surround back)"
     function = "SSCFRSBK "
 
 @Amp.add_feature
-class Crossover_front_height(_Crossover): #undocumented
+class CrossoverFrontHeight(_Crossover): #undocumented
     name = "Crossover (front height)"
     function = "SSCFRFRH "
 
 @Amp.add_feature
-class Crossover_top_front(_Crossover): #undocumented
+class CrossoverTopFront(_Crossover): #undocumented
     name = "Crossover (top front)"
     function = "SSCFRTFR "
 
 @Amp.add_feature
-class Crossover_top_middle(_Crossover): #undocumented
+class CrossoverTopMiddle(_Crossover): #undocumented
     name = "Crossover (top middle)"
     function = "SSCFRTPM "
 
 @Amp.add_feature
-class Crossover_front_atmos(_Crossover): #undocumented
+class CrossoverFrontAtmos(_Crossover): #undocumented
     name = "Crossover (front atmos)"
     function = "SSCFRFRD "
 
 @Amp.add_feature
-class Crossover_surround_atmos(_Crossover): #undocumented
+class CrossoverSurroundAtmos(_Crossover): #undocumented
     name = "Crossover (surround atmos)"
     function = "SSCFRSUD "
 
 @Amp.add_feature
-class Subwoofer_mode(SelectFeature): #undocumented
+class SubwooferMode(SelectFeature): #undocumented
     category = "Bass"
     function = "SSSWM "
     translation = {"L+M":"LFE + Main", "LFE":"LFE"}
     
 @Amp.add_feature
-class Lfe_lowpass(SelectFeature): #undocumented
+class LfeLowpass(SelectFeature): #undocumented
     name = "LFE Lowpass Freq."
     category = "Bass"
     function = "SSLFL "
@@ -782,7 +782,7 @@ class Display(SelectFeature):
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
 @Amp.add_feature
-class Input_signal(BoolFeature): #undocumented
+class InputSignal(BoolFeature): #undocumented
     """
     Information on Audio Input Signal
     Value seems to indicate if amp is playing something via HDMI
@@ -810,21 +810,21 @@ class Input_signal(BoolFeature): #undocumented
 
 
 @Amp.add_feature
-class Sample_rate(SelectFeature): #undocumented
+class SampleRate(SelectFeature): #undocumented
     """ Information on Audio Input Signal Sample Rate """
     category = "Input"
     function = "SSINFAISFV "
 
 
 @Amp.add_feature
-class Auto_standby(SelectFeature):
+class AutoStandby(SelectFeature):
     category = "Eco"
     function = "STBY"
     translation = {"OFF":"Off","15M":"15 min","30M":"30 min","60M":"60 min"}
 
 
 @Amp.add_feature
-class Amp_assign(SelectFeature): #undocumented
+class AmpAssign(SelectFeature): #undocumented
     category = "Speakers"
     function = "SSPAAMOD "
     call = "SSPAA ?"
@@ -832,27 +832,27 @@ class Amp_assign(SelectFeature): #undocumented
 
 
 @Amp.add_feature
-class Volume_osd(SelectFeature): #undocumented
+class VolumeOsd(SelectFeature): #undocumented
     category = "Video"
     function = "SSOSDVOL "
     translation = {"TOP":"Top","BOT":"Bottom","OFF":"Off"}
 
 
 @Amp.add_feature
-class Info_osd(BoolFeature): #undocumented
+class InfoOsd(BoolFeature): #undocumented
     category = "Video"
     function = "SSOSDTXT "
 
 
 @Amp.add_feature
-class Hdmi_rc_select(SelectFeature): #undocumented
+class HdmiRcSelect(SelectFeature): #undocumented
     function = "SSHOSRSS "
     call = "SSHOS ?"
     translation = {"POS":"Power On + Source", "SSO":"Only Source"}
 
 
 @Amp.add_feature
-class Hdmi_control(BoolFeature): #undocumented
+class HdmiControl(BoolFeature): #undocumented
     function = "SSHOSCON "
     call = "SSHOS ?"
 
@@ -865,7 +865,7 @@ class Language(SelectFeature): #undocumented
 
 
 @Amp.add_feature
-class Eco_mode(SelectFeature): #undocumented
+class EcoMode(SelectFeature): #undocumented
     category = "Eco"
     function = "ECO"
     translation = {"AUTO":"Auto","ON":"On","OFF":"Off"}
@@ -910,13 +910,13 @@ for code, key, name in SPEAKERS:
 
 
 @Amp.add_feature
-class Serial_number(SelectFeature):
+class SerialNumber(SelectFeature):
     call = "VIALL?"
     function = "VIALLS/N."
 
 
 @Amp.add_feature
-class Volume_scale(SelectFeature):
+class VolumeScale(SelectFeature):
     category = "Volume"
     function = "SSVCTZMADIS "
     call = "SSVCTZMA ?"
@@ -924,7 +924,7 @@ class Volume_scale(SelectFeature):
 
 
 @Amp.add_feature
-class Power_on_level(LooseIntFeature):
+class PowerOnLevel(LooseIntFeature):
     category = "Volume"
     key = "power_on_level_numeric"
     function = "SSVCTZMAPON "
@@ -932,7 +932,7 @@ class Power_on_level(LooseIntFeature):
 
 
 @Amp.add_feature
-class Power_on_level(SelectFeature):
+class PowerOnLevel(SelectFeature):
     category = "Volume"
     function = "SSVCTZMAPON "
     call = "SSVCTZMA ?"
@@ -1018,7 +1018,7 @@ for zone in range(2,ZONES+1):
         function = "Z%sMU"%zone
     
     @Amp.add_feature
-    class Channel_setting(Zone, SelectFeature):
+    class ChannelSetting(Zone, SelectFeature):
         key = "zone%s_channel_setting"%zone
         function = "Z%sCS"%zone
         translation = {"MONO":"Mono","ST":"Stereo"}
@@ -1070,7 +1070,7 @@ for zone in range(2,ZONES+1):
         function = "Z%sSLP"%zone
         
     @Amp.add_feature
-    class Auto_Standby(Zone, SelectFeature):
+    class AutoStandby(Zone, SelectFeature):
         name = "Zone %s Auto Standby"%zone
         key = "zone%s_auto_standby"%zone
         function = "Z%sSTBY"%zone
