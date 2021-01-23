@@ -1,5 +1,5 @@
 import argparse, sys
-from .common import AbstractServer, AbstractClient, TelnetServer
+from .core import AbstractServer, AbstractClient, TelnetServer
 from . import Server, DummyServer, Client
 
 

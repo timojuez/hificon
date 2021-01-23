@@ -1,6 +1,6 @@
 import sys, os, argparse, pkgutil, re
 from contextlib import suppress
-from ..common.config import config, FILE
+from ..core.config import config, FILE
 from ..amp import discover_amp, check_amp
 from .. import NAME, PKG_NAME, Amp, protocol
 

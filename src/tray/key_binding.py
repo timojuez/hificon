@@ -4,7 +4,7 @@ from threading import Thread, Lock
 from contextlib import suppress
 from ..util import json_service
 from ..info import PKG_NAME
-from ..common import features, config
+from ..core import features, config
 
 
 ipc_port_file = os.path.join(tempfile.gettempdir(), "%s.port"%PKG_NAME)

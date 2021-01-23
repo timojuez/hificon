@@ -1,4 +1,4 @@
-from ..common import features, TelnetProtocol
+from ..core import features, TelnetProtocol
 
 
 class Amp(TelnetProtocol):

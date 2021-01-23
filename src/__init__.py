@@ -1,7 +1,7 @@
 import importlib
 import math
 from decimal import Decimal
-from .common import AmpType, config, AbstractProtocol, AbstractServer, AbstractClient, features
+from .core import AmpType, config, AbstractProtocol, AbstractServer, AbstractClient, features
 from .info import *
 
 

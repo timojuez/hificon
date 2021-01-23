@@ -5,7 +5,7 @@ Examples in src/protocol
 
 from threading import Timer, Lock
 from ..util import log_call
-from ..common import config, AbstractProtocol, TelnetProtocol
+from ..core import config, AbstractProtocol, TelnetProtocol
 
 
 class AbstractAmp(AbstractProtocol):

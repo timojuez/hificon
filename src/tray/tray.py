@@ -1,10 +1,10 @@
 import sys, math, pkgutil, os, tempfile
 from threading import Thread, Timer
 from .. import Amp
-from ..common import features
+from ..core import features
 from ..amp import AmpController
 from ..util import Bindable
-from ..common.config import config, ConfigDict
+from ..core.config import config, ConfigDict
 from . import gui
 from .key_binding import RemoteControlService, VolumeChanger
 

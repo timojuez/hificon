@@ -6,7 +6,7 @@ from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
 from . import Amp, VERSION, AUTHOR
-from .common import features
+from .core import features
 try: import readline
 except ImportError: pass
 

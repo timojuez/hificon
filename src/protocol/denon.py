@@ -5,7 +5,7 @@ Compatible with Denon Firmware Version 4600-6121-1061-3085
 import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
-from ..common import config, features
+from ..core import config, features
 from .. import amp
 
 ZONES = 4
