@@ -41,11 +41,11 @@ class ProtocolBase(Bindable, AmpType):
         """ This is being called by setattr(self, f, value) if getattr(self, f) is a Feature type """
         raise NotImplementedError()
         
-    def __enter__(self): return self.enter()
+    def __enter__(self): self.enter(); return self
 
     def __exit__(self, type, value, tb): self.exit()
 
-    def enter(self): return self
+    def enter(self): pass
     
     def exit(self): pass
     
