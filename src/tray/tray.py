@@ -2,9 +2,9 @@ import sys, math, pkgutil, os, tempfile
 from threading import Thread, Timer
 from .. import Amp
 from ..core import features
-from ..amp import AmpController
-from ..util import Bindable
+from ..core.util import Bindable
 from ..core.config import config, ConfigDict
+from ..amp import AmpController
 from . import gui
 from .key_binding import RemoteControlService, VolumeChanger
 

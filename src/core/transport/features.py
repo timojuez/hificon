@@ -3,7 +3,7 @@ from contextlib import suppress
 from decimal import Decimal
 from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
-from ...util import call_sequence, Bindable
+from ..util import call_sequence, Bindable
 from ..config import config
 from .amp_type import AmpType
 

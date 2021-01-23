@@ -1,6 +1,6 @@
 import argparse, os, pkgutil, tempfile, sys
 from decimal import Decimal
-from .util.async_widget import bind_widget_to_value
+from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
 from .protocol import protocols

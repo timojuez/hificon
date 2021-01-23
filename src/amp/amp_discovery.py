@@ -1,6 +1,6 @@
 import socket
 from urllib.parse import urlparse
-from ..util import ssdp
+from ..core.util import ssdp
 from .. import Amp
 
 

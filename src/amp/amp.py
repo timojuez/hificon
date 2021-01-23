@@ -4,7 +4,7 @@ Examples in src/protocol
 """
 
 from threading import Timer, Lock
-from ..util import log_call
+from ..core.util import log_call
 from ..core import config, AbstractProtocol, TelnetProtocol
 
 

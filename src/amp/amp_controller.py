@@ -3,8 +3,8 @@ Connects system events to the amp.
 Main class AmpController
 """
 
-from ..util.system_events import SystemEvents
-from ..util import log_call
+from ..core.util.system_events import SystemEvents
+from ..core.util import log_call
 from ..core import config, features
 
 

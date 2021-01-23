@@ -2,7 +2,7 @@ import time, socket, time, selectors
 from telnetlib import Telnet
 from threading import Lock, Thread, Event
 from contextlib import suppress
-from ...util.json_service import Service
+from ..util.json_service import Service
 from .abstract import AbstractProtocol, AbstractClient, AbstractServer
 
 
