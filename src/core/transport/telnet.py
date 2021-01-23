@@ -1,4 +1,4 @@
-import time, socket, time, selectors
+import time, socket, time, selectors, traceback
 from telnetlib import Telnet
 from threading import Lock, Thread, Event
 from contextlib import suppress
@@ -102,7 +102,9 @@ class _TelnetServer(Service):
         return super().connection(conn, mask)
 
     def read(self, data):
-        for data in data.strip().decode().replace("\n","\r").split("\r"):
+        try: decoded = data.strip().decode()
+        except: return print(traceback.format_exc())
+        for data in decoded.replace("\n","\r").split("\r"):
             if self.verbose >= 1: print("%s $ %s"%(self.amp.prompt,data))
             try: self.amp.on_receive_raw_data(data)
             except Exception as e: print(traceback.format_exc())
