@@ -11,8 +11,13 @@ class ClientRepeater(TelnetServer):
         self.client.bind(on_receive_raw_data = lambda data:self.send(data))
         super().__init__(listen_host, listen_port, linebreak)
     
-    def enter(self, *args, **xargs): return self.client.enter(*args, **xargs)
-    def exit(self, *args, **xargs): return self.client.exit(*args, **xargs)
+    def enter(self):
+        super().enter()
+        self.client.enter(*args, **xargs)
+
+    def exit(self):
+        super().exit()
+        self.client.exit(*args, **xargs)
 
     @property
     def prompt(self): return self.client.prompt
