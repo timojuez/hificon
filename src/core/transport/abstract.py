@@ -205,6 +205,7 @@ class _AbstractClient(ProtocolBase):
         self.port = port or self.port or config["Connection"].getint("port")
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
+        if self.host.startswith("//"): self.host = self.host[2:]
     
     def _setfattr(self, key, val): return self.features[key].send(val)
 
