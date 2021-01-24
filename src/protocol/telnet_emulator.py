@@ -8,8 +8,8 @@ from ..core import TelnetClient
 
 class _ConnectDummyTelnetServer(_ProtocolInheritance):
 
-    def __call__(cls, *args, protocol=None, **xargs):
-        server = DummyServer(protocol=protocol, listen_host="127.0.0.1", listen_port=1234) #TODO: port=0
+    def __call__(cls, *args, protocol=None, port=0, **xargs):
+        server = DummyServer(protocol=protocol, listen_host="127.0.0.1", listen_port=port)
         xargs.update(host=server.host, port=server.port)
         client = super().__call__(*args, protocol=protocol, **xargs)
         client._server = server
