@@ -123,7 +123,7 @@ If `__return__` is a callable, `$""` will return the received line from the amp 
 
 
 ### Server Software
-You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --protocol PROTOCOL.MODULE`
+You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --target PROTOCOL.MODULE`
 
 The switch `-e` starts a dummy server for testing. You can connect to it using the clients mentioned above.
 
@@ -131,7 +131,7 @@ The switch `-e` starts a dummy server for testing. You can connect to it using t
 ## Development
 
 ### Support for other AVR brands
-It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "protocol" parameter in config and in hifish. Hint: `hifish --protocol .raw_telnet -f --host [IP]` prints all data received from [IP] via telnet.
+It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target .raw_telnet://IP:PORT -f` prints all data received from [IP] via telnet.
 
 ### Reverse Engineering Amplifiers
 `hifish -f` opens a shell and prints all received data from the amp. Meanwhile change settings e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
@@ -144,13 +144,13 @@ Your requirement is purely the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `python3 -m hificon.telnet_server -e --listen-port [port] --protocol .denon` and connect to it e.g. via the HiFiShell `hifish --protocol .denon --host 127.0.0.1 --port [port]`.
+For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `python3 -m hificon.telnet_server -e --listen-port PORT --target .denon` and connect to it e.g. via the HiFiShell `hifish --target .denon://127.0.0.1:PORT`.
 
-You can also emulate the HiFi Shell: `hifish --protocol .emulator`
+You can also emulate the HiFi Shell: `hifish --target .emulator:.denon`
 
 
 ## Troubleshoot
 - If HiFiCon cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --protocol .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --target .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
 
