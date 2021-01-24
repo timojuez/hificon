@@ -96,9 +96,9 @@ class CLI:
     def print_help_features(self):
         tw = TextWrapper(initial_indent=" "*8, subsequent_indent=" "*12)
         print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
-        features = map(self.amp.features.get, self.amp.__class__.features.keys())
-        features = sorted(features, key=lambda f: (f.category, f.key))
-        for category, ff in groupby(features, key=lambda f:f.category):
+        features_ = map(self.amp.features.get, self.amp.__class__.features.keys())
+        features_ = sorted(features_, key=lambda f: (f.category, f.key))
+        for category, ff in groupby(features_, key=lambda f:f.category):
             print(bright(category.upper()))
             for f in ff:
                 print(bright(f"    ${f.key}"))
