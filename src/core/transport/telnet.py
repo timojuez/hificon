@@ -130,6 +130,9 @@ class TelnetServer(AbstractServer):
     def __init__(self, *args, listen_host, listen_port, linebreak="\r", verbose=0, **xargs):
         super().__init__(*args, verbose=min(0, verbose-1), **xargs)
         self._server = _TelnetServer(self, listen_host, listen_port, linebreak, verbose=verbose)
+    
+    host = property(lambda self: self._server.sock.getsockname()[0])
+    port = property(lambda self: self._server.sock.getsockname()[1])
 
     def enter(self): self._server.enter()
     def exit(self): self._server.exit()
