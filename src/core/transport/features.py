@@ -5,7 +5,7 @@ from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable
 from ..config import config
-from .amp_type import AmpType
+from .protocol_type import ProtocolType
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
@@ -53,13 +53,13 @@ class FunctionCall(object):
             return True
         
     def _find_amp(self, args): 
-        """ search AmpType type in args """
+        """ search ProtocolType type in args """
         try:
             amp = getattr(args[0],"amp",None) # = self.amp if args==(self,)
-            return next(filter(lambda e: isinstance(e,AmpType), (amp,)+args))
+            return next(filter(lambda e: isinstance(e,ProtocolType), (amp,)+args))
         except (StopIteration, IndexError):
             raise TypeError("`%s` cannot be called. @require needs "
-                "AmpType instance as argument"%self._func.__name__)
+                "ProtocolType instance as argument"%self._func.__name__)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)

@@ -1,7 +1,7 @@
 import importlib
 import math
 from decimal import Decimal
-from .core import AmpType, config, AbstractProtocol, AbstractServer, AbstractClient, features
+from .core import ProtocolType, config, AbstractProtocol, AbstractServer, AbstractClient, features
 from .info import *
 
 
@@ -13,7 +13,7 @@ def Amp_cls(protocol=None, cls="Amp"):
     except ImportError:
         raise ValueError("Amp protocol `%s` not found."%protocol)
     Protocol = getattr(module, cls)
-    assert(issubclass(Protocol, AmpType))
+    assert(issubclass(Protocol, ProtocolType))
     return Protocol
 
 

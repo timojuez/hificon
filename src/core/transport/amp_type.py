@@ -1,2 +1,0 @@
-class AmpType: pass
-

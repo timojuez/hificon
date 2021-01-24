@@ -2,10 +2,10 @@
 Dry software run that acts like a real amp
 """
 
-from .. import AmpType, DummyClient
+from .. import ProtocolType, DummyClient
 
 
-class Amp(AmpType):
+class Amp(ProtocolType):
     protocol = "Emulator"
     Client = DummyClient
     

@@ -2,7 +2,7 @@
 Dry software run that acts like a real amp
 """
 
-from .. import AmpType, DummyServer, _ProtocolInheritance
+from .. import ProtocolType, DummyServer, _ProtocolInheritance
 from ..core import TelnetClient
 
 
@@ -29,7 +29,7 @@ class DummyTelnetClient(metaclass=_ConnectDummyTelnetServer):
         self._server.exit()
 
 
-class Amp(AmpType):
+class Amp(ProtocolType):
     protocol = "Telnet Emulator"
     Client = DummyTelnetClient
 

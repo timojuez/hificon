@@ -9,11 +9,11 @@ from ..util.function_bind import Bindable
 from ..util import log_call, AttrDict
 from ..config import config
 from ..config import FILE as CONFFILE
-from .amp_type import AmpType
+from .protocol_type import ProtocolType
 from . import features
 
 
-class ProtocolBase(Bindable, AmpType):
+class ProtocolBase(Bindable, ProtocolType):
     protocol = None
     verbose = 0
     connected = False
