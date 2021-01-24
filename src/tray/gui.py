@@ -252,13 +252,14 @@ class MenuMixin:
         return item
 
     def _add_select_feature(self, f, compact):
-        item = Gtk.MenuItem(f.name)
+        submenu = Gtk.Menu()
+        item = Gtk.MenuItem(f.name, submenu=submenu)
         if compact: f.bind(gtk(item.set_label))
-        f.bind(gtk(lambda _:self._set_submenu(f, item, compact)))
+        f.bind(gtk(lambda _:self._refill_submenu(f, submenu, compact)))
         return item
 
-    def _set_submenu(self, f, parent_item, compact):
-        submenu = Gtk.Menu()
+    def _refill_submenu(self, f, submenu, compact):
+        submenu.foreach(lambda child: child.destroy())
         if compact:
             submenu.append(Gtk.MenuItem(f.name, sensitive=False))
             submenu.append(Gtk.SeparatorMenuItem())
@@ -276,7 +277,6 @@ class MenuMixin:
             item.connect("activate", on_activate)
             submenu.append(item)
         submenu.show_all()
-        parent_item.set_submenu(submenu)
     
 
 class Tray(MenuMixin):
