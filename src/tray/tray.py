@@ -207,7 +207,7 @@ class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_
 
 
 def main(args):
-    amp = Amp(connect=False, protocol=args.protocol, verbose=args.verbose+1)
+    amp = Amp(connect=False, protocol=args.protocol, host=args.host, port=args.port, verbose=args.verbose+1)
     icon = Icon(amp)
     app = Main(amp, icon=icon, verbose=args.verbose+1)
     with icon, amp:
