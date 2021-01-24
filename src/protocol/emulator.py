@@ -9,6 +9,6 @@ class Amp(ProtocolType):
     protocol = "Emulator"
     Client = DummyClient
     
-    def __new__(cls, *args, emulate=None, **xargs):
-        return cls.Client(*args, protocol=emulate, **xargs)
+    def __new__(cls, *args, **xargs):
+        return cls.Client(*args, **xargs)
 

@@ -6,9 +6,7 @@ from .setup import Setup
 def main():
     parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
     parser.add_argument('--setup', default=False, action="store_true", help='Run initial setup')
-    parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
-    parser.add_argument('--host', type=str, default=None, help='Server IP or hostname')
-    parser.add_argument('--port', type=int, default=None, help='Server port')
+    parser.add_argument('--target', metavar="URI", type=str, default=None, help='Device URI')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
     

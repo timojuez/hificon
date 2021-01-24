@@ -19,9 +19,7 @@ class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Controller for Network Amp - CLI')
-        parser.add_argument('--host', type=str, default=None, help='Amp IP or hostname')
-        parser.add_argument('--port', type=int, default=None, help='Amp port')
-        parser.add_argument('--protocol', type=str, default=None, help='Amp protocol')
+        parser.add_argument('--target', metavar="URI", type=str, default=None, help='Device URI')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor amp messages')
@@ -37,8 +35,7 @@ class CLI:
     def __call__(self):
         matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
-        self.amp = Amp(
-            host=self.args.host, port=self.args.port, protocol=self.args.protocol, verbose=self.args.verbose)
+        self.amp = Amp(self.args.target, verbose=self.args.verbose)
         if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
         with self.amp:
             self.compiler = Compiler(

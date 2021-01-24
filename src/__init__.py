@@ -20,12 +20,14 @@ def Amp_cls(protocol=None, cls="Amp"):
 class _ProtocolInheritance(type):
     """ Adds first parameter @protocol (str) to __init__ and will inherit a class cls from
     (Protocol, cls._parent(Protocol)) where @protocol points at Protocol module.
-    Read @protocol from config if None """
+    @target is a URI in the scheme protocol_module:arg_1:...:arg_n, e.g. .denon://127.0.0.1:23
+    Read @target from config if None """
 
-    def __call__(cls, *args, protocol=None, **xargs):
-        Protocol = Amp_cls(protocol=protocol)
+    def __call__(cls, target=None, *args, **xargs):
+        target = target.split(":") if target else [None]
+        Protocol = Amp_cls(protocol=target.pop(0))
         Complete = type(cls.__name__, (cls, Protocol, cls._parent(Protocol)), {})
-        return super(_ProtocolInheritance, Complete).__call__(*args, **xargs)
+        return super(_ProtocolInheritance, Complete).__call__(*target, *args, **xargs)
 
 
 class Client(metaclass=_ProtocolInheritance):
@@ -62,9 +64,9 @@ class LocalDummyServer(DummyServer):
 
 class _ConnectLocalDummyServer(_ProtocolInheritance):
 
-    def __call__(cls, *args, protocol=None, **xargs):
-        client = super().__call__(*args, protocol=None, **xargs)
-        server = LocalDummyServer(protocol=protocol)
+    def __call__(cls, target=None, *args, **xargs):
+        client = super().__call__(target, *args, **xargs)
+        server = LocalDummyServer(target)
         client.bind(send = lambda data: server.on_receive_raw_data(data))
         server.bind(send = lambda data: client.on_receive_raw_data(data))
         return client
