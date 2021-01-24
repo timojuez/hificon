@@ -2,14 +2,13 @@
 Dry software run that acts like a real amp
 """
 
-from .. import DummyClient
-from ..core import AbstractProtocol
+from .. import AmpType, DummyClient
 
 
-class Amp(AbstractProtocol):
+class Amp(AmpType):
     protocol = "Emulator"
-    Server = None
+    Client = DummyClient
     
     def __new__(cls, *args, emulate=None, **xargs):
-        return DummyClient(*args, protocol=emulate, **xargs)
+        return cls.Client(*args, protocol=emulate, **xargs)
 
