@@ -105,13 +105,13 @@ class Fallback(features.SelectFeature):
     def matches(self, data): return False
     def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
-    def isset(self): return super().isset() and config.getboolean("Connection","fallback_feature")
+    def isset(self): return super().isset() and config.getboolean("Target","fallback_feature")
 
     def consume(self, data):
         self._val = data
         if self.amp.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        if config.getboolean("Connection","fallback_feature"): self.on_change(None, data)
+        if config.getboolean("Target","fallback_feature"): self.on_change(None, data)
 
 
 @ProtocolBase.add_feature
@@ -201,8 +201,8 @@ class _AbstractClient(ProtocolBase):
         super().__init__(*args, **xargs)
         self._stoploop = Event()
         self._connectOnEnter = connect
-        self.host = host or self.host or config["Connection"].get("Host")
-        self.port = port or self.port or config["Connection"].getint("port")
+        self.host = host
+        self.port = port
         if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
             "IP or hostname in %s."%CONFFILE)
         if self.host.startswith("//"): self.host = self.host[2:]

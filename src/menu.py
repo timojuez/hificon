@@ -227,14 +227,16 @@ class SettingsTab(TabbedPanelItem):
             self.ids.protocol.text = protocol_names.get(protocol, protocol)
         dropdown.bind(on_select=on_select)
         
-        self.ids.host.text = config.get("Connection","host")
-        self.ids.port.text = config.get("Connection","port")
-        on_select(None, config.get("Connection","protocol"))
+        uri = config.get("Target","uri").split(":")
+        try:
+            on_select(None, uri[0])
+            self.ids.host.text = uri[1]
+            self.ids.port.text = uri[2]
+        except IndexError: pass
 
     def apply(self):
-        config["Connection"]["host"] = self.ids.host.text.strip()
-        config["Connection"]["port"] = self.ids.port.text.strip()
-        config["Connection"]["protocol"] = self.protocol
+        parts = [self.protocol, self.ids.host.text.strip(), self.ids.port.text.strip()]
+        config["Target"]["uri"] = ":".join(parts)
         App.get_running_app().load_screen()
 
 

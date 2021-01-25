@@ -1,8 +1,6 @@
-[Connection]
+[Target]
 # module that implements the protocol, e.g. ".denon"
-protocol = .auto
-host = auto
-port = 23
+uri = .auto
 # The fallback feature matches all data from the amp that is not handled by any other feature
 fallback_feature = no
 
