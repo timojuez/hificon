@@ -4,7 +4,7 @@ from .info import *
 
 
 def Amp_cls(protocol=None, cls="Amp"):
-    """ returns amp instance from @protocol module. Read @protocol from config if None """
+    """ returns Amp class from @protocol module """
     try:
         module = importlib.import_module(protocol, "%s.protocol"%__name__)
     except ImportError:
@@ -14,14 +14,16 @@ def Amp_cls(protocol=None, cls="Amp"):
     return Protocol
 
 
-def Target(uri=None, method="client", *args, **xargs): #Communication, Target, Transport, Protocol?
-    """ Adds first parameter @protocol (str) to __init__ and will inherit a class cls from
-    (Protocol, cls._parent(Protocol)) where @protocol points at Protocol module.
-    @target is a URI in the scheme protocol_module:arg_1:...:arg_n, e.g. .denon://127.0.0.1:23
-    Read @target from config if None """
+def Target(uri=None, role="client", *args, **xargs):
+    """
+    Returns a protocol instance. The protocol class path must be contained in the URI.
+    @uri: URI to connect to. Schema: protocol_module:arg_1:...:arg_n. Example: .denon://192.168.1.15:23
+        Will be read from config if None.
+    @role: Method "new_@role" will be called on the protocol for instantiation. Can be "server" or "client".
+    """
     uri = uri or f'{config.get("Connection","protocol")}://{config.get("Connection","host")}:{config.get("Connection","port")}'
     uri = uri.split(":")
-    Protocol = getattr(Amp_cls(protocol=uri.pop(0)), f"new_{method}")
+    Protocol = getattr(Amp_cls(protocol=uri.pop(0)), f"new_{role}")
     return Protocol(*uri, *args, **xargs)
 
 

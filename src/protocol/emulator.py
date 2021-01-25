@@ -8,7 +8,7 @@ from ..core.transport.abstract import DummyServerMixin, AbstractClient, Abstract
 
 
 class DummyClientMixin:
-    """ This client class connects to an internal server instance """
+    """ This client class automatically connects to an internal server instance """
     host = "emulator"
     _server = None
 

@@ -7,6 +7,7 @@ from .. import Target, Amp_cls
 
 
 class DummyTelnetClient:
+    """ This client class automatically connects to a dummy server instance """
     _server = None
 
     def enter(self):

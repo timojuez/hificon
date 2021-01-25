@@ -284,6 +284,7 @@ class AbstractProtocol(ProtocolBase):
 
     @classmethod
     def new_dummyserver(cls, *args, **xargs):
+        """ Returns a server instance that stores bogus values """
         return type(cls.__name__, (DummyServerMixin, cls, cls.Server), {})(*args, **xargs)
 
 
