@@ -1,4 +1,4 @@
-import argparse, os, sys, time, re, ast, traceback
+import argparse, os, sys, time, re, ast, traceback, shutil
 from code import InteractiveConsole
 from threading import Thread
 from itertools import groupby
@@ -87,14 +87,16 @@ class CLI:
             ("Low level functions (protocol dependent)",
                 [("CMD or $'CMD'", "Send CMD to the amp and return answer")])
         ]
-        tw = TextWrapper(initial_indent=" "*4, subsequent_indent=" "*(20+4))
+        tw = TextWrapper(
+            initial_indent=" "*4, subsequent_indent=" "*(20+4), width=shutil.get_terminal_size().columns)
         for header, l in help:
             print(bright(header.upper()))
             for e in l: print(tw.fill("%-20s%s"%e))
             print()
 
     def print_help_features(self):
-        tw = TextWrapper(initial_indent=" "*8, subsequent_indent=" "*12)
+        tw = TextWrapper(
+            initial_indent=" "*8, subsequent_indent=" "*12, width=shutil.get_terminal_size().columns)
         print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
         features_ = map(self.amp.features.get, self.amp.__class__.features.keys())
         features_ = sorted(features_, key=lambda f: (f.category, f.key))
