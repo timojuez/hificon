@@ -134,8 +134,14 @@ class TelnetServer(AbstractServer):
     host = property(lambda self: self._server.sock.getsockname()[0])
     port = property(lambda self: self._server.sock.getsockname()[1])
 
-    def enter(self): self._server.enter()
-    def exit(self): self._server.exit()
+    def enter(self):
+        self._server.enter()
+        super().enter()
+
+    def exit(self):
+        super().exit()
+        self._server.exit()
+
     def send(self, data): return self._server.on_amp_send(data)
 
 

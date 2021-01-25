@@ -10,6 +10,7 @@ from ..core.transport.abstract import DummyServerMixin, AbstractClient, Abstract
 class DummyClientMixin:
     """ This client class connects to an internal server instance """
     host = "emulator"
+    _server = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -30,6 +31,14 @@ class DummyClientMixin:
         super().send(data)
         if not self.connected: raise BrokenPipeError("Not connected")
 
+    def enter(self):
+        self._server.enter()
+        super().enter()
+    
+    def exit(self):
+        super().exit()
+        self._server.exit()
+
 
 class Amp(ProtocolType):
     protocol = "Emulator"
@@ -39,6 +48,7 @@ class Amp(ProtocolType):
         Protocol = Amp_cls(protocol)
         server = type("Server", (DummyServerMixin, Protocol, AbstractServer), {})()
         client = type("Client", (DummyClientMixin, Protocol, AbstractClient), {})(*args, **xargs)
+        client._server = server
         server.bind(send = lambda data: client.on_receive_raw_data(data))
         client.bind(send = lambda data: server.on_receive_raw_data(data))
         return client
