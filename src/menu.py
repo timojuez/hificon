@@ -1,4 +1,4 @@
-import argparse, os, pkgutil, tempfile, sys
+import argparse, os, pkgutil, tempfile, sys, traceback
 from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
@@ -333,7 +333,7 @@ class App(App):
         self.manager.switch_to(WelcomeScreen())
         try: self.amp = Amp(connect=False, verbose=args.verbose, **xargs)
         except Exception as e:
-            print(repr(e))
+            print(traceback.format_exc())
             ErrorScreen()
         else: MenuScreen(self.amp)
 
