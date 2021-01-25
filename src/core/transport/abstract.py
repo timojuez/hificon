@@ -267,6 +267,45 @@ class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
 class AbstractProtocol(ProtocolBase):
-    Server = AbstractServer
     Client = AbstractClient
+    Server = AbstractServer
+
+    @classmethod
+    def new(cls, func, *args, **xargs):
+        return cls.getattr(func)(*args, **xargs)
+
+    @classmethod
+    def new_client(cls, *args, **xargs):
+        return type(cls.__name__, (cls, cls.Client), {})(*args, **xargs)
+
+    @classmethod
+    def new_server(cls, *args, **xargs):
+        return type(cls.__name__, (cls, cls.Server), {})(*args, **xargs)
+
+    @classmethod
+    def new_dummyserver(cls, *args, **xargs):
+        return type(cls.__name__, (DummyServerMixin, cls, cls.Server), {})(*args, **xargs)
+
+
+import math
+from decimal import Decimal
+class DummyServerMixin:
+    """ Server class that fills feature values with some values """
+
+    default_values = dict(
+        name = "Dummy X7800H",
+    )
+
+    def poll_feature(self, f, *args, **xargs):
+        if f.isset(): val = f.get()
+        elif f.key in self.default_values: val = self.default_values[f.key]
+        elif getattr(f, "default_value", None): val = f.default_value
+        elif isinstance(f, features.IntFeature): val = math.ceil((f.max+f.min)/2)
+        elif isinstance(f, features.DecimalFeature): val = Decimal(f.max+f.min)/2
+        elif isinstance(f, features.BoolFeature): val = False
+        elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
+        else: raise TypeError("Feature type %s not known."%f)
+        #self.on_receive_raw_data(f.encode(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
+        f.store(val)
+
 

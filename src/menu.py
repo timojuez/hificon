@@ -12,7 +12,7 @@ os.environ["KIVY_NO_ARGS"] = "1"
 parser = argparse.ArgumentParser(description='Control Menu App')
 parser.add_argument('--target', metavar="URI", type=str, default=None, help='Device URI')
 parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
-args = parser.parse_args()
+cmd_args = parser.parse_args()
 
 
 from kivy.app import App
@@ -328,10 +328,10 @@ def hide_widget(w):
 
 class App(App):
 
-    def load_screen(self, **xargs):
+    def load_screen(self, *args, **xargs):
         self.title = TITLE
         self.manager.switch_to(WelcomeScreen())
-        try: self.amp = Amp(connect=False, verbose=args.verbose, **xargs)
+        try: self.amp = Amp(*args, connect=False, verbose=cmd_args.verbose, **xargs)
         except Exception as e:
             print(traceback.format_exc())
             ErrorScreen()
@@ -339,7 +339,7 @@ class App(App):
 
     def build(self):
         self.manager = ScreenManager()
-        self.load_screen(target = args.target)
+        self.load_screen(cmd_args.target)
         return self.manager
 
 

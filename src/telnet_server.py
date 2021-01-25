@@ -38,7 +38,7 @@ def main():
     parser.add_argument('-n', '--newline', action="store_const", default="\r", const="\n", help='Print \\n after each line (not native bahaviour)')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
-    xargs = dict(target=args.target, listen_host=args.listen_host, listen_port=args.listen_port, linebreak=args.newline, verbose=args.verbose+1)
+    xargs = dict(uri=args.target, listen_host=args.listen_host, listen_port=args.listen_port, linebreak=args.newline, verbose=args.verbose+1)
     if args.repeat: server = ClientRepeater(**xargs)
     else: server = args.server(**xargs)
     with server:
