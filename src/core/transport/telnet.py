@@ -11,16 +11,29 @@ class TelnetClient(AbstractClient):
     This class connects to the server via LAN and executes commands
     @host is the server's hostname or IP.
     """
+    host = None
+    port = None
     _pulse = "" # this is being sent regularly to keep connection
     _telnet = None
     _send_lock = None
     _pulse_stop = None
     
-    def __init__(self, *args, **xargs):
+    def __init__(self, host=None, port=None, *args, **xargs):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
+        self.host = host
+        self.port = port
+        if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
+            "IP or hostname in %s."%CONFFILE)
+        if self.host.startswith("//"): self.host = self.host[2:]
 
+    @property
+    def prompt(self):
+        p = "%s://%s"%(self.get_protocol(),self.host)
+        if self.port: p = "%s:%s"%(p,self.port)
+        return p
+    
     def send(self, cmd):
         super().send(cmd)
         try:

@@ -189,23 +189,15 @@ class _AbstractClient(ProtocolBase):
         and delay further command processing. Use threads for not blocking the
         mainloop.
     """
-    
-    host = None
-    port = None
     connected = False
     _mainloopt = None
     _stoploop = None
     _connectOnEnter = False
 
-    def __init__(self, host=None, port=None, connect=True, *args, **xargs):
+    def __init__(self, connect=True, *args, **xargs):
         super().__init__(*args, **xargs)
         self._stoploop = Event()
         self._connectOnEnter = connect
-        self.host = host
-        self.port = port
-        if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
-            "IP or hostname in %s."%CONFFILE)
-        if self.host.startswith("//"): self.host = self.host[2:]
     
     def _setfattr(self, key, val): return self.features[key].send(val)
 
@@ -222,12 +214,6 @@ class _AbstractClient(ProtocolBase):
         self._mainloopt.join()
         if self.connected: self.on_disconnected()
 
-    @property
-    def prompt(self):
-        p = "%s://%s"%(self.get_protocol(),self.host)
-        if self.port: p = "%s:%s"%(p,self.port)
-        return p
-    
     def connect(self): pass
 
     def disconnect(self): pass
