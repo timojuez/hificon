@@ -18,7 +18,7 @@ class TelnetClient(AbstractClient):
     _send_lock = None
     _pulse_stop = None
     
-    def __init__(self, host=None, port=None, *args, **xargs):
+    def __init__(self, host, port=23, *args, **xargs):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
