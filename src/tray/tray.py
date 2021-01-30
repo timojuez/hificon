@@ -63,24 +63,30 @@ class Icon(Bindable):
         self.amp = amp
         self._icon_name = None
         self.amp.bind(
-            on_connect=self.updateWidgets,
+            on_connect=self.update_icon,
+            on_disconnected=self.set_icon,
             on_feature_change=self.on_feature_change)
 
-    def on_feature_change(self, key, value, *args): # bound to amp
-        if key in (config.volume,config.muted): self.updateWidgets()
+    def bind(self, *args, **xargs):
+        super().bind(*args, **xargs)
+        self.set_icon()
+        self.update_icon()
 
-    def _getCurrentIconName(self):
+    def on_feature_change(self, key, value, *args): # bound to amp
+        if key in (config.volume, config.muted, config.power): self.update_icon()
+
+    @features.require(config.muted, config.volume, config.power)
+    def update_icon(self):
         volume = self.amp.features[config.volume]
+        #elif not getattr(self.amp,config.power): return "power"
         if getattr(self.amp,config.muted) or volume.get() == volume.min:
-            return "audio-volume-muted"
+            self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
             icon_idx = math.ceil(volume.get()/volume.max*len(icons))-1
-            return icons[icon_idx]
+            self.set_icon(icons[icon_idx])
     
-    @features.require(config.muted,config.volume)
-    def updateWidgets(self):
-        name = self._getCurrentIconName()
+    def set_icon(self, name="disconnected"):
         if self._icon_name == name: return
         self._icon_name = name
         image_data = pkgutil.get_data(__name__, f"../share/icons/scalable/{name}.svg")
@@ -91,6 +97,7 @@ class Icon(Bindable):
     
     def __enter__(self):
         self._path = tempfile.mktemp()
+        return self
     
     def __exit__(self, *args):
         try: os.remove(self._path)
@@ -139,10 +146,8 @@ class TrayMixin(gui.Tray):
         super().__init__(*args,**xargs)
         self.amp.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("Tray","tray_scroll_delta")
-        self.amp.bind(
-            on_connect=self.show,
-            on_disconnected=self.hide)
         icon.bind(on_change = self.on_icon_change)
+        self.show()
 
     def on_icon_change(self, path, name):
         gui.ScalePopup(self.amp).set_image(path)
@@ -207,9 +212,9 @@ class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_
 
 def main(args):
     amp = Amp(args.target, connect=False, verbose=args.verbose+1)
-    icon = Icon(amp)
-    app = Main(amp, icon=icon, verbose=args.verbose+1)
-    with icon, amp:
-        if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
-        app.mainloop()
+    with Icon(amp) as icon:
+        app = Main(amp, icon=icon, verbose=args.verbose+1)
+        with amp:
+            if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
+            app.mainloop()
 
