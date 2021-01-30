@@ -795,8 +795,6 @@ class InputSignal(BoolFeature): #undocumented
         super().__init__(*args, **xargs)
         self.amp.bind(on_stop_playing = self.on_stop_playing)
         
-    def async_poll(self, *args, **xargs): pass
-
     def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
 
     def on_change(self, old, new):
