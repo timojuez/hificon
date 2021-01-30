@@ -101,7 +101,30 @@ class GaugeNotification(GladeGtk, _Notification):
         self._timer.start()
 
 
-class ScalePopup(GladeGtk):
+class HideOnUnfocusMixin:
+    """ Adds a popup behaviour to a window object: It closes, when the user clicks outside of it """
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.window = self.builder.get_object("window")
+        self.window.set_keep_above(True)
+        self.window.connect("map-event", self.pointer_grab)
+        self.window.connect("unmap-event", self.pointer_ungrab)
+        self.window.connect("button-press-event", self. on_button_press)
+
+    def on_button_press(self, widget, event):
+        p_x, p_y = self.window.get_pointer()
+        w_x, w_y = self.window.get_size()
+        if p_x < 0 or p_y < 0 or p_x > w_x or p_y > w_y: # pointer outside window
+            self.hide()
+
+    def pointer_grab(self, *args):
+        Gdk.pointer_grab(self.window.get_window(), True, Gdk.EventMask.BUTTON_PRESS_MASK, None, None, 0)
+
+    def pointer_ungrab(self, *args): Gdk.pointer_ungrab(0)
+
+
+class ScalePopup(HideOnUnfocusMixin, GladeGtk):
     GLADE = "../share/scale_popup.glade"
     
     def __init__(self, amp, *args, **xargs):
@@ -130,8 +153,6 @@ class ScalePopup(GladeGtk):
         self.image.set_from_file(path)
         
     def on_change(self, event): self.on_widget_change()
-    
-    def on_focus_out(self, *args): self.hide()
     
     @property
     def visible(self): return self.window.get_visible()
