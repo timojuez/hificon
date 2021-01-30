@@ -57,7 +57,7 @@ class GladeGtk(metaclass=Singleton):
         self.builder.connect_signals(self)
 
     @gtk
-    def show(self): self.window.show()
+    def show(self): self.window.present()
 
     @gtk
     def hide(self): self.window.hide()
