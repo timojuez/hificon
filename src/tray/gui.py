@@ -190,6 +190,7 @@ class MenuMixin:
             if f: self.amp.preload_features.add(key)
 
         item_disconnected = Gtk.MenuItem("Connecting ...", sensitive=False)
+        menu.append(item_disconnected)
         self.amp.bind(on_connect = gtk(item_disconnected.hide))
         self.amp.bind(on_disconnected = gtk(item_disconnected.show))
 
