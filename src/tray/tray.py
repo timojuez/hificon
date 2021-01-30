@@ -78,8 +78,8 @@ class Icon(Bindable):
     @features.require(config.muted, config.volume, config.power)
     def update_icon(self):
         volume = self.amp.features[config.volume]
-        #elif not getattr(self.amp,config.power): return "power"
-        if getattr(self.amp,config.muted) or volume.get() == volume.min:
+        if not getattr(self.amp,config.power): self.set_icon("power")
+        elif getattr(self.amp,config.muted) or volume.get() == volume.min:
             self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
