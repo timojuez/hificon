@@ -124,7 +124,6 @@ class Name(features.SelectFeature):
     def async_poll(self, *args, **xargs): pass
     def isset(self): return True
     def unset(self): pass
-    def send(self, *args, **xargs): pass
     def resend(self, *args, **xargs): pass
 
 
