@@ -83,8 +83,7 @@ class Icon(Bindable):
         name = self._getCurrentIconName()
         if self._icon_name == name: return
         self._icon_name = name
-        image_data = pkgutil.get_data(
-            __name__,"../share/icons/scalable/%s-dark.svg"%name)
+        image_data = pkgutil.get_data(__name__, f"../share/icons/scalable/{name}.svg")
         with open(self._path, "wb") as fp: fp.write(image_data)
         self.on_change(self._path, name)
 
