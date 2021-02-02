@@ -1,6 +1,6 @@
 [Target]
 # module that implements the protocol, e.g. ".denon"
-uri = .auto
+uri = auto
 # The fallback feature matches all data from the amp that is not handled by any other feature
 fallback_feature = no
 

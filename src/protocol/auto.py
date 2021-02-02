@@ -6,6 +6,5 @@ class Amp(AbstractAmp):
     protocol = "Auto"
 
     def __new__(self, *args, **xargs):
-        xargs.update(discover_amp())
-        return Amp_(*args,**xargs)
+        return Amp_(discover_amp(), *args,**xargs)
 
