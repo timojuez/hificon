@@ -77,7 +77,7 @@ INPUTS = {
 }
 
 
-class Amp(TelnetAmp):
+class Denon(TelnetAmp):
     protocol = "Denon"
     
     def query(self, cmd, matches=None):
@@ -204,14 +204,14 @@ class LooseBoolFeature(BoolFeature):
 
 ######### Features implementation (see Denon CLI protocol)
 
-@Amp.add_feature
+@Denon.add_feature
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
     def send(self, value, **xargs): super().send(min(max(self.min,value),self.max), **xargs)
     def matches(self, data): return data.startswith(self.function) and data[len(self.function):].isnumeric()
     
-@Amp.add_feature
+@Denon.add_feature
 class Maxvol(DecimalFeature): #undocumented
     name = "Max. Vol."
     category = "Volume"
@@ -220,7 +220,7 @@ class Maxvol(DecimalFeature): #undocumented
     default_value = 98
     def send(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
 
-@Amp.add_feature
+@Denon.add_feature
 class VolumeLimit(SelectFeature): #undocumented
     category = "Volume"
     function="SSVCTZMALIM "
@@ -235,60 +235,60 @@ class _SpeakerConfig(SelectFeature):
     call = "SSSPC ?"
     translation = {"SMA":"Small","LAR":"Large","NON":"None"}
 
-@Amp.add_feature
+@Denon.add_feature
 class FrontSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRO "
     
-@Amp.add_feature
+@Denon.add_feature
 class SurroundSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSUA "
     
-@Amp.add_feature
+@Denon.add_feature
 class CenterSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCCEN "
     
-@Amp.add_feature
+@Denon.add_feature
 class SurroundBackSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSBK "
     
-@Amp.add_feature
+@Denon.add_feature
 class FrontHeightSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRH "
     
-@Amp.add_feature
+@Denon.add_feature
 class TopFrontSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCTFR "
     
-@Amp.add_feature
+@Denon.add_feature
 class TopMiddleSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCTPM "
     
-@Amp.add_feature
+@Denon.add_feature
 class FrontAtmosSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCFRD "
     
-@Amp.add_feature
+@Denon.add_feature
 class SurroundAtmosSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSUD "
     
-@Amp.add_feature
+@Denon.add_feature
 class SubwooferSpeakerConfig(_SpeakerConfig): #undocumented
     function = "SSSPCSWF "
     translation = {"YES":"Yes","NO":"No"}
     
-@Amp.add_feature
+@Denon.add_feature
 class DevicePower(BoolFeature):
     category = "General"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
 
-@Amp.add_feature
+@Denon.add_feature
 class Muted(BoolFeature):
     category = "Volume"
     function = "MU"
 
 
-@Amp.add_feature
+@Denon.add_feature
 class SourceNames(SelectFeature): #undocumented
     """
     SSFUN ?
@@ -327,7 +327,7 @@ class SourceNames(SelectFeature): #undocumented
                 self.translation[code] = name
 
 
-@Amp.add_feature
+@Denon.add_feature
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
@@ -356,14 +356,14 @@ class Source(SelectFeature):
     def send(self, *args, **xargs): return super().send(*args, **xargs)
 
 
-@Amp.add_feature(overwrite=True)
+@Denon.add_feature(overwrite=True)
 class Name(SelectFeature): #undocumented
     default_value = "Denon AVR"
     function = "NSFRN "
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value!")
 
 for code, key, name in SPEAKERS:
-    @Amp.add_feature
+    @Denon.add_feature
     class ChannelVolume(RelativeDecimal):
         name = f"{name} Volume"
         key = f"{key}_volume"
@@ -371,7 +371,7 @@ for code, key, name in SPEAKERS:
         call = "CV?"
         function = f"CV{code} "
 
-    @Amp.add_feature
+    @Denon.add_feature
     class SpeakerLevel(RelativeDecimal): #undocumented
         name = f"{name} Level"
         key = f"{key}_level"
@@ -380,35 +380,35 @@ for code, key, name in SPEAKERS:
         function = f"SSLEV{code} "
 
 
-@Amp.add_feature
+@Denon.add_feature
 class MainZonePower(BoolFeature):
     key = "power"
     category = "General"
     function = "ZM"
     
-@Amp.add_feature
+@Denon.add_feature
 class RecSelect(SelectFeature): function = "SR"
 
-@Amp.add_feature
+@Denon.add_feature
 class InputMode(SelectFeature):
     category = "Input"
     translation = {"AUTO":"Auto", "HDMI":"HDMI", "DIGITAL":"Digital", "ANALOG": "Analog"}
     function = "SD"
 
-@Amp.add_feature
+@Denon.add_feature
 class DigitalInput(SelectFeature):
     category = "Input"
     function = "DC"
     translation = {"AUTO":"Auto", "PCM": "PCM", "DTS":"DTS"}
     
-@Amp.add_feature
+@Denon.add_feature
 class VideoSelect(SelectFeature):
     name = "Video Select Mode"
     category = "Video"
     function = "SV"
     translation = {"DVD":"DVD", "BD": "Blu-Ray", "TV":"TV", "SAT/CBL": "CBL/SAT", "DVR": "DVR", "GAME": "Game", "GAME2": "Game2", "V.AUX":"V.Aux", "DOCK": "Dock", "SOURCE":"cancel", "OFF":"Off"}
 
-@Amp.add_feature
+@Denon.add_feature
 class Sleep(IntFeature):
     min = 0 # 1..120, 0 will send "OFF"
     max = 120
@@ -418,7 +418,7 @@ class Sleep(IntFeature):
     def decodeVal(self, val): return 0 if val=="OFF" else super().decodeVal(val)
     
 
-@Amp.add_feature
+@Denon.add_feature
 class SoundMode(SelectFeature):
     category = "General"
     function = "MS"
@@ -435,14 +435,14 @@ class _QuickSelect(SelectFeature):
     function="MSQUICK"
     translation = {str(n+1):str(n+1) for n in range(5)}
 
-@Amp.add_feature
+@Denon.add_feature
 class QuickSelect(_QuickSelect):
     name = "Quick Select (load)"
     call="MSQUICK ?"
     def get(self): return "(None)" if super().get() == "0" else super().get()
     def matches(self, data): return super().matches(data) and not data.endswith("MEMORY")
 
-@Amp.add_feature
+@Denon.add_feature
 class QuickSelectStore(_QuickSelect):
     name = "Quick Select (save)"
     call = None
@@ -465,7 +465,7 @@ class QuickSelectStore(_QuickSelect):
         self.amp.features.quick_select.resend()
 
 
-@Amp.add_feature
+@Denon.add_feature
 class HdmiMonitor(SelectFeature):
     name = "HDMI Monitor auto detection"
     category = "Video"
@@ -473,7 +473,7 @@ class HdmiMonitor(SelectFeature):
     call = "VSMONI ?"
     translation = {"MONI1":"OUT-1", "MONI2":"OUT-2"}
     
-@Amp.add_feature
+@Denon.add_feature
 class Asp(SelectFeature):
     name = "ASP mode"
     function = "VSASP"
@@ -484,74 +484,74 @@ class _Resolution(SelectFeature):
     category = "Video"
     translation = {"48P":"480p/576p", "10I":"1080i", "72P":"720p", "10P":"1080p", "10P24":"1080p:24Hz", "AUTO":"Auto"}
 
-@Amp.add_feature
+@Denon.add_feature
 class Resolution(_Resolution):
     function = "VSSC"
     call = "VSSC ?"
     def matches(self, data): return super().matches(data) and not data.startswith("VSSCH")
     
-@Amp.add_feature
+@Denon.add_feature
 class HdmiResolution(_Resolution):
     name = "HDMI Resolution"
     function = "VSSCH"
     call = "VSSCH ?"
 
-@Amp.add_feature
+@Denon.add_feature
 class HdmiAudioOutput(SelectFeature):
     name = "HDMI Audio Output"
     category = "Video"
     function = "VSAUDIO "
     translation = {"AMP":"to Amp", "TV": "to TV"}
     
-@Amp.add_feature
+@Denon.add_feature
 class VideoProcessingMode(SelectFeature):
     category = "Video"
     function = "VSVPM"
     call = "VSVPM ?"
     translation = {"AUTO":"Auto", "GAME":"Game", "MOVI": "Movie"}
     
-@Amp.add_feature
+@Denon.add_feature
 class ToneControl(BoolFeature):
     category = "General"
     function = "PSTONE CTRL "
     
-@Amp.add_feature
+@Denon.add_feature
 class SurroundBackMode(SelectFeature):
     name = "Surround Back SP Mode"
     function = "PSSB:"
     call = "PSSB: ?"
     translation = {"MTRX ON": "Matrix", "PL2x CINEMA":"Cinema", "PL2x MUSIC": "Music", "ON":"On", "OFF":"Off"}
     
-@Amp.add_feature
+@Denon.add_feature
 class CinemaEq(BoolFeature):
     name = "Cinema Eq."
     function = "PSCINEMA EQ."
     call = "PSCINEMA EQ. ?"
 
-@Amp.add_feature
+@Denon.add_feature
 class Mode(SelectFeature):
     function = "PSMODE:"
     call = "PSMODE: ?"
     translation = {"MUSIC":"Music","CINEMA":"Cinema","GAME":"Game","PRO LOGIC":"Pro Logic"}
     
-@Amp.add_feature
+@Denon.add_feature
 class FrontHeight(BoolFeature):
     function = "PSFH:"
     call = "PSFH: ?"
 
-@Amp.add_feature
+@Denon.add_feature
 class Pl2hg(SelectFeature):
     name = "PL2z Height Gain"
     function = "PSPHG "
     translation = {"LOW":"Low","MID":"Medium","HI":"High"}
     
-@Amp.add_feature
+@Denon.add_feature
 class SpeakerOutput(SelectFeature):
     function = "PSSP:"
     call = "PSSP: ?"
     translation = {"FH":"F. Height", "FW":"F. Wide", "SB":"S. Back"}
     
-@Amp.add_feature
+@Denon.add_feature
 class MultiEq(SelectFeature):
     name = "MultiEQ XT mode"
     category = "Audyssey"
@@ -559,18 +559,18 @@ class MultiEq(SelectFeature):
     call = "PSMULTEQ: ?"
     translation = {"AUDYSSEY":"Audyssey", "BYP.LR":"L/R Bypass", "FLAT":"Flat", "MANUAL":"Manual", "OFF":"Off"}
     
-@Amp.add_feature
+@Denon.add_feature
 class DynamicEq(BoolFeature):
     category = "Audyssey"
     function = "PSDYNEQ "
     
-@Amp.add_feature
+@Denon.add_feature
 class ReferenceLevel(SelectFeature):
     category = "Audyssey"
     function = "PSREFLEV "
     translation = {"0":"0 dB","5":"5 dB","10":"10 dB","15":"15 dB"}
     
-@Amp.add_feature
+@Denon.add_feature
 class DynamicVolume(SelectFeature):
     category = "Audyssey"
     function = "PSDYNVOL "
@@ -578,40 +578,40 @@ class DynamicVolume(SelectFeature):
     translation = {"LIT":"Light","MED":"Medium","HEV":"Heavy", #undocumented
         "NGT":"Heavy", "EVE":"Medium", "DAY":"Light","OFF":"Off"}
     
-@Amp.add_feature
+@Denon.add_feature
 class AudysseyDsx(SelectFeature):
     name = "Audyssey DSX"
     category = "Audyssey"
     function = "PSDSX "
     translation = {"ONH":"On (Height)", "ONW":"On (Wide)","OFF":"Off"}
     
-@Amp.add_feature
+@Denon.add_feature
 class StageWidth(IntFeature): function = "PSSTW "
 
-@Amp.add_feature
+@Denon.add_feature
 class StageHeight(IntFeature): function = "PSSTH "
     
-@Amp.add_feature
+@Denon.add_feature
 class Bass(RelativeInt):
     category = "General"
     function = "PSBAS "
     
-@Amp.add_feature
+@Denon.add_feature
 class Treble(RelativeInt):
     category = "General"
     function = "PSTRE "
     
-@Amp.add_feature
+@Denon.add_feature
 class Drc(SelectFeature):
     function = "PSDRC "
     translation = {"AUTO":"Auto", "LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
-@Amp.add_feature
+@Denon.add_feature
 class DynamicCompression(SelectFeature):
     function = "PSDCO "
     translation = {"LOW":"Low", "MID":"Medium", "HI":"High", "OFF":"Off"}
 
-@Amp.add_feature
+@Denon.add_feature
 class Lfe(IntFeature):
     name = "LFE"
     category = "Audio"
@@ -621,33 +621,33 @@ class Lfe(IntFeature):
     def decodeVal(self, val): return super().decodeVal(val)*-1
     def encodeVal(self, val): return super().encodeVal(val*-1)
 
-@Amp.add_feature
+@Denon.add_feature
 class EffectLevel(IntFeature): function = "PSEFF "
     
-@Amp.add_feature
+@Denon.add_feature
 class Delay(IntFeature):
     category = "Audio"
     max=999
     function = "PSDEL "
     
-@Amp.add_feature
+@Denon.add_feature
 class Afd(BoolFeature):
     name = "AFDM"
     function = "PSAFD "
     
-@Amp.add_feature
+@Denon.add_feature
 class Panorama(BoolFeature): function = "PSPAN "
 
-@Amp.add_feature
+@Denon.add_feature
 class Dimension(IntFeature): function = "PSDIM "
 
-@Amp.add_feature
+@Denon.add_feature
 class CenterWidth(IntFeature): function = "PSCEN "
     
-@Amp.add_feature
+@Denon.add_feature
 class CenterImage(IntFeature): function = "PSCEI "
     
-@Amp.add_feature
+@Denon.add_feature
 class Subwoofer(BoolFeature):
     category = "Bass"
     function = "PSSWR "
@@ -658,10 +658,10 @@ class _SubwooferAdjustment: #undocumented
     function = "PSSWL "
     name = "Subwoofer Adjustment"
 
-@Amp.add_feature
+@Denon.add_feature
 class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
 
-@Amp.add_feature
+@Denon.add_feature
 class SubwooferAdjustment(_SubwooferAdjustment, LooseDecimalFeature): pass
 
 class _DialogLevel: #undocumented
@@ -669,36 +669,36 @@ class _DialogLevel: #undocumented
     function = "PSDIL "
     name = "Dialog Level"
 
-@Amp.add_feature
+@Denon.add_feature
 class DialogLevelSwitch(_DialogLevel, LooseBoolFeature): pass
 
-@Amp.add_feature
+@Denon.add_feature
 class DialogLevel(_DialogLevel, LooseDecimalFeature): pass
 
-@Amp.add_feature
+@Denon.add_feature
 class RoomSize(SelectFeature):
     function = "PSRSZ "
     translation = {e:e for e in ["S","MS","M","ML","L"]}
     
-@Amp.add_feature
+@Denon.add_feature
 class AudioDelay(IntFeature):
     category = "Audio"
     max = 999
     function  ="PSDELAY "
 
-@Amp.add_feature
+@Denon.add_feature
 class Restorer(SelectFeature):
     name = "Audio Restorer"
     category = "Audio"
     function = "PSRSTR "
     translation = {"OFF":"Off", "MODE1":"Mode 1", "MODE2":"Mode 2", "MODE3":"Mode 3"}
     
-@Amp.add_feature
+@Denon.add_feature
 class FrontSpeaker(SelectFeature):
     function = "PSFRONT"
     translation = {" SPA":"A"," SPB":"B"," A+B":"A+B"}
     
-@Amp.add_feature
+@Denon.add_feature
 class Crossover(SelectFeature): #undocumented
     name = "Crossover Speaker Select"
     category = "Speakers"
@@ -712,63 +712,63 @@ class _Crossover(SelectFeature): #undocumented
     translation = {x:"%d Hz"%int(x)
         for x in ["040","060","080","090","100","110","120","150","200","250"]}
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverAll(_Crossover): #undocumented
     name = "Crossover (all)"
     function = "SSCFRALL "
     
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverFront(_Crossover): #undocumented
     name = "Crossover (front)"
     function = "SSCFRFRO "
     
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverSurround(_Crossover): #undocumented
     name = "Crossover (surround)"
     function = "SSCFRSUA "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverCenter(_Crossover): #undocumented
     name = "Crossover (center)"
     function = "SSCFRCEN "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverSurroundBack(_Crossover): #undocumented
     name = "Crossover (surround back)"
     function = "SSCFRSBK "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverFrontHeight(_Crossover): #undocumented
     name = "Crossover (front height)"
     function = "SSCFRFRH "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverTopFront(_Crossover): #undocumented
     name = "Crossover (top front)"
     function = "SSCFRTFR "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverTopMiddle(_Crossover): #undocumented
     name = "Crossover (top middle)"
     function = "SSCFRTPM "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverFrontAtmos(_Crossover): #undocumented
     name = "Crossover (front atmos)"
     function = "SSCFRFRD "
 
-@Amp.add_feature
+@Denon.add_feature
 class CrossoverSurroundAtmos(_Crossover): #undocumented
     name = "Crossover (surround atmos)"
     function = "SSCFRSUD "
 
-@Amp.add_feature
+@Denon.add_feature
 class SubwooferMode(SelectFeature): #undocumented
     category = "Bass"
     function = "SSSWM "
     translation = {"L+M":"LFE + Main", "LFE":"LFE"}
     
-@Amp.add_feature
+@Denon.add_feature
 class LfeLowpass(SelectFeature): #undocumented
     name = "LFE Lowpass Freq."
     category = "Bass"
@@ -776,12 +776,12 @@ class LfeLowpass(SelectFeature): #undocumented
     translation = {x:"%d Hz"%int(x) 
         for x in ["080","090","100","110","120","150","200","250"]}
 
-@Amp.add_feature
+@Denon.add_feature
 class Display(SelectFeature):
     function = "DIM "
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
-@Amp.add_feature
+@Denon.add_feature
 class InputSignal(BoolFeature): #undocumented
     """
     Information on Audio Input Signal
@@ -807,21 +807,21 @@ class InputSignal(BoolFeature): #undocumented
         if self.get(): self.amp.on_start_playing()
 
 
-@Amp.add_feature
+@Denon.add_feature
 class SampleRate(SelectFeature): #undocumented
     """ Information on Audio Input Signal Sample Rate """
     category = "Input"
     function = "SSINFAISFV "
 
 
-@Amp.add_feature
+@Denon.add_feature
 class AutoStandby(SelectFeature):
     category = "Eco"
     function = "STBY"
     translation = {"OFF":"Off","15M":"15 min","30M":"30 min","60M":"60 min"}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class AmpAssign(SelectFeature): #undocumented
     category = "Speakers"
     function = "SSPAAMOD "
@@ -829,40 +829,40 @@ class AmpAssign(SelectFeature): #undocumented
     translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "Front Height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class VolumeOsd(SelectFeature): #undocumented
     category = "Video"
     function = "SSOSDVOL "
     translation = {"TOP":"Top","BOT":"Bottom","OFF":"Off"}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class InfoOsd(BoolFeature): #undocumented
     category = "Video"
     function = "SSOSDTXT "
 
 
-@Amp.add_feature
+@Denon.add_feature
 class HdmiRcSelect(SelectFeature): #undocumented
     function = "SSHOSRSS "
     call = "SSHOS ?"
     translation = {"POS":"Power On + Source", "SSO":"Only Source"}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class HdmiControl(BoolFeature): #undocumented
     function = "SSHOSCON "
     call = "SSHOS ?"
 
 
-@Amp.add_feature
+@Denon.add_feature
 class Language(SelectFeature): #undocumented
     function = "SSLAN "
     translation = {"DEU":"German", "ENG":"English", "ESP":"Spanish", "POL":"Polish", "RUS": "Russian",
         "FRA":"French", "ITA":"Italian", "NER":"Dutch", "SVE":"Swedish"}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class EcoMode(SelectFeature): #undocumented
     category = "Eco"
     function = "ECO"
@@ -870,7 +870,7 @@ class EcoMode(SelectFeature): #undocumented
 
 
 for code, key, name in SOURCES:
-    @Amp.add_feature
+    @Denon.add_feature
     class InputVisibility(BoolFeature): #undocumented
         name = f"Enable {name} Input"
         key = f"enable_{key}"
@@ -881,7 +881,7 @@ for code, key, name in SOURCES:
 
 
 for code, key, name in SOURCES:
-    @Amp.add_feature
+    @Denon.add_feature
     class SourceVolumeLevel(RelativeInt): #undocumented
         name = f"{name} Volume Level"
         key = f"{key}_volume_level"
@@ -896,7 +896,7 @@ for code, key, name in SOURCES:
 
 
 for code, key, name in SPEAKERS:
-    @Amp.add_feature
+    @Denon.add_feature
     class SpeakerDistance(IntFeature): #undocumented
         name = f"{name} Distance"
         key = f"{key}_distance"
@@ -907,13 +907,13 @@ for code, key, name in SPEAKERS:
         function = f"SSSDE{code} "
 
 
-@Amp.add_feature
+@Denon.add_feature
 class SerialNumber(SelectFeature):
     call = "VIALL?"
     function = "VIALLS/N."
 
 
-@Amp.add_feature
+@Denon.add_feature
 class VolumeScale(SelectFeature):
     category = "Volume"
     function = "SSVCTZMADIS "
@@ -921,7 +921,7 @@ class VolumeScale(SelectFeature):
     translation = {"REL":"-79-18 dB", "ABS":"0-98"}
 
 
-@Amp.add_feature
+@Denon.add_feature
 class PowerOnLevel(LooseIntFeature):
     category = "Volume"
     key = "power_on_level_numeric"
@@ -929,7 +929,7 @@ class PowerOnLevel(LooseIntFeature):
     call = "SSVCTZMA ?"
 
 
-@Amp.add_feature
+@Denon.add_feature
 class PowerOnLevel(SelectFeature):
     category = "Volume"
     function = "SSVCTZMAPON "
@@ -941,7 +941,7 @@ class PowerOnLevel(SelectFeature):
             self.amp.features.power_on_level_numeric.store(0)
 
 
-@Amp.add_feature
+@Denon.add_feature
 class MuteMode(SelectFeature):
     category = "Volume"
     function = "SSVCTZMAMLV "
@@ -951,7 +951,7 @@ class MuteMode(SelectFeature):
 
 for source_code, source_key, source_name in SOURCES:
     for input_code, input_value_code, input_key, input_name in INPUTS:
-        @Amp.add_feature
+        @Denon.add_feature
         class SourceInputAssign(SelectFeature):
             name = f"{source_name} {input_name} Input"
             key = f"input_{source_key}_{input_key}"
@@ -969,20 +969,20 @@ for zone in range(2,ZONES+1):
     class Zone:
         category = "Zone %s"%zone
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ZVolume(Zone, Volume):
         name = "Zone %s Volume"%zone
         key = "zone%s_volume"%zone
         function = "Z%s"%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class ZPower(Zone, BoolFeature):
         name = "Zone %s Power"%zone
         key = "zone%s_power"%zone
         function = "Z%s"%zone
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ZSource(Zone, Source):
         name = "Zone %s Source"%zone
         key = "zone%s_source"%zone
@@ -1009,51 +1009,51 @@ for zone in range(2,ZONES+1):
             super().unset()
             self._from_mainzone = False
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ZMuted(Zone, Muted):
         name = "Zone %s Muted"%zone
         key = "zone%s_muted"%zone
         function = "Z%sMU"%zone
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ChannelSetting(Zone, SelectFeature):
         key = "zone%s_channel_setting"%zone
         function = "Z%sCS"%zone
         translation = {"MONO":"Mono","ST":"Stereo"}
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ZFrontLeftVolume(Zone, RelativeDecimal):
         key = "zone%s_front_left_volume"%zone
         name = "Front Left Volume"
         function = "Z%sFL "%zone
         call = "Z%sCV?"%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class ZFrontRightVolume(Zone, RelativeDecimal):
         key = "zone%s_front_right_volume"%zone
         name = "Front Right Volume"
         function = "Z%sFR "%zone
         call = "Z%sCV?"%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class Hpf(Zone, BoolFeature):
         key = "zone%s_hpf"%zone
         name = "HPF"
         function = "Z%sHPF"%zone
     
-    @Amp.add_feature
+    @Denon.add_feature
     class ZBass(Zone, RelativeInt):
         name = "Zone %s Bass"%zone
         key = "zone%s_bass"%zone
         function = "Z%sPSBAS "%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class ZTreble(Zone, RelativeInt):
         name = "Zone %s Treble"%zone
         key = "zone%s_treble"%zone
         function = "Z%sPSTRE "%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class Mdmi(Zone, SelectFeature):
         name = "MDMI Out"
         key = "zone%s_mdmi"%zone
@@ -1061,13 +1061,13 @@ for zone in range(2,ZONES+1):
         call = "Z%sHDA?"%zone
         translation = {"THR":"THR", "PCM":"PCM"}
         
-    @Amp.add_feature
+    @Denon.add_feature
     class ZSleep(Zone, Sleep):
         name = "Zone %s Sleep (min.)"%zone
         key = "zone%s_sleep"%zone
         function = "Z%sSLP"%zone
         
-    @Amp.add_feature
+    @Denon.add_feature
     class AutoStandby(Zone, SelectFeature):
         name = "Zone %s Auto Standby"%zone
         key = "zone%s_auto_standby"%zone

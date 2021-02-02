@@ -2,7 +2,7 @@ from ..amp import AbstractAmp, discover_amp
 from .. import Amp as Amp_
 
 
-class Amp(AbstractAmp):
+class Auto(AbstractAmp):
     protocol = "Auto"
 
     def __new__(self, *args, **xargs):

@@ -87,7 +87,7 @@ class PlainEmulator(ProtocolType):
     def new_server(*args, **xargs): raise NotImplementedError()
 
 
-class Amp(ProtocolType):
+class Emulator(ProtocolType):
     protocol = "Emulator"
 
     @classmethod
