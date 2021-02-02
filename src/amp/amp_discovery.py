@@ -1,17 +1,17 @@
 import socket
 from urllib.parse import urlparse
 from ..core.util import ssdp
-from .. import Amp
+from .. import Target
 
 
 def check_amp(host):
+    uri = f"denon://{host}:23"
     try:
-        with Amp(protocol=".denon", host=host, port=23) as amp:
-            name = amp.name
+        with Target(uri) as amp: name = amp.name
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
         return False
     print("Found %s on %s."%(name, host))
-    return dict(host=host,port=23,protocol=".denon")
+    return uri
 
 
 def discover_amp():

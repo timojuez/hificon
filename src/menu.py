@@ -4,7 +4,7 @@ from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
 from .protocol import protocols
-from . import Amp, Amp_cls, NAME, VERSION, AUTHOR, COPYRIGHT
+from . import Amp, get_protocol, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = "%s Control Menu"%NAME
@@ -211,7 +211,7 @@ class SettingsTab(TabbedPanelItem):
 
     def __init__(self):
         super().__init__()
-        protocol_names = {protocol_: Amp_cls(protocol_).protocol or protocol_
+        protocol_names = {protocol_: get_protocol(protocol_).protocol or protocol_
             for protocol_ in protocols}
 
         dropdown = SelectFeatureOptions()

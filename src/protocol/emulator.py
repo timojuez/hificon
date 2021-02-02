@@ -2,7 +2,7 @@
 Dry software run that acts like a real amp
 """
 
-from .. import Amp_cls
+from .. import get_protocol
 from ..core.transport import ProtocolType, TelnetProtocol
 from ..core.transport.abstract import DummyServerMixin, AbstractClient, AbstractServer
 
@@ -59,7 +59,7 @@ class TelnetEmulator(ProtocolType):
     @classmethod
     def new_client(cls, protocol, port=0, *args, **xargs):
         print(protocol)
-        Protocol = Amp_cls(protocol)
+        Protocol = get_protocol(protocol)
         server = Protocol.new_dummyserver(listen_host="127.0.0.1", listen_port=int(port))
         xargs.update(host=server.host, port=server.port)
         client = type(Protocol.__name__, (DummyTelnetClient, Protocol, Protocol.Client), {})(*args, **xargs)
@@ -75,7 +75,7 @@ class PlainEmulator(ProtocolType):
     
     @classmethod
     def new_client(cls, protocol, *args, **xargs):
-        Protocol = Amp_cls(protocol)
+        Protocol = get_protocol(protocol)
         server = type("Server", (DummyServerMixin, Protocol, AbstractServer), {})()
         client = type("Client", (DummyClientMixin, Protocol, AbstractClient), {})(*args, **xargs)
         client._server = server
@@ -92,7 +92,7 @@ class Amp(ProtocolType):
 
     @classmethod
     def new_client(cls, protocol, *args, **xargs):
-        Protocol = Amp_cls(protocol)
+        Protocol = get_protocol(protocol)
         Emulator = TelnetEmulator if issubclass(Protocol, TelnetProtocol) else PlainEmulator
         return Emulator.new_client(protocol, *args, **xargs)
 

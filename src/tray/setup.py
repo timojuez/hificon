@@ -63,16 +63,15 @@ def zone_setup():
 
 
 def discover_amp_prompt():
-    def set_amp(host,port,protocol,**xargs):
-        config["Target"]["uri"] = f"{protocol}://{host}:{port}"
+    def set_amp(uri): config["Target"]["uri"] = uri
     try: amp_details = discover_amp()
     except Exception as e:
         print("%s: %s"%(type(e).__name__, e))
         while True:
             host = input("Enter amp's IP: ")
-            if amp_details := check_amp(host): return set_amp(**amp_details)
+            if amp_details := check_amp(host): return set_amp(amp_details)
             else: print("Cannot connect to host.")
-    else: set_amp(**amp_details)
+    else: set_amp(amp_details)
 
 
 class Main(object):
