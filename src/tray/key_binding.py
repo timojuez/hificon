@@ -3,7 +3,7 @@ import time, sys, tempfile, os
 from threading import Thread, Lock
 from contextlib import suppress
 from ..core.util import json_service
-from ..core import features, config
+from ..core import config
 from ..info import PKG_NAME
 
 
@@ -55,9 +55,8 @@ class VolumeChanger:
     def volume_thread(self):
         while True:
             self._volume_step.acquire() # wait for on_feature_change
-            self.step_volume()
+            self.amp.schedule(self.step_volume, requires=(config.volume,))
     
-    @features.require(config.volume)
     def step_volume(self):
         if self.keys_pressed > 0:
             setattr(self.amp,config.volume,

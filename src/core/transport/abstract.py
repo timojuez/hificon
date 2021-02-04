@@ -34,7 +34,7 @@ class ProtocolBase(Bindable, ProtocolType):
         """ @name must match an existing attribute """
         if hasattr(self.__class__, name): super().__setattr__(name, value)
         else: raise AttributeError(("%s object has no attribute %s. To rely on "
-            "optional features, use decorator @features.require('attribute')")
+            "optional features, use Target.schedule.")
             %(repr(self.__class__.__name__),repr(name)))
 
     def _setfattr(self, key, value):
@@ -83,6 +83,11 @@ class ProtocolBase(Bindable, ProtocolType):
         return add(Feature) if Feature else add
     
     def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
+
+    def schedule(self, func, args=tuple(), xargs={}, requires=tuple()):
+        @features.require(*requires)
+        def f(target): return func(*args, **xargs)
+        return f(self)
     
     @log_call
     def on_feature_change(self, key, value, previous_val):

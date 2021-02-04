@@ -154,7 +154,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def __str__(self): return str(self.get()) if self.isset() else "..."
     
     def get(self):
-        if not self.isset(): raise AttributeError("`%s` not available. Use @require"%self.key)
+        if not self.isset(): raise AttributeError(f"`{self.key}` not available. Use Target.schedule")
         else: return self._val
     
     def send(self, value, force=False):

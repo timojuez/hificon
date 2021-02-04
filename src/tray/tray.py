@@ -26,14 +26,14 @@ class TextNotification(FeatureNotification, gui.Notification):
         super().update("Connecting ...", self.amp.prompt)
         self.amp.preload_features.add("name")
     
-    @features.require("name")
-    def update(self):
-        if self.f.isset(): val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
-        else: return
-        super().update("%s: %s"%(self.f.name, val), self.f.amp.name)
+    def update(self): self.amp.schedule(self._update, requires=("name",))
+    
+    def _update(self):
+        if not self.f.isset(): return
+        val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
+        super().update(f"{self.f.name}: {val}", self.f.amp.name)
 
-    @features.require("name")
-    def show(self): super().show()
+    def show(self): self.amp.schedule(super(TextNotification, self).show, requires=("name",))
 
 
 class NumericNotification(FeatureNotification):
@@ -75,8 +75,10 @@ class Icon(Bindable):
     def on_feature_change(self, key, value, *args): # bound to amp
         if key in (config.volume, config.muted, config.power): self.update_icon()
 
-    @features.require(config.muted, config.volume, config.power)
     def update_icon(self):
+        self.amp.schedule(self._update_icon, requires=(config.muted, config.volume, config.power))
+
+    def _update_icon(self):
         volume = self.amp.features[config.volume]
         if not getattr(self.amp,config.power): self.set_icon("power")
         elif getattr(self.amp,config.muted) or volume.get() == volume.min:
@@ -153,15 +155,17 @@ class TrayMixin(gui.Tray):
         gui.ScalePopup(self.amp).set_image(path)
         self.set_icon(path, name)
     
-    @features.require(config.volume)
     def on_scroll_up(self, steps):
-        new_volume = getattr(self.amp,config.volume)+self.scroll_delta*steps
-        setattr(self.amp, config.volume, new_volume)
+        volume = self.amp.features[config.volume]
+        try:
+            if volume.isset(): volume.send(volume.get()+self.scroll_delta*steps)
+        except ConnectionError: pass
 
-    @features.require(config.volume)
     def on_scroll_down(self, steps):
-        new_volume = getattr(self.amp,config.volume)-self.scroll_delta*steps
-        setattr(self.amp, config.volume, new_volume)
+        volume = self.amp.features[config.volume]
+        try:
+            if volume.isset(): volume.send(volume.get()-self.scroll_delta*steps)
+        except ConnectionError: pass
     
     def poweron(self, force=False):
         """ poweron amp """
@@ -192,8 +196,9 @@ class NotifyPoweroff:
         if self._n.get_closed_reason() == 1: # timeout
             self.poweroff()
     
-    @features.require("name")
-    def on_amp_idle(self):
+    def on_amp_idle(self): self.amp.schedule(self._on_amp_idle, requires=("name",))
+
+    def _on_amp_idle(self):
         if self.can_poweroff:
             self._n.update("Power off %s"%self.amp.name)
             self._n.show()

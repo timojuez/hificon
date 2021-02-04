@@ -349,11 +349,11 @@ class Source(SelectFeature):
         else:
             self.translation.update(self.amp.features.source_names.translation)
         
-    @features.require("source_names")
-    def consume(self, data): return super().consume(data)
+    def consume(self, data):
+        self.amp.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
     
-    @features.require("source_names")
-    def send(self, *args, **xargs): return super().send(*args, **xargs)
+    def send(self, *args, **xargs):
+        self.amp.schedule(lambda:super(Source, self).send(*args, **xargs), requires=("source_names",))
 
 
 @Denon.add_feature(overwrite=True)
@@ -460,9 +460,8 @@ class QuickSelectStore(_QuickSelect):
         super().on_change(old, new)
         self.amp.features.quick_select.store(new)
         
-    @features.require("quick_select")
     def resend(self):
-        self.amp.features.quick_select.resend()
+        self.amp.schedule(self.amp.features.quick_select.resend, requires=("quick_select",))
 
 
 @Denon.add_feature
@@ -801,10 +800,9 @@ class InputSignal(BoolFeature): #undocumented
         super().on_change(old, new)
         self.amp.on_start_playing() if new == True else self.amp.on_stop_playing()
 
-    @features.require("input_signal")
     def on_stop_playing(self):
         # undo amp.on_stop_playing() if self.get() == True
-        if self.get(): self.amp.on_start_playing()
+        self.amp.schedule(lambda:self.get() and self.amp.on_start_playing(), requires=(self.key,))
 
 
 @Denon.add_feature
@@ -996,9 +994,9 @@ for zone in range(2,ZONES+1):
 
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
-        @features.require("source")
         def _resolve_main_zone_source(self):
-            if self._from_mainzone: super().store(self.amp.source)
+            self.amp.schedule(lambda: self._from_mainzone and Source.store(self, self.amp.source),
+                requires=("source",))
 
         def store(self, data):
             self._from_mainzone = data == "Main Zone"

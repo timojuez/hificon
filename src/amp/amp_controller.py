@@ -5,7 +5,7 @@ Main class AmpController
 
 from ..core.util.system_events import SystemEvents
 from ..core.util import log_call
-from ..core import config, features
+from ..core import config
 
 
 class _Base(SystemEvents):
@@ -16,8 +16,9 @@ class _Base(SystemEvents):
         self.amp.preload_features.update((config.source, config.power))
         super().__init__(*args, **xargs)
 
-    @features.require(config.power, config.source)
-    def poweron(self):
+    def poweron(self): self.amp.schedule(self._poweron, requires=(config.power, config.source))
+
+    def _poweron(self):
         if getattr(self.amp, config.power): return
         if config["Amp"].get("source"): self.amp.features[config.source].send(config.getlist("Amp","source")[0])
         setattr(self.amp, config.power, True)
@@ -26,9 +27,9 @@ class _Base(SystemEvents):
         lambda self: getattr(self.amp,config.power)
         and (not config["Amp"]["source"] or getattr(self.amp,config.source) in config.getlist("Amp","source")))
 
-    @features.require(config.power, config.source)
     def poweroff(self, force=False):
-        if force or self.can_poweroff: setattr(self.amp,config.power,False)
+        self.amp.schedule(lambda:(force or self.can_poweroff) and setattr(self.amp,config.power,False),
+            requires=(config.power, config.source))
 
 
 class SoundMixin(_Base):
