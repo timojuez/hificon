@@ -1,7 +1,7 @@
 import sys, traceback, re
 from contextlib import suppress
 from decimal import Decimal
-from threading import Event, Lock, Timer
+from threading import Event, Lock, Timer, Thread
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable, AttrDict
 from ..config import config
@@ -81,8 +81,18 @@ class FunctionCall(object):
         return True
 
 
-class Features(AttrDict): pass
+class Features(AttrDict):
     
+    def wait_for(self, *features):
+        try: features = [f if isinstance(f, Feature) else self[f] for f in features]
+        except KeyError as e:
+            print(f"[{self.__class__.__name__}] Warning: Target does not provide feature. {e}",
+                file=sys.stderr)
+            return False
+        threads = [Thread(target=f.wait_poll, daemon=True, name="wait_for") for f in features]
+        for t in threads: t.start()
+        for t in threads: t.join()
+        return all([f.isset() for f in features])
         
 
 class FeatureInterface(object):
@@ -136,6 +146,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         super().__init__()
         self.amp = amp
         self._lock = Lock()
+        self._event_on_set = Event()
         amp.features[self.key] = self
         
     name = property(lambda self:self.__class__.__name__)
@@ -221,6 +232,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         """ Event is fired on initial set """
         try: self._timer_store_default.cancel()
         except: pass
+        self._event_on_set.set()
         if getattr(self.amp, "_pending", None):
             if self.amp.verbose > 5: print("[%s] %d pending functions"
                 %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
@@ -232,6 +244,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def on_unset(self):
         try: self._timer_store_default.cancel()
         except: pass
+        self._event_on_set.clear()
     
     def on_store(self, value):
         """ This event is being called each time the feature is being set to a value
@@ -253,17 +266,22 @@ class SynchronousFeature(AsyncFeature):
                 self.poll()
                 return super().get()
         finally: self._poll_lock.release()
-        
+
+    def wait_poll(self, force=False):
+        """ Poll and wait if Feature is unset. Returns False on timeout and True otherwise """
+        if not self.amp.connected: return False
+        if force: self.unset()
+        if not self.isset():
+            try: self.async_poll()
+            except ConnectionError: return False
+            if not self._event_on_set.wait(timeout=MAX_CALL_DELAY+.1): return False
+        return True
+
     def poll(self, force=False):
         """ synchronous poll """
-        self.async_poll(force)
-        e = Event()
-        def poll_event(self): e.set()
-        require(self.key)(poll_event)(self)
-        if not e.wait(timeout=MAX_CALL_DELAY+.1):
-            raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
-        return super().get()
-    
+        if self.wait_poll(force): return super().get()
+        else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
+
 
 Feature = SynchronousFeature
 
