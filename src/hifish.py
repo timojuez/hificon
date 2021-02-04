@@ -19,7 +19,7 @@ class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='Controller for Network Amp - CLI')
-        parser.add_argument('--target', metavar="URI", type=str, default=None, help='Device URI')
+        parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor amp messages')

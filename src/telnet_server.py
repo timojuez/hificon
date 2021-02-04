@@ -29,7 +29,7 @@ def main():
     parser = argparse.ArgumentParser(description='Start a server for interacting on a given protocol')
     parser.add_argument('--listen-host', metavar="HOST", type=str, default="127.0.0.1", help='Host (listening)')
     parser.add_argument('--listen-port', metavar="PORT", type=int, default=0, help='Port (listening)')
-    parser.add_argument('--target', metavar="URI", type=str, default=None, help='Target URI')
+    parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('-e', '--emulate', default="server", const="dummyserver", dest="role",
         action="store_const", help='Emulate server (dry run)')

@@ -6,10 +6,10 @@ from .core.config import config, ConfigDict, CONFDIR
 from . import Amp, protocol, get_protocol, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
-TITLE = "%s Control Menu"%NAME
+TITLE = f"{NAME} Control Menu"
 os.environ["KIVY_NO_ARGS"] = "1"
 parser = argparse.ArgumentParser(description='Control Menu App')
-parser.add_argument('--target', metavar="URI", type=str, default=None, help='Device URI')
+parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
 parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
 cmd_args = parser.parse_args()
 
