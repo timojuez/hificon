@@ -85,6 +85,9 @@ class ProtocolBase(Bindable, ProtocolType):
     def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
 
     def schedule(self, func, args=tuple(), xargs={}, requires=tuple()):
+        """ Use this to call methods that use Target.features.
+        Call func(*args, **xargs) if all features in @requires are set.
+        Poll features and schedule func otherwise. """
         @features.require(*requires)
         def f(target): return func(*args, **xargs)
         return f(self)
