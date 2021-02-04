@@ -259,28 +259,21 @@ class SynchronousFeature(AsyncFeature):
         super().__init__(*args,**xargs)
 
     def get(self):
-        self._poll_lock.acquire()
-        try:
+        with self._poll_lock:
             try: return super().get()
             except AttributeError:
-                self.poll()
-                return super().get()
-        finally: self._poll_lock.release()
+                if self.wait_poll(): return super().get()
+                else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
 
     def wait_poll(self, force=False):
         """ Poll and wait if Feature is unset. Returns False on timeout and True otherwise """
         if not self.amp.connected: return False
         if force: self.unset()
         if not self.isset():
-            try: self.async_poll()
+            try: self.async_poll(force)
             except ConnectionError: return False
             if not self._event_on_set.wait(timeout=MAX_CALL_DELAY+.1): return False
         return True
-
-    def poll(self, force=False):
-        """ synchronous poll """
-        if self.wait_poll(force): return super().get()
-        else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
 
 
 Feature = SynchronousFeature

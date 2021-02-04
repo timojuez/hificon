@@ -17,5 +17,5 @@ class RawTelnet(TelnetProtocol):
             def decode(self, cmd): return cmd
             def encode(self, value): return value
         RawFeature.__name__ = cmd
-        return RawFeature(self).poll(force=True)
+        return RawFeature(self).get()
 
