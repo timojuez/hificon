@@ -3,7 +3,7 @@ from contextlib import suppress
 from decimal import Decimal
 from threading import Event, Lock, Timer
 from datetime import datetime, timedelta
-from ..util import call_sequence, Bindable
+from ..util import call_sequence, Bindable, AttrDict
 from ..config import config
 from .protocol_type import ProtocolType
 
@@ -79,6 +79,10 @@ class FunctionCall(object):
                 %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
             self.cancel()
         return True
+
+
+class Features(AttrDict): pass
+    
         
 
 class FeatureInterface(object):

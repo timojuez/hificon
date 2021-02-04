@@ -6,7 +6,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 import sys
 from threading import Thread, Event
 from ..util.function_bind import Bindable
-from ..util import log_call, AttrDict
+from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
 from .protocol_type import ProtocolType
@@ -17,12 +17,12 @@ class ProtocolBase(Bindable, ProtocolType):
     protocol = None
     verbose = 0
     connected = False
-    features = {}
+    features = features.Features()
     _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
-        self.features = AttrDict()
+        self.features = self.features.__class__()
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
         self.add_feature = disable_add_feature
@@ -78,7 +78,7 @@ class ProtocolBase(Bindable, ProtocolType):
                 lambda self:self.features[Feature.key].get(),
                 lambda self,val:self._setfattr(Feature.key, val)
             ))
-            cls.features = {**cls.features, Feature.key: Feature}
+            cls.features = cls.features.__class__({**cls.features, Feature.key: Feature})
             return Feature
         return add(Feature) if Feature else add
     
