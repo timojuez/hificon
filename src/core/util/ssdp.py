@@ -55,3 +55,7 @@ def discover(service="ssdp:all", timeout=5, retries=1, mx=3):
 # Example:
 # import ssdp
 # ssdp.discover("roku:ecp")
+
+if __name__ == '__main__':
+    for response in discover(): print(response)
+
