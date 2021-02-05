@@ -37,7 +37,9 @@ class TabPanel(ScrollView):
         self.amp = amp
         super().__init__()
         self.features = {}
-        self._features_stack = list(self.amp.features.values())
+        pinned = {True:[], False:[]}
+        for f in self.amp.features.values(): pinned[f.key in self.config["pinned"]].append(f)
+        self._features_stack = [*pinned[True], *pinned[False]]
         self.addFeaturesFromStack(chunksize=50, repeat=None)
         
     @property
