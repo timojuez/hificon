@@ -37,7 +37,7 @@ class TabPanel(ScrollView):
         self.amp = amp
         super().__init__()
         self.features = {}
-        self._features_stack = list(self.amp.features.items())
+        self._features_stack = list(self.amp.features.values())
         self.addFeaturesFromStack(chunksize=50, repeat=None)
         
     @property
@@ -45,17 +45,17 @@ class TabPanel(ScrollView):
 
     def addFeaturesFromStack(self, *_, chunksize=15, repeat=.2):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
-        for key, f in chunk:
+        for f in chunk:
             print("adding %s"%f.name)
-            self.addFeature(key, f)
+            self.addFeature(f)
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
-    def addFeature(self, key, f):
+    def addFeature(self, f):
         try: f.async_poll()
         except ConnectionError: pass
         row = FeatureRow()
         row.ids.text.text = f.name
-        row.ids.checkbox.active = key in self.config["pinned"]
+        row.ids.checkbox.active = f.key in self.config["pinned"]
 
         if f.type == bool: w = self.addBoolFeature(f)
         elif f.type == str: w = self.addSelectFeature(f)
@@ -65,13 +65,13 @@ class TabPanel(ScrollView):
         if w: row.ids.content.add_widget(w)
         
         def on_checkbox(checkbox, active):
-            if active: self.config["pinned"].append(key)
-            else: self.config["pinned"].remove(key)
+            if active: self.config["pinned"].append(f.key)
+            else: self.config["pinned"].remove(f.key)
             self.config.save()
             self.update_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
 
-        self.features[key] = row
+        self.features[f.key] = row
         f.bind(on_set=lambda: self.update_feature_visibility(f))
         f.bind(on_unset=lambda: self.update_feature_visibility(f))
         self.ids.layout.add_widget(row)
