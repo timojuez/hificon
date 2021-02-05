@@ -45,7 +45,7 @@ class TabPanel(ScrollView):
     @property
     def header(self): return self.tabbed_panel.current_tab
 
-    def addFeaturesFromStack(self, *_, chunksize=15, repeat=.2):
+    def addFeaturesFromStack(self, *_, chunksize=1, repeat=.1):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for f in chunk:
             print("adding %s"%f.name)
