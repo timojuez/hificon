@@ -308,7 +308,6 @@ class SourceNames(SelectFeature): #undocumented
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.translation = self.translation.copy()
-    def get(self): return "(select)"
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def encode(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
