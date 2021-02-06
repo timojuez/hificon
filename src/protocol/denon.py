@@ -93,7 +93,9 @@ class Denon(TelnetAmp):
             function=_function
             matches = lambda self, data: (matches(data) if matches else super().matches(data))
         _Feature.__name__ = _function
-        return "%s%s"%(_function, _Feature(self).get())
+        f = _Feature(self)
+        f.wait_poll(force=True)
+        return "%s%s"%(_function, f.get())
     
     def send(self, cmd): super().send(cmd.upper())
 
