@@ -132,21 +132,33 @@ class _Translation:
 
 class SelectFeature(_Translation, DenonFeature, features.SelectFeature): pass
 
-class DecimalFeature(DenonFeature, features.DecimalFeature):
+class NumericFeature(DenonFeature):
+    """ add UP/DOWN value decoding capability """
+    step = 1
+
+    def decodeVal(self, val):
+        if val == "UP": return self.get()+self.step
+        elif val == "DOWN": return self.get()-self.step
+        else: raise ValueError(f"Invalid value `{val}` for feature `{self.key}`")
+
+
+class DecimalFeature(NumericFeature, features.DecimalFeature):
+    step = Decimal('.5')
 
     def __str__(self): return "%0.1f"%self.get() if self.isset() else super().__str__()
 
-    @staticmethod
-    def _roundVolume(vol): return Decimal('.5')*round(vol/Decimal('.5'))
+    @classmethod
+    def _roundVolume(self, vol): return self.step*round(vol/self.step)
 
-    def decodeVal(self, val): return Decimal(val.ljust(3,"0"))/10
-        
+    def decodeVal(self, val):
+        return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().decodeVal(val)
+
     def encodeVal(self, val):
         val = self._roundVolume(val)
         return "%02d"%val if val%1 == 0 else "%03d"%(val*10)
 
 
-class IntFeature(DenonFeature, features.IntFeature):
+class IntFeature(NumericFeature, features.IntFeature):
     min = 0
     max = 99
     
@@ -155,8 +167,9 @@ class IntFeature(DenonFeature, features.IntFeature):
         digits = math.ceil(math.log(longestValue+1,10))
         return ("%%0%dd"%digits)%val
     
-    def decodeVal(self, val): return int(val)
-        
+    def decodeVal(self, val):
+        return int(val) if val.isnumeric() else super().decodeVal(val)
+
 
 class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
     translation = {"ON":True,"OFF":False}
@@ -165,19 +178,23 @@ class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
 class RelativeInt(IntFeature):
     min = -6
     max = 6
-    
+
     def encodeVal(self, val): return super().encodeVal(val+50)
-    def decodeVal(self, val): return super().decodeVal(val)-50
-    
+
+    def decodeVal(self, val):
+        return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
+
 
 class RelativeDecimal(DecimalFeature):
     min = -12
     max = 12
-    
+
     def encodeVal(self, val): return super().encodeVal(val+50)
-    def decodeVal(self, val): return super().decodeVal(val)-50
-    
-    
+
+    def decodeVal(self, val):
+        return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
+
+
 class _LooseNumericFeature:
     """ Value where the target does not always send a numeric """
     
@@ -210,9 +227,13 @@ class LooseBoolFeature(BoolFeature):
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
+
     def send(self, value, **xargs): super().send(min(max(self.min,value),self.max), **xargs)
-    def matches(self, data): return data.startswith(self.function) and data[len(self.function):].isnumeric()
-    
+
+    def matches(self, data): return data.startswith(self.function) and (
+        data[len(self.function):].isnumeric() or data[len(self.function):] in ["UP", "DOWN"])
+
+
 @Denon.add_feature
 class Maxvol(DecimalFeature): #undocumented
     name = "Max. Vol."
