@@ -6,7 +6,7 @@ import sys, math
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
 from ..core import config, features
-from .. import amp
+
 
 ZONES = 4
 
@@ -82,7 +82,7 @@ class Denon(TelnetAmp):
     
     def query(self, cmd, matches=None):
         """
-        Send command to amp
+        Send command to target
         @cmd str: function[?|param]
         @matches callable: return received line where matches(line) is True
         """
@@ -103,7 +103,7 @@ class Denon(TelnetAmp):
 class DenonFeature:
     """ Handles Denon format "@function@value" """
     
-    function = None #str, Amp function command
+    function = None #str, Denon function command
     call = property(lambda self: "%s?"%self.function)
     
     def encode(self, value):
@@ -179,7 +179,7 @@ class RelativeDecimal(DecimalFeature):
     
     
 class _LooseNumericFeature:
-    """ Value where the amp does not always send a numeric """
+    """ Value where the target does not always send a numeric """
     
     def matches(self, data):
         try:
@@ -194,14 +194,14 @@ class LooseDecimalFeature(_LooseNumericFeature, RelativeDecimal): pass
 class LooseIntFeature(_LooseNumericFeature, IntFeature): pass
 
 class LooseBoolFeature(BoolFeature):
-    """ Value where the amp does not always send a boolean """
+    """ Value where the target does not always send a boolean """
 
     def matches(self,data):
         return super().matches(data) and isinstance(self.decode(data), bool)
 
     def on_change(self, old, new):
         super().on_change(old, new)
-        if new == True: self.amp.send(self.call) # make amp send the nonbool value TODO: only once
+        if new == True: self.target.send(self.call) # make target send the nonbool value TODO: only once
 
 
 ######### Features implementation (see Denon CLI protocol)
@@ -230,7 +230,7 @@ class VolumeLimit(SelectFeature): #undocumented
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
     def on_change(self, old, new):
         super().on_change(old, new)
-        self.amp.features.maxvol.async_poll(force=True)
+        self.target.features.maxvol.async_poll(force=True)
 
 class _SpeakerConfig(SelectFeature):
     category = "Speakers"
@@ -337,24 +337,24 @@ class Source(SelectFeature):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.translation = self.translation.copy()
-        self.amp.features.source_names.bind(self.on_source_names_change)
+        self.target.features.source_names.bind(self.on_source_names_change)
 
     def on_source_names_change(self, *args, **xargs):
         if self.isset():
             old = self._val
             encoded = self.encode(old)
-            self.translation.update(self.amp.features.source_names.translation)
+            self.translation.update(self.target.features.source_names.translation)
             new = self.decode(encoded)
             #self.consume(encoded) # might cause deadlock
             self.on_change(old, new) # cause listeners to update from self.translation
         else:
-            self.translation.update(self.amp.features.source_names.translation)
+            self.translation.update(self.target.features.source_names.translation)
         
     def consume(self, data):
-        self.amp.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
+        self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
     
     def send(self, *args, **xargs):
-        self.amp.schedule(lambda:super(Source, self).send(*args, **xargs), requires=("source_names",))
+        self.target.schedule(lambda:super(Source, self).send(*args, **xargs), requires=("source_names",))
 
 
 @Denon.add_feature(overwrite=True)
@@ -429,7 +429,7 @@ class SoundMode(SelectFeature):
     def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
     def on_change(self, old, new):
         super().on_change(old,new)
-        self.amp.send("CV?")
+        self.target.send("CV?")
 
 
 class _QuickSelect(SelectFeature):
@@ -459,10 +459,10 @@ class QuickSelectStore(_QuickSelect):
     
     def on_change(self, old, new):
         super().on_change(old, new)
-        self.amp.features.quick_select.store(new)
+        self.target.features.quick_select.store(new)
         
     def resend(self):
-        self.amp.schedule(self.amp.features.quick_select.resend, requires=("quick_select",))
+        self.target.schedule(self.target.features.quick_select.resend, requires=("quick_select",))
 
 
 @Denon.add_feature
@@ -793,17 +793,17 @@ class InputSignal(BoolFeature): #undocumented
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.bind(on_stop_playing = self.on_stop_playing)
+        self.target.bind(on_stop_playing = self.on_stop_playing)
         
     def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
 
     def on_change(self, old, new):
         super().on_change(old, new)
-        self.amp.on_start_playing() if new == True else self.amp.on_stop_playing()
+        self.target.on_start_playing() if new == True else self.target.on_stop_playing()
 
     def on_stop_playing(self):
-        # undo amp.on_stop_playing() if self.get() == True
-        self.amp.schedule(lambda:self.get() and self.amp.on_start_playing(), requires=(self.key,))
+        # undo target.on_stop_playing() if self.get() == True
+        self.target.schedule(lambda:self.get() and self.target.on_start_playing(), requires=(self.key,))
 
 
 @Denon.add_feature
@@ -936,8 +936,8 @@ class PowerOnLevel(SelectFeature):
     translation = {"MUT":"Muted", "LAS":"Unchanged"}
     def on_change(self, val, prev):
         super().on_change(val, prev)
-        if not self.amp.features.power_on_level_numeric.isset():
-            self.amp.features.power_on_level_numeric.store(0)
+        if not self.target.features.power_on_level_numeric.isset():
+            self.target.features.power_on_level_numeric.store(0)
 
 
 @Denon.add_feature
@@ -991,12 +991,12 @@ for zone in range(2,ZONES+1):
         
         def __init__(self, *args, **xargs):
             super().__init__(*args, **xargs)
-            self.amp.features.source.bind(lambda *_:self._resolve_main_zone_source())
+            self.target.features.source.bind(lambda *_:self._resolve_main_zone_source())
 
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
         def _resolve_main_zone_source(self):
-            self.amp.schedule(lambda: self._from_mainzone and Source.store(self, self.amp.source),
+            self.target.schedule(lambda: self._from_mainzone and Source.store(self, self.target.source),
                 requires=("source",))
 
         def store(self, data):

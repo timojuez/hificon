@@ -1,5 +1,5 @@
 """
-Dry software run that acts like a real amp
+Dry software run that emulates a protocol and acts like a real target
 """
 
 from .. import get_protocol

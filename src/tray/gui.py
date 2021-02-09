@@ -127,9 +127,9 @@ class HideOnUnfocusMixin:
 class ScalePopup(HideOnUnfocusMixin, GladeGtk):
     GLADE = "../share/scale_popup.glade"
     
-    def __init__(self, amp, *args, **xargs):
+    def __init__(self, target, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp = amp
+        self.target = target
         self._current_feature = None
 
         self.window = self.builder.get_object("window")
@@ -141,7 +141,7 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
         self.adj = self.builder.get_object("adjustment")
         self.adj.set_page_increment(config.getdecimal("Tray","tray_scroll_delta"))
         
-        for f in self.amp.features.values(): f.bind(
+        for f in self.target.features.values(): f.bind(
             gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
 
     def set_value(self, value):
@@ -185,36 +185,36 @@ class MenuMixin:
         # header features
         for key in config.getlist("Tray","tray_menu_features"):
             key = config.get("Amp", key[1:]) if key.startswith("@") else key
-            f = getattr(self.amp.features, key, None)
+            f = getattr(self.target.features, key, None)
             if f: menu.append(self.add_feature(f, True))
-            if f: self.amp.preload_features.add(key)
+            if f: self.target.preload_features.add(key)
 
         item_disconnected = Gtk.MenuItem("Connecting ...", sensitive=False)
         menu.append(item_disconnected)
-        self.amp.bind(on_connect = gtk(item_disconnected.hide))
-        self.amp.bind(on_disconnected = gtk(item_disconnected.show))
+        self.target.bind(on_connect = gtk(item_disconnected.hide))
+        self.target.bind(on_disconnected = gtk(item_disconnected.show))
 
         item_more = Gtk.MenuItem("Options", no_show_all=True)
-        self.amp.bind(on_connect = gtk(item_more.show))
-        self.amp.bind(on_disconnected = gtk(item_more.hide))
+        self.target.bind(on_connect = gtk(item_more.show))
+        self.target.bind(on_disconnected = gtk(item_more.hide))
         submenu = Gtk.Menu()
-        categories = list(dict.fromkeys([f.category for f in self.amp.features.values()]))
+        categories = list(dict.fromkeys([f.category for f in self.target.features.values()]))
         categories = {cat: {"menu":Gtk.Menu(), "item":Gtk.MenuItem(cat, no_show_all=True)}
             for cat in categories}
         for d in categories.values():
             submenu.append(d["item"])
             d["item"].set_submenu(d["menu"])
-            self.amp.bind(on_disconnected=gtk(lambda i=d["item"]: i.hide()))
-        for key, f in self.amp.features.items():
+            self.target.bind(on_disconnected=gtk(lambda i=d["item"]: i.hide()))
+        for key, f in self.target.features.items():
             d = categories[f.category]
             try: d["menu"].append(self.add_feature(f, False))
             except RuntimeError: pass
             else: f.bind(on_set = gtk(lambda i=d["item"]: i.show()))
         def poll_all():
             try:
-                for f in self.amp.features.values(): f.async_poll()
+                for f in self.target.features.values(): f.async_poll()
             except ConnectionError: pass
-        self.amp.bind(on_connect=lambda:Timer(1, poll_all).start())
+        self.target.bind(on_connect=lambda:Timer(1, poll_all).start())
         item_more.set_submenu(submenu)
         menu.append(item_more)
 
@@ -239,7 +239,7 @@ class MenuMixin:
         menu.append(item_about)
 
         item_quit = Gtk.MenuItem('Quit')
-        item_quit.connect('activate', lambda *args: (self.amp.exit(), GUI_Backend.exit()))
+        item_quit.connect('activate', lambda *args: (self.target.exit(), GUI_Backend.exit()))
         menu.append(item_quit)
 
         menu.show_all()
@@ -306,7 +306,7 @@ class Tray(MenuMixin):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = ScalePopup(self.amp)
+        self.popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)
         self.icon.set_menu(self.build_menu())
         

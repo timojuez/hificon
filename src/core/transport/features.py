@@ -16,7 +16,7 @@ class FunctionCall(object):
 
     def __init__(self, target, func, args=tuple(), kwargs={}, features=tuple(), timeout=MAX_CALL_DELAY):
         self._lock = Lock()
-        self.amp = target
+        self._target = target
         self._func = func
         self._args = args
         self._kwargs = kwargs
@@ -39,24 +39,24 @@ class FunctionCall(object):
                 self.cancel()
                 return True
 
-    def postpone(self): self.amp._pending.append(self)
+    def postpone(self): self._target._pending.append(self)
 
     def cancel(self):
-        with suppress(ValueError): self.amp._pending.remove(self)
+        with suppress(ValueError): self._target._pending.remove(self)
 
-    active = property(lambda self: self in self.amp._pending)
+    active = property(lambda self: self in self._target._pending)
 
     expired = property(lambda self: self._timeout and self._timeout < datetime.now())
 
     def check_expiration(self):
-        if self.expired and self.amp.verbose > 1:
+        if self.expired and self._target.verbose > 1:
             print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
     
     def on_feature_set(self, feature):
         if feature in self._missing_features and self._try_call():
-            if self.amp.verbose > 5: print("[%s] called pending function %s"
+            if self._target.verbose > 5: print("[%s] called pending function %s"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
 
 
@@ -77,10 +77,10 @@ class Features(AttrDict):
 class FeatureInterface(object):
     name = "Short description"
     category = "Misc"
-    call = None # for retrieval, call amp.send(call)
+    call = None # for retrieval, call target.send(call)
     default_value = None #if no response
     type = object # value data type, e.g. int, bool, str
-    #key = "key" # feature will be available as amp.key; default: key = class name
+    #key = "key" # feature will be available as target.key; default: key = class name
     
     def poll_on_server(self):
         """ This is being executed on server side and must call self.store(some value) """
@@ -88,7 +88,7 @@ class FeatureInterface(object):
     
     def matches(self, data):
         """
-        @data: line received from amp
+        @data: line received from target
         return True if data shall be parsed with this class
         """
         raise NotImplementedError()
@@ -98,7 +98,7 @@ class FeatureInterface(object):
         raise NotImplementedError()
         
     def encode(self, value):
-        """ encode @value to amp command """
+        """ encode @value to target command """
         raise NotImplementedError()
     
 
@@ -114,19 +114,17 @@ class _MetaFeature(type):
         
 class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
-    An attribute of the amplifier
-    High level telnet protocol communication
+    A target attribute for high level communication
     """
     _val = None
     _block_on_send = None
 
-    def __init__(self, amp):
-        """ amp instance, connected amp attribute name """
+    def __init__(self, target):
         super().__init__()
-        self.amp = amp
+        self.target = target
         self._lock = Lock()
         self._event_on_set = Event()
-        amp.features[self.key] = self
+        target.features[self.key] = self
         
     name = property(lambda self:self.__class__.__name__)
     
@@ -143,7 +141,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         encoded = self.encode(self.type(value))
         if not force and self._block_on_send == encoded: return
         self._block_on_send = encoded
-        self.amp.send(encoded)
+        self.target.send(encoded)
     
     def isset(self): return self._val != None
         
@@ -151,16 +149,16 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             self._val = None
             self.on_unset()
-        #with suppress(ValueError): self.amp._polled.remove(self.call)
+        #with suppress(ValueError): self.target._polled.remove(self.call)
 
-    def async_poll(self, *args, **xargs): self.amp.poll_feature(self, *args, **xargs)
+    def async_poll(self, *args, **xargs): self.target.poll_feature(self, *args, **xargs)
     
     def poll_on_client(self):
         """ async_poll() executed on client side """
         if self.default_value is not None:
             self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
             self._timer_store_default.start()
-        if self.call is not None: self.amp.send(self.call)
+        if self.call is not None: self.target.send(self.call)
     
     def _store_default(self):
         with self._lock:
@@ -170,7 +168,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
-        for f in self.amp.features.values(): f._block_on_send = None
+        for f in self.target.features.values(): f._block_on_send = None
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.store(d)
@@ -205,19 +203,19 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             
     def on_change(self, old, new):
         """ This event is being called when self.options or the return value of self.get() changes """
-        self.amp.on_feature_change(self.key, new, old)
+        self.target.on_feature_change(self.key, new, old)
     
     def on_set(self):
         """ Event is fired on initial set """
         try: self._timer_store_default.cancel()
         except: pass
         self._event_on_set.set()
-        if getattr(self.amp, "_pending", None):
-            if self.amp.verbose > 5: print("[%s] %d pending functions"
-                %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
-            if self.amp.verbose > 6: print("[%s] pending functions: %s"
-                %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
-            for call in self.amp._pending.copy(): # on_feature_set() changes _pending
+        if getattr(self.target, "_pending", None):
+            if self.target.verbose > 5: print("[%s] %d pending functions"
+                %(self.target.__class__.__name__, len(self.target._pending)), file=sys.stderr)
+            if self.target.verbose > 6: print("[%s] pending functions: %s"
+                %(self.target.__class__.__name__, self.target._pending), file=sys.stderr)
+            for call in self.target._pending.copy(): # on_feature_set() changes _pending
                 call.on_feature_set(self)
         
     def on_unset(self):
@@ -246,7 +244,7 @@ class SynchronousFeature(AsyncFeature):
 
     def wait_poll(self, force=False):
         """ Poll and wait if Feature is unset. Returns False on timeout and True otherwise """
-        if not self.amp.connected: return False
+        if not self.target.connected: return False
         if force: self.unset()
         if not self.isset():
             try: self.async_poll(force)
@@ -270,7 +268,7 @@ class SelectFeature(Feature):
 
     def send(self, value, force=False):
         if not force and value not in self.options:
-            raise ValueError("Value must be one of %s or try amp.features.%s.send(value, force=True)"
+            raise ValueError("Value must be one of %s or try target.features.%s.send(value, force=True)"
                 %(self.options, self.key))
         return super().send(value, force)
     

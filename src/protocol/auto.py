@@ -1,10 +1,11 @@
-from ..amp import AbstractAmp, discover_amp
-from .. import Amp as Amp_
+from ..core import AbstractProtocol
+from ..amp import discover_amp
+from .. import Target
 
 
-class Auto(AbstractAmp):
+class Auto(AbstractProtocol):
     protocol = "Auto"
 
     def __new__(self, *args, **xargs):
-        return Amp_(discover_amp(), *args,**xargs)
+        return Target(discover_amp(), *args,**xargs)
 

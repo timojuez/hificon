@@ -1,41 +1,52 @@
-# HiFiCon Network Amp Software
-### Free High Freedelity for Your Computer
+# HiFiCon Network Amplifier Server and Client Software
+### This software provides high level Python variable bindings for an underlying asynchronous data transportation. It comes with three different client programs.
+
 
 ## Features
 - HiFiCon Tray Control*
-    - Amplifier control via tray icon
+    - Control attributes via tray icon
     - Mouse and keyboard volume key support
-    - Amplifier notifications OSD
+    - Notifications OSD
     - Automatic amp power control
 	    - Switching the amplifier on when sound starts playing**
 	    - Switching the amplifier off when sound stops or computer shuts down/suspends
 - HiFiCon Control Menu*
-    - Manipulate many of the amp's attributes
-- HiFiSh HiFi Shell: Send custom commands to the amp and program your own hifi script
+    - Control attributes in a standalone app
+- HiFiSh HiFi Shell: Send custom commands and run your own hifi script
 - Automatic amplifier discovery*
 - Platform independent
 - Easily control your AVR – even far away from remote control distance
 - Amp server software
 
-*Currently only supports Denon/Marantz AVR compatible (tested with Denon X1400H)
+*Requires an implemented protocol
 
 **Requires pulseaudio
 
 
-## Requirements on the Client
-- Amplifier connected via LAN/Wifi
+## Preliminaries
+
+**A target** is an entity associated to a protocol. Amplifiers will be called target in this document.
+**Attributes** are variables that a target's protocol provides. It can be volume, power, etc.
+
+
+### Supported Protocols
+- Denon; Denon/Marantz AVR compatible (tested with Denon X1400H); scheme: `denon://IP:PORT`
+- Raw Telnet; Reads telnet data without further interpretation; scheme: `raw_telnet://IP:PORT`
+- Emulator; Emulates any other protocol; scheme: `emulator:PROTOCOL`
+
+
+### Requirements on the Client
 - Python 3 and Pip
 
-Optional:
+**Amplifiers**
+- The amplifier needs to be connected via LAN/Wifi
 
 **For automatic power control:**
 - SystemD
 - Pulseaudio
 
-**For mouse and keyboard volume key support**
-- Any platform
 
-## Requirements on Server
+### Requirements on Server
 - Python 3 and Pip
 
 
@@ -79,14 +90,14 @@ Start the HiFi Icon:
 
 ### Control Menu
 
-The menu lets you control all available amplifier attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your amp).
+The menu lets you control all available attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your target).
 
 `python3 -m hificon.menu`
 
 
 
 ### HiFi Shell
-HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for amplifier programming. It can read and write the amp's attributes or run remote control actions.
+HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for programming with HiFiCon. It can read and write the attributes or run e.g. remote control actions (depending on the target).
 
 #### Starting the shell
 Calling `hifish` without arguments will start the prompt.
@@ -101,25 +112,25 @@ Example: `$volume=40`
 To see what attributes are being supported, type `help()` or call `hifish --protocol .emulator -c 'help()'`
 
 #### Raw commands
-Raw commands can be sent to the amp like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
+Raw commands can be sent to the target like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
 
 #### PyFiHiFi Language
 HiFiSh compiles the code into Python as described below. The Python code assumes the following:
 ```
 import time
-from hificon import Amp
+from hificon import Target
 __return__ = None
 __wait__ = .1
-amp = Amp()
+target = Target()
 ```
 
 | HiFiSh | Python |
 | --- | --- |
-| `$"X"` or `$'X'` | `amp.query("X", __return__); time.sleep(__wait__)` |
-| `$X` | `amp.X` |
+| `$"X"` or `$'X'` | `target.query("X", __return__); time.sleep(__wait__)` |
+| `$X` | `target.X` |
 | `wait(X)` | `time.sleep(X)` |
 
-If `__return__` is a callable, `$""` will return the received line from the amp where `__return__(line) == True`.
+If `__return__` is a callable, `$""` will return the received line from the target where `__return__(line) == True`.
 
 
 ### Server Software
@@ -131,26 +142,28 @@ The switch `-e` starts a dummy server for testing. You can connect to it using t
 ## Development
 
 ### Support for other AVR brands
-It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. This software can connect your computer to any network amp that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target .raw_telnet://IP:PORT -f` prints all data received from [IP] via telnet.
+It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
 
-### Reverse Engineering Amplifiers
-`hifish -f` opens a shell and prints all received data from the amp. Meanwhile change settings e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
+### Reverse Engineering a Target
+`hifish -f` opens a shell and prints all received data. Meanwhile change settings on the target e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
 
-### Custom Amp Control Software
-It is possible to create an own program that controls the amp and keeps being synchronised with it.
+### Custom Client Software
+It is possible to create an own program that controls the target and keeps being synchronised with it.
 See ./examples/custom_app.py
 
-Your requirement is purely the hificon package.
+Your requirement will be the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a Denon AVR software emulator that nearly acts like the amp's Telnet protocol. Try it out by starting the emulator `python3 -m hificon.telnet_server -e --listen-port PORT --target .denon` and connect to it e.g. via the HiFiShell `hifish --target .denon://127.0.0.1:PORT`.
+For testing purposes, there is a server emulator software. The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.telnet_server -e --target PROTOCOL --listen-port PORT` and connect to it e.g. via HiFiSh: `hifish --target PROTOCOL://127.0.0.1:PORT`.
 
-You can also emulate the HiFi Shell: `hifish --target .emulator:.denon`
+Example: `python3 -m hificon.telnet_server -e --target denon --listen-port 1234`
+
+You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 
 
 ## Troubleshoot
-- If HiFiCon cannot find your device, add the amp's IP address as "Host = [IP]" under [Amp] to ~/.hificon/main.cfg in your user directory.
+- If HiFiCon cannot find your device, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --target .auto --listen-port 1234`. In the programs, set `localhost:1234` as your amp.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --target auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
 

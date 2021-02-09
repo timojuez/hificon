@@ -2,7 +2,7 @@ import sys, os, argparse, pkgutil, re
 from contextlib import suppress
 from ..core.config import config, FILE
 from ..amp import discover_amp, check_amp
-from .. import NAME, PKG_NAME, Amp, protocol
+from .. import NAME, PKG_NAME, Target, protocol
 
 
 def autostart():
@@ -24,10 +24,11 @@ def autostart_gnu():
 
 
 def source_setup():
+    target = Target()
+    if config.source not in target.features: return
     if input("On your amp, select the input source that this device is connected to and press "
         "ENTER. This setting is used by the auto power function. [s]kip? ") == "s": return
-    with Amp() as amp:
-        source = amp.features[config.source].get()
+    with target: source = target.features[config.source].get()
     print("Registered input source `%s`."%source)
     config.setlist("Amp", "source", [source])
 
@@ -48,9 +49,9 @@ def setup_xorg_key_binding():
 
 
 def zone_setup():
-    amp = Amp()
+    target = Target()
     comp = re.compile("^zone(\d*)_volume$")
-    zones = [match.groups()[0] for key in amp.features.keys()
+    zones = [match.groups()[0] for key in target.features.keys()
         for match in [comp.match(key)] if match]
     if not zones: return
     while True:
@@ -62,16 +63,16 @@ def zone_setup():
             break
 
 
-def discover_amp_prompt():
-    def set_amp(uri): config["Target"]["uri"] = uri
+def discover_target_prompt():
+    def set_target(uri): config["Target"]["uri"] = uri
     try: uri = discover_amp()
     except Exception as e:
         print("%s: %s"%(type(e).__name__, e))
         while True:
-            host = input("Enter amp's IP: ")
-            if uri := check_amp(host): return set_amp(uri)
+            host = input("Enter target IP: ")
+            if uri := check_amp(host): return set_target(uri)
             else: print("Cannot connect to host.")
-    else: set_amp(uri)
+    else: set_target(uri)
 
 
 class Main(object):
@@ -96,7 +97,7 @@ class Main(object):
 class BasicSetup:
     add_tasks = [
         # arg,      func,           help,               default
-        ("discover", discover_amp_prompt, "Discover amp automatically", True),
+        ("discover", discover_target_prompt, "Discover amp automatically", True),
     ]
     
 
@@ -105,7 +106,7 @@ class IconSetup(BasicSetup):
         ("autostart", autostart, "Add tray icon to autostart", True),
         ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
         ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
-        ("source-setup", source_setup, "Connect Denon amp source setting to computer", True),
+        ("source-setup", source_setup, "Connect an input source to the computer", True),
     ]
 
 

@@ -1,6 +1,6 @@
 import sys, math, pkgutil, os, tempfile
 from threading import Thread, Timer
-from .. import Amp
+from .. import Target
 from ..core import features
 from ..core.util import Bindable
 from ..core.config import config, ConfigDict
@@ -14,7 +14,7 @@ class FeatureNotification:
     def __init__(self, feature, *args, **xargs):
         super().__init__(*args, **xargs)
         self.f = feature
-        self.amp = feature.amp
+        self.target = feature.target
 
 
 class TextNotification(FeatureNotification, gui.Notification):
@@ -23,17 +23,17 @@ class TextNotification(FeatureNotification, gui.Notification):
         super().__init__(*args, **xargs)
         self.set_urgency(2)
         self.set_timeout(config.getint("Tray","notification_timeout"))
-        super().update("Connecting ...", self.amp.prompt)
-        self.amp.preload_features.add("name")
+        super().update("Connecting ...", self.target.prompt)
+        self.target.preload_features.add("name")
     
-    def update(self): self.amp.schedule(self._update, requires=("name",))
+    def update(self): self.target.schedule(self._update, requires=("name",))
     
     def _update(self):
         if not self.f.isset(): return
         val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
-        super().update(f"{self.f.name}: {val}", self.f.amp.name)
+        super().update(f"{self.f.name}: {val}", self.target.name)
 
-    def show(self): self.amp.schedule(super(TextNotification, self).show, requires=("name",))
+    def show(self): self.target.schedule(super(TextNotification, self).show, requires=("name",))
 
 
 class NumericNotification(FeatureNotification):
@@ -59,10 +59,10 @@ class NumericNotification(FeatureNotification):
 class Icon(Bindable):
     """ Functions regarding loading images from src/share """
     
-    def __init__(self, amp):
-        self.amp = amp
+    def __init__(self, target):
+        self.target = target
         self._icon_name = None
-        self.amp.bind(
+        self.target.bind(
             on_connect=self.update_icon,
             on_disconnected=self.set_icon,
             on_feature_change=self.on_feature_change)
@@ -72,16 +72,16 @@ class Icon(Bindable):
         self.set_icon()
         self.update_icon()
 
-    def on_feature_change(self, key, value, *args): # bound to amp
+    def on_feature_change(self, key, value, *args): # bound to target
         if key in (config.volume, config.muted, config.power): self.update_icon()
 
     def update_icon(self):
-        self.amp.schedule(self._update_icon, requires=(config.muted, config.volume, config.power))
+        self.target.schedule(self._update_icon, requires=(config.muted, config.volume, config.power))
 
     def _update_icon(self):
-        volume = self.amp.features[config.volume]
-        if not getattr(self.amp,config.power): self.set_icon("power")
-        elif getattr(self.amp,config.muted) or volume.get() == volume.min:
+        volume = self.target.features[config.volume]
+        if not getattr(self.target,config.power): self.set_icon("power")
+        elif getattr(self.target,config.muted) or volume.get() == volume.min:
             self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
@@ -115,11 +115,11 @@ class NotificationMixin(object):
         notification_blacklist = config.getlist("Tray","notification_blacklist")
         create_notification = lambda f: \
             NumericNotification(f) if isinstance(f, features.NumericFeature) else TextNotification(f)
-        self._notifications = {key:create_notification(f) for key,f in list(self.amp.features.items())
+        self._notifications = {key:create_notification(f) for key,f in list(self.target.features.items())
             if f.key not in notification_blacklist
             and ("*" in notification_whitelist or self.f.key in notification_whitelist)}
-        self.amp.preload_features.add(config.volume)
-        self.amp.bind(on_feature_change = self.show_notification_on_feature_change)
+        self.target.preload_features.add(config.volume)
+        self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
     def show_notification(self, key): key in self._notifications and self._notifications[key].show()
     
@@ -127,7 +127,7 @@ class NotificationMixin(object):
         self.show_notification(config.volume)
         super().on_key_press(*args,**xargs)
 
-    def show_notification_on_feature_change(self, key, value, prev): # bound to amp
+    def show_notification_on_feature_change(self, key, value, prev): # bound to target
         if key in self._notifications: self._notifications[key].update()
         if prev is not None: self.show_notification(key)
 
@@ -146,29 +146,29 @@ class TrayMixin(gui.Tray):
     def __init__(self, *args, icon, **xargs):
         self.config = ConfigDict("tray.json")
         super().__init__(*args,**xargs)
-        self.amp.preload_features.update((config.volume,config.muted))
+        self.target.preload_features.update((config.volume,config.muted))
         self.scroll_delta = config.getdecimal("Tray","tray_scroll_delta")
         icon.bind(on_change = self.on_icon_change)
         self.show()
 
     def on_icon_change(self, path, name):
-        gui.ScalePopup(self.amp).set_image(path)
+        gui.ScalePopup(self.target).set_image(path)
         self.set_icon(path, name)
     
     def on_scroll_up(self, steps):
-        volume = self.amp.features[config.volume]
+        volume = self.target.features[config.volume]
         try:
             if volume.isset(): volume.send(volume.get()+self.scroll_delta*steps)
         except ConnectionError: pass
 
     def on_scroll_down(self, steps):
-        volume = self.amp.features[config.volume]
+        volume = self.target.features[config.volume]
         try:
             if volume.isset(): volume.send(volume.get()-self.scroll_delta*steps)
         except ConnectionError: pass
     
     def poweron(self, force=False):
-        """ poweron amp """
+        """ poweron target """
         if force or self.config["control_power_on"]: super().poweron()
         
     @property # read by poweroff()
@@ -176,13 +176,13 @@ class TrayMixin(gui.Tray):
     
 
 class NotifyPoweroff:
-    """ Adds a notification warning to poweroff amp.on_idle """
+    """ Adds a notification warning to poweroff when on_idle """
     notification_timeout = 10
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.preload_features.add("name")
-        self.amp.bind(
+        self.target.preload_features.add("name")
+        self.target.bind(
             on_start_playing = self.close_popup,
             on_poweroff = self.close_popup,
             on_disconnected = self.close_popup)
@@ -196,11 +196,11 @@ class NotifyPoweroff:
         if self._n.get_closed_reason() == 1: # timeout
             self.poweroff()
     
-    def on_amp_idle(self): self.amp.schedule(self._on_amp_idle, requires=("name",))
+    def on_target_idle(self): self.target.schedule(self._on_target_idle, requires=("name",))
 
-    def _on_amp_idle(self):
+    def _on_target_idle(self):
         if self.can_poweroff:
-            self._n.update("Power off %s"%self.amp.name)
+            self._n.update("Power off %s"%self.target.name)
             self._n.show()
         
     def close_popup(self):
@@ -216,10 +216,10 @@ class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_
 
 
 def main(args):
-    amp = Amp(args.target, connect=False, verbose=args.verbose+1)
-    with Icon(amp) as icon:
-        app = Main(amp, icon=icon, verbose=args.verbose+1)
-        with amp:
+    target = Target(args.target, connect=False, verbose=args.verbose+1)
+    with Icon(target) as icon:
+        app = Main(target, icon=icon, verbose=args.verbose+1)
+        with target:
             if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
             app.mainloop()
 

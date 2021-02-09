@@ -26,7 +26,7 @@ class ProtocolBase(Bindable, ProtocolType):
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
         self.add_feature = disable_add_feature
-        # apply @features to Amp
+        # apply @features to self
         for F in self.__class__.features.values(): F(self)
         super().__init__(*args, **xargs)
 
@@ -122,7 +122,7 @@ class Fallback(features.SelectFeature):
 
     def consume(self, data):
         self._val = data
-        if self.amp.verbose > 1:
+        if self.target.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
         if config.getboolean("Target","fallback_feature"): self.on_change(None, data)
 
@@ -130,7 +130,7 @@ class Fallback(features.SelectFeature):
 @ProtocolBase.add_feature
 class Name(features.SelectFeature):
     
-    def get(self): return self.amp.prompt
+    def get(self): return self.target.prompt
     def matches(self, data): return False
     def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass

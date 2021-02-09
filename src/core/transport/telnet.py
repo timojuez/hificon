@@ -94,14 +94,14 @@ class TelnetClient(AbstractClient):
 class _TelnetServer(Service):
     EVENTS = selectors.EVENT_READ | selectors.EVENT_WRITE
     
-    def __init__(self, amp, listen_host, listen_port, linebreak="\r", verbose=0):
+    def __init__(self, target, listen_host, listen_port, linebreak="\r", verbose=0):
         self._send = {}
         self.verbose = verbose
-        self.amp = amp
+        self.target = target
         self._break = linebreak
         if self.verbose >= 0:
-            print("Starting telnet amplifier")
-            print(f"Operating on {self.amp.prompt}")
+            print("Starting telnet server")
+            print(f"Operating on {self.target.prompt}")
             print()
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
@@ -118,8 +118,8 @@ class _TelnetServer(Service):
         try: decoded = data.strip().decode()
         except: return print(traceback.format_exc())
         for data in decoded.replace("\n","\r").split("\r"):
-            if self.verbose >= 1: print("%s $ %s"%(self.amp.prompt,data))
-            try: self.amp.on_receive_raw_data(data)
+            if self.verbose >= 1: print("%s $ %s"%(self.target.prompt,data))
+            try: self.target.on_receive_raw_data(data)
             except Exception as e: print(traceback.format_exc())
         
     def write(self, conn):
@@ -130,7 +130,7 @@ class _TelnetServer(Service):
         except OSError: pass
         self._send[conn] = self._send[conn][l:]
     
-    def on_amp_send(self, data):
+    def on_target_send(self, data):
         if self.verbose >= 1: print(data)
         encoded = ("%s%s"%(data,self._break)).encode("ascii")
         # send to all connected listeners
@@ -155,7 +155,7 @@ class TelnetServer(AbstractServer):
         super().exit()
         self._server.exit()
 
-    def send(self, data): return self._server.on_amp_send(data)
+    def send(self, data): return self._server.on_target_send(data)
 
 
 class TelnetProtocol(AbstractProtocol):

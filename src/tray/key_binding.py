@@ -35,12 +35,12 @@ class VolumeChanger:
         self.button = None
         self._volume_step = Lock()
         self._volume_step.acquire()
-        self.amp.preload_features.add(config.volume)
-        self.amp.bind(on_feature_change = self.on_feature_change)
+        self.target.preload_features.add(config.volume)
+        self.target.bind(on_feature_change = self.on_feature_change)
         Thread(target=self.volume_thread, daemon=True, name="key_binding").start()
     
     def on_key_press(self, button):
-        """ start sending volume events to amp """
+        """ start sending volume events to target """
         self.keys_pressed += 1
         self.button = button
         with suppress(RuntimeError): self._volume_step.release()
@@ -55,15 +55,15 @@ class VolumeChanger:
     def volume_thread(self):
         while True:
             self._volume_step.acquire() # wait for on_feature_change
-            self.amp.schedule(self.step_volume, requires=(config.volume,))
+            self.target.schedule(self.step_volume, requires=(config.volume,))
     
     def step_volume(self):
         if self.keys_pressed > 0:
-            setattr(self.amp,config.volume,
-                getattr(self.amp,config.volume) + self.step*(int(self.button)*2-1))
+            setattr(self.target,config.volume,
+                getattr(self.target,config.volume) + self.step*(int(self.button)*2-1))
             if self.interval: time.sleep(self.interval)
 
-    def on_feature_change(self, key, value, *args): # amp change
+    def on_feature_change(self, key, value, *args): # bound to target
         if key != config.volume or self.keys_pressed <= 0: return
         with suppress(RuntimeError): self._volume_step.release()
 

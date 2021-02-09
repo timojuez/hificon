@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import time
 from decimal import Decimal
-from hificon.amp import features
-from hificon import Amp
+from hificon import Target
 
 
 PROMPT = "Enter new volume: "
 
+
 def on_feature_change(key, value, prev_value):
-    name = amp.features[key].name
+    name = target.features[key].name
 
     if prev_value is None: # initial call
         print("Initially setting %s"%name)
@@ -16,23 +16,24 @@ def on_feature_change(key, value, prev_value):
         print("Changed %s to %s."%(name, value))
     print(PROMPT)
     
-@features.require("volume") # this function uses amp.volume -> async call
-def print_volume(amp):
-    print("Current volume: %.1f"%amp.volume)
+
+def print_volume():
+    print("Current volume: %.1f"%target.volume)
     print(PROMPT)
 
-@features.require("volume") # this function uses amp.volume -> async call
-def set_volume(amp, newvol):
-    if newvol: amp.volume = Decimal(newvol)
 
 if __name__ == "__main__":
-    amp = Amp()
-    amp.bind(on_feature_change=on_feature_change)
-    with amp:
-        amp.connect()
-        print_volume(amp)
+    #target = Target()
+    ## for testing:
+    target = Target("emulator:denon")
+
+    target.features.volume.bind(on_set = lambda: print("Initially setting volume"))
+    target.bind(on_feature_change = on_feature_change)
+    with target:
+        target.connect()
+        target.schedule(print_volume, requires=("volume",)) # this function needs target.volume -> schedule call
         while True:
             print(PROMPT)
             newvol = input()
-            if newvol: set_volume(amp, newvol)
+            if newvol: target.volume = Decimal(newvol)
 

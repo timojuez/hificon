@@ -3,7 +3,7 @@ from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
-from . import Amp, protocol, get_protocol, NAME, VERSION, AUTHOR, COPYRIGHT
+from . import Target, protocol, get_protocol, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = f"{NAME} Control Menu"
@@ -32,13 +32,13 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 class TabPanel(ScrollView):
     config = ConfigDict("menu.json")
 
-    def __init__(self, amp, tabbed_panel):
+    def __init__(self, target, tabbed_panel):
         self.tabbed_panel = tabbed_panel
-        self.amp = amp
+        self.target = target
         super().__init__()
         self.features = {}
         pinned = {True:[], False:[]}
-        for f in self.amp.features.values(): pinned[f.key in self.config["pinned"]].append(f)
+        for f in self.target.features.values(): pinned[f.key in self.config["pinned"]].append(f)
         self._features_stack = [*pinned[True], *pinned[False]]
         self.addFeaturesFromStack(chunksize=50, repeat=None)
         
@@ -167,7 +167,7 @@ class TabHeader(TabbedPanelHeader):
         
     def refresh_panel(self):
         for key in self.content.features.keys():
-            self.content.update_feature_visibility(self.content.amp.features[key])
+            self.content.update_feature_visibility(self.content.target.features[key])
 
 
 class ScrollViewLayout(StackLayout):
@@ -254,9 +254,9 @@ class WelcomeScreen(Screen):
 
 class _MenuScreen(Screen):
 
-    def __init__(self, amp=None, **kwargs):
+    def __init__(self, target=None, **kwargs):
         super().__init__()
-        self.amp = amp
+        self.target = target
         self.tabs = TabbedPanel()
         #self.build()
         Clock.schedule_once(lambda *_:self.build(), .8) # TODO: instead do this on WelcomeScreen.on_enter. must be executed by Clock!
@@ -282,20 +282,20 @@ class MenuScreen(_MenuScreen):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.amp.features.name.bind(self.set_title)
-        self.amp.enter()
+        self.target.features.name.bind(self.set_title)
+        self.target.enter()
     
     def set_title(self, name):
         App.get_running_app().title = "%s – %s"%(TITLE, name)
     
     def build(self):
         headers = {}
-        self.panel = TabPanel(self.amp, self.tabs)
+        self.panel = TabPanel(self.target, self.tabs)
         self.pinned_tab = PinnedTab(self.panel)
         self.all_tab = AllTab(self.panel)
         self.tabs.add_widget(self.pinned_tab)
         self.tabs.add_widget(self.all_tab)
-        for key, f in self.amp.features.items():
+        for key, f in self.target.features.items():
             if f.category not in headers: headers[f.category] = self._newTab(f.category)
         super().build()
         self.tabs.default_tab = self.pinned_tab
@@ -310,7 +310,7 @@ class MenuScreen(_MenuScreen):
 
     def on_enter(self): self.panel.addFeaturesFromStack()
         
-    def on_leave(self): self.amp.exit()
+    def on_leave(self): self.target.exit()
 
 
 def show_widget(w):
@@ -334,11 +334,11 @@ class App(App):
     def load_screen(self, *args, **xargs):
         self.title = TITLE
         self.manager.switch_to(WelcomeScreen())
-        try: self.amp = Amp(*args, connect=False, verbose=cmd_args.verbose, **xargs)
+        try: self.target = Target(*args, connect=False, verbose=cmd_args.verbose, **xargs)
         except Exception as e:
             print(traceback.format_exc())
             ErrorScreen()
-        else: MenuScreen(self.amp)
+        else: MenuScreen(self.target)
 
     def build(self):
         self.manager = ScreenManager()
@@ -359,7 +359,7 @@ def main():
         app.icon = icon_path
         app.run()
     finally:
-        try: app.amp.exit()
+        try: app.target.exit()
         except: pass
         os.remove(icon_path)
 

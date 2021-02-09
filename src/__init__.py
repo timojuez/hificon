@@ -26,6 +26,3 @@ def Target(uri=None, role="client", *args, **xargs):
     Protocol = getattr(get_protocol(uri.pop(0)), f"new_{role}")
     return Protocol(*uri, *args, **xargs)
 
-
-Amp = Target
-

@@ -5,7 +5,7 @@ from itertools import groupby
 from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
-from . import Amp, VERSION, AUTHOR
+from . import Target, VERSION, AUTHOR
 from .core import features
 try: import readline
 except ImportError: pass
@@ -18,11 +18,11 @@ dim = lambda s: f"\033[2m{s}\033[0m" if sys.platform == "linux" else s
 class CLI:
     
     def __init__(self):
-        parser = argparse.ArgumentParser(description='Controller for Network Amp - CLI')
+        parser = argparse.ArgumentParser(description='HIFI SHELL')
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
-        group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor amp messages')
+        group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor received messages')
         group.add_argument("file", metavar="HIFI FILE", type=str, nargs="?", help='Run hifi script')
         
         parser.add_argument("-c", "--command", default=[], metavar="CMD", nargs="+", help='Execute commands')
@@ -35,16 +35,16 @@ class CLI:
     def __call__(self):
         matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
-        self.amp = Amp(self.args.target, verbose=self.args.verbose)
-        if self.args.follow: self.amp.bind(on_receive_raw_data=self.receive)
-        with self.amp:
+        self.target = Target(self.args.target, verbose=self.args.verbose)
+        if self.args.follow: self.target.bind(on_receive_raw_data=self.receive)
+        with self.target:
             self.compiler = Compiler(
                 # environment variables for hifish
                 __query__ = self.query,
                 __return__ = matches,
                 __wait__ = .1,
                 Decimal = Decimal,
-                amp = self.amp,
+                target = self.target,
                 help = self.print_help,
                 help_features = self.print_help_features,
             )
@@ -54,7 +54,7 @@ class CLI:
     
     def query(self, cmd, matches, wait):
         """ calling $"cmd" or $'cmd' from within hifish. @matches comes from --return """
-        r = self.amp.query(cmd, matches)
+        r = self.target.query(cmd, matches)
         if wait: time.sleep(wait)
         return r
         
@@ -64,13 +64,13 @@ class CLI:
         print("To get started, write help()\n")
 
     def prompt(self):
-        self.amp.bind(on_disconnected=self.on_disconnected)
+        self.target.bind(on_disconnected=self.on_disconnected)
         ic = InteractiveHifish(
-            prompt="%s $ "%self.amp.prompt, compiler=self.compiler, locals=self.compiler.env)
+            prompt="%s $ "%self.target.prompt, compiler=self.compiler, locals=self.compiler.env)
         ic.interact(banner="", exitmsg="")
 
     def parse_file(self):
-        if not self.args.quiet: self.amp.verbose += 3
+        if not self.args.quiet: self.target.verbose += 3
         with open(self.args.file) as fp:
             self.compiler.run(fp.read(),self.args.file,"exec")
             
@@ -82,10 +82,10 @@ class CLI:
                 ("wait(seconds)","Sleep given amount of seconds"),
                 ("exit()","Quit")]),
             ("High level functions (protocol independent)", [
-                ("$feature", "Variable that contains amp's attribute, potentially read and writeable"),
+                ("$feature", "Variable that contains target's attribute, potentially read and writeable"),
                 ("To see a list of features, type help_features()","")]),
             ("Low level functions (protocol dependent)",
-                [("CMD or $'CMD'", "Send CMD to the amp and return answer")])
+                [("CMD or $'CMD'", "Send CMD to the target and return answer")])
         ]
         tw = TextWrapper(
             initial_indent=" "*4, subsequent_indent=" "*(20+4), width=shutil.get_terminal_size().columns)
@@ -97,8 +97,8 @@ class CLI:
     def print_help_features(self):
         tw = TextWrapper(
             initial_indent=" "*8, subsequent_indent=" "*12, width=shutil.get_terminal_size().columns)
-        print(f"Protocol '{self.amp.protocol}' supports the following features.\n")
-        features_ = map(self.amp.features.get, self.amp.__class__.features.keys())
+        print(f"Protocol '{self.target.protocol}' supports the following features.\n")
+        features_ = map(self.target.features.get, self.target.__class__.features.keys())
         features_ = sorted(features_, key=lambda f: (f.category, f.key))
         for category, ff in groupby(features_, key=lambda f:f.category):
             print(bright(category.upper()))
@@ -121,7 +121,7 @@ class CLI:
         os._exit(1)
 
 
-class AmpCommandTransformation(ast.NodeTransformer):
+class CommandTransformation(ast.NodeTransformer):
     """ transformer for the parsed python syntax tree """
     
     def __init__(self, preprocessor):
@@ -143,7 +143,7 @@ class AmpCommandTransformation(ast.NodeTransformer):
         return node
      
     def visit_Expr(self, node):
-        """ handle amp commands outside of $, like MVUP;MVUP; """
+        """ handle commands outside of $, like MVUP;MVUP; """
         if isinstance(node.value, ast.Name): node.value = self._query_call(node.value.id)
         self.generic_visit(node)
         return node
@@ -181,7 +181,7 @@ class Preprocessor:
         ("?",   ("__quest__",       "__quest__")),
         ("$'",  ("'__dollar1__",    "__dollar1__")),
         ('$"',  ('"__dollar2__',    "__dollar2__")),
-        ("$",   ("amp.",            "amp.")),
+        ("$",   ("target.",            "target.")),
     ]
     
     def __init__(self, source):
@@ -210,7 +210,7 @@ class Compiler(Preprocessor):
         preprocessor = Preprocessor(source)
         source_p = preprocessor.encode()
         tree = ast.parse(source_p, mode=mode)
-        tree = AmpCommandTransformation(preprocessor).visit(tree)
+        tree = CommandTransformation(preprocessor).visit(tree)
         tree = ast.fix_missing_locations(tree)
         #print(ast.dump(tree))
         return compile(tree, filename=filename, mode=mode)

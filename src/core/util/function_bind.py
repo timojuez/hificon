@@ -19,7 +19,7 @@ class Bindable(object):
     def bind(self, **callbacks):
         """
         bind(event=function)
-        Register callback on @event. Event can be any function in Amp
+        Register callback on @event. Event can be any function in the child class
         """
         for name, callback in callbacks.items():
             setattr(self, name, call_sequence(getattr(self,name), callback))

@@ -17,7 +17,7 @@ class Main(object):
         send(dict(kwargs=dict(button=button), func=func))
             
     def __call__(self):
-        print("WARNING: Mouse events that control the amp are not being suppressed to other programs.")
+        print("WARNING: Mouse events that control the target are not being suppressed to other programs.")
         with Listener(on_click=self.on_click, suppress=False) as listener: #bug: suppress=True kills X
             listener.join()
 
