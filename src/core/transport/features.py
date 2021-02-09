@@ -15,42 +15,49 @@ class FunctionCall(object):
     """ Function call that requires features. Drops call if no connection """
 
     def __init__(self, target, func, args=tuple(), kwargs={}, features=tuple(), timeout=MAX_CALL_DELAY):
+        self._lock = Lock()
         self.amp = target
         self._func = func
         self._args = args
         self._kwargs = kwargs
-        self.missing_features = features
+        self._missing_features = features
         self._timeout = datetime.now()+timedelta(seconds=timeout) if timeout != None else None
-        if not self._try_call(): self.postpone()
+        self.postpone()
+        if not self._try_call():
+            try: [f.async_poll() for f in self._missing_features]
+            except ConnectionError: self.cancel()
 
     def __repr__(self): return "<pending%s>"%self._func
     
     def _try_call(self):
-        self.missing_features = list(filter(lambda f:not f.isset(), self.missing_features))
-        if not self.missing_features: 
-            try: self._func(*self._args,**self._kwargs)
-            except ConnectionError: self.cancel()
-            return True
+        with self._lock:
+            if not self.active: return False
+            self._missing_features = list(filter(lambda f:not f.isset(), self._missing_features))
+            if not self._missing_features:
+                try: self._func(*self._args, **self._kwargs)
+                except ConnectionError: pass
+                self.cancel()
+                return True
 
-    def postpone(self):
-        self.amp._pending.append(self)
-        try: [f.async_poll() for f in self.missing_features]
-        except ConnectionError: self.cancel()
+    def postpone(self): self.amp._pending.append(self)
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)
-        
+
+    active = property(lambda self: self in self.amp._pending)
+
+    expired = property(lambda self: self._timeout and self._timeout < datetime.now())
+
     def check_expiration(self):
-        if self._timeout and self._timeout < datetime.now():
-            if self.amp.verbose > 1: print("[%s] pending function `%s` expired"
+        if self.expired and self.amp.verbose > 1:
+            print("[%s] pending function `%s` expired"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
     
     def on_feature_set(self, feature):
-        if feature in self.missing_features and self._try_call():
+        if feature in self._missing_features and self._try_call():
             if self.amp.verbose > 5: print("[%s] called pending function %s"
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
-            self.cancel()
 
 
 class Features(AttrDict):
