@@ -144,6 +144,8 @@ class NumericFeature(DenonFeature):
 
 class DecimalFeature(NumericFeature, features.DecimalFeature):
     step = Decimal('.5')
+    min = 0
+    max = 98
 
     def __str__(self): return "%0.1f"%self.get() if self.isset() else super().__str__()
 
@@ -159,8 +161,6 @@ class DecimalFeature(NumericFeature, features.DecimalFeature):
 
 
 class IntFeature(NumericFeature, features.IntFeature):
-    min = 0
-    max = 99
     
     def encodeVal(self, val):
         longestValue = max(abs(self.max),abs(self.min))
