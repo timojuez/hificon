@@ -94,12 +94,7 @@ class ProtocolBase(Bindable, ProtocolType):
             if self.verbose > 3:
                 print("[%s] Warning: Target does not provide feature required by `%s`: %s"
                 %(self.__class__.__name__, func.__name__, e), file=sys.stderr)
-        else:
-            call = features.FunctionCall(self, func, args, kwargs, features_)
-            if call._try_call(): return
-            self._pending.append(call) #postpone
-            try: [f.async_poll() for f in call.missing_features]
-            except ConnectionError: call.cancel()
+        else: return features.FunctionCall(self, func, args, kwargs, features_)
 
     @log_call
     def on_feature_change(self, key, value, previous_val):

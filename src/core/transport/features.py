@@ -14,14 +14,15 @@ MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 class FunctionCall(object):
     """ Function call that requires features. Drops call if no connection """
 
-    def __init__(self, target, func, args=tuple(), kwargs={}, missing_features=tuple(), timeout=MAX_CALL_DELAY):
+    def __init__(self, target, func, args=tuple(), kwargs={}, features=tuple(), timeout=MAX_CALL_DELAY):
         self.amp = target
         self._func = func
         self._args = args
         self._kwargs = kwargs
-        self.missing_features = missing_features
+        self.missing_features = features
         self._timeout = datetime.now()+timedelta(seconds=timeout) if timeout != None else None
-    
+        if not self._try_call(): self.postpone()
+
     def __repr__(self): return "<pending%s>"%self._func
     
     def _try_call(self):
@@ -30,15 +31,11 @@ class FunctionCall(object):
             try: self._func(*self._args,**self._kwargs)
             except ConnectionError: self.cancel()
             return True
-        
-    def _find_amp(self, args): 
-        """ search ProtocolType type in args """
-        try:
-            amp = getattr(args[0],"amp",None) # = self.amp if args==(self,)
-            return next(filter(lambda e: isinstance(e,ProtocolType), (amp,)+args))
-        except (StopIteration, IndexError):
-            raise TypeError("`%s` cannot be called. @require needs "
-                "ProtocolType instance as argument"%self._func.__name__)
+
+    def postpone(self):
+        self.amp._pending.append(self)
+        try: [f.async_poll() for f in self.missing_features]
+        except ConnectionError: self.cancel()
 
     def cancel(self):
         with suppress(ValueError): self.amp._pending.remove(self)
@@ -49,15 +46,11 @@ class FunctionCall(object):
                 %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
     
-    def has_polled(self, feature):
-        """ returns if we are waiting for @feature, update internal values and try call """
-        try: self.missing_features.remove(self.amp.features.get(feature))
-        except ValueError: return False
-        if self._try_call():
+    def on_feature_set(self, feature):
+        if feature in self.missing_features and self._try_call():
             if self.amp.verbose > 5: print("[%s] called pending function %s"
-                %(self.__class__.__name__,self._func.__name__), file=sys.stderr)
+                %(self.__class__.__name__, self._func.__name__), file=sys.stderr)
             self.cancel()
-        return True
 
 
 class Features(AttrDict):
@@ -217,8 +210,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
                 %(self.amp.__class__.__name__, len(self.amp._pending)), file=sys.stderr)
             if self.amp.verbose > 6: print("[%s] pending functions: %s"
                 %(self.amp.__class__.__name__, self.amp._pending), file=sys.stderr)
-            for call in self.amp._pending.copy(): # has_polled() changes _pending
-                call.has_polled(self.key)
+            for call in self.amp._pending.copy(): # on_feature_set() changes _pending
+                call.on_feature_set(self)
         
     def on_unset(self):
         try: self._timer_store_default.cancel()
