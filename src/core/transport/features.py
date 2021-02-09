@@ -11,42 +11,21 @@ from .protocol_type import ProtocolType
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
 
 
-def require(*features, timeout=MAX_CALL_DELAY):
-    """
-    Decorator that states which features have to be loaded before calling the function.
-    Call might be delayed until the feature values have been set.
-    Skip call if delay is longer than @timeout seconds.
-    Can be used in Amp or AmpEvents.
-    Example: @require("volume","muted")
-    """
-    return lambda func: lambda *args,**xargs: FunctionCall(features, func, args, xargs, timeout)
-
-
 class FunctionCall(object):
     """ Function call that requires features. Drops call if no connection """
 
-    def __init__(self, features, func, args=set(), kwargs={}, timeout=MAX_CALL_DELAY):
+    def __init__(self, target, func, args=tuple(), kwargs={}, missing_features=tuple(), timeout=MAX_CALL_DELAY):
+        self.amp = target
         self._func = func
         self._args = args
         self._kwargs = kwargs
+        self.missing_features = missing_features
         self._timeout = datetime.now()+timedelta(seconds=timeout) if timeout != None else None
-        self.amp = self._find_amp(args)
-        if not self.amp or not self.amp.connected: return
-        try: self._features = [self.amp.features[name] for name in features]
-        except KeyError as e:
-            if self.amp.verbose > 3:
-                print("[%s] Warning: Amp does not provide feature required by `%s`: %s"
-                %(self.__class__.__name__,self._func.__name__,e), file=sys.stderr)
-            return
-        self.missing_features = list(filter(lambda f:not f.isset(), self._features))
-        if self._try_call(): return
-        self.amp._pending.append(self) #postpone
-        try: [f.async_poll() for f in self.missing_features]
-        except ConnectionError: self.cancel()
     
     def __repr__(self): return "<pending%s>"%self._func
     
     def _try_call(self):
+        self.missing_features = list(filter(lambda f:not f.isset(), self.missing_features))
         if not self.missing_features: 
             try: self._func(*self._args,**self._kwargs)
             except ConnectionError: self.cancel()

@@ -84,14 +84,23 @@ class ProtocolBase(Bindable, ProtocolType):
     
     def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
 
-    def schedule(self, func, args=tuple(), xargs={}, requires=tuple()):
+    def schedule(self, func, args=tuple(), kwargs={}, requires=tuple()):
         """ Use this to call methods that use Target.features.
         Call func(*args, **xargs) if all features in @requires are set.
         Poll features and schedule func otherwise. """
-        @features.require(*requires)
-        def f(target): return func(*args, **xargs)
-        return f(self)
-    
+        if not self.connected: return
+        try: features_ = [self.features[name] for name in requires]
+        except KeyError as e:
+            if self.verbose > 3:
+                print("[%s] Warning: Target does not provide feature required by `%s`: %s"
+                %(self.__class__.__name__, func.__name__, e), file=sys.stderr)
+        else:
+            call = features.FunctionCall(self, func, args, kwargs, features_)
+            if call._try_call(): return
+            self._pending.append(call) #postpone
+            try: [f.async_poll() for f in call.missing_features]
+            except ConnectionError: call.cancel()
+
     @log_call
     def on_feature_change(self, key, value, previous_val):
         """ attribute on server has changed """
