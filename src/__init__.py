@@ -33,7 +33,7 @@ def Target(uri=None, role="client", *args, **xargs):
             for key, val in parse_qsl(query, True):
                 if val: # ?fkey=val
                     f = target.features[key]
-                    convert = {bool: lambda s:s[0].lower() in tuple("yt1")}.get(f.type, f.type)
+                    convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
                     f.send(convert(val), force=True)
                 else: target.send(key) # ?COMMAND
     return target
