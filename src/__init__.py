@@ -1,4 +1,5 @@
 import importlib
+from urllib.parse import parse_qsl
 from .core import ProtocolType, config, AbstractProtocol, AbstractServer, AbstractClient, features
 from .info import *
 
@@ -22,7 +23,18 @@ def Target(uri=None, role="client", *args, **xargs):
             emulator:denon
     @role: Method "new_@role" will be called on the protocol for instantiation. Can be "server" or "client".
     """
-    uri = (uri or config.get("Target","uri")).split(":")
+    query = None
+    if "?" in uri: uri, query = (uri or config.get("Target","uri")).split("?",1)
+    uri = uri.split(":")
     Protocol = getattr(get_protocol(uri.pop(0)), f"new_{role}")
-    return Protocol(*uri, *args, **xargs)
+    target = Protocol(*uri, *args, **xargs)
+    if query:
+        with target:
+            for key, val in parse_qsl(query, True):
+                if val: # ?fkey=val
+                    f = target.features[key]
+                    convert = {bool: lambda s:s[0].lower() in tuple("yt1")}.get(f.type, f.type)
+                    f.send(convert(val), force=True)
+                else: target.send(key) # ?COMMAND
+    return target
 
