@@ -21,10 +21,11 @@ class CLI:
         parser = argparse.ArgumentParser(description='HIFI SHELL')
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
-        group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor received messages')
         group.add_argument("file", metavar="HIFI FILE", type=str, nargs="?", help='Run hifi script')
-        
+        group.add_argument('--return', dest="ret", type=str, metavar="CMD", default=None, help='Return line that starts with CMD')
+        group.add_argument('-x','--exit', default=False, action="store_true", help='Skip prompt. Useful if -t contains a query')
+
         parser.add_argument("-c", "--command", default=[], metavar="CMD", nargs="+", help='Execute commands')
         parser.add_argument('-q', '--quiet', action='store_true', default=False, help='Less output')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
@@ -50,7 +51,8 @@ class CLI:
             )
             for cmd in self.args.command: self.compiler.run(cmd)
             if self.args.file: self.parse_file()
-            if not self.args.file and not self.args.command or self.args.follow: self.prompt()
+            if not self.args.exit and (not self.args.file and not self.args.command or self.args.follow):
+                self.prompt()
     
     def query(self, cmd, matches, wait):
         """ calling $"cmd" or $'cmd' from within hifish. @matches comes from --return """
