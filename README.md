@@ -144,6 +144,10 @@ You can implement an own protocol and start the server by running `python3 -m hi
 
 If the prefix `emulator:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
 
+Examples:
+- `python3 -m hificon.server --target denon://0.0.0.0:23`
+- `python3 -m hificon.server --target emulator:denon://127.0.0.1:1234`
+
 
 ## Development
 
