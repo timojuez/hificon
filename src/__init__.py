@@ -23,8 +23,9 @@ def Target(uri=None, role="client", *args, **xargs):
             emulator:denon
     @role: Method "new_@role" will be called on the protocol for instantiation. Can be "server" or "client".
     """
-    query = None
-    if "?" in uri: uri, query = (uri or config.get("Target","uri")).split("?",1)
+    if not uri: uri = config.get("Target", "uri")
+    if "?" in uri: uri, query = uri.split("?",1)
+    else: query = None
     uri = uri.split(":")
     Protocol = getattr(get_protocol(uri.pop(0)), f"new_{role}")
     target = Protocol(*uri, *args, **xargs)
