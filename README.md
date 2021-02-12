@@ -30,10 +30,14 @@
 
 
 ### Supported Protocols
-- Denon; Denon/Marantz AVR compatible (tested with Denon X1400H); scheme: `denon://IP:PORT`
-- Raw Telnet; Reads telnet data without further interpretation; scheme: `raw_telnet://IP:PORT`
-- Emulator; Emulates any other protocol; scheme: `emulator:PROTOCOL`
-- Plain Emulator; Emulator that skips network; scheme: `plain_emulator:PROTOCOL`
+
+| Protocol | Scheme (Client) | Scheme (Server) | Description |
+|---|---|---|---|
+| Auto | `auto` | - | Detect a supported server in network by using SSDP |
+| Denon | `denon://SERVER_IP:SERVER_PORT` | `denon://LISTEN_IP:LISTEN_PORT` | Denon/Marantz AVR compatible (tested with Denon X1400H) |
+| Raw Telnet | `raw_telnet://IP:PORT` | - | Reads telnet data without further interpretation |
+| Emulator | `emulator:PROTOCOL` | `emulator:PROTOCOL` | Emulates any other protocol |
+| Plain Emulator | `plain_emulator:PROTOCOL` | `plain_emulator:PROTOCOL` | Emulator that skips network |
 
 
 ### Requirements on the Client
