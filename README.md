@@ -31,10 +31,11 @@
 
 ### Supported Protocols
 
-| Protocol | Scheme (Client) | Scheme (Server) | Description |
+| Protocol | URI (Client) | URI (Server) | Description |
 |---|---|---|---|
 | Auto | `auto` | - | Detect a supported server in network by using SSDP |
 | Denon | `denon://SERVER_IP:SERVER_PORT` | `denon://LISTEN_IP:LISTEN_PORT` | Denon/Marantz AVR compatible (tested with Denon X1400H) |
+| Repeater | - | `repeat:CLIENT_URI` | A server that connects to another server and repeats the data |
 | Raw Telnet | `raw_telnet://IP:PORT` | - | Reads telnet data without further interpretation |
 | Emulator | `emulator:PROTOCOL` | `emulator:PROTOCOL` | Emulates any other protocol |
 | Plain Emulator | `plain_emulator:PROTOCOL` | `plain_emulator:PROTOCOL` | Emulator that skips network |
@@ -170,5 +171,5 @@ You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 ## Troubleshoot
 - If HiFiCon cannot find your device, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server -r --target auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
 
