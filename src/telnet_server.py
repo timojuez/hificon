@@ -35,10 +35,9 @@ def main():
     parser.add_argument('--listen-port', metavar="PORT", type=int, default=0, help='Port (listening)')
     parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
     parser.add_argument('-r', '--repeat', action="store_true", help='Repeat target')
-    parser.add_argument('-n', '--newline', action="store_const", default="\r", const="\n", help='Print \\n after each line (not native bahaviour)')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
-    xargs = dict(listen_host=args.listen_host, listen_port=args.listen_port, linebreak=args.newline, verbose=args.verbose+1)
+    xargs = dict(listen_host=args.listen_host, listen_port=args.listen_port, verbose=args.verbose+1)
     if args.repeat: server = create_client_repeater(uri=args.target, kwargs_server=xargs)
     else: server = Target(uri=args.target, role="server", **xargs)
     with server:
