@@ -140,7 +140,7 @@ If `__return__` is a callable, `$""` will return the received line from the targ
 
 
 ### Server Software
-You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --target PROTOCOL_MODULE.CLASS`
+You can implement an own protocol and start the server by running `python3 -m hificon.server --target PROTOCOL_MODULE.CLASS`
 
 If the prefix `emulator:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
 
@@ -161,9 +161,9 @@ Your requirement will be the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a server emulator software. The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.telnet_server --target emulator:PROTOCOL --listen-port PORT` and connect to it e.g. via HiFiSh: `hifish --target PROTOCOL://127.0.0.1:PORT`.
+For testing purposes, there is a server emulator software. The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.server --target emulator:PROTOCOL --listen-port PORT` and connect to it e.g. via HiFiSh: `hifish --target PROTOCOL://127.0.0.1:PORT`.
 
-Example: `python3 -m hificon.telnet_server --target emulator:denon --listen-port 1234`
+Example: `python3 -m hificon.server --target emulator:denon --listen-port 1234`
 
 You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 
@@ -171,5 +171,5 @@ You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 ## Troubleshoot
 - If HiFiCon cannot find your device, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.telnet_server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
 

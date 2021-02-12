@@ -23,7 +23,7 @@ setup(name=PKG_NAME,
       include_package_data=True,
       entry_points={'console_scripts': [
         'hifish = %(name)s.hifish:main'%dict(name=PKG_NAME),
-        "%(name)s_telnet_server = %(name)s.telnet_server:main"%dict(name=PKG_NAME),
+        "%(name)s_server = %(name)s.server:main"%dict(name=PKG_NAME),
         "%(name)s_menu = %(name)s.menu:main"%dict(name=PKG_NAME),
         '%(name)s_tray = %(name)s.tray:main'%dict(name=PKG_NAME),
         '%(name)s_setup = %(name)s.tray.setup:main'%dict(name=PKG_NAME),
