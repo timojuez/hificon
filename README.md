@@ -135,7 +135,7 @@ If `__return__` is a callable, `$""` will return the received line from the targ
 
 
 ### Server Software
-You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --target PROTOCOL.MODULE`
+You can implement an own protocol and start the server by running `python3 -m hificon.telnet_server --listen-host 0.0.0.0 --listen-port 23 --target PROTOCOL_MODULE.CLASS`
 
 The switch `-e` starts a dummy server for testing. You can connect to it using the clients mentioned above.
 
