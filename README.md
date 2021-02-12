@@ -25,10 +25,10 @@
 
 ## Preliminaries
 
-- **A target** is an entity associated to a protocol. Amplifiers will be called target in this document.
+- **A target** is an entity that communicates using a protocol. A network amplifier can be a target.
 - **Attributes** are variables that a target's protocol provides. It can be volume, power, etc.
 - **A target URI** describes the connection to a target and has the form `protocol:arg_0:...:arg_n`, where `protocol` is a class from ./src/protocol or of the form `[module.]protocol_class`. Example: `denon://192.168.1.5:23`
-- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given the order. If `part` has the form `attribute=value`, the target's attribute `attribute` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example: `?power=1&source=DVD&MVUP`
+- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `attribute=value`, the target's attribute `attribute` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt 'denon://192.168.1.5:23?power=1&source=DVD&MVUP'`
 
 
 ### Supported Protocols
@@ -115,12 +115,12 @@ Hifi scripts can be executed by `hifish FILE.hifi`
 See also `hifish -h` and the ./examples/.
 
 #### High level commands
-High level attributes are not protocol (resp. amp manufacturer) specific and start with a `$`. 
-Example: `$volume=40`
-To see what attributes are being supported, type `help()` or call `hifish --protocol .emulator -c 'help()'`
+High level attributes are not protocol (resp. amp manufacturer) dependent and in the form `$attribute` for reading and `$attribute=value` for writing.
+Examples: `$volume += 5`, `$source = 'DVD'`, `$power = True`
+To see what attributes are being supported, type `help_features()` in hifish or call `hifish -c 'help_features()'`
 
 #### Raw commands
-Raw commands can be sent to the target like `MV50` or `PWON`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. 
+Raw commands can be sent to the target like `COMMAND`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. Examples: `MV50`, `PWON`, `$'PW?'`
 
 #### PyFiHiFi Language
 HiFiSh compiles the code into Python as described below. The Python code assumes the following:
@@ -153,8 +153,8 @@ Examples:
 
 ## Development
 
-### Support for other AVR brands
-It is possible to implement the support for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
+### Support for other devices
+It is possible to implement the support e.g. for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
 
 ### Reverse Engineering a Target
 `hifish -f` opens a shell and prints all received data. Meanwhile change settings on the target e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
@@ -167,15 +167,15 @@ Your requirement will be the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a server emulator software. The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.server --target emulator:PROTOCOL --listen-port PORT` and connect to it e.g. via HiFiSh: `hifish --target PROTOCOL://127.0.0.1:PORT`.
+For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulator:PROTOCOL`.
 
-Example: `python3 -m hificon.server --target emulator:denon --listen-port 1234`
+The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.server --target emulator:denon://127.0.0.1:1234` and connect to it e.g. via HiFiSh: `hifish --target denon://127.0.0.1:PORT`.
 
 You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 
 
 ## Troubleshoot
-- If HiFiCon cannot find your device, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
+- If HiFiCon cannot find your device automatically, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 - If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
 
