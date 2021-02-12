@@ -33,6 +33,7 @@
 - Denon; Denon/Marantz AVR compatible (tested with Denon X1400H); scheme: `denon://IP:PORT`
 - Raw Telnet; Reads telnet data without further interpretation; scheme: `raw_telnet://IP:PORT`
 - Emulator; Emulates any other protocol; scheme: `emulator:PROTOCOL`
+- Plain Emulator; Emulator that skips network; scheme: `plain_emulator:PROTOCOL`
 
 
 ### Requirements on the Client
