@@ -19,13 +19,12 @@ class TelnetClient(AbstractClient):
     _pulse_stop = None
     
     def __init__(self, host, port=23, *args, **xargs):
+        """ host can be IP for server instance """
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
-        self.host = host
-        self.port = port
-        if not self.host: raise RuntimeError("Host is not set! Execute setup or set AVR "
-            "IP or hostname in %s."%CONFFILE)
+        self.host = getattr(host, "host", host)
+        self.port = getattr(host, "port", port)
         if self.host.startswith("//"): self.host = self.host[2:]
 
     @property
