@@ -169,7 +169,10 @@ Your requirement will be the hificon package.
 ### AVR Emulator
 For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulator:PROTOCOL`.
 
-The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: `python3 -m hificon.server --target emulator:denon://127.0.0.1:1234` and connect to it e.g. via HiFiSh: `hifish --target denon://127.0.0.1:PORT`.
+The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: 
+`python3 -m hificon.server --target emulator:denon://127.0.0.1:1234`
+and connect to it e.g. via HiFiSh:
+`hifish --target denon://127.0.0.1:1234`.
 
 You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
 
