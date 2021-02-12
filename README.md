@@ -26,9 +26,9 @@
 ## Preliminaries
 
 - **A target** is an entity that communicates using a protocol. A network amplifier can be a target.
-- **Attributes** are variables that a target's protocol provides. It can be volume, power, etc.
+- **A feature** is a variable that a target's protocol provides. It can be volume, power, etc.
 - **A target URI** describes the connection to a target and has the form `protocol:arg_0:...:arg_n`, where `protocol` is a class from ./src/protocol or of the form `[module.]protocol_class`. Example: `denon://192.168.1.5:23`
-- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `attribute=value`, the target's attribute `attribute` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt 'denon://192.168.1.5:23?power=1&source=DVD&MVUP'`
+- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `feature=value`, the target's feature `feature` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt 'denon://192.168.1.5:23?power=1&source=DVD&MVUP'`
 
 
 ### Supported Protocols
@@ -98,14 +98,14 @@ Start the HiFi Icon:
 
 ### Control Menu
 
-The menu lets you control all available attributes, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your target).
+The menu lets you control all available features, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your target).
 
 `python3 -m hificon.menu`
 
 
 
 ### HiFi Shell
-HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for programming with HiFiCon. It can read and write the attributes or run e.g. remote control actions (depending on the target).
+HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for programming with HiFiCon. It can read and write the target's features or run e.g. remote control actions (depending on the target).
 
 #### Starting the shell
 Calling `hifish` without arguments will start the prompt.
@@ -115,9 +115,9 @@ Hifi scripts can be executed by `hifish FILE.hifi`
 See also `hifish -h` and the ./examples/.
 
 #### High level commands
-High level attributes are not protocol (resp. amp manufacturer) dependent and in the form `$attribute` for reading and `$attribute=value` for writing.
+High level features are not protocol (resp. amp manufacturer) dependent and in the form `$feature` for reading and `$feature=value` for writing.
 Examples: `$volume += 5`, `$source = 'DVD'`, `$power = True`
-To see what attributes are being supported, type `help_features()` in hifish or call `hifish -c 'help_features()'`
+To see what features are being supported, type `help_features()` in hifish or call `hifish -c 'help_features()'`
 
 #### Raw commands
 Raw commands can be sent to the target like `COMMAND`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. Examples: `MV50`, `PWON`, `$'PW?'`
