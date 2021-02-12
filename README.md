@@ -27,8 +27,8 @@
 
 - **A target** is an entity that communicates using a protocol. A network amplifier can be a target.
 - **A feature** is a variable that a target's protocol provides. It can be volume, power, etc.
-- **A target URI** describes the connection to a target and has the form `protocol:arg_0:...:arg_n`, where `protocol` is a class from ./src/protocol or of the form `[module.]protocol_class`. Example: `denon://192.168.1.5:23`
-- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `feature=value`, the target's feature `feature` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt 'denon://192.168.1.5:23?power=1&source=DVD&MVUP'`
+- **A target URI** describes the connection to a target and has the form `protocol:arg_0:...:arg_n`, where `protocol` is a class from ./src/protocol or of the form `[module.]protocol_class`. By default it is being read from the main.cfg. Example: `denon://192.168.1.5:23`
+- A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `feature=value`, the target's feature `feature` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt '?power=1&source=DVD&MVUP'`
 
 
 ### Supported Protocols
