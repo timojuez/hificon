@@ -1,8 +1,8 @@
 import sys, os, argparse, pkgutil, re
 from contextlib import suppress
 from ..core.config import config, FILE
-from ..amp import discover_amp, check_amp
-from .. import NAME, PKG_NAME, Target, protocol
+from ..protocol.auto import discover_target, check_target
+from .. import NAME, PKG_NAME, Target
 
 
 def autostart():
@@ -65,12 +65,12 @@ def zone_setup():
 
 def discover_target_prompt():
     def set_target(uri): config["Target"]["uri"] = uri
-    try: uri = discover_amp()
+    try: uri = discover_target()
     except Exception as e:
         print("%s: %s"%(type(e).__name__, e))
         while True:
             host = input("Enter target IP: ")
-            if uri := check_amp(host): return set_target(uri)
+            if uri := check_target(host): return set_target(uri)
             else: print("Cannot connect to host.")
     else: set_target(uri)
 
