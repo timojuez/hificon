@@ -161,7 +161,7 @@ It is possible to implement the support e.g. for other AVR brands like Yamaha, P
 
 ### Custom Client Software
 It is possible to create an own program that controls the target and keeps being synchronised with it.
-See ./examples/custom_app.py
+See ./examples/custom_client.py
 
 Your requirement will be the hificon package.
 
