@@ -101,7 +101,7 @@ class BasicSetup:
     ]
     
 
-class IconSetup(BasicSetup):
+class TraySetup(BasicSetup):
     add_tasks = [
         ("autostart", autostart, "Add tray icon to autostart", True),
         ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
@@ -110,7 +110,7 @@ class IconSetup(BasicSetup):
     ]
 
 
-class Setup(IconSetup, BasicSetup):
+class Setup(TraySetup, BasicSetup):
 
     @classmethod
     def configured(self): return os.path.exists(FILE)
