@@ -39,8 +39,8 @@
 | Denon | `denon://SERVER_IP:SERVER_PORT` | `denon://LISTEN_IP:LISTEN_PORT` | Denon/Marantz AVR compatible (tested with Denon X1400H) |
 | Repeater | - | `repeat:CLIENT_URI` | A server that connects to another server and repeats the data |
 | Raw Telnet | `raw_telnet://IP:PORT` | - | Reads telnet data without further interpretation |
-| Emulator | `emulator:PROTOCOL` | `emulator:PROTOCOL` | Emulates any other protocol |
-| Plain Emulator | `plain_emulator:PROTOCOL` | `plain_emulator:PROTOCOL` | Emulator that skips network |
+| Emulator | `emulate:PROTOCOL` | `emulate:PROTOCOL` | Emulates any other protocol |
+| Plain Emulator | `plain_emulate:PROTOCOL` | `plain_emulate:PROTOCOL` | Emulator that skips network |
 
 
 ### Requirements on the Client
@@ -144,11 +144,11 @@ If `__return__` is a callable, `$""` will return the received line from the targ
 ### Server Software
 You can implement an own protocol and start the server by running `python3 -m hificon.server --target PROTOCOL_MODULE.CLASS`
 
-If the prefix `emulator:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
+If the prefix `emulate:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
 
 Examples:
 - `python3 -m hificon.server --target denon://0.0.0.0:23`
-- `python3 -m hificon.server --target emulator:denon://127.0.0.1:1234`
+- `python3 -m hificon.server --target emulate:denon://127.0.0.1:1234`
 
 
 ## Development
@@ -167,14 +167,14 @@ Your requirement will be the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulator:PROTOCOL`.
+For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulate:PROTOCOL`.
 
 The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: 
-`python3 -m hificon.server --target emulator:denon://127.0.0.1:1234`
+`python3 -m hificon.server --target emulate:denon://127.0.0.1:1234`
 and connect to it e.g. via HiFiSh:
 `hifish --target denon://127.0.0.1:1234`.
 
-You can also emulate the HiFi Shell directly: `hifish --target emulator:denon`
+You can also emulate the HiFi Shell directly: `hifish --target emulate:denon`
 
 
 ## Troubleshoot

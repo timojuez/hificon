@@ -20,7 +20,7 @@ def Target(uri=None, role="client", *args, **xargs):
     @uri: URI to connect to. Schema: protocol_cls:arg_1:...:arg_n. Will be read from config by default.
         Examples:
             denon://192.168.1.15:23
-            emulator:denon
+            emulate:denon
     @role: Method "new_@role" will be called on the protocol for instantiation. Can be "server" or "client".
     """
     if uri and "?" in uri: uri, query = uri.split("?",1)

@@ -45,7 +45,7 @@ class PlainDummyClientMixin(DummyClientMixin):
         if not self.connected: raise BrokenPipeError("Not connected")
 
 
-class Emulator(ProtocolType):
+class Emulate(ProtocolType):
     protocol = "Emulator"
 
     @classmethod
@@ -61,7 +61,7 @@ class Emulator(ProtocolType):
         return Protocol.new_dummyserver(*args, **xargs)
 
 
-class PlainEmulator(ProtocolType):
+class PlainEmulate(ProtocolType):
     """ Emulator without network connection. Only internal variables are being used. """
     protocol = "Plain Emulator"
 
