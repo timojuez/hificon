@@ -51,9 +51,9 @@ class Emulator(ProtocolType):
     @classmethod
     def new_client(cls, protocol, *args, **xargs):
         Protocol = get_protocol(protocol)
-        server = cls.new_server(protocol, *args, **xargs)
+        server = cls.new_server(protocol)
         Client = type(Protocol.__name__, (DummyClientMixin, Protocol, Protocol.Client), {"_server":server})
-        return Client(server)
+        return Client(server, *args, **xargs)
 
     @classmethod
     def new_server(cls, protocol, *args, **xargs):
