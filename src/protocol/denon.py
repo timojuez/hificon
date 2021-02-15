@@ -3,6 +3,7 @@ Compatible with Denon Firmware Version 4600-6121-1061-3085
 """
 
 import sys, math
+from threading import Timer
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
 from ..core import config, features
@@ -304,6 +305,12 @@ class DevicePower(BoolFeature):
     category = "General"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
+
+    def on_change(self, old, new):
+        super().on_change(old, new)
+        if new: Timer(10, # workaround for denon to retrieve CV?
+            lambda:self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)).start()
+
 
 @Denon.add_feature
 class Muted(BoolFeature):
