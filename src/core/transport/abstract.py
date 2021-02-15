@@ -241,7 +241,7 @@ class _AbstractClient(ProtocolBase):
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
     def send(self, cmd):
-        if self.verbose > 4: print("%s $ %s"%(self.prompt, cmd), file=sys.stderr)
+        if self.verbose > 4: print(f"{self.prompt} $ ${repr(cmd)}", file=sys.stderr)
 
     @log_call
     def on_connect(self):
