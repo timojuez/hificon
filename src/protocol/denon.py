@@ -450,7 +450,7 @@ class SoundMode(SelectFeature):
     def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
     def on_change(self, old, new):
         super().on_change(old,new)
-        self.target.send("CV?")
+        self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)
 
 
 class _QuickSelect(SelectFeature):
