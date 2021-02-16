@@ -12,7 +12,9 @@
 	    - Switching the amplifier off when sound stops or computer shuts down/suspends
 - HiFiCon Control Menu*
     - Control attributes in a standalone app
-- HiFiSh HiFi Shell: Send custom commands and run your own hifi script
+- HiFiSh HiFi Shell
+    - Send custom commands and run your own hifi script
+    - Record actions from remote control and repeat automatically
 - Automatic amplifier discovery*
 - Platform independent
 - Easily control your AVR – even far away from remote control distance
@@ -139,6 +141,18 @@ target = Target()
 | `wait(X)` | `time.sleep(X)` |
 
 If `__return__` is a callable, `$""` will return the received line from the target where `__return__(line) == True`.
+
+#### Script Creator
+`python3 -m hificon.create_script`
+
+The create_script tool helps to create HiFi scripts automatically or even to record remote control actions.
+
+Example:
+```
+python3 -m hificon.create_script --raw > my_script.hifi # start recording
+# now change the target's values that you want to store
+hifish my_script.hifi # repeat
+```
 
 
 ### Server Software
