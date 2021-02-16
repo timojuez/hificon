@@ -24,7 +24,7 @@ class Main:
         append()
         if raw: t.bind(on_receive_raw_data=lambda data: append(f"${repr(data)}"))
         else: t.bind(on_feature_change=lambda key, value, *args, **xargs: append(f"${key} = {repr(value)}"))
-        t.bind(send = lambda data: append(f"\n# sent {repr(data)}"))
+        t.bind(send = lambda data: append(f"\n# sent ${repr(data)}"))
         with t:
             if all_features:
                 for call in set([f.call for f in t.features.values() if f.call]):
