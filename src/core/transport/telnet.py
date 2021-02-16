@@ -1,4 +1,4 @@
-import time, socket, time, selectors, traceback
+import time, socket, time, selectors, traceback, sys
 from telnetlib import Telnet
 from threading import Lock, Thread, Event
 from contextlib import suppress
@@ -99,9 +99,7 @@ class _TelnetServer(Service):
         self.target = target
         self._break = linebreak
         if self.verbose >= 0:
-            print("Starting telnet server")
-            print(f"Operating on {self.target.prompt}")
-            print()
+            print(f"[{self.__class__.__name__}] Operating on {self.target.prompt}", file=sys.stderr)
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
     def enter(self):
