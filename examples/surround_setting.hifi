@@ -7,7 +7,7 @@ $front_speaker = 'A'
 #$source = 'CBL/SAT'
 $sound_mode = 'Multi Channel In'
 $sound_mode = 'Dolby Digital'
-$multi_eq = 'Flat'
+$mult_eq = 'Flat'
 wait(1)
 $subwoofer_volume = Decimal('-3.5')
 

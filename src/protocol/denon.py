@@ -580,8 +580,8 @@ class SpeakerOutput(SelectFeature):
     translation = {"FH":"F. Height", "FW":"F. Wide", "SB":"S. Back"}
     
 @Denon.add_feature
-class MultiEq(SelectFeature):
-    name = "MultiEQ XT mode"
+class MultEq(SelectFeature):
+    name = "MultEQ XT mode"
     category = "Audyssey"
     function = "PSMULTEQ:"
     call = "PSMULTEQ: ?"
