@@ -712,7 +712,7 @@ class RoomSize(SelectFeature):
 class AudioDelay(IntFeature):
     category = "Audio"
     max = 999
-    function  ="PSDELAY "
+    function = "PSDELAY "
 
 @Denon.add_feature
 class Restorer(SelectFeature):
