@@ -35,14 +35,10 @@
 
 ### Supported Protocols
 
-| Protocol | URI (Client) | URI (Server) | Description |
-|---|---|---|---|
-| Auto | `auto` | - | Detect a supported server in network by using SSDP |
-| Denon | `denon://SERVER_IP:SERVER_PORT` | `denon://LISTEN_IP:LISTEN_PORT` | Denon/Marantz AVR compatible (tested with Denon X1400H) |
-| Repeater | - | `repeat:CLIENT_URI` | A server that connects to another server and repeats the data |
-| Raw Telnet | `raw_telnet://IP:PORT` | - | Reads telnet data without further interpretation |
-| Emulator | `emulate:PROTOCOL` | `emulate:PROTOCOL` | Emulates any other protocol |
-| Plain Emulator | `plain_emulate:PROTOCOL` | `plain_emulate:PROTOCOL` | Emulator that skips network |
+- Denon/Marantz AVR compatible (tested with Denon X1400H)
+- Raw Telnet
+
+For a complete list, run `hifish --help-protocol`
 
 
 ### Requirements on the Client
