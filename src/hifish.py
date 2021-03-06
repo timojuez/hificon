@@ -19,6 +19,7 @@ class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='HIFI SHELL')
+        parser.add_argument("--help-features", metavar="PROTOCOL", action="store", const=1, nargs="?", help="show target's feature variables and exit")
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor received messages')
@@ -34,9 +35,13 @@ class CLI:
         assert(self.args.command or not self.args.ret)
         
     def __call__(self):
+        self.target = Target(self.args.target, verbose=self.args.verbose)
+        if self.args.help_features:
+            if self.args.help_features != 1:
+                self.target= Target(f"emulate:{self.args.help_features}")
+            return self.print_help_features()
         matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
-        self.target = Target(self.args.target, verbose=self.args.verbose)
         if self.args.follow: self.target.bind(on_receive_raw_data=self.receive)
         with self.target:
             self.compiler = Compiler(

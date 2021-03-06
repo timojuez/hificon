@@ -119,7 +119,7 @@ See also `hifish -h` and the ./examples/.
 #### High level commands
 High level features are not protocol (resp. amp manufacturer) dependent and in the form `$feature` for reading and `$feature=value` for writing.
 Examples: `$volume += 5`, `$source = 'DVD'`, `$power = True`
-To see what features are being supported, type `help_features()` in hifish or call `hifish -c 'help_features()'`
+To see what features are being supported, type `help_features()` in hifish or call `hifish --help-features`
 
 #### Raw commands
 Raw commands can be sent to the target like `COMMAND`. If your command contains a space or special character (`;`) or if you need it's return value, use the alternative way `$"COMMAND"`. Examples: `MV50`, `PWON`, `$'PW?'`
