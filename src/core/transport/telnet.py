@@ -44,8 +44,9 @@ class TelnetClient(AbstractClient):
 
     @property
     def prompt(self):
-        p = "%s://%s"%(self.get_protocol(),self.host)
-        if self.port: p = "%s:%s"%(p,self.port)
+        p = self.get_protocol()
+        if self.host: p = f"{p}://{self.host}"
+        if self.port: p = f"{p}:{self.port}"
         return p
     
     def send(self, cmd):
