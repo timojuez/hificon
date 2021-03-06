@@ -48,9 +48,6 @@ class ProtocolBase(Bindable, ProtocolType):
     
     def exit(self): pass
     
-    @classmethod
-    def get_protocol(self): return self.protocol or self.__module__
-
     @property
     def prompt(self): return self.get_protocol()
         
