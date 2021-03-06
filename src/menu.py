@@ -3,7 +3,8 @@ from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
-from . import Target, protocol, get_protocol, NAME, VERSION, AUTHOR, COPYRIGHT
+from .protocol import protocols
+from . import Target, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = f"{NAME} Control Menu"
@@ -214,20 +215,18 @@ class SettingsTab(TabbedPanelItem):
 
     def __init__(self):
         super().__init__()
-        protocol_names = {protocol_: get_protocol(protocol_).protocol or protocol_
-            for protocol_ in dir(protocol) if not protocol_.startswith("_")}
-
+        protocol_names = {protocol: P.get_title() for protocol, P in protocols.items()}
         dropdown = SelectFeatureOptions()
         self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
-        for protocol_, text in protocol_names.items():
+        for protocol, title in protocol_names.items():
             o = SelectFeatureOption()
-            o.text = text
-            o.bind(on_release=lambda e,protocol_=protocol_: dropdown.select(protocol_))
+            o.text = title
+            o.bind(on_release=lambda e,protocol=protocol: dropdown.select(protocol))
             dropdown.add_widget(o)
         
-        def on_select(e,protocol_):
-            self.protocol = protocol_
-            self.ids.protocol.text = protocol_names.get(protocol_, protocol_)
+        def on_select(e,protocol):
+            self.protocol = protocol
+            self.ids.protocol.text = protocol_names.get(protocol, protocol)
         dropdown.bind(on_select=on_select)
         
         uri = config.get("Target","uri").split(":")
