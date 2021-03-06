@@ -219,7 +219,6 @@ def main(args):
     target = Target(args.target, connect=False, verbose=args.verbose+1)
     with Icon(target) as icon:
         app = Main(target, icon=icon, verbose=args.verbose+1)
-        with target:
-            if rcs := RemoteControlService(app,verbose=args.verbose): rcs()
-            app.mainloop()
+        rcs = RemoteControlService(app,verbose=args.verbose)
+        with target, rcs: app.mainloop()
 

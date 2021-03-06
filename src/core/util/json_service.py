@@ -12,30 +12,28 @@ PORT=654321
 
 class Service(object):
     """
-    A service communicating with Json objects. Call mainloop() after init.
+    A service communicating with Json objects. Call enter() after init.
     """
     EVENTS = selectors.EVENT_READ #| selectors.EVENT_WRITE
     running = True
     
     def __init__(self, host="127.0.0.1", port=PORT, verbose=0):
+        self.host = host
+        self.port = port
         self._verbose = verbose
-        self.sel = selectors.DefaultSelector()
-        sock = socket.socket()
-        self.sock = sock
-        sock.bind((host, port))
-        if self._verbose > 0: print(
-            "[%s] Listening on %s:%d"%(self.__class__.__name__,*sock.getsockname()), file=sys.stderr)
-        sock.listen(100)
-        sock.setblocking(False)
-        self.sel.register(sock, selectors.EVENT_READ, self.accept)
-
-    def __call__(self):
-        Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
 
     def __enter__(self): self.enter(); return self
     def __exit__(self, *args, **xargs): self.exit()
 
     def enter(self):
+        self.sock = socket.socket()
+        self.sock.bind((self.host, self.port))
+        self.sel = selectors.DefaultSelector()
+        if self._verbose > 0: print(
+            "[%s] Listening on %s:%d"%(self.__class__.__name__,*self.sock.getsockname()), file=sys.stderr)
+        self.sock.listen(100)
+        self.sock.setblocking(False)
+        self.sel.register(self.sock, selectors.EVENT_READ, self.accept)
         self.running = True
         Thread(target=self.mainloop, daemon=True, name="TelnetService.mainloop").start()
 

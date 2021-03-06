@@ -68,19 +68,26 @@ class VolumeChanger:
         with suppress(RuntimeError): self._volume_step.release()
 
 
-def RemoteControlService(*args,**xargs):
-    ipc_port = config.getint("Service","ipc_port")
-    if ipc_port < 0: return
-    secure_mode = config.getboolean("Service","secure_mode")
-    if not secure_mode: print("[WARNING] Service not running in secure mode", file=sys.stderr)
-    whitelist = ("on_key_press","on_key_release") if secure_mode else None
-    rcs = json_service.RemoteControlService(
-        *args,port=ipc_port,func_whitelist=whitelist,**xargs)
-    ipc_port = rcs.sock.getsockname()[1]
-    with suppress(Exception):
-        with open(ipc_port_file, "w") as fp: fp.write(str(ipc_port))
-    #with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME) # TODO: cleanup on close
-    return rcs
+class RemoteControlService(json_service.RemoteControlService):
+    
+    def __init__(self, *args, **xargs):
+        self.ipc_port = config.getint("Service","ipc_port")
+        if self.ipc_port >= 0:
+            secure_mode = config.getboolean("Service","secure_mode")
+            if not secure_mode: print("[WARNING] Service not running in secure mode", file=sys.stderr)
+            whitelist = ("on_key_press","on_key_release") if secure_mode else None
+            super().__init__(*args, port=self.ipc_port, func_whitelist=whitelist, **xargs)
+
+    def enter(self):
+        if self.ipc_port >= 0:
+            super().enter()
+            ipc_port = self.sock.getsockname()[1]
+            with suppress(Exception):
+                with open(ipc_port_file, "w") as fp: fp.write(str(ipc_port))
+            #with suppress(Exception): os.remove("/tmp/%s.port"%PKG_NAME) # TODO: cleanup on close
+
+    def exit(self):
+        if self.ipc_port >= 0: super().exit()
 
 
 def send(e):
