@@ -8,25 +8,26 @@ class Main:
     def __init__(self):
         script = os.path.basename(__file__)
         parser = argparse.ArgumentParser(description=f'Tool for creating a HiFi script for HiFiSh. It can record target changes to repeat the actions later by calling the HiFi script. Writes to stdout. Example: {script} > batch.hifi && hifish batch.hifi')
-        parser.add_argument('-a', '--all', action="store_true", help='Include all current feature values, not just recorded ones')
-        group = parser.add_mutually_exclusive_group(required=False)
+        subparsers = parser.add_subparsers(help='sub-command help', dest="command", required=True)
+        parser_full = subparsers.add_parser('full', help='Include all current feature values')
+        parser_record = subparsers.add_parser('record', help='Record feature value changes')
+        group = parser_record.add_mutually_exclusive_group(required=False)
         group.add_argument("--relative", action="store_true", help="For numeric values, denote only the difference instead of absolute value")
         group.add_argument("-r", "--raw", action="store_true", help="Use low level commands")
-        parser.add_argument("--debug", action="store_true", help="Same as -ar")
+        parser_full.add_argument("-r", "--raw", action="store_true", help="Use low level commands")
+
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
         args = parser.parse_args()
-        assert(not(args.all and args.relative))
-        self.all_features = args.all or args.debug
-        self.raw = args.raw or args.debug
-        self.relative = args.relative
+        self.raw = args.raw
+        self.relative = getattr(args, "relative", False)
         with Target(args.target, verbose=args.verbose) as self.t:
             self.append("#!/usr/bin/env hifish")
             self.append("#")
             self.append(f"# CREATED WITH {script}")
             self.append("#")
             self.append()
-            if self.all_features:
+            if args.command == "full":
                 self.start_recording()
                 for call in set([f.call for f in self.t.features.values() if f.call]):
                     self.append(f"\n# sent ${repr(call)}")

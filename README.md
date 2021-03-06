@@ -147,11 +147,16 @@ If `__return__` is a callable, `$""` will return the received line from the targ
 
 The create_script tool helps to create HiFi scripts automatically or even to record remote control actions.
 
-Example:
+Example 1:
 ```
-python3 -m hificon.create_script --raw > my_script.hifi # start recording
+python3 -m hificon.create_script record --raw > my_script.hifi # start recording
 # now change the target's values that you want to store
 hifish my_script.hifi # repeat
+```
+
+Example 2:
+```
+python3 -m hificon.create_script -t emulate:denon full > example_script.hifi
 ```
 
 
