@@ -102,11 +102,6 @@ class _TelnetServer(Service):
             print(f"[{self.__class__.__name__}] Operating on {self.target.prompt}", file=sys.stderr)
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
-    def enter(self):
-        Thread(target=self.mainloop, daemon=True, name="mainloop").start()
-
-    def exit(self): pass #FIXME: stop thread
-    
     def connection(self, conn, mask):
         if conn not in self._send: self._send[conn] = b""
         return super().connection(conn, mask)

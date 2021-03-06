@@ -15,6 +15,7 @@ class Service(object):
     A service communicating with Json objects. Call mainloop() after init.
     """
     EVENTS = selectors.EVENT_READ #| selectors.EVENT_WRITE
+    running = True
     
     def __init__(self, host="127.0.0.1", port=PORT, verbose=0):
         self._verbose = verbose
@@ -30,9 +31,21 @@ class Service(object):
 
     def __call__(self):
         Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True).start()
-        
+
+    def __enter__(self): self.enter(); return self
+    def __exit__(self, *args, **xargs): self.exit()
+
+    def enter(self):
+        self.running = True
+        Thread(target=self.mainloop, daemon=True, name="TelnetService.mainloop").start()
+
+    def exit(self):
+        self.running = False
+        #self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+    
     def mainloop(self):
-        while True:
+        while self.running:
             events = self.sel.select()
             for key, mask in events:
                 callback = key.data
