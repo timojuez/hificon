@@ -104,12 +104,19 @@ class CLI:
             print()
 
     def print_help_protocol(self):
+        tw = TextWrapper(
+            initial_indent=" "*4, subsequent_indent=" "*8, width=shutil.get_terminal_size().columns)
         print(f"A protocol defines a class that extends {PKG_NAME}.core.transport.ProtocolType.")
         print("The following protocols are being supported internally:")
         print()
         for p in [p for p in dir(protocol) if not p.startswith("_")]:
             P = get_protocol(p)
-            print("    %-30s%s"%(bright(p), P.protocol))
+            print(bright(P.protocol))
+            if isinstance(P.description, str): print(tw.fill(f"{P.description}"))
+            if isinstance(P.uri_client, str): print(tw.fill(f"URI (Client): {p}{P.uri_client}"))
+            if isinstance(P.uri_server, str): print(tw.fill(f"URI (Server): {p}{P.uri_server}"))
+            print()
+            #print(tw.fill("%-20s%-20s%s"%(bright(p), P.protocol, getattr(P, "help", ""))))
 
     def print_help_features(self):
         tw = TextWrapper(
