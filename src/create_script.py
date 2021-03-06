@@ -29,6 +29,7 @@ class Main:
             if self.all_features:
                 self.start_recording()
                 for call in set([f.call for f in self.t.features.values() if f.call]):
+                    self.append(f"\n# sent ${repr(call)}")
                     self.t.send(call)
                     time.sleep(.2)
                 time.sleep(3)
@@ -53,7 +54,6 @@ class Main:
                 self.append(f"${key} += {repr(value-prev)}")
                 if self.relative and prev and isinstance(self.t.features[key], NumericFeature)
                 else self.append(f"${key} = {repr(value)}"))
-        self.t.bind(send = lambda data: self.append(f"\n# sent ${repr(data)}"))
 
 
 if __name__ == '__main__': Main()
