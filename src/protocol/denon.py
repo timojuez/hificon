@@ -88,7 +88,7 @@ class Denon(TelnetAmp):
         @matches callable: return received line where matches(line) is True
         """
         _function = cmd.upper().replace("?","")
-        if "?" not in cmd: return self.send(_function)
+        if "?" not in cmd: return self.send(cmd)
         class _Feature(SelectFeature):
             key=None
             function=_function
@@ -98,7 +98,7 @@ class Denon(TelnetAmp):
         f.wait_poll(force=True)
         return "%s%s"%(_function, f.get())
     
-    def send(self, cmd): super().send(cmd.upper())
+    def send(self, cmd): super().send(cmd.upper() if cmd == cmd.lower() else cmd)
 
 
 class DenonFeature:
