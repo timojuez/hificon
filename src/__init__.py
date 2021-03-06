@@ -6,10 +6,14 @@ from .info import *
 
 def get_protocol(cls):
     """ @cls str: Class name in .protocol or "module.class" """
-    if "." in cls: module_path, cls = cls.rsplit(".", 1)
-    else: module_path = "."
-    module = importlib.import_module(module_path, "%s.protocol"%__name__)
-    Protocol = getattr(module, cls)
+    from .protocol import protocols
+    try: Protocol = protocols[cls]
+    except KeyError:
+        if "." in cls: module_path, cls_ = cls.rsplit(".", 1)
+        else: module_path = "."
+        module = importlib.import_module(module_path, "%s.protocol"%__name__)
+        Protocol = getattr(module, cls_)
+        Protocol.protocol = cls
     assert(issubclass(Protocol, ProtocolType))
     return Protocol
 
