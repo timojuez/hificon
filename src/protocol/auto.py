@@ -27,9 +27,9 @@ def discover_target():
 
 
 class Auto(AbstractProtocol):
-    protocol = "Auto"
-    uri_client = ""
     description = "Detect a supported server in network by using SSDP"
+    protocol = "auto"
+    uri_client = protocol
 
     def __new__(self, *args, **xargs):
         return Target(discover_target(), *args,**xargs)

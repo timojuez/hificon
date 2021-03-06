@@ -25,9 +25,10 @@ class ClientRepeaterMixin:
 
 
 class Repeat(ProtocolType):
-    protocol = "Repeater"
-    uri_server = ":CLIENT_URI"
+    title = "Repeater"
     description = "A server that connects to another server and repeats the data"
+    protocol = "repeat"
+    uri_server = f"{protocol}:CLIENT_URI"
 
     @classmethod
     def new_client(cls, protocol, *args, **xargs): raise NotImplementedError()
