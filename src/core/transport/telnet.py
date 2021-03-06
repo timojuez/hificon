@@ -149,7 +149,7 @@ class TelnetServer(AbstractServer):
     _server = None
     
     def __init__(self, listen_host="127.0.0.1", listen_port=0, linebreak="\r", *args, verbose=0, **xargs):
-        super().__init__(*args, verbose=min(0, verbose-1), **xargs)
+        super().__init__(*args, verbose=max(0, verbose-1), **xargs)
         if listen_host.startswith("//"): listen_host = listen_host[2:]
         self._server = _TelnetServer(self, listen_host, int(listen_port), linebreak, verbose=verbose)
     
