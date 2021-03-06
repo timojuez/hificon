@@ -5,7 +5,7 @@ from itertools import groupby
 from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
-from . import Target, VERSION, AUTHOR
+from . import Target, get_protocol, protocol, PKG_NAME, VERSION, AUTHOR
 from .core import features
 try: import readline
 except ImportError: pass
@@ -19,6 +19,7 @@ class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='HIFI SHELL')
+        parser.add_argument("--help-protocol", action="store_true", help="show list of supported protocols and exit")
         parser.add_argument("--help-features", metavar="PROTOCOL", action="store", const=1, nargs="?", help="show target's feature variables and exit")
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
@@ -35,10 +36,11 @@ class CLI:
         assert(self.args.command or not self.args.ret)
         
     def __call__(self):
+        if self.args.help_protocol: return self.print_help_protocol()
         self.target = Target(self.args.target, verbose=self.args.verbose)
         if self.args.help_features:
             if self.args.help_features != 1:
-                self.target= Target(f"emulate:{self.args.help_features}")
+                self.target = Target(f"emulate:{self.args.help_features}")
             return self.print_help_features()
         matches = (lambda cmd:cmd.startswith(self.args.ret)) if self.args.ret else None
         if len(self.args.command) == 0 and not self.args.file: self.print_header()
@@ -100,6 +102,14 @@ class CLI:
             print(bright(header.upper()))
             for e in l: print(tw.fill("%-20s%s"%e))
             print()
+
+    def print_help_protocol(self):
+        print(f"A protocol defines a class that extends {PKG_NAME}.core.transport.ProtocolType.")
+        print("The following protocols are being supported internally:")
+        print()
+        for p in [p for p in dir(protocol) if not p.startswith("_")]:
+            P = get_protocol(p)
+            print("    %-30s%s"%(bright(p), P.protocol))
 
     def print_help_features(self):
         tw = TextWrapper(
