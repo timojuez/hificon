@@ -14,7 +14,6 @@ from . import features
 
 
 class ProtocolBase(Bindable, ProtocolType):
-    protocol = None
     verbose = 0
     connected = False
     features = features.Features()
