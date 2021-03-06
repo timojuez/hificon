@@ -114,7 +114,7 @@ class _TelnetServer(Service):
         self.verbose = verbose
         self.target = target
         self._break = linebreak
-        if self.verbose >= 0:
+        if self.verbose >= 1:
             print(f"[{self.__class__.__name__}] Operating on {self.target.prompt}", file=sys.stderr)
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
