@@ -49,6 +49,9 @@ class PlainDummyClientMixin(DummyClientMixin):
 
 class Emulate(ProtocolType):
     protocol = "Emulator"
+    uri_server = ":PROTOCOL"
+    uri_client = ":PROTOCOL"
+    description = "Emulates any other protocol"
 
     @classmethod
     def new_client(cls, protocol, *args, **xargs):
@@ -66,6 +69,9 @@ class Emulate(ProtocolType):
 class PlainEmulate(ProtocolType):
     """ Emulator without network connection. Only internal variables are being used. """
     protocol = "Plain Emulator"
+    uri_server = ":PROTOCOL"
+    uri_client = ":PROTOCOL"
+    description = "Emulator that skips network"
 
     @classmethod
     def new_client(cls, protocol, *args, **xargs):

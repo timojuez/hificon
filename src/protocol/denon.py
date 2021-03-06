@@ -80,6 +80,9 @@ INPUTS = {
 
 class Denon(TelnetAmp):
     protocol = "Denon"
+    uri_client = "://SERVER_IP:SERVER_PORT"
+    uri_server = "://LISTEN_IP:LISTEN_PORT"
+    description = "Denon/Marantz AVR compatible (tested with Denon X1400H)"
     
     def query(self, cmd, matches=None):
         """
