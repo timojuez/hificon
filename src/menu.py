@@ -3,8 +3,7 @@ from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
-from .protocol import protocols
-from . import Target, NAME, VERSION, AUTHOR, COPYRIGHT
+from . import Target, get_protocols, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = f"{NAME} Control Menu"
@@ -215,7 +214,7 @@ class SettingsTab(TabbedPanelItem):
 
     def __init__(self):
         super().__init__()
-        protocol_names = {protocol: P.get_title() for protocol, P in protocols.items()}
+        protocol_names = {P.protocol: P.get_title() for P in get_protocols()}
         dropdown = SelectFeatureOptions()
         self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
         for protocol, title in protocol_names.items():

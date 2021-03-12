@@ -2,18 +2,21 @@ import importlib
 from urllib.parse import parse_qsl
 from .core import ProtocolType, config, AbstractProtocol, AbstractServer, AbstractClient, features
 from .info import *
+from .protocol import protocols
 
 
-def get_protocol(cls):
-    """ @cls str: Class name in .protocol or "module.class" """
-    from .protocol import protocols
-    try: Protocol = protocols[cls]
-    except KeyError:
-        if "." in cls: module_path, cls_ = cls.rsplit(".", 1)
-        else: module_path = "."
-        module = importlib.import_module(module_path, "%s.protocol"%__name__)
-        Protocol = getattr(module, cls_)
-        Protocol.protocol = cls
+def get_protocols():
+    for p in protocols.keys(): yield get_protocol(p)
+
+
+def get_protocol(cls_path):
+    """ @cls_path str: Key in .protocol.protocols or "module.class" """
+    try: cls_path_ = protocols[cls_path]
+    except KeyError: cls_path_ = cls_path
+    module_path, cls = cls_path_.rsplit(".", 1)
+    module = importlib.import_module(module_path, "%s.protocol"%__name__)
+    Protocol = getattr(module, cls)
+    Protocol.protocol = cls_path
     assert(issubclass(Protocol, ProtocolType))
     return Protocol
 

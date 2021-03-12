@@ -11,6 +11,7 @@ class TelnetClient(AbstractClient):
     This class connects to the server via LAN and executes commands
     @host is the server's hostname or IP.
     """
+    init_args_help = ("//SERVER_IP", "SERVER_PORT")
     host = None
     port = None
     _host = None
@@ -44,7 +45,7 @@ class TelnetClient(AbstractClient):
 
     @property
     def prompt(self):
-        p = self.get_protocol()
+        p = self.protocol
         if self.host: p = f"{p}://{self.host}"
         if self.port: p = f"{p}:{self.port}"
         return p
@@ -146,6 +147,7 @@ class _TelnetServer(Service):
 
 
 class TelnetServer(AbstractServer):
+    init_args_help = ("//LISTEN_IP", "LISTEN_PORT")
     _server = None
     
     def __init__(self, listen_host="127.0.0.1", listen_port=0, linebreak="\r", *args, verbose=0, **xargs):

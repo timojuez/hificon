@@ -49,7 +49,7 @@ class ProtocolBase(Bindable, ProtocolType):
     def exit(self): pass
     
     @property
-    def prompt(self): return self.get_protocol()
+    def prompt(self): return self.protocol
         
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
@@ -136,6 +136,7 @@ class Name(features.SelectFeature):
 
 
 class AbstractServer(ProtocolBase):
+    init_args_help = None # tuple
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -198,6 +199,7 @@ class _AbstractClient(ProtocolBase):
         and delay further command processing. Use threads for not blocking the
         mainloop.
     """
+    init_args_help = None # tuple
     connected = False
     _mainloopt = None
     _stoploop = None

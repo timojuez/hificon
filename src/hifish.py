@@ -5,8 +5,7 @@ from itertools import groupby
 from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
-from . import Target, PKG_NAME, VERSION, AUTHOR
-from .protocol import protocols
+from . import Target, get_protocols, PKG_NAME, VERSION, AUTHOR
 from .core import features
 try: import readline
 except ImportError: pass
@@ -110,11 +109,11 @@ class CLI:
         print(f"A protocol defines a class that extends {PKG_NAME}.core.transport.ProtocolType.")
         print("The following protocols are being supported internally:")
         print()
-        for P in protocols.values():
+        for P in get_protocols():
             print(bright(P.get_title()))
             if isinstance(P.description, str): print(tw.fill(f"{P.description}"))
-            if isinstance(P.uri_client, str): print(tw.fill(f"URI (Client): {P.uri_client}"))
-            if isinstance(P.uri_server, str): print(tw.fill(f"URI (Server): {P.uri_server}"))
+            if uri := P.get_client_uri(): print(tw.fill(f"URI (Client): {uri}"))
+            if uri := P.get_server_uri(): print(tw.fill(f"URI (Server): {uri}"))
             print()
             #print(tw.fill("%-20s%-20s%s"%(bright(p), P.protocol, getattr(P, "help", ""))))
 
