@@ -67,7 +67,7 @@ class ProtocolBase(Bindable, ProtocolType):
             if Feature.key.startswith("_"): raise KeyError("Feature.key may not start with '_'")
             if hasattr(cls.features.__class__, Feature.key):
                 raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
-            if not overwrite and hasattr(cls, Feature.key):
+            if not overwrite and any([hasattr(a, Feature.key) for a in (cls, cls.Server, cls.Client)]):
                 raise KeyError(
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
             setattr(cls, Feature.key, property(
