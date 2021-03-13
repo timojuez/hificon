@@ -118,6 +118,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
     _val = None
     _block_on_send = None
+    _block_on_send_resetter = None
 
     def __init__(self, target):
         super().__init__()
@@ -139,9 +140,17 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
         encoded = self.encode(self.type(value))
-        if not force and self._block_on_send == encoded: return
-        self._block_on_send = encoded
-        self.target.send(encoded)
+        if not self._blocked(encoded): self.target.send(encoded)
+
+    @classmethod
+    def _blocked(cls, encoded):
+        """ prevent sending the same line many times """
+        if cls._block_on_send == encoded: return True
+        cls._block_on_send = encoded
+        try: cls._block_on_send_resetter.cancel()
+        except AttributeError: pass
+        cls._block_on_send_resetter = Timer(1, lambda: setattr(cls, "_block_on_send", None))
+        cls._block_on_send_resetter.start()
     
     def isset(self): return self._val != None
         
@@ -168,7 +177,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def consume(self, cmd):
         """ decode and apply @cmd to this object """
-        for f in self.target.features.values(): f._block_on_send = None
+        self.__class__._block_on_send = None # for power.consume("PWON")
         try: d = self.decode(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.store(d)
