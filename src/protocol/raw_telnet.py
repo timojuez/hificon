@@ -4,7 +4,6 @@ from ..core import features, TelnetProtocol
 class RawTelnet(TelnetProtocol):
     """ Low level target """
     description = "Reads telnet data without further interpretation"
-    Server = None
     
     def query(self, cmd, matches=None):
         """
