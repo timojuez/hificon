@@ -31,9 +31,9 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 class TabPanel(ScrollView):
     config = ConfigDict("menu.json")
+    filter = None
 
-    def __init__(self, target, tabbed_panel):
-        self.tabbed_panel = tabbed_panel
+    def __init__(self, target):
         self.target = target
         super().__init__()
         self.features = {}
@@ -42,9 +42,6 @@ class TabPanel(ScrollView):
         self._features_stack = [*pinned[True], *pinned[False]]
         self.addFeaturesFromStack(chunksize=50, repeat=None)
         
-    @property
-    def header(self): return self.tabbed_panel.current_tab
-
     def addFeaturesFromStack(self, *_, chunksize=1, repeat=.1):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for f in chunk:
@@ -145,9 +142,8 @@ class TabPanel(ScrollView):
         Clock.schedule_once(lambda *_,f=f: self._update_feature_visibility(f), -1)
         
     def _update_feature_visibility(self, f):
-        filter = getattr(self.header, "filter", None)
-        if filter is None: return
-        func = show_widget if f.isset() and filter(f) else hide_widget
+        if self.filter is None: return
+        func = show_widget if f.isset() and self.filter(f) else hide_widget
         try: func(self.features[f.key])
         except RuntimeError: pass
         
@@ -170,6 +166,7 @@ class TabHeader(TabbedPanelHeader):
     def refresh_panel(self):
         for key in self.content.features.keys():
             self.content.update_feature_visibility(self.content.target.features[key])
+        self.panel.filter = self.filter
 
 
 class ScrollViewLayout(StackLayout):
