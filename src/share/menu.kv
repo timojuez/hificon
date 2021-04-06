@@ -11,16 +11,39 @@
 
 
 <MenuScreen>:
+    GridLayout:
+        rows: 2
+        cols: 1
+        ScrollView:
+            size_hint_y: None
+            height: 50
+            do_scroll_x: True
+            do_scroll_y: False
+            ScrollViewLayoutHorizontal:
+                id: headers
+                padding: 2
+                rows: 1
+        StackLayout:
+            id: menu_content
+            canvas.before:
+                Color:
+                    rgba: .188, .188, .188, 1
+                Rectangle:
+                    pos: self.pos
+                    size: self.size
 
 
 <TabHeader>:
+    size_hint_x: None
+    width: 100
+    allow_no_selection: False
 
 
 <TabPanel>:
     do_scroll_x: False
     do_scroll_y: True
     
-    ScrollViewLayout:
+    ScrollViewLayoutVertical:
         id: layout
 
 
@@ -31,9 +54,11 @@
     row_default_height: 50
 
 
-<SettingsTab>:
+<SettingsTabHeader>:
     text: "Connection"
 
+
+<SettingsTab>:
     MyGrid:
         cols: 2
 
@@ -58,17 +83,22 @@
             on_press: root.apply()
 
 
-<About>:
-    id: about
+<AboutTabHeader>:
     text: "About"
+
+<AboutTab>:
     GridLayout:
         cols: 1
         Label:
             id: text
 
 
-<ScrollViewLayout>:
+<ScrollViewLayoutVertical>:
     size_hint_y: None
+
+
+<ScrollViewLayoutHorizontal>:
+    size_hint_x: None
 
 
 <FeatureRow>:

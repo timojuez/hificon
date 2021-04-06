@@ -21,9 +21,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.slider import Slider
 from kivy.uix.label import Label
-from kivy.uix.tabbedpanel import TabbedPanelItem, TabbedPanelHeader
 from kivy.uix.button import Button
-from kivy.uix.tabbedpanel import TabbedPanel
+from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.scrollview import ScrollView
 from kivy.uix.dropdown import DropDown
 from kivy.uix.screenmanager import ScreenManager, Screen
@@ -153,27 +152,62 @@ class TabPanel(ScrollView):
             f.get, f.send, widget_getter, widget_setter)
         f.bind(on_value_change)
         return on_widget_change
-        
 
-class TabHeader(TabbedPanelHeader):
 
-    def __init__(self, panel, *args, filter=None, **xargs):
-        super().__init__(*args, **xargs)
-        self.content = panel
+class TabHeader(ToggleButton):
+    """ a tab header. shows self.panel when activated """
+
+    def __init__(self, menu, *args, **xargs):
+        super().__init__(*args, **xargs, group = "tab_header")
+        self.content = menu.ids.menu_content
+        self.bind(on_release = lambda *_: self.activate())
+
+    def activate(self):
+        self.state = "down"
+        self.content.clear_widgets()
+        self.content.add_widget(self.panel)
+
+
+class CategoryTabHeader(TabHeader):
+
+    def __init__(self, menu, *args, filter=None, **xargs):
+        super().__init__(menu, *args, **xargs)
+        self.panel = menu.panel
         if filter: self.filter = filter
         self.bind(on_release = lambda *_: self.refresh_panel())
         
     def refresh_panel(self):
-        for key in self.content.features.keys():
-            self.content.update_feature_visibility(self.content.target.features[key])
         self.panel.filter = self.filter
+        for key in self.panel.features.keys():
+            self.panel.update_feature_visibility(self.panel.target.features[key])
 
 
-class ScrollViewLayout(StackLayout):
+class SettingsTabHeader(TabHeader):
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.panel = SettingsTab()
+
+
+class AboutTabHeader(TabHeader):
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.panel = AboutTab()
+
+
+class ScrollViewLayoutVertical(StackLayout):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
         self.bind(minimum_height=self.setter('height'))
+
+
+class ScrollViewLayoutHorizontal(GridLayout):
+
+    def __init__(self,*args,**xargs):
+        super().__init__(*args,**xargs)
+        self.bind(minimum_width=self.setter('width'))
 
 
 class MyGrid(GridLayout): pass
@@ -192,22 +226,22 @@ class SelectFeatureOptions(DropDown): pass
 
 class SelectFeatureOption(Button): pass
 
-class PinnedTab(TabHeader):
+class PinnedTab(CategoryTabHeader):
     text = "Pinned"
-    filter = lambda self,f: f.key in self.content.config["pinned"]
+    filter = lambda self,f: f.key in self.panel.config["pinned"]
 
-class AllTab(TabHeader):
+class AllTab(CategoryTabHeader):
     text = "All"
     filter = lambda self,f: True
 
-class About(TabbedPanelItem):
+class AboutTab(StackLayout):
     
     def __init__(self):
         super().__init__()
         self.ids.text.text = f"{TITLE}\nVersion {VERSION}\n{COPYRIGHT}\n"
 
 
-class SettingsTab(TabbedPanelItem):
+class SettingsTab(StackLayout):
 
     def __init__(self):
         super().__init__()
@@ -247,23 +281,21 @@ class WelcomeScreen(Screen):
             fp.write(pkgutil.get_data(__name__,"share/icons/png/logo.png"))
         self.ids.image.source = icon_path
         os.remove(icon_path)
-        
+
 
 class _MenuScreen(Screen):
 
     def __init__(self, target=None, **kwargs):
         super().__init__()
         self.target = target
-        self.tabs = TabbedPanel()
         #self.build()
         Clock.schedule_once(lambda *_:self.build(), .8) # TODO: instead do this on WelcomeScreen.on_enter. must be executed by Clock!
 
     def build(self):
         """ is being executed while showing Welcome screen """
-        self.settings_tab = SettingsTab()
-        self.tabs.add_widget(self.settings_tab)
-        self.tabs.add_widget(About())
-        self.add_widget(self.tabs)
+        self.settings_tab = SettingsTabHeader(self)
+        self.ids.headers.add_widget(self.settings_tab)
+        self.ids.headers.add_widget(AboutTabHeader(self))
         App.get_running_app().manager.switch_to(self)
         
 
@@ -271,8 +303,7 @@ class ErrorScreen(_MenuScreen):
 
     def build(self):
         super().build()
-        self.tabs.default_tab = self.settings_tab
-        self.tabs.default_tab_text = self.settings_tab.text
+        self.settings_tab.activate()
         
 
 class MenuScreen(_MenuScreen):
@@ -286,23 +317,30 @@ class MenuScreen(_MenuScreen):
         App.get_running_app().title = "%s – %s"%(TITLE, name)
     
     def build(self):
-        headers = {}
-        self.panel = TabPanel(self.target, self.tabs)
-        self.pinned_tab = PinnedTab(self.panel)
-        self.all_tab = AllTab(self.panel)
-        self.tabs.add_widget(self.pinned_tab)
-        self.tabs.add_widget(self.all_tab)
+        self.panel = TabPanel(self.target)
+        self.pinned_tab = PinnedTab(self)
+        self.all_tab = AllTab(self)
+        self.ids.headers.add_widget(self.pinned_tab)
+        self.ids.headers.add_widget(self.all_tab)
+        categories = list(dict.fromkeys([f.category for f in self.target.features.values()]))
+        tabs = {}
+        def silently_hide_widget(e):
+            try: return hide_widget(e)
+            except RuntimeError: pass
+        for cat in categories:
+            e = self._newTab(cat)
+            tabs[cat] = e
+            hide_widget(e)
+            self.target.bind(on_disconnected = lambda e=e:silently_hide_widget(e))
         for key, f in self.target.features.items():
-            if f.category not in headers: headers[f.category] = self._newTab(f.category)
+            f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
-        self.tabs.default_tab = self.pinned_tab
-        self.tabs.default_tab_text = self.pinned_tab.text
-        self.pinned_tab.refresh_panel()
-    
+        self.pinned_tab.activate()
+
     def _newTab(self, category):
         def filter(f, category=category): return f.category == category
-        header = TabHeader(self.panel, text=category, filter=filter)
-        self.tabs.add_widget(header)
+        header = CategoryTabHeader(self, text=category, filter=filter)
+        self.ids.headers.add_widget(header)
         return header
 
     def on_enter(self): self.panel.addFeaturesFromStack()
