@@ -174,12 +174,12 @@ class CategoryTabHeader(TabHeader):
         super().__init__(menu, *args, **xargs)
         self.panel = menu.panel
         if filter: self.filter = filter
-        self.bind(on_release = lambda *_: self.refresh_panel())
         
-    def refresh_panel(self):
+    def activate(self):
         self.panel.filter = self.filter
         for key in self.panel.features.keys():
             self.panel.update_feature_visibility(self.panel.target.features[key])
+        super().activate()
 
 
 class SettingsTabHeader(TabHeader):
