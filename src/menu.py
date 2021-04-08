@@ -195,6 +195,17 @@ class AboutTabHeader(TabHeader):
         self.panel = AboutTab()
 
 
+class ConnectingTabHeader(TabHeader):
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.panel = ConnectingTab()
+        hide_widget(self)
+
+
+class ConnectingTab(Label): pass
+
+
 class ScrollViewLayoutVertical(StackLayout):
 
     def __init__(self,*args,**xargs):
@@ -293,7 +304,9 @@ class _MenuScreen(Screen):
     def build(self):
         """ is being executed while showing Welcome screen """
         self.settings_tab = SettingsTabHeader(self)
+        self.connecting_tab = ConnectingTabHeader(self)
         self.ids.headers.add_widget(self.settings_tab)
+        self.ids.headers.add_widget(self.connecting_tab)
         self.ids.headers.add_widget(AboutTabHeader(self))
         App.get_running_app().manager.switch_to(self)
         
@@ -332,7 +345,7 @@ class MenuScreen(_MenuScreen):
             f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
         self.target.bind(on_connect=self.pinned_tab.activate)
-        self.target.bind(on_disconnected=self.settings_tab.activate)
+        self.target.bind(on_disconnected=self.connecting_tab.activate)
         if self.target.connected: self.pinned_tab.activate()
         else: self.settings_tab.activate()
 
