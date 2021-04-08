@@ -478,7 +478,7 @@ class QuickSelectStore(_QuickSelect):
 
     # for client
     def get(self): return "(select)"
-    def isset(self): return self.target.connected
+    def isset(self): return True
     
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
