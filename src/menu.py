@@ -367,20 +367,22 @@ class MenuScreen(_MenuScreen):
 
 
 def show_widget(w):
-    old_attrs = getattr(w,"_attrs",None)
+    old_attrs = widget_attrs.get(w)
     if old_attrs:
         w.height, w.size_hint_y, w.opacity, w.disabled, w.width, w.size_hint_x = old_attrs
-        del w._attrs
+        del widget_attrs[w]
     
 def hide_widget(w):
-    if hasattr(w, "_attrs"): return #widget is already hidden
-    w._attrs = w.height, w.size_hint_y, w.opacity, w.disabled, w.width, w.size_hint_x
+    if w in widget_attrs: return #widget is already hidden
+    widget_attrs[w] = w.height, w.size_hint_y, w.opacity, w.disabled, w.width, w.size_hint_x
     w.height = 0
     w.width = 0
     w.size_hint_x = None
     w.size_hint_y = None
     w.opacity = 0
     w.disabled = True
+
+widget_attrs = {}
 
 
 class App(App):
