@@ -817,7 +817,7 @@ class InputSignal(BoolFeature): #undocumented
     """
     category = "Input"
     function = "SSINFAISSIG "
-    translation = {"01": False, "02": True} #01: analog, 02: PCM
+    translation = {"01": False, "02": True, "12": False} #01: analog, 02: PCM
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
