@@ -319,9 +319,9 @@ class MenuScreen(_MenuScreen):
     def build(self):
         self.panel = TabPanel(self.target)
         self.pinned_tab = PinnedTab(self)
+        self._visible_when_connected(self.pinned_tab)
         self.all_tab = AllTab(self)
-        self.ids.headers.add_widget(self.pinned_tab)
-        self.ids.headers.add_widget(self.all_tab)
+        self._visible_when_connected(self.all_tab)
         categories = list(dict.fromkeys([f.category for f in self.target.features.values()]))
         tabs = {}
         def silently_hide_widget(e):
@@ -335,7 +335,16 @@ class MenuScreen(_MenuScreen):
         for key, f in self.target.features.items():
             f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
-        self.pinned_tab.activate()
+        self.target.bind(on_connect=self.pinned_tab.activate)
+        self.target.bind(on_disconnected=self.settings_tab.activate)
+        if self.target.connected: self.pinned_tab.activate()
+        else: self.settings_tab.activate()
+
+    def _visible_when_connected(self, e):
+        self.target.bind(on_connect = lambda:show_widget(e))
+        self.target.bind(on_disconnected = lambda:hide_widget(e))
+        if not self.target.connected: hide_widget(e)
+        self.ids.headers.add_widget(e)
 
     def _newTab(self, category):
         def filter(f, category=category): return f.category == category
