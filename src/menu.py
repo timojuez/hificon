@@ -143,8 +143,7 @@ class TabPanel(ScrollView):
     def _update_feature_visibility(self, f):
         if self.filter is None: return
         func = show_widget if f.isset() and self.filter(f) else hide_widget
-        try: func(self.features[f.key])
-        except RuntimeError: pass
+        func(self.features[f.key])
         
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
@@ -324,14 +323,11 @@ class MenuScreen(_MenuScreen):
         self._visible_when_connected(self.all_tab)
         categories = list(dict.fromkeys([f.category for f in self.target.features.values()]))
         tabs = {}
-        def silently_hide_widget(e):
-            try: return hide_widget(e)
-            except RuntimeError: pass
         for cat in categories:
             e = self._newTab(cat)
             tabs[cat] = e
             hide_widget(e)
-            self.target.bind(on_disconnected = lambda e=e:silently_hide_widget(e))
+            self.target.bind(on_disconnected = lambda e=e:hide_widget(e))
         for key, f in self.target.features.items():
             f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
@@ -364,8 +360,7 @@ def show_widget(w):
         del w._attrs
     
 def hide_widget(w):
-    if hasattr(w, "_attrs"): raise RuntimeError(
-        "Widget's attribute '_attrs' is occupied or widget is already hidden!")
+    if hasattr(w, "_attrs"): return #widget is already hidden
     w._attrs = w.height, w.size_hint_y, w.opacity, w.disabled, w.width, w.size_hint_x
     w.height = 0
     w.width = 0
