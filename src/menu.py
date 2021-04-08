@@ -347,7 +347,7 @@ class MenuScreen(_MenuScreen):
         self.target.bind(on_connect=self.pinned_tab.activate)
         self.target.bind(on_disconnected=self.connecting_tab.activate)
         if self.target.connected: self.pinned_tab.activate()
-        else: self.settings_tab.activate()
+        else: self.connecting_tab.activate()
 
     def _visible_when_connected(self, e):
         self.target.bind(on_connect = lambda:show_widget(e))
