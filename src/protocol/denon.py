@@ -471,14 +471,10 @@ class QuickSelect(_QuickSelect):
     def get(self): return "(None)" if super().get() == "0" else super().get()
     def matches(self, data): return super().matches(data) and not data.endswith("MEMORY")
 
-@Denon.add_feature
-class QuickSelectStore(_QuickSelect):
-    name = "Quick Select (save)"
-    call = None
 
-    # for client
-    def get(self): return "(select)"
-    def isset(self): return True
+@Denon.add_feature
+class QuickSelectStore(features.WriteOnlyFeature, _QuickSelect):
+    name = "Quick Select (save)"
     
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")

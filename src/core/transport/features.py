@@ -310,3 +310,14 @@ class Constant(PresetValue):
     def store(self,*args,**xargs): pass
 
 
+class WriteOnlyFeature:
+    call = None
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.target.bind(on_connect=self.on_set)
+
+    # for client
+    def get(self): return "(select)"
+    def isset(self): return self.target.connected
+
