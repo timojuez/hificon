@@ -5,6 +5,7 @@ from threading import Event, Lock, Timer, Thread
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable, AttrDict
 from ..config import config
+from .types import ClientType, ServerType
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"
@@ -309,14 +310,23 @@ class Constant(PresetValue):
     def set(self,*args,**xargs): pass
 
 
-class WriteOnlyFeature:
+class ClientToServerFeature:
+    """ Inheriting features are write only on client and read only on server """
     call = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.target.bind(on_connect=self.on_set)
+        if isinstance(self.target, ClientType): self.target.bind(on_connect=self.on_set)
 
     # for client
-    def get(self): return "(select)"
-    def isset(self): return self.target.connected
+    def get(self): return "(select)" if isinstance(self.target, ClientType) else super().get()
+    def isset(self):
+        return self.target.connected if isinstance(self.target, ClientType) else super().isset()
+
+    # for server
+    def send(self, *args, **xargs):
+        if isinstance(self.target, ClientType): return super().send(*args, **xargs)
+        else: raise ValueError("This is a unidirectional feature")
+
+    def resend(self): isinstance(self.target, ClientType) and super().resend()
 

@@ -473,7 +473,7 @@ class QuickSelect(_QuickSelect):
 
 
 @Denon.add_feature
-class QuickSelectStore(features.WriteOnlyFeature, _QuickSelect):
+class QuickSelectStore(features.ClientToServerFeature, _QuickSelect):
     name = "Quick Select (save)"
     
     # for server:

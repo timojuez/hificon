@@ -9,7 +9,7 @@ from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
-from .scheme_type import SchemeType
+from .types import SchemeType, ServerType, ClientType
 from . import features
 
 
@@ -135,7 +135,7 @@ class Name(features.SelectFeature):
     def resend(self, *args, **xargs): pass
 
 
-class AbstractServer(SchemeBase):
+class AbstractServer(ServerType, SchemeBase):
     init_args_help = None # tuple
 
     def __init__(self, *args, **xargs):
@@ -192,7 +192,7 @@ class _FeaturesMixin:
         f.poll_on_client()
 
 
-class _AbstractClient(SchemeBase):
+class _AbstractClient(ClientType, SchemeBase):
     """
     Abstract Client
     Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop

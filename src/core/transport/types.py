@@ -24,3 +24,7 @@ class SchemeType:
         if args is None: args = getattr(cls.Server,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
 
+
+class ServerType: pass
+class ClientType: pass
+
