@@ -303,7 +303,7 @@ class DummyServerMixin:
         elif isinstance(f, features.BoolFeature): val = False
         elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
         else: raise TypeError("Feature type %s not known."%f)
-        #self.on_receive_raw_data(f.encode(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
+        #self.on_receive_raw_data(f.serialize(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
         f.store(val)
 
 

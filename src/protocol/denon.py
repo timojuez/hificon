@@ -107,8 +107,8 @@ class DenonFeature:
     function = None #str, Denon function command
     call = property(lambda self: "%s?"%self.function)
     
-    def encode(self, value):
-        return "%s%s"%(self.function, self.encodeVal(value))
+    def serialize(self, value):
+        return "%s%s"%(self.function, self.serializeVal(value))
     
     def decode(self, cmd):
         param = cmd[len(self.function):]
@@ -119,13 +119,13 @@ class DenonFeature:
     
         
 class _Translation:
-    translation = {} #{return_string:value} decode return_string to value / encode vice versa
+    translation = {} #{return_string:value} decode return_string to value / serialize vice versa
 
     options = property(lambda self: list(self.translation.values()))
     
     def decodeVal(self, val): return self.translation.get(val,val)
         
-    def encodeVal(self, val):
+    def serializeVal(self, val):
         return {val:key for key,val in self.translation.items()}.get(val,val)
 
 
@@ -156,14 +156,14 @@ class DecimalFeature(NumericFeature, features.DecimalFeature):
     def decodeVal(self, val):
         return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().decodeVal(val)
 
-    def encodeVal(self, val):
+    def serializeVal(self, val):
         val = self._roundVolume(val)
         return "%02d"%val if val%1 == 0 else "%03d"%(val*10)
 
 
 class IntFeature(NumericFeature, features.IntFeature):
     
-    def encodeVal(self, val):
+    def serializeVal(self, val):
         longestValue = max(abs(self.max),abs(self.min))
         digits = math.ceil(math.log(longestValue+1,10))
         return ("%%0%dd"%digits)%val
@@ -180,7 +180,7 @@ class RelativeInt(IntFeature):
     min = -6
     max = 6
 
-    def encodeVal(self, val): return super().encodeVal(val+50)
+    def serializeVal(self, val): return super().serializeVal(val+50)
 
     def decodeVal(self, val):
         return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
@@ -190,7 +190,7 @@ class RelativeDecimal(DecimalFeature):
     min = -12
     max = 12
 
-    def encodeVal(self, val): return super().encodeVal(val+50)
+    def serializeVal(self, val): return super().serializeVal(val+50)
 
     def decodeVal(self, val):
         return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
@@ -337,7 +337,7 @@ class SourceNames(SelectFeature): #undocumented
         super().__init__(*args, **xargs)
         self.translation = self.translation.copy()
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
-    def encode(self, d):
+    def serialize(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
     def decode(self, x): return [super(SourceNames, self).decode(e) for e in x.split("\r")]
     def decodeVal(self, x): return x
@@ -370,10 +370,10 @@ class Source(SelectFeature):
     def on_source_names_change(self, *args, **xargs):
         if self.isset():
             old = self._val
-            encoded = self.encode(old)
+            serialized = self.serialize(old)
             self.translation.update(self.target.features.source_names.translation)
-            new = self.decode(encoded)
-            #self.consume(encoded) # might cause deadlock
+            new = self.decode(serialized)
+            #self.consume(serialized) # might cause deadlock
             self.on_change(old, new) # cause listeners to update from self.translation
         else:
             self.translation.update(self.target.features.source_names.translation)
@@ -443,7 +443,7 @@ class Sleep(IntFeature):
     max = 120
     name = "Main Zone Sleep (minutes)"
     function = "SLP"
-    def encodeVal(self, val): return "OFF" if val==0 else super().encodeVal(val)
+    def serializeVal(self, val): return "OFF" if val==0 else super().serializeVal(val)
     def decodeVal(self, val): return 0 if val=="OFF" else super().decodeVal(val)
     
 
@@ -478,7 +478,7 @@ class QuickSelectStore(features.WriteOnlyFeature, _QuickSelect):
     
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
-    def encodeVal(self, value): return f"{value} MEMORY"
+    def serializeVal(self, value): return f"{value} MEMORY"
     def decodeVal(self, data): return data.split(" ",1)[0]
     
     def on_change(self, old, new):
@@ -643,7 +643,7 @@ class Lfe(IntFeature):
     min=-10
     max=0
     def decodeVal(self, val): return super().decodeVal(val)*-1
-    def encodeVal(self, val): return super().encodeVal(val*-1)
+    def serializeVal(self, val): return super().serializeVal(val*-1)
 
 @Denon.add_feature
 class EffectLevel(IntFeature): function = "PSEFF "

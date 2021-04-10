@@ -97,8 +97,8 @@ class FeatureInterface(object):
         """ transform string @data to type self.type """
         raise NotImplementedError()
         
-    def encode(self, value):
-        """ encode @value to target command """
+    def serialize(self, value):
+        """ serialize @value to target command """
         raise NotImplementedError()
     
 
@@ -139,14 +139,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         assert(value is not None)
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
-        encoded = self.encode(self.type(value))
-        if not self._blocked(encoded): self.target.send(encoded)
+        serialized = self.serialize(self.type(value))
+        if not self._blocked(serialized): self.target.send(serialized)
 
     @classmethod
-    def _blocked(cls, encoded):
+    def _blocked(cls, serialized):
         """ prevent sending the same line many times """
-        if cls._block_on_send == encoded: return True
-        cls._block_on_send = encoded
+        if cls._block_on_send == serialized: return True
+        cls._block_on_send = serialized
         try: cls._block_on_send_resetter.cancel()
         except AttributeError: pass
         cls._block_on_send_resetter = Timer(1, lambda: setattr(cls, "_block_on_send", None))

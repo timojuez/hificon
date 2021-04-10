@@ -15,7 +15,7 @@ class RawTelnet(TelnetProtocol):
             call = cmd
             matches = lambda self, data: matches(data)
             def decode(self, cmd): return cmd
-            def encode(self, value): return value
+            def serialize(self, value): return value
         RawFeature.__name__ = cmd
         f = RawFeature(self)
         f.wait_poll(force=True)

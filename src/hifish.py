@@ -214,7 +214,7 @@ class Preprocessor:
             else: return r,o
         self.replace = [(s,find_unique(r,o)) for s,(r,o) in self.replace]
     
-    def encode(self):
+    def serialize(self):
         source = self.source
         for s,(repl,find) in self.replace: source = source.replace(s,repl)
         return source
@@ -231,7 +231,7 @@ class Compiler(Preprocessor):
 
     def compile(self, source, filename, mode):
         preprocessor = Preprocessor(source)
-        source_p = preprocessor.encode()
+        source_p = preprocessor.serialize()
         tree = ast.parse(source_p, mode=mode)
         tree = CommandTransformation(preprocessor).visit(tree)
         tree = ast.fix_missing_locations(tree)
