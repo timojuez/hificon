@@ -65,7 +65,7 @@ class TelnetClient(AbstractClient):
         try:
             assert(self.connected and self._telnet.sock)
             return self._telnet.read_until(b"\r",timeout=timeout).strip().decode()
-        except socket.timeout: return None
+        except (socket.timeout, UnicodeDecodeError): return None
         except (OSError, EOFError, AssertionError, AttributeError) as e:
             self.on_disconnected()
             raise BrokenPipeError(e)
