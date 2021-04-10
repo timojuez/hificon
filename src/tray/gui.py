@@ -194,7 +194,7 @@ class MenuMixin:
         self.target.bind(on_connect = gtk(item_disconnected.hide))
         self.target.bind(on_disconnected = gtk(item_disconnected.show))
 
-        item_more = Gtk.MenuItem("Options", no_show_all=True)
+        item_more = Gtk.MenuItem("All Settings", no_show_all=True)
         self.target.bind(on_connect = gtk(item_more.show))
         self.target.bind(on_disconnected = gtk(item_more.hide))
         submenu = Gtk.Menu()
