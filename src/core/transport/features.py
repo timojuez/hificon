@@ -93,14 +93,14 @@ class FeatureInterface(object):
         """
         raise NotImplementedError()
         
-    def decode(self, data):
+    def serialize(self, value):
+        """ transform @value to string """
+        raise NotImplementedError()
+
+    def unserialize(self, data):
         """ transform string @data to type self.type """
         raise NotImplementedError()
-        
-    def serialize(self, value):
-        """ serialize @value to target command """
-        raise NotImplementedError()
-    
+
 
 class _MetaFeature(type):
 
@@ -176,9 +176,9 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def resend(self): return AsyncFeature.send(self, self._val, force=True)
     
     def consume(self, cmd):
-        """ decode and apply @cmd to this object """
+        """ unserialize and apply @cmd to this object """
         self.__class__._block_on_send = None # for power.consume("PWON")
-        try: d = self.decode(cmd)
+        try: d = self.unserialize(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.store(d)
         

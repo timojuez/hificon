@@ -156,7 +156,7 @@ class CommandTransformation(ast.NodeTransformer):
         node = ast.Call(
             func=ast.Name(id="__query__", ctx=ast.Load()),
             args=[
-                ast.Str(self.preprocessor.decode(cmd),ctx=ast.Load()),
+                ast.Str(self.preprocessor.unserialize(cmd),ctx=ast.Load()),
                 ast.Name(id="__return__",ctx=ast.Load()),
                 ast.Name(id="__wait__",ctx=ast.Load()),
             ],
@@ -184,14 +184,14 @@ class CommandTransformation(ast.NodeTransformer):
     def visit(self, node):
         r = super().visit(node)
         # undo preprocessing
-        if isinstance(node, ast.Name): node.id = self.preprocessor.decode(node.id)
-        elif isinstance(node, ast.ClassDef): node.name = self.preprocessor.decode(node.name)
-        elif isinstance(node, ast.keyword): node.arg = self.preprocessor.decode(node.arg)
-        elif isinstance(node, ast.AsyncFunctionDef): node.name = self.preprocessor.decode(node.name)
-        elif isinstance(node, ast.FunctionDef): node.name = self.preprocessor.decode(node.name)
-        elif isinstance(node, ast.arg): node.arg = self.preprocessor.decode(node.arg)
-        elif isinstance(node, ast.Constant) and isinstance(node.value, str): node.value = self.preprocessor.decode(node.value)
-        elif isinstance(node, ast.Str): node.s = self.preprocessor.decode(node.s)
+        if isinstance(node, ast.Name): node.id = self.preprocessor.unserialize(node.id)
+        elif isinstance(node, ast.ClassDef): node.name = self.preprocessor.unserialize(node.name)
+        elif isinstance(node, ast.keyword): node.arg = self.preprocessor.unserialize(node.arg)
+        elif isinstance(node, ast.AsyncFunctionDef): node.name = self.preprocessor.unserialize(node.name)
+        elif isinstance(node, ast.FunctionDef): node.name = self.preprocessor.unserialize(node.name)
+        elif isinstance(node, ast.arg): node.arg = self.preprocessor.unserialize(node.arg)
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str): node.value = self.preprocessor.unserialize(node.value)
+        elif isinstance(node, ast.Str): node.s = self.preprocessor.unserialize(node.s)
         return r
         
 
@@ -219,7 +219,7 @@ class Preprocessor:
         for s,(repl,find) in self.replace: source = source.replace(s,repl)
         return source
         
-    def decode(self, data):
+    def unserialize(self, data):
         for s,(repl,find) in self.replace: data = data.replace(repl,s)
         return data
 

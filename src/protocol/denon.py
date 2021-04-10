@@ -110,20 +110,20 @@ class DenonFeature:
     def serialize(self, value):
         return "%s%s"%(self.function, self.serializeVal(value))
     
-    def decode(self, cmd):
+    def unserialize(self, cmd):
         param = cmd[len(self.function):]
-        return self.decodeVal(param)
+        return self.unserializeVal(param)
         
     def matches(self, cmd):
         return cmd.startswith(self.function) #and " " not in cmd.replace(self.function,"",1)
     
         
 class _Translation:
-    translation = {} #{return_string:value} decode return_string to value / serialize vice versa
+    translation = {} #{return_string:value} unserialize return_string to value / serialize vice versa
 
     options = property(lambda self: list(self.translation.values()))
     
-    def decodeVal(self, val): return self.translation.get(val,val)
+    def unserializeVal(self, val): return self.translation.get(val,val)
         
     def serializeVal(self, val):
         return {val:key for key,val in self.translation.items()}.get(val,val)
@@ -137,7 +137,7 @@ class NumericFeature(DenonFeature):
     """ add UP/DOWN value decoding capability """
     step = 1
 
-    def decodeVal(self, val):
+    def unserializeVal(self, val):
         if val == "UP": return self.get()+self.step
         elif val == "DOWN": return self.get()-self.step
         else: raise ValueError(f"Invalid value `{val}` for feature `{self.key}`")
@@ -153,8 +153,8 @@ class DecimalFeature(NumericFeature, features.DecimalFeature):
     @classmethod
     def _roundVolume(self, vol): return self.step*round(vol/self.step)
 
-    def decodeVal(self, val):
-        return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().decodeVal(val)
+    def unserializeVal(self, val):
+        return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().unserializeVal(val)
 
     def serializeVal(self, val):
         val = self._roundVolume(val)
@@ -168,8 +168,8 @@ class IntFeature(NumericFeature, features.IntFeature):
         digits = math.ceil(math.log(longestValue+1,10))
         return ("%%0%dd"%digits)%val
     
-    def decodeVal(self, val):
-        return int(val) if val.isnumeric() else super().decodeVal(val)
+    def unserializeVal(self, val):
+        return int(val) if val.isnumeric() else super().unserializeVal(val)
 
 
 class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
@@ -182,8 +182,8 @@ class RelativeInt(IntFeature):
 
     def serializeVal(self, val): return super().serializeVal(val+50)
 
-    def decodeVal(self, val):
-        return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
+    def unserializeVal(self, val):
+        return super().unserializeVal(val)-50 if val.isnumeric() else super().unserializeVal(val)
 
 
 class RelativeDecimal(DecimalFeature):
@@ -192,8 +192,8 @@ class RelativeDecimal(DecimalFeature):
 
     def serializeVal(self, val): return super().serializeVal(val+50)
 
-    def decodeVal(self, val):
-        return super().decodeVal(val)-50 if val.isnumeric() else super().decodeVal(val)
+    def unserializeVal(self, val):
+        return super().unserializeVal(val)-50 if val.isnumeric() else super().unserializeVal(val)
 
 
 class _LooseNumericFeature:
@@ -202,7 +202,7 @@ class _LooseNumericFeature:
     def matches(self, data):
         try:
             assert(super().matches(data))
-            self.decode(data)
+            self.unserialize(data)
             return True
         except (TypeError, ValueError, AssertionError, InvalidOperation): return False
 
@@ -215,7 +215,7 @@ class LooseBoolFeature(BoolFeature):
     """ Value where the target does not always send a boolean """
 
     def matches(self,data):
-        return super().matches(data) and isinstance(self.decode(data), bool)
+        return super().matches(data) and isinstance(self.unserialize(data), bool)
 
     def on_change(self, old, new):
         super().on_change(old, new)
@@ -339,8 +339,8 @@ class SourceNames(SelectFeature): #undocumented
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def serialize(self, d):
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
-    def decode(self, x): return [super(SourceNames, self).decode(e) for e in x.split("\r")]
-    def decodeVal(self, x): return x
+    def unserialize(self, x): return [super(SourceNames, self).unserialize(e) for e in x.split("\r")]
+    def unserializeVal(self, x): return x
     def store(self, value):
         if value == self.default_value:
             self.translation = value.copy()
@@ -372,7 +372,7 @@ class Source(SelectFeature):
             old = self._val
             serialized = self.serialize(old)
             self.translation.update(self.target.features.source_names.translation)
-            new = self.decode(serialized)
+            new = self.unserialize(serialized)
             #self.consume(serialized) # might cause deadlock
             self.on_change(old, new) # cause listeners to update from self.translation
         else:
@@ -444,7 +444,7 @@ class Sleep(IntFeature):
     name = "Main Zone Sleep (minutes)"
     function = "SLP"
     def serializeVal(self, val): return "OFF" if val==0 else super().serializeVal(val)
-    def decodeVal(self, val): return 0 if val=="OFF" else super().decodeVal(val)
+    def unserializeVal(self, val): return 0 if val=="OFF" else super().unserializeVal(val)
     
 
 @Denon.add_feature
@@ -479,7 +479,7 @@ class QuickSelectStore(features.WriteOnlyFeature, _QuickSelect):
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
     def serializeVal(self, value): return f"{value} MEMORY"
-    def decodeVal(self, data): return data.split(" ",1)[0]
+    def unserializeVal(self, data): return data.split(" ",1)[0]
     
     def on_change(self, old, new):
         super().on_change(old, new)
@@ -642,7 +642,7 @@ class Lfe(IntFeature):
     function = "PSLFE "
     min=-10
     max=0
-    def decodeVal(self, val): return super().decodeVal(val)*-1
+    def unserializeVal(self, val): return super().unserializeVal(val)*-1
     def serializeVal(self, val): return super().serializeVal(val*-1)
 
 @Denon.add_feature
@@ -819,7 +819,7 @@ class InputSignal(BoolFeature): #undocumented
         super().__init__(*args, **xargs)
         self.target.bind(on_stop_playing = self.on_stop_playing)
         
-    def matches(self, data): return super().matches(data) and isinstance(self.decode(data), bool)
+    def matches(self, data): return super().matches(data) and isinstance(self.unserialize(data), bool)
 
     def on_change(self, old, new):
         super().on_change(old, new)
