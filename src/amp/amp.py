@@ -1,14 +1,14 @@
 """
-Common abstract amplifier classes for creating an amp protocol.
-Examples in src/protocol
+Common abstract amplifier classes for creating an amp scheme.
+Examples in src/schemes
 """
 
 from threading import Timer, Lock
 from ..core.util import log_call
-from ..core import config, AbstractProtocol, TelnetProtocol
+from ..core import config, AbstractScheme, TelnetScheme
 
 
-class AbstractAmp(AbstractProtocol):
+class AbstractAmp(AbstractScheme):
     """ provide on_start_playing, on_stop_playing, on_idle, on_poweron and on_poweroff """
     _soundMixinLock = Lock()
     _idle_timer = None
@@ -43,6 +43,6 @@ class AbstractAmp(AbstractProtocol):
         if self._idle_timer: self._idle_timer.cancel()
 
 
-class TelnetAmp(AbstractAmp, TelnetProtocol): pass
+class TelnetAmp(AbstractAmp, TelnetScheme): pass
 
 

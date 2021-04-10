@@ -3,7 +3,7 @@ from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
 from .core.config import config, ConfigDict, CONFDIR
-from . import Target, get_protocols, NAME, VERSION, AUTHOR, COPYRIGHT
+from . import Target, get_schemes, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
 TITLE = f"{NAME} Control Menu"
@@ -255,18 +255,18 @@ class SettingsTab(StackLayout):
 
     def __init__(self):
         super().__init__()
-        protocol_names = {P.protocol: P.get_title() for P in get_protocols()}
+        scheme_names = {P.scheme: P.get_title() for P in get_schemes()}
         dropdown = SelectFeatureOptions()
-        self.ids.protocol.bind(on_release=lambda i: dropdown.open(i))
-        for protocol, title in protocol_names.items():
+        self.ids.scheme.bind(on_release=lambda i: dropdown.open(i))
+        for scheme, title in scheme_names.items():
             o = SelectFeatureOption()
             o.text = title
-            o.bind(on_release=lambda e,protocol=protocol: dropdown.select(protocol))
+            o.bind(on_release=lambda e,scheme=scheme: dropdown.select(scheme))
             dropdown.add_widget(o)
         
-        def on_select(e,protocol):
-            self.protocol = protocol
-            self.ids.protocol.text = protocol_names.get(protocol, protocol)
+        def on_select(e,scheme):
+            self.scheme = scheme
+            self.ids.scheme.text = scheme_names.get(scheme, scheme)
         dropdown.bind(on_select=on_select)
         
         uri = config.get("Target","uri").split(":")
@@ -277,7 +277,7 @@ class SettingsTab(StackLayout):
         except IndexError: pass
 
     def apply(self):
-        parts = [self.protocol, self.ids.host.text.strip(), self.ids.port.text.strip()]
+        parts = [self.scheme, self.ids.host.text.strip(), self.ids.port.text.strip()]
         config["Target"]["uri"] = ":".join(parts)
         App.get_running_app().load_screen()
 

@@ -5,7 +5,7 @@ from itertools import groupby
 from textwrap import TextWrapper
 from contextlib import suppress
 from decimal import Decimal
-from . import Target, get_protocols, PKG_NAME, VERSION, AUTHOR
+from . import Target, get_schemes, PKG_NAME, VERSION, AUTHOR
 from .core import features
 try: import readline
 except ImportError: pass
@@ -19,8 +19,8 @@ class CLI:
     
     def __init__(self):
         parser = argparse.ArgumentParser(description='HIFI SHELL')
-        parser.add_argument("--help-protocol", action="store_true", help="show list of supported protocols and exit")
-        parser.add_argument("--help-features", metavar="PROTOCOL", action="store", const=1, nargs="?", help="show target's feature variables and exit")
+        parser.add_argument("--help-schemes", action="store_true", help="show list of supported schemes and exit")
+        parser.add_argument("--help-features", metavar="SCHEME", action="store", const=1, nargs="?", help="show target's feature variables and exit")
         parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
         group = parser.add_mutually_exclusive_group(required=False)
         group.add_argument('-f','--follow', default=False, action="store_true", help='Monitor received messages')
@@ -36,7 +36,7 @@ class CLI:
         assert(self.args.command or not self.args.ret)
         
     def __call__(self):
-        if self.args.help_protocol: return self.print_help_protocol()
+        if self.args.help_schemes: return self.print_help_schemes()
         self.target = Target(self.args.target, verbose=self.args.verbose)
         if self.args.help_features:
             if self.args.help_features != 1:
@@ -90,10 +90,10 @@ class CLI:
                 ("help_features()", "Show features list"),
                 ("wait(seconds)","Sleep given amount of seconds"),
                 ("exit()","Quit")]),
-            ("High level functions (protocol independent)", [
+            ("High level functions (scheme independent)", [
                 ("$feature", "Variable that contains target's attribute, potentially read and writeable"),
                 ("To see a list of features, type help_features()","")]),
-            ("Low level functions (protocol dependent)",
+            ("Low level functions (scheme dependent)",
                 [("CMD or $'CMD'", "Send CMD to the target and return answer")])
         ]
         tw = TextWrapper(
@@ -103,24 +103,24 @@ class CLI:
             for e in l: print(tw.fill("%-20s%s"%e))
             print()
 
-    def print_help_protocol(self):
+    def print_help_schemes(self):
         tw = TextWrapper(
             initial_indent=" "*4, subsequent_indent=" "*8, width=shutil.get_terminal_size().columns)
-        print(f"A protocol defines a class that extends {PKG_NAME}.core.transport.ProtocolType.")
-        print("The following protocols are being supported internally:")
+        print(f"A scheme defines a class that extends {PKG_NAME}.core.transport.SchemeType.")
+        print("The following schemes are being supported internally:")
         print()
-        for P in get_protocols():
+        for P in get_schemes():
             print(bright(P.get_title()))
             if isinstance(P.description, str): print(tw.fill(f"{P.description}"))
             if uri := P.get_client_uri(): print(tw.fill(f"URI (Client): {uri}"))
             if uri := P.get_server_uri(): print(tw.fill(f"URI (Server): {uri}"))
             print()
-            #print(tw.fill("%-20s%-20s%s"%(bright(p), P.protocol, getattr(P, "help", ""))))
+            #print(tw.fill("%-20s%-20s%s"%(bright(p), P.scheme, getattr(P, "help", ""))))
 
     def print_help_features(self):
         tw = TextWrapper(
             initial_indent=" "*8, subsequent_indent=" "*12, width=shutil.get_terminal_size().columns)
-        print(f"Protocol '{self.target.protocol}' supports the following features.\n")
+        print(f"Scheme '{self.target.scheme}' supports the following features.\n")
         features_ = map(self.target.features.get, self.target.__class__.features.keys())
         features_ = sorted(features_, key=lambda f: (f.category, f.key))
         for category, ff in groupby(features_, key=lambda f:f.category):

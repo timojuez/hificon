@@ -1,4 +1,4 @@
-protocols = {
+schemes = {
     "denon": ".denon.Denon",
     "emulate": ".emulate.Emulate",
     "plain_emulate": ".emulate.PlainEmulate",

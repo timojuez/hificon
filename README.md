@@ -20,25 +20,26 @@
 - Easily control your AVR – even far away from remote control distance
 - Amp server software
 
-*Requires an implemented protocol
+*Requires an implemented scheme
 
 **Requires pulseaudio
 
 
 ## Preliminaries
 
-- **A target** is an entity that communicates using a protocol. A network amplifier can be a target.
-- **A feature** is a variable that a target's protocol provides. It can be volume, power, etc.
-- **A target URI** describes the connection to a target and has the form `protocol:arg_0:...:arg_n`, where `protocol` is a class from ./src/protocol or of the form `[module.]protocol_class`. By default it is being read from the main.cfg. Example: `denon://192.168.1.5:23`
+- **A scheme** for communication is a plan that a server and client agree upon. It can be but not necessarily is a network protocol. Typically, different AVR manufacturers use their own scheme.
+- **A target** is an entity that communicates using a scheme. A network amplifier can be a target.
+- **A feature** is a variable that a target's scheme provides. It can be volume, power, etc.
+- **A target URI** describes the connection to a target and has syntax `scheme:arg_0:...:arg_n`, where `scheme` is a class from ./src/schemes or of the form `[module.]scheme_class`. By default it is being read from the main.cfg. Example: `denon://192.168.1.5:23`
 - A URI can carry a **query string** `?part_0&...&part_m` at the end which will be processed once initially according to the given order. If `part` has the form `feature=value`, the target's feature `feature` will be set to `value`. If `part` has the form `command` then `command` will be sent to the target. Example usage: `hifish -xt '?power=1&source=DVD&MVUP'`
 
 
-### Supported Protocols
+### Supported Schemes
 
 - Denon/Marantz AVR compatible (tested with Denon X1400H)
 - Raw Telnet
 
-For a complete list, run `hifish --help-protocol`
+For a complete list, run `hifish --help-schemes`
 
 
 ### Requirements on the Client
@@ -113,7 +114,7 @@ Hifi scripts can be executed by `hifish FILE.hifi`
 See also `hifish -h` and the ./examples/.
 
 #### High level commands
-High level features are not protocol (resp. amp manufacturer) dependent and in the form `$feature` for reading and `$feature=value` for writing.
+High level features are not scheme (resp. amp manufacturer) dependent and in the form `$feature` for reading and `$feature=value` for writing.
 Examples: `$volume += 5`, `$source = 'DVD'`, `$power = True`
 To see what features are being supported, type `help_features()` in hifish or call `hifish --help-features`
 
@@ -157,7 +158,7 @@ python3 -m hificon.create_script -t emulate:denon full > example_script.hifi
 
 
 ### Server Software
-You can implement an own protocol and start the server by running `python3 -m hificon.server --target PROTOCOL_MODULE.CLASS`
+You can implement an own scheme and start the server by running `python3 -m hificon.server --target SCHEME_MODULE.CLASS`
 
 If the prefix `emulate:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
 
@@ -169,10 +170,10 @@ Examples:
 ## Development
 
 ### Support for other devices
-It is possible to implement the support e.g. for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/protocol/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
+It is possible to implement the support e.g. for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/schemes/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
 
 ### Reverse Engineering a Target
-`hifish -f` opens a shell and prints all received data. Meanwhile change settings on the target e.g. with a remote and observe on what it prints. This may help you to program an own protocol.
+`hifish -f` opens a shell and prints all received data. Meanwhile change settings on the target e.g. with a remote and observe on what it prints. This may help you to program an own scheme.
 
 ### Custom Client Software
 It is possible to create an own program that controls the target and keeps being synchronised with it.
@@ -182,9 +183,9 @@ Your requirement will be the hificon package.
 
 
 ### AVR Emulator
-For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulate:PROTOCOL`.
+For testing purposes, there is a server emulator software. Start it with `python3 -m hificon.server --target emulate:SCHEME`.
 
-The Denon AVR software emulator acts nearly like the amp's Telnet protocol. Try it out: 
+The Denon AVR software emulator acts nearly like the amp's Telnet service. Try it out: 
 `python3 -m hificon.server --target emulate:denon://127.0.0.1:1234`
 and connect to it e.g. via HiFiSh:
 `hifish --target denon://127.0.0.1:1234`.
@@ -193,7 +194,7 @@ You can also emulate the HiFi Shell directly: `hifish --target emulate:denon`
 
 
 ## Troubleshoot
-- If HiFiCon cannot find your device automatically, add its URI as "uri = PROTOCOL://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
+- If HiFiCon cannot find your device automatically, add its URI as "uri = SCHEME://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
 - If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
 - If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
 

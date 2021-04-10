@@ -9,11 +9,11 @@ from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
-from .protocol_type import ProtocolType
+from .scheme_type import SchemeType
 from . import features
 
 
-class ProtocolBase(Bindable, ProtocolType):
+class SchemeBase(Bindable, SchemeType):
     verbose = 0
     connected = False
     features = features.Features()
@@ -49,7 +49,7 @@ class ProtocolBase(Bindable, ProtocolType):
     def exit(self): pass
     
     @property
-    def prompt(self): return self.protocol
+    def prompt(self): return self.scheme
         
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
@@ -106,7 +106,7 @@ class ProtocolBase(Bindable, ProtocolType):
         if not consumed: self.features.fallback.consume(data)
 
 
-@ProtocolBase.add_feature
+@SchemeBase.add_feature
 class Fallback(features.SelectFeature):
     """ Matches always, if no other feature matched """
     
@@ -123,7 +123,7 @@ class Fallback(features.SelectFeature):
         if config.getboolean("Target","fallback_feature"): self.on_change(None, data)
 
 
-@ProtocolBase.add_feature
+@SchemeBase.add_feature
 class Name(features.SelectFeature):
     
     def get(self): return self.target.prompt
@@ -135,7 +135,7 @@ class Name(features.SelectFeature):
     def resend(self, *args, **xargs): pass
 
 
-class AbstractServer(ProtocolBase):
+class AbstractServer(SchemeBase):
     init_args_help = None # tuple
 
     def __init__(self, *args, **xargs):
@@ -192,7 +192,7 @@ class _FeaturesMixin:
         f.poll_on_client()
 
 
-class _AbstractClient(ProtocolBase):
+class _AbstractClient(SchemeBase):
     """
     Abstract Client
     Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop
@@ -263,7 +263,7 @@ class _AbstractClient(ProtocolBase):
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
-class AbstractProtocol(ProtocolBase):
+class AbstractScheme(SchemeBase):
     Client = AbstractClient
     Server = AbstractServer
 

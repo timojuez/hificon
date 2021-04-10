@@ -3,7 +3,7 @@ from . import Target
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Start a server for interacting on a given protocol')
+    parser = argparse.ArgumentParser(description='Start a server for interacting in a given scheme')
     parser.add_argument('-t', '--target', metavar="URI", type=str, help='Target URI')
     parser.add_argument('--listen-host', metavar="HOST", type=str, help='Host (listening)')
     parser.add_argument('--listen-port', metavar="PORT", type=int, help='Port (listening)')

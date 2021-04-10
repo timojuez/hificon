@@ -1,9 +1,9 @@
 """
-Dry software run that emulates a protocol and acts like a real target
+Dry software run that emulates a target of another scheme
 """
 
-from .. import get_protocol
-from ..core.transport import ProtocolType, TelnetProtocol
+from .. import get_scheme
+from ..core.transport import SchemeType, TelnetScheme
 from ..core.transport.abstract import DummyServerMixin, AbstractClient, AbstractServer
 
 
@@ -47,39 +47,39 @@ class PlainDummyClientMixin(DummyClientMixin):
         if not self.connected: raise BrokenPipeError("Not connected")
 
 
-class Emulate(ProtocolType):
+class Emulate(SchemeType):
     title = "Emulator"
-    description = "Emulates any other protocol"
-    client_args_help = ("PROTOCOL",)
-    server_args_help = ("PROTOCOL",)
+    description = "Emulates a target"
+    client_args_help = ("SCHEME",)
+    server_args_help = ("SCHEME",)
 
     @classmethod
-    def new_client(cls, protocol, *args, **xargs):
-        Protocol = get_protocol(protocol)
-        server = cls.new_server(protocol)
-        Client = type(Protocol.__name__, (DummyClientMixin, Protocol, Protocol.Client), {"_server":server})
+    def new_client(cls, scheme, *args, **xargs):
+        Scheme = get_scheme(scheme)
+        server = cls.new_server(scheme)
+        Client = type(Scheme.__name__, (DummyClientMixin, Scheme, Scheme.Client), {"_server":server})
         return Client(server, *args, **xargs)
 
     @classmethod
-    def new_server(cls, protocol, *args, **xargs):
-        Protocol = get_protocol(protocol)
-        return Protocol.new_dummyserver(*args, **xargs)
+    def new_server(cls, scheme, *args, **xargs):
+        Scheme = get_scheme(scheme)
+        return Scheme.new_dummyserver(*args, **xargs)
 
 
-class PlainEmulate(ProtocolType):
+class PlainEmulate(SchemeType):
     """ Emulator without network connection. Only internal variables are being used. """
     title = "Plain Emulator"
     description = "Emulator that skips network"
-    client_args_help = ("PROTOCOL",)
-    server_args_help = ("PROTOCOL",)
+    client_args_help = ("SCHEME",)
+    server_args_help = ("SCHEME",)
 
     @classmethod
-    def new_client(cls, protocol, *args, **xargs):
-        Client = type("Client", (PlainDummyClientMixin, get_protocol(protocol), AbstractClient), {})
-        return Client(cls.new_server(protocol), *args, **xargs)
+    def new_client(cls, scheme, *args, **xargs):
+        Client = type("Client", (PlainDummyClientMixin, get_scheme(scheme), AbstractClient), {})
+        return Client(cls.new_server(scheme), *args, **xargs)
 
     @classmethod
-    def new_server(cls, protocol, *args, **xargs):
-        Protocol = get_protocol(protocol)
-        return type("Server", (DummyServerMixin, Protocol, AbstractServer), {})(*args, **xargs)
+    def new_server(cls, scheme, *args, **xargs):
+        Scheme = get_scheme(scheme)
+        return type("Server", (DummyServerMixin, Scheme, AbstractServer), {})(*args, **xargs)
 

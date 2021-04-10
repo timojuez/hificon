@@ -5,7 +5,6 @@ from threading import Event, Lock, Timer, Thread
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable, AttrDict
 from ..config import config
-from .protocol_type import ProtocolType
 
 
 MAX_CALL_DELAY = 2 #seconds, max delay for calling function using "@require"

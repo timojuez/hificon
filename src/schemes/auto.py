@@ -1,7 +1,7 @@
 import socket
 from urllib.parse import urlparse
 from ..core.util import ssdp
-from ..core import AbstractProtocol
+from ..core import AbstractScheme
 from .. import Target
 
 
@@ -26,7 +26,7 @@ def discover_target():
     raise Exception("No target found. Check if device is connected or set IP manually.")
 
 
-class Auto(AbstractProtocol):
+class Auto(AbstractScheme):
     description = "Detect a supported server in network by using SSDP"
     client_args_help = tuple()
 

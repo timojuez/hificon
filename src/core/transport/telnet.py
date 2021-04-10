@@ -3,7 +3,7 @@ from telnetlib import Telnet
 from threading import Lock, Thread, Event
 from contextlib import suppress
 from ..util.json_service import Service
-from .abstract import AbstractProtocol, AbstractClient, AbstractServer
+from .abstract import AbstractScheme, AbstractClient, AbstractServer
 
 
 class TelnetClient(AbstractClient):
@@ -45,7 +45,7 @@ class TelnetClient(AbstractClient):
 
     @property
     def prompt(self):
-        p = self.protocol
+        p = self.scheme
         if self.host: p = f"{p}://{self.host}"
         if self.port: p = f"{p}:{self.port}"
         return p
@@ -169,7 +169,7 @@ class TelnetServer(AbstractServer):
     def send(self, data): return self._server.on_target_send(data)
 
 
-class TelnetProtocol(AbstractProtocol):
+class TelnetScheme(AbstractScheme):
     Server = TelnetServer
     Client = TelnetClient
 

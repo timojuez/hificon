@@ -1,4 +1,4 @@
-from ..core.transport import ProtocolType
+from ..core.transport import SchemeType
 from .. import Target
 
 
@@ -24,13 +24,13 @@ class ClientRepeaterMixin:
     def on_receive_raw_data(self, data): self._client.send(data)
 
 
-class Repeat(ProtocolType):
+class Repeat(SchemeType):
     title = "Repeater"
     description = "A server that connects to another server and repeats the data"
     server_args_help = ("CLIENT_URI",)
 
     @classmethod
-    def new_client(cls, protocol, *args, **xargs): raise NotImplementedError()
+    def new_client(cls, scheme, *args, **xargs): raise NotImplementedError()
 
     @classmethod
     def new_server(cls, *args, **xargs):

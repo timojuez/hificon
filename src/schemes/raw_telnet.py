@@ -1,7 +1,7 @@
-from ..core import features, TelnetProtocol
+from ..core import features, TelnetScheme
 
 
-class RawTelnet(TelnetProtocol):
+class RawTelnet(TelnetScheme):
     """ Low level target """
     description = "Reads telnet data without further interpretation"
     
