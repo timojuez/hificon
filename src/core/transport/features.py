@@ -83,7 +83,7 @@ class FeatureInterface(object):
     #key = "key" # feature will be available as target.key; default: key = class name
     
     def poll_on_server(self):
-        """ This is being executed on server side and must call self.store(some value) """
+        """ This is being executed on server side and must call self.set(some value) """
         raise NotImplementedError()
     
     def matches(self, data):
@@ -165,13 +165,13 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def poll_on_client(self):
         """ async_poll() executed on client side """
         if self.default_value is not None:
-            self._timer_store_default = Timer(MAX_CALL_DELAY, self._store_default)
-            self._timer_store_default.start()
+            self._timer_set_default = Timer(MAX_CALL_DELAY, self._set_default)
+            self._timer_set_default.start()
         if self.call is not None: self.target.send(self.call)
     
-    def _store_default(self):
+    def _set_default(self):
         with self._lock:
-            if not self.isset(): self._store(self.default_value)
+            if not self.isset(): self._set(self.default_value)
     
     def resend(self): return AsyncFeature.send(self, self._val, force=True)
     
@@ -180,35 +180,35 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.__class__._block_on_send = None # for power.consume("PWON")
         try: d = self.unserialize(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
-        else: return self.store(d)
+        else: return self.set(d)
         
-    def store(self, value):
-        with self._lock: return self._store(value)
+    def set(self, value):
+        with self._lock: return self._set(value)
     
-    def _store(self, value):
+    def _set(self, value):
         assert(value is not None)
         old = self._val
         self._val = value
         if not self.isset(): return
         if self._val != old: self.on_change(old, self._val)
         if old == None: self.on_set()
-        self.on_store(value)
+        self.on_processed(value)
         return old, self._val
 
-    def bind(self, on_change=None, on_set=None, on_unset=None, on_store=None):
+    def bind(self, on_change=None, on_set=None, on_unset=None, on_processed=None):
         """ Register an observer with bind() and call the callback as soon as possible
         to stay synchronised """
         with self._lock:
             if self.isset():
                 if on_change: on_change(self.get())
                 if on_set: on_set()
-                if on_store: on_store(self.get())
+                if on_processed: on_processed(self.get())
             elif on_unset: on_unset()
             
             if on_change: super().bind(on_change = lambda old, new: on_change(new))
             if on_set: super().bind(on_set = on_set)
             if on_unset: super().bind(on_unset = on_unset)
-            if on_store: super().bind(on_store = on_store)
+            if on_processed: super().bind(on_processed = on_processed)
             
     def on_change(self, old, new):
         """ This event is being called when self.options or the return value of self.get() changes """
@@ -216,7 +216,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def on_set(self):
         """ Event is fired on initial set """
-        try: self._timer_store_default.cancel()
+        try: self._timer_set_default.cancel()
         except: pass
         self._event_on_set.set()
         if getattr(self.target, "_pending", None):
@@ -228,11 +228,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
                 call.on_feature_set(self)
         
     def on_unset(self):
-        try: self._timer_store_default.cancel()
+        try: self._timer_set_default.cancel()
         except: pass
         self._event_on_set.clear()
     
-    def on_store(self, value):
+    def on_processed(self, value):
         """ This event is being called each time the feature is being set to a value
         even if the value is the same as the previous one """
         pass
@@ -307,7 +307,7 @@ class PresetValue:
 class Constant(PresetValue):
     """ Inerhit if feature value may not change """
     def matches(self,*args,**xargs): return False
-    def store(self,*args,**xargs): pass
+    def set(self,*args,**xargs): pass
 
 
 class WriteOnlyFeature:

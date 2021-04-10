@@ -341,13 +341,13 @@ class SourceNames(SelectFeature): #undocumented
         return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
     def unserialize(self, x): return [super(SourceNames, self).unserialize(e) for e in x.split("\r")]
     def unserializeVal(self, x): return x
-    def store(self, value):
+    def set(self, value):
         if value == self.default_value:
             self.translation = value.copy()
-            return super().store(self.translation)
+            return super().set(self.translation)
         for line in value:
             if line.strip() == "END":
-                super().store(self.translation) # cause self.on_change()
+                super().set(self.translation) # cause self.on_change()
             else:
                 try: code, name = line.split(" ",1)
                 except:
@@ -483,7 +483,7 @@ class QuickSelectStore(features.WriteOnlyFeature, _QuickSelect):
     
     def on_change(self, old, new):
         super().on_change(old, new)
-        self.target.features.quick_select.store(new)
+        self.target.features.quick_select.set(new)
         
     def resend(self):
         self.target.schedule(self.target.features.quick_select.resend, requires=("quick_select",))
@@ -961,7 +961,7 @@ class PowerOnLevel(SelectFeature):
     def on_change(self, val, prev):
         super().on_change(val, prev)
         if not self.target.features.power_on_level_numeric.isset():
-            self.target.features.power_on_level_numeric.store(0)
+            self.target.features.power_on_level_numeric.set(0)
 
 
 @Denon.add_feature
@@ -1020,13 +1020,13 @@ for zone in range(2,ZONES+1):
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
         def _resolve_main_zone_source(self):
-            self.target.schedule(lambda: self._from_mainzone and Source.store(self, self.target.source),
+            self.target.schedule(lambda: self._from_mainzone and Source.set(self, self.target.source),
                 requires=("source",))
 
-        def store(self, data):
+        def set(self, data):
             self._from_mainzone = data == "Main Zone"
             if self._from_mainzone: self._resolve_main_zone_source()
-            else: return super().store(data)
+            else: return super().set(data)
         
         def unset(self):
             super().unset()

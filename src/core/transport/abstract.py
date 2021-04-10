@@ -140,12 +140,12 @@ class AbstractServer(ProtocolBase):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        for f in self.features.values(): not f.key=="fallback" and f.bind(on_store=lambda *_,f=f:f.resend())
+        for f in self.features.values(): not f.key=="fallback" and f.bind(on_processed=lambda *_,f=f:f.resend())
     
     def enter(self): self.connected = True
     def exit(self): self.connected = False
     
-    def _setfattr(self, key, val): return self.features[key].store(val)
+    def _setfattr(self, key, val): return self.features[key].set(val)
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
 
@@ -304,6 +304,6 @@ class DummyServerMixin:
         elif isinstance(f, features.SelectFeature): val = f.options[0] if f.options else "?"
         else: raise TypeError("Feature type %s not known."%f)
         #self.on_receive_raw_data(f.serialize(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
-        f.store(val)
+        f.set(val)
 
 
