@@ -1,12 +1,14 @@
-import sys, math, pkgutil, os, tempfile
+import sys, math, pkgutil, os, tempfile, argparse
 from threading import Thread, Timer
 from .. import Target
+from .. import NAME
 from ..core import features
 from ..core.util import Bindable
 from ..core.config import config, ConfigDict
 from ..amp import AmpController
 from . import gui
 from .key_binding import RemoteControlService, VolumeChanger
+from .setup import Setup
 
 
 class FeatureNotification:
@@ -215,7 +217,14 @@ class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_
         gui.GUI_Backend.mainloop(self)
 
 
-def main(args):
+def main():
+    parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
+    parser.add_argument('--setup', default=False, action="store_true", help='Run initial setup')
+    parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
+    parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
+    args = parser.parse_args()
+    if not Setup.configured() or args.setup: Setup.setup()
+
     target = Target(args.target, connect=False, verbose=args.verbose+1)
     with Icon(target) as icon:
         app = Main(target, icon=icon, verbose=args.verbose+1)
