@@ -1,4 +1,4 @@
-import sys, traceback, re
+import sys, traceback, re, math
 from contextlib import suppress
 from decimal import Decimal
 from threading import Event, Lock, Timer, Thread
@@ -79,6 +79,7 @@ class FeatureInterface(object):
     category = "Misc"
     call = None # for retrieval, call target.send(call)
     default_value = None #if no response
+    dummy_value = None # for dummy server
     type = object # value data type, e.g. int, bool, str
     #key = "key" # feature will be available as target.key; default: key = class name
     
@@ -169,6 +170,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             self._timer_set_default.start()
         if self.call is not None: self.target.send(self.call)
     
+    def poll_on_dummy(self):
+        if self.isset(): val = self.get()
+        elif self.default_value is not None: val = self.default_value
+        elif self.dummy_value is not None: val = self.dummy_value
+        else: raise ValueError("Feature type %s has no dummy value."%f)
+        #self.on_receive_raw_data(f.serialize(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
+        self.set(val)
+
     def _set_default(self):
         with self._lock:
             if not self.isset(): self._set(self.default_value)
@@ -269,11 +278,15 @@ class NumericFeature(Feature):
     max=99
 
 
-class IntFeature(NumericFeature): type=int
+class IntFeature(NumericFeature):
+    type=int
+    dummy_value = property(lambda self: math.ceil((self.max+self.min)/2))
+
 
 class SelectFeature(Feature):
     type=str
     options = []
+    dummy_value = property(lambda self: self.options[0] if self.options else "?")
 
     def send(self, value, force=False):
         if not force and value not in self.options:
@@ -285,10 +298,12 @@ class SelectFeature(Feature):
 class BoolFeature(SelectFeature):
     type=bool
     options = [True, False]
+    dummy_value = False
 
 
 class DecimalFeature(NumericFeature):
     type=Decimal
+    dummy_value = property(lambda self: Decimal(self.max+self.min)/2)
     
     def send(self, value, force=False):
         return super().send((Decimal(value) if isinstance(value, int) else value), force)

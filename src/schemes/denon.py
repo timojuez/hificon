@@ -390,6 +390,7 @@ class Name(SelectFeature): #undocumented
     default_value = "Denon AVR"
     function = "NSFRN "
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value!")
+    def poll_on_dummy(self): self.set("Dummy X7800H")
 
 for code, key, name in SPEAKERS:
     @Denon.add_feature
