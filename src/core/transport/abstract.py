@@ -80,6 +80,8 @@ class SchemeBase(Bindable, SchemeType):
     
     def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
 
+    def set_feature(self, f, value): raise NotImplementedError()
+
     def schedule(self, func, args=tuple(), kwargs={}, requires=tuple()):
         """ Use this to call methods that use Target.features.
         Call func(*args, **xargs) if all features in @requires are set.
@@ -149,6 +151,8 @@ class AbstractServer(ServerType, SchemeBase):
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
 
+    def set_feature(self, f, value): f.set_on_server(value)
+
     def send(self, data): pass
 
     def on_receive_raw_data(self, data):
@@ -190,6 +194,8 @@ class _FeaturesMixin:
         if f.call in self._polled and not force: return
         self._polled.append(f.call)
         f.poll_on_client()
+
+    def set_feature(self, f, value): f.set(value)
 
 
 class _AbstractClient(ClientType, SchemeBase):
@@ -289,4 +295,5 @@ class DummyServerMixin:
     """ Server class that fills feature values with some values """
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_dummy()
+    def set_feature(self, f, value): f.set(value)
 

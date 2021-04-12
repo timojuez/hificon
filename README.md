@@ -158,7 +158,8 @@ python3 -m hificon.create_script -t emulate:denon full > example_script.hifi
 
 
 ### Server Software
-You can implement an own scheme and start the server by running `python3 -m hificon.server --target SCHEME_MODULE.CLASS`
+You can implement an own scheme or protocol. Client and Server is being implemented into one single class. Inherit e.g. the class AbstractScheme or TelnetScheme. Pay attention to the methods `poll_feature` and `set_feature`.
+Start the server by running `python3 -m hificon.server --target SCHEME_MODULE.CLASS`
 
 If the prefix `emulate:` is being added to `--target`, a dummy server will be run for testing. You can connect to it using the clients mentioned above.
 

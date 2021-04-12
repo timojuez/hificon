@@ -78,13 +78,19 @@ class FeatureInterface(object):
     name = "Short description"
     category = "Misc"
     call = None # for retrieval, call target.send(call)
-    default_value = None #if no response
+    default_value = None # if no response from server
     dummy_value = None # for dummy server
     type = object # value data type, e.g. int, bool, str
     #key = "key" # feature will be available as target.key; default: key = class name
     
     def poll_on_server(self):
-        """ This is being executed on server side and must call self.set(some value) """
+        """ This is being executed on server side when the client asks for a value
+        and must call self.set(some value) """
+        raise NotImplementedError()
+    
+    def set_on_server(self, value):
+        """ This is being executed on server side when the client tries to set a value.
+        It shall call self.set(value) """
         raise NotImplementedError()
     
     def matches(self, data):
@@ -193,7 +199,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.__class__._block_on_send = None # for power.consume("PWON")
         try: d = self.unserialize(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
-        else: return self.set(d)
+        else: return self.target.set_feature(self, d)
         
     def set(self, value):
         with self._lock: return self._set(value)
