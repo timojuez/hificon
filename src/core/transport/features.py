@@ -123,6 +123,9 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
 
     def __init__(self, target):
         super().__init__()
+        target_type = (ServerType, ClientType)
+        if not any([isinstance(target, c) for c in target_type]):
+            raise TypeError("target must inherit one of %s."%(", ".join(map(lambda c:c.__name__, target_type))))
         self.target = target
         self._lock = Lock()
         self._event_on_set = Event()
