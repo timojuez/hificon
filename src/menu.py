@@ -30,6 +30,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 class TabPanel(ScrollView):
     config = ConfigDict("menu.json")
+    _filter = lambda f: False
 
     def __init__(self, target):
         self.target = target
@@ -72,6 +73,7 @@ class TabPanel(ScrollView):
         self.features[f.key] = row
         f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), -1))
         f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), -1))
+        self.add_filtered(f.key, row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -135,10 +137,12 @@ class TabPanel(ScrollView):
         return button
 
     def filter(self, func):
+        self._filter = func
         self.ids.layout.clear_widgets()
-        for key, w in self.features.items():
-            if func(self.target.features[key]):
-                self.ids.layout.add_widget(w)
+        for key, w in self.features.items(): self.add_filtered(key, w)
+
+    def add_filtered(self, key, w):
+        if self._filter(self.target.features[key]): self.ids.layout.add_widget(w)
 
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
