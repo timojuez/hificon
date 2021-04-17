@@ -30,7 +30,6 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 class TabPanel(ScrollView):
     config = ConfigDict("menu.json")
-    filter = None
 
     def __init__(self, target):
         self.target = target
@@ -68,13 +67,11 @@ class TabPanel(ScrollView):
             if active: self.config["pinned"].append(f.key)
             else: self.config["pinned"].remove(f.key)
             self.config.save()
-            self.update_feature_visibility(f)
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[f.key] = row
-        f.bind(on_set=lambda: self.update_feature_visibility(f))
-        f.bind(on_unset=lambda: self.update_feature_visibility(f))
-        self.ids.layout.add_widget(row)
+        f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), -1))
+        f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), -1))
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -137,14 +134,12 @@ class TabPanel(ScrollView):
 
         return button
 
-    def update_feature_visibility(self, f):
-        Clock.schedule_once(lambda *_,f=f: self._update_feature_visibility(f), -1)
-        
-    def _update_feature_visibility(self, f):
-        if self.filter is None: return
-        func = show_widget if f.isset() and self.filter(f) else hide_widget
-        func(self.features[f.key])
-        
+    def filter(self, func):
+        self.ids.layout.clear_widgets()
+        for key, w in self.features.items():
+            if func(self.target.features[key]):
+                self.ids.layout.add_widget(w)
+
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
         on_value_change, on_widget_change = bind_widget_to_value(
@@ -161,7 +156,7 @@ class TabHeader(ToggleButton):
         self.content = menu.ids.menu_content
         self.bind(on_release = lambda *_: self.activate())
 
-    def activate(self):
+    def activate(self, *_):
         self.state = "down"
         self.content.clear_widgets()
         self.content.add_widget(self.panel)
@@ -175,9 +170,7 @@ class CategoryTabHeader(TabHeader):
         if filter: self.filter = filter
         
     def activate(self):
-        self.panel.filter = self.filter
-        for key in self.panel.features.keys():
-            self.panel.update_feature_visibility(self.panel.target.features[key])
+        self.panel.filter(self.filter)
         super().activate()
 
 
