@@ -30,7 +30,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 class TabPanel(ScrollView):
     config = ConfigDict("menu.json")
-    _filter = lambda f: False
+    _filter = lambda *_: False
 
     def __init__(self, target):
         self.target = target
