@@ -344,8 +344,8 @@ class MenuScreen(_MenuScreen):
         for key, f in self.target.features.items():
             f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
-        self.target.bind(on_connect=self.pinned_tab.activate)
-        self.target.bind(on_disconnected=self.connecting_tab.activate)
+        self.target.bind(on_connect=lambda:Clock.schedule_once(self.pinned_tab.activate, 0))
+        self.target.bind(on_disconnected=lambda:Clock.schedule_once(self.connecting_tab.activate, 0))
         if self.target.connected: self.pinned_tab.activate()
         else: self.connecting_tab.activate()
 
