@@ -160,7 +160,7 @@ class TabHeader(ToggleButton):
         self.content = menu.ids.menu_content
         self.bind(on_release = lambda *_: self.activate())
 
-    def activate(self, *_):
+    def activate(self):
         self.state = "down"
         self.content.clear_widgets()
         self.content.add_widget(self.panel)
@@ -341,8 +341,8 @@ class MenuScreen(_MenuScreen):
         for key, f in self.target.features.items():
             f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
         super().build()
-        self.target.bind(on_connect=lambda:Clock.schedule_once(self.pinned_tab.activate, 0))
-        self.target.bind(on_disconnected=lambda:Clock.schedule_once(self.connecting_tab.activate, 0))
+        self.target.bind(on_connect=lambda:Clock.schedule_once(lambda *_:self.pinned_tab.activate(), 0))
+        self.target.bind(on_disconnected=lambda:Clock.schedule_once(lambda *_:self.connecting_tab.activate(), 0))
         if self.target.connected: self.pinned_tab.activate()
         else: self.connecting_tab.activate()
 
