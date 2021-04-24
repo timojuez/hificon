@@ -39,7 +39,7 @@ tray_menu_features = @volume_feature_key, @power_feature_key, sound_mode, @sourc
 vol_up = button9
 vol_down = button8
 # Wait @interval milliseconds after each @step volume steps
-interval = 30
+interval = 45
 # volume steps while key is pressed
-step = 1.0
+step = 1.5
 
