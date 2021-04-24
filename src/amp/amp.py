@@ -5,7 +5,7 @@ Examples in src/schemes
 
 from threading import Timer, Lock
 from ..core.util import log_call
-from ..core import config, AbstractScheme, TelnetScheme
+from ..core import config, AbstractScheme, TelnetScheme, features
 
 
 class AbstractAmp(AbstractScheme):
@@ -45,4 +45,15 @@ class AbstractAmp(AbstractScheme):
 
 class TelnetAmp(AbstractAmp, TelnetScheme): pass
 
+@AbstractAmp.add_feature
+class Power(features.Constant, features.BoolFeature): pass
+
+@AbstractAmp.add_feature
+class Source(features.Constant, features.SelectFeature): pass
+
+@AbstractAmp.add_feature
+class Volume(features.Constant, features.DecimalFeature): pass
+
+@AbstractAmp.add_feature
+class Muted(features.Constant, features.BoolFeature): pass
 

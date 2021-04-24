@@ -224,7 +224,7 @@ class LooseBoolFeature(BoolFeature):
 
 ######### Features implementation (see Denon CLI protocol)
 
-@Denon.add_feature
+@Denon.add_feature(overwrite=True)
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
@@ -312,7 +312,7 @@ class DevicePower(BoolFeature):
             lambda:self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)).start()
 
 
-@Denon.add_feature
+@Denon.add_feature(overwrite=True)
 class Muted(BoolFeature):
     category = "Volume"
     function = "MU"
@@ -356,7 +356,7 @@ class SourceNames(SelectFeature): #undocumented
                 self.translation[code] = name
 
 
-@Denon.add_feature
+@Denon.add_feature(overwrite=True)
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
@@ -410,7 +410,7 @@ for code, key, name in SPEAKERS:
         function = f"SSLEV{code} "
 
 
-@Denon.add_feature
+@Denon.add_feature(overwrite=True)
 class MainZonePower(BoolFeature):
     key = "power"
     category = "General"
