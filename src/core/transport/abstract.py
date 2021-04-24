@@ -13,7 +13,13 @@ from .types import SchemeType, ServerType, ClientType
 from . import features
 
 
-class SchemeBase(Bindable, SchemeType):
+class _SchemeBaseMeta(type):
+
+    def __init__(cls, name, bases, dct):
+        cls.features = cls.features.copy()
+
+
+class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     verbose = 0
     connected = False
     features = features.Features()
@@ -74,7 +80,8 @@ class SchemeBase(Bindable, SchemeType):
                 lambda self:self.features[Feature.key].get(),
                 lambda self,val:self._setfattr(Feature.key, val)
             ))
-            cls.features = cls.features.__class__({**cls.features, Feature.key: Feature})
+            cls.features.pop(Feature.key, None)
+            cls.features[Feature.key] = Feature
             return Feature
         return add(Feature) if Feature else add
     
