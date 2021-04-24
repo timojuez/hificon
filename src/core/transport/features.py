@@ -82,7 +82,11 @@ class FeatureInterface(object):
     dummy_value = None # for dummy server
     type = object # value data type, e.g. int, bool, str
     #key = "key" # feature will be available as target.key; default: key = class name
-    
+
+    def init_on_server(self):
+        """ called after __init__ on server side """
+        pass
+
     def poll_on_server(self):
         """ This is being executed on server side when the client asks for a value
         and must call self.set(some value) """
