@@ -247,6 +247,7 @@ class _AbstractClient(ClientType, SchemeBase):
         Low level function that sends @cmd and returns a value where matches(value) is True.
         Only called by hifish
         """
+        if matches is None: return self.send(cmd)
         raise NotImplementedError()
 
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
