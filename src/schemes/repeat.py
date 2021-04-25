@@ -34,6 +34,6 @@ class Repeat(SchemeType):
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        target = Target(":".join(args), **xargs)
-        return type("Server", (ClientRepeaterMixin, target.Server, cls), {})(target)
+        target = Target(":".join(args), connect=False)
+        return type("Server", (ClientRepeaterMixin, target.Server, cls), {})(target, **xargs)
 
