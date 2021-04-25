@@ -19,7 +19,9 @@ class ClientRepeaterMixin:
         super().exit()
         self._client.exit()
 
-    def on_receive_raw_data(self, data): self._client.send(data)
+    def on_receive_raw_data(self, data):
+        try: self._client.send(data)
+        except ConnectionError as e: print(repr(e))
 
 
 class Repeat(SchemeType):

@@ -81,7 +81,9 @@ class TelnetClient(AbstractClient):
     def on_connect(self):
         super().on_connect()
         def func():
-            while not self._pulse_stop.wait(10): self.send(self._pulse)
+            while not self._pulse_stop.wait(10):
+                try: self.send(self._pulse)
+                except ConnectionError: pass
         self._pulse_stop.clear()
         if self._pulse is not None: Thread(target=func, daemon=True, name="pulse").start()
         
