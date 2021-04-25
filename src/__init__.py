@@ -42,7 +42,7 @@ def Target(uri=None, role="client", *args, **xargs):
                 if val: # ?fkey=val
                     f = target.features[key]
                     convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
-                    f.send(convert(val), force=True)
-                else: target.send(key) # ?COMMAND
+                    target._setfattr(key, convert(val))
+                else: target.send(key) # ?COMMAND #FIXME: use target.on_receive_raw_data for server
     return target
 
