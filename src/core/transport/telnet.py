@@ -41,7 +41,7 @@ class TelnetClient(AbstractClient):
             self.host = self._host
             self.port = self._port
         if self.host.startswith("//"): self.host = self.host[2:]
-        self.prompt = f"{self.scheme}://{self.host}:{self.port}"
+        self.uri = f"{self.scheme}://{self.host}:{self.port}"
         super().enter()
 
     def send(self, cmd):
@@ -110,7 +110,7 @@ class _TelnetServer(Service):
         self.target = target
         self._break = linebreak
         if self.verbose >= 1:
-            print(f"[{self.__class__.__name__}] Operating on {self.target.prompt}", file=sys.stderr)
+            print(f"[{self.__class__.__name__}] Operating on {self.target.uri}", file=sys.stderr)
         super().__init__(host=listen_host, port=listen_port, verbose=1)
 
     def connection(self, conn, mask):
@@ -121,7 +121,7 @@ class _TelnetServer(Service):
         try: decoded = data.strip().decode()
         except: return print(traceback.format_exc())
         for data in decoded.replace("\n","\r").split("\r"):
-            if self.verbose >= 1: print("%s $ %s"%(self.target.prompt,data))
+            if self.verbose >= 1: print("%s $ %s"%(self.target.uri,data))
             try: self.target.on_receive_raw_data(data)
             except Exception as e: print(traceback.format_exc())
         

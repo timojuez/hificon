@@ -13,14 +13,12 @@ class ClientRepeaterMixin:
     def enter(self):
         super().enter()
         self._client.enter()
+        self.uri = f"{self.scheme}:{self._client.uri}"
 
     def exit(self):
         super().exit()
         self._client.exit()
 
-    @property
-    def prompt(self): return self._client.prompt
-    
     def on_receive_raw_data(self, data): self._client.send(data)
 
 
@@ -35,5 +33,5 @@ class Repeat(SchemeType):
     @classmethod
     def new_server(cls, *args, **xargs):
         target = Target(":".join(args), **xargs)
-        return type("Server", (ClientRepeaterMixin, target.Server), {})(target)
+        return type("Server", (ClientRepeaterMixin, target.Server, cls), {})(target)
 

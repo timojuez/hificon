@@ -25,7 +25,7 @@ class TextNotification(FeatureNotification, gui.Notification):
         super().__init__(*args, **xargs)
         self.set_urgency(2)
         self.set_timeout(config.getint("Tray","notification_timeout"))
-        super().update("Connecting ...", self.target.prompt)
+        super().update("Connecting ...", self.target.uri)
         self.target.preload_features.add("name")
     
     def update(self): self.target.schedule(self._update, requires=("name",))

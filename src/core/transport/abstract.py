@@ -22,13 +22,13 @@ class _SchemeBaseMeta(type):
 class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     verbose = 0
     connected = False
-    prompt = ""
+    uri = ""
     features = features.Features()
     _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
-        self.prompt = self.scheme
+        self.uri = self.scheme
         self.features = self.features.__class__()
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
@@ -134,7 +134,7 @@ class Fallback(features.SelectFeature):
 @SchemeBase.add_feature
 class Name(features.SelectFeature):
     
-    def get(self): return self.target.prompt
+    def get(self): return self.target.uri
     def matches(self, data): return False
     def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
@@ -255,14 +255,14 @@ class _AbstractClient(ClientType, SchemeBase):
     __call__ = lambda self,*args,**xargs: self.query(*args,**xargs)
         
     def send(self, cmd):
-        if self.verbose > 4: print(f"{self.prompt} $ ${repr(cmd)}", file=sys.stderr)
+        if self.verbose > 4: print(f"{self.uri} $ ${repr(cmd)}", file=sys.stderr)
 
     @log_call
     def on_connect(self):
         """ Execute when connected to server e.g. after connection aborted """
         self.connected = True
         if self.verbose > 0:
-            print("[%s] connected to %s"%(self.__class__.__name__, self.prompt), file=sys.stderr)
+            print("[%s] connected to %s"%(self.__class__.__name__, self.uri), file=sys.stderr)
         
     @log_call
     def on_disconnected(self): self.connected = False
