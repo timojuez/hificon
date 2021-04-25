@@ -16,8 +16,8 @@ class DummyClientMixin:
         super().enter()
     
     def exit(self):
-        super().exit()
         self._server.exit()
+        super().exit()
 
 
 class PlainDummyClientMixin(DummyClientMixin):
