@@ -139,6 +139,7 @@ class CLI:
     
     def on_disconnected(self):
         print("\nConnection closed", file=sys.stderr)
+        # quit InteractiveConsole
         try: os.system('stty sane')
         except: pass
         os._exit(1)
