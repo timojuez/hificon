@@ -163,6 +163,7 @@ class TelnetServer(AbstractServer):
         super().enter()
 
     def exit(self):
+        time.sleep(.1)
         super().exit()
         self._server.exit()
 
