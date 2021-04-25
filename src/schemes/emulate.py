@@ -28,8 +28,7 @@ class PlainDummyClientMixin(DummyClientMixin):
         self._server = server
         server.bind(send = lambda data: self.on_receive_raw_data(data))
         self.bind(send = lambda data: server.on_receive_raw_data(data))
-
-    prompt = property(lambda self:"emulate:%s"%super().prompt)
+        self.prompt = f"emulate:{self.scheme}"
 
     def connect(self):
         super().connect()

@@ -41,15 +41,9 @@ class TelnetClient(AbstractClient):
             self.host = self._host
             self.port = self._port
         if self.host.startswith("//"): self.host = self.host[2:]
+        self.prompt = f"{self.scheme}://{self.host}:{self.port}"
         super().enter()
 
-    @property
-    def prompt(self):
-        p = self.scheme
-        if self.host: p = f"{p}://{self.host}"
-        if self.port: p = f"{p}:{self.port}"
-        return p
-    
     def send(self, cmd):
         super().send(cmd)
         try:

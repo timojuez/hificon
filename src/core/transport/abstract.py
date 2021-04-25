@@ -22,11 +22,13 @@ class _SchemeBaseMeta(type):
 class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     verbose = 0
     connected = False
+    prompt = ""
     features = features.Features()
     _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
+        self.prompt = self.scheme
         self.features = self.features.__class__()
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
@@ -54,9 +56,6 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     
     def exit(self): pass
     
-    @property
-    def prompt(self): return self.scheme
-        
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
         """
