@@ -80,6 +80,7 @@ INPUTS = {
 
 class Denon(TelnetAmp):
     description = "Denon/Marantz AVR compatible (tested with Denon X1400H)"
+    _pulse = "CV?" # workaround for denon to retrieve CV?
     
     def query(self, cmd, matches=None):
         """
@@ -305,11 +306,6 @@ class DevicePower(BoolFeature):
     category = "General"
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
-
-    def on_change(self, old, new):
-        super().on_change(old, new)
-        if new: Timer(10, # workaround for denon to retrieve CV?
-            lambda:self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)).start()
 
 
 @Denon.add_feature(overwrite=True)
