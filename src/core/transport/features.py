@@ -185,8 +185,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self.call is not None: self.target.send(self.call)
     
     def poll_on_dummy(self):
-        if self.isset(): val = self.get()
-        elif self.default_value is not None: val = self.default_value
+        if self.default_value is not None: val = self.default_value
         elif self.dummy_value is not None: val = self.dummy_value
         else: raise ValueError("Feature type %s has no dummy value."%f)
         #self.on_receive_raw_data(f.serialize(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True

@@ -167,7 +167,9 @@ class AbstractServer(ServerType, SchemeBase):
         called_features = [f for key, f in self.features.items() if f.call == data]
         if called_features:
             # data is a request
-            for f in called_features: self.poll_feature(f)
+            for f in called_features:
+                if f.isset(): f.resend()
+                else: self.poll_feature(f)
         else:
             # data is a command
             super().on_receive_raw_data(data)
