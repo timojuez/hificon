@@ -153,15 +153,15 @@ class DenonFeature:
     call = property(lambda self: "%s?"%self.function)
     
     def serialize(self, value):
-        return "%s%s"%(self.function, self.serializeVal(value))
+        return "%s%s"%(self.function, self.serialize_val(value))
     
-    def serializeVal(self, value): return value
+    def serialize_val(self, value): return value
 
     def unserialize(self, cmd):
         param = cmd[len(self.function):]
-        return self.unserializeVal(param)
+        return self.unserialize_val(param)
 
-    def unserializeVal(self, data): return data
+    def unserialize_val(self, data): return data
         
     def matches(self, cmd):
         return cmd.startswith(self.function) #and " " not in cmd.replace(self.function,"",1)
@@ -172,9 +172,9 @@ class _Translation:
 
     options = property(lambda self: list(self.translation.values()))
     
-    def unserializeVal(self, val): return self.translation.get(val,val)
+    def unserialize_val(self, val): return self.translation.get(val,val)
         
-    def serializeVal(self, val):
+    def serialize_val(self, val):
         return {val:key for key,val in self.translation.items()}.get(val,val)
 
 
@@ -186,7 +186,7 @@ class NumericFeature(DenonFeature):
     """ add UP/DOWN value decoding capability """
     step = 1
 
-    def unserializeVal(self, val):
+    def unserialize_val(self, val):
         if val == "UP": return self.get()+self.step
         elif val == "DOWN": return self.get()-self.step
         else: raise ValueError(f"Invalid value `{val}` for feature `{self.key}`")
@@ -202,23 +202,23 @@ class DecimalFeature(NumericFeature, features.DecimalFeature):
     @classmethod
     def _roundVolume(self, vol): return self.step*round(vol/self.step)
 
-    def unserializeVal(self, val):
-        return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().unserializeVal(val)
+    def unserialize_val(self, val):
+        return Decimal(val.ljust(3,"0"))/10 if val.isnumeric() else super().unserialize_val(val)
 
-    def serializeVal(self, val):
+    def serialize_val(self, val):
         val = self._roundVolume(val)
         return "%02d"%val if val%1 == 0 else "%03d"%(val*10)
 
 
 class IntFeature(NumericFeature, features.IntFeature):
     
-    def serializeVal(self, val):
+    def serialize_val(self, val):
         longestValue = max(abs(self.max),abs(self.min))
         digits = math.ceil(math.log(longestValue+1,10))
         return ("%%0%dd"%digits)%val
     
-    def unserializeVal(self, val):
-        return int(val) if val.isnumeric() else super().unserializeVal(val)
+    def unserialize_val(self, val):
+        return int(val) if val.isnumeric() else super().unserialize_val(val)
 
 
 class BoolFeature(_Translation, DenonFeature, features.BoolFeature):
@@ -229,20 +229,20 @@ class RelativeInt(IntFeature):
     min = -6
     max = 6
 
-    def serializeVal(self, val): return super().serializeVal(val+50)
+    def serialize_val(self, val): return super().serialize_val(val+50)
 
-    def unserializeVal(self, val):
-        return super().unserializeVal(val)-50 if val.isnumeric() else super().unserializeVal(val)
+    def unserialize_val(self, val):
+        return super().unserialize_val(val)-50 if val.isnumeric() else super().unserialize_val(val)
 
 
 class RelativeDecimal(DecimalFeature):
     min = -12
     max = 12
 
-    def serializeVal(self, val): return super().serializeVal(val+50)
+    def serialize_val(self, val): return super().serialize_val(val+50)
 
-    def unserializeVal(self, val):
-        return super().unserializeVal(val)-50 if val.isnumeric() else super().unserializeVal(val)
+    def unserialize_val(self, val):
+        return super().unserialize_val(val)-50 if val.isnumeric() else super().unserialize_val(val)
 
 
 class _LooseNumericFeature:
@@ -470,8 +470,8 @@ class Sleep(IntFeature):
     max = 120
     name = "Main Zone Sleep (minutes)"
     function = "SLP"
-    def serializeVal(self, val): return "OFF" if val==0 else super().serializeVal(val)
-    def unserializeVal(self, val): return 0 if val=="OFF" else super().unserializeVal(val)
+    def serialize_val(self, val): return "OFF" if val==0 else super().serialize_val(val)
+    def unserialize_val(self, val): return 0 if val=="OFF" else super().unserialize_val(val)
 
 @Denon.add_feature
 class SoundMode(SelectFeature): #undocumented
@@ -509,8 +509,8 @@ class SoundModeSetting(SelectFeature):
             self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
         
     def matches(self, data): return super().matches(data) and data[len(self.function)+2] == "1"
-    def serializeVal(self, val): return "%s1%s"%(super().serializeVal(val)[:2], val)
-    def unserializeVal(self, data): return data[3:]
+    def serialize_val(self, val): return "%s1%s"%(super().serialize_val(val)[:2], val)
+    def unserialize_val(self, data): return data[3:]
 
 
 @Denon.add_feature
@@ -546,8 +546,8 @@ class QuickSelectStore(features.ClientToServerFeatureMixin, _QuickSelect):
     
     # for server:
     def matches(self, data): return super().matches(data) and data.endswith("MEMORY")
-    def serializeVal(self, value): return f"{value} MEMORY"
-    def unserializeVal(self, data): return data.split(" ",1)[0]
+    def serialize_val(self, value): return f"{value} MEMORY"
+    def unserialize_val(self, data): return data.split(" ",1)[0]
     
     def on_change(self, old, new):
         super().on_change(old, new)
@@ -710,8 +710,8 @@ class Lfe(IntFeature):
     function = "PSLFE "
     min=-10
     max=0
-    def unserializeVal(self, val): return super().unserializeVal(val)*-1
-    def serializeVal(self, val): return super().serializeVal(val*-1)
+    def unserialize_val(self, val): return super().unserialize_val(val)*-1
+    def serialize_val(self, val): return super().serialize_val(val*-1)
 
 @Denon.add_feature
 class EffectLevel(IntFeature): function = "PSEFF "
@@ -1037,9 +1037,9 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
             call = f"SSAEQ{cat_code} ?"
             dummy_value = {i:0 for i in range(9)}
             
-            def serializeVal(self, d): return ":".join(["%d"%(v*10+500) for v in d.values()])
+            def serialize_val(self, d): return ":".join(["%d"%(v*10+500) for v in d.values()])
 
-            def unserializeVal(self, data):
+            def unserialize_val(self, data):
                 return {i: Decimal(v)/10-50 for i, v in enumerate(data.split(":"))}
 
             def set_value(self, key, val):
