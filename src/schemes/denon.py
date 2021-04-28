@@ -263,6 +263,11 @@ class LooseBoolFeature(BoolFeature):
         if new == True: self.target.send(self.call) # make target send the nonbool value TODO: only once
 
 
+
+class MultipartFeature(features.MultipartFeature, DenonFeature, features.Feature):
+    TERMINATOR = " END"
+
+
 ######### Features implementation (see Denon CLI protocol)
 
 @Denon.add_feature(overwrite=True)
@@ -347,15 +352,13 @@ class DevicePower(BoolFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
 
-
 @Denon.add_feature(overwrite=True)
 class Muted(BoolFeature):
     category = "Volume"
     function = "MU"
 
-
 @Denon.add_feature
-class SourceNames(SelectFeature): #undocumented
+class SourceNames(MultipartFeature): #undocumented
     """
     SSFUN ?
     SSFUNSAT/CBL CBL/SAT
@@ -363,34 +366,13 @@ class SourceNames(SelectFeature): #undocumented
     SSFUN END    
     """
     category = "Input"
+    type = dict
     function = "SSFUN"
     call = "SSFUN ?"
-    translation = {}
     default_value = {code: name for code, key, name in SOURCES}
-    type = dict
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.translation = self.translation.copy()
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
-    def serialize(self, d):
-        return "\r".join([f"{self.function}{code} {name}" for code, name in [*d.items(), ("","END")]])
-    def unserialize(self, x): return [super(SourceNames, self).unserialize(e) for e in x.split("\r")]
-    def unserializeVal(self, x): return x
-    def set(self, value):
-        if value == self.default_value:
-            self.translation = value.copy()
-            return super().set(self.translation)
-        for line in value:
-            if line.strip() == "END":
-                super().set(self.translation) # cause self.on_change()
-            else:
-                try: code, name = line.split(" ",1)
-                except:
-                    print(line)
-                    raise
-                self.translation[code] = name
-
+    def to_list(self, d): return [" ".join(e) for e in d.items()]
+    def from_list(self, l): return dict([line.split(" ",1) for line in l])
 
 @Denon.add_feature(overwrite=True)
 class Source(SelectFeature):
@@ -407,12 +389,12 @@ class Source(SelectFeature):
         if self.isset():
             old = self._val
             serialized = self.serialize(old)
-            self.translation.update(self.target.features.source_names.translation)
+            self.translation.update(self.target.source_names)
             new = self.unserialize(serialized)
             #self.consume(serialized) # might cause deadlock
             self.on_change(old, new) # cause listeners to update from self.translation
         else:
-            self.translation.update(self.target.features.source_names.translation)
+            self.translation.update(self.target.source_names)
         
     def consume(self, data):
         self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
