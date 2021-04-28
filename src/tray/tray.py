@@ -115,14 +115,17 @@ class NotificationMixin(object):
         super().__init__(*args,**xargs)
         notification_whitelist = config.getlist("Tray","notification_whitelist")
         notification_blacklist = config.getlist("Tray","notification_blacklist")
-        create_notification = lambda f: \
-            NumericNotification(f) if isinstance(f, features.NumericFeature) else TextNotification(f)
-        self._notifications = {key:create_notification(f) for key,f in list(self.target.features.items())
+        n_features = [f for f in self.target.features.values()
             if f.key not in notification_blacklist
-            and ("*" in notification_whitelist or self.f.key in notification_whitelist)}
+            and ("*" in notification_whitelist or f.key in notification_whitelist)]
+        self._notifications = {f.key: n for f in n_features for n in [self.create_notification(f)] if n}
         self.target.preload_features.add(config.volume)
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
+    def create_notification(self, f):
+        if isinstance(f, features.NumericFeature): return NumericNotification(f)
+        if isinstance(f, features.SelectFeature): return TextNotification(f)
+
     def show_notification(self, key): key in self._notifications and self._notifications[key].show()
     
     def on_key_press(self,*args,**xargs):
