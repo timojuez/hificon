@@ -984,6 +984,12 @@ for source_code, source_key, source_name in SOURCES:
                 **{f"{input_value_code}{i}":f"{input_name} {i}" for i in range(7)}}
 
 
+@Denon.add_feature
+class EnergyUse(IntFeature): #undocumented
+    category = "Eco"
+    function = "SSECOSTS "
+
+
 # TODO: implement PV
 
 for zone in range(2,ZONES+1):
