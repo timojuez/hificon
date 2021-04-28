@@ -7,7 +7,7 @@ from threading import Timer
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
 from ..core import config, features
-from ..core.transport.types import ClientType, ServerType
+from ..core.transmission.types import ClientType, ServerType
 
 
 ZONES = 4

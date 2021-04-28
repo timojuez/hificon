@@ -10,9 +10,9 @@ Run client:
 
 import time
 from threading import Thread, Lock
-from hificon.core.transport.telnet import TelnetServer, TelnetScheme
+from hificon.core.transmission.telnet import TelnetServer, TelnetScheme
 from hificon.amp import TelnetAmp
-from hificon.core.transport import features
+from hificon.core.transmission import features
 
 
 class ExternalCounter:

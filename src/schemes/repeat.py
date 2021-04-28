@@ -1,4 +1,4 @@
-from ..core.transport import SchemeType
+from ..core.transmission import SchemeType
 from .. import Target
 
 

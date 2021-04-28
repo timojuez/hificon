@@ -106,7 +106,7 @@ class CLI:
     def print_help_schemes(self):
         tw = TextWrapper(
             initial_indent=" "*4, subsequent_indent=" "*8, width=shutil.get_terminal_size().columns)
-        print(f"A scheme defines a class that extends {PKG_NAME}.core.transport.SchemeType.")
+        print(f"A scheme defines a class that extends {PKG_NAME}.core.transmission.SchemeType.")
         print("The following schemes are being supported internally:")
         print()
         for P in get_schemes():

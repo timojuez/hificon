@@ -1,6 +1,6 @@
 from decimal import Decimal
 from hificon.amp import TelnetAmp
-from hificon.core.transport import features
+from hificon.core.transmission import features
 
 
 class MyTelnetScheme(TelnetAmp):

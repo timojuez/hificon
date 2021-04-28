@@ -3,8 +3,8 @@ Dry software run that emulates a target of another scheme
 """
 
 from .. import get_scheme
-from ..core.transport import SchemeType, TelnetScheme
-from ..core.transport.abstract import DummyServerMixin, AbstractClient, AbstractServer
+from ..core.transmission import SchemeType, TelnetScheme
+from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer
 
 
 class DummyClientMixin:

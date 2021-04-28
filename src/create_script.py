@@ -1,5 +1,5 @@
 import argparse, time, sys, os
-from .core.transport.features import NumericFeature
+from .core.transmission.features import NumericFeature
 from . import Target
 
 
