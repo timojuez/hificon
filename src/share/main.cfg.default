@@ -31,7 +31,7 @@ notification_blacklist = maxvol, input_signal, source_names
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
-tray_menu_features = @volume_feature_key, @power_feature_key, sound_mode, @source_feature_key
+tray_menu_features = @volume_feature_key, @power_feature_key, sound_mode, sound_mode_setting, @source_feature_key
 
 
 [MouseBinding]
