@@ -379,8 +379,8 @@ class SourceNames(MultipartFeature): #undocumented
     call = "SSFUN ?"
     default_value = {code: name for code, key, name in SOURCES}
     def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
-    def to_list(self, d): return [" ".join(e) for e in d.items()]
-    def from_list(self, l): return dict([line.split(" ",1) for line in l])
+    def to_parts(self, d): return [" ".join(e) for e in d.items()]
+    def from_parts(self, l): return dict([line.split(" ",1) for line in l])
 
 @Denon.add_feature(overwrite=True)
 class Source(SelectFeature):
@@ -486,11 +486,11 @@ class SoundModeSettings(MultipartFeature): # according to current sound mode #un
     function = 'OPSML '
     dummy_value = {"010":"Stereo", "020":"Dolby Surround", "030":"DTS Neural:X", "040":"DTS Virtual:X", "050":"Multi Ch Stereo", "061":"Mono Movie", "070":"Virtual"}
 
-    def to_list(self, d):
+    def to_parts(self, d):
         return ["".join([key[:2], str(int(self.target.sound_mode_setting == val)), val])
             for key, val in d.items()]
 
-    def from_list(self, l): return {data[:3]: data[3:] for data in l}
+    def from_parts(self, l): return {data[:3]: data[3:] for data in l}
 
 
 @Denon.add_feature

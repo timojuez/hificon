@@ -361,7 +361,7 @@ class ClientToServerFeature:
 
 class MultipartFeature:
     """ This mixin allows you to send and receive a value in multiple parts. The parts are a
-    list. Implement the conversion of the value to and from a list in to_list() and from_list(). 
+    list. Implement the conversion of the value to and from a list in to_parts() and from_parts(). 
     In Telnet, parts could be rows. """
     SEPARATOR = "\r"
     TERMINATOR = "END"
@@ -370,13 +370,17 @@ class MultipartFeature:
         super().__init__(*args, **xargs)
         self._buffer = []
 
-    def to_list(self, value): raise NotImplementedError()
+    def to_parts(self, value):
+        """ value is of type self.type. Returns a list of string """
+        raise NotImplementedError()
 
-    def from_list(self, l): raise NotImplementedError()
+    def from_parts(self, l):
+        """ l is of type list. Returns object of type self.type """
+        raise NotImplementedError()
 
     def serialize(self, value):
         return self.SEPARATOR.join([super(MultipartFeature, self).serialize(e)
-            for e in [*self.to_list(value), self.TERMINATOR]])
+            for e in [*self.to_parts(value), self.TERMINATOR]])
 
     def unserialize(self, data):
         # will return one element on telnet and at least one on plain_emulator
@@ -386,7 +390,7 @@ class MultipartFeature:
         if l in (self.dummy_value, self.default_value): return super().set(l)
         for line in l:
             if line == self.TERMINATOR:
-                super().set(self.from_list(self._buffer)) # cause self.on_change()
+                super().set(self.from_parts(self._buffer)) # cause self.on_change()
                 self._buffer.clear()
             else: self._buffer.append(line)
 
