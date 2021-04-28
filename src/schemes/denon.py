@@ -147,9 +147,13 @@ class DenonFeature:
     def serialize(self, value):
         return "%s%s"%(self.function, self.serializeVal(value))
     
+    def serializeVal(self, value): return value
+
     def unserialize(self, cmd):
         param = cmd[len(self.function):]
         return self.unserializeVal(param)
+
+    def unserializeVal(self, data): return data
         
     def matches(self, cmd):
         return cmd.startswith(self.function) #and " " not in cmd.replace(self.function,"",1)
