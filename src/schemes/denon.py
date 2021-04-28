@@ -464,19 +464,60 @@ class Sleep(IntFeature):
     function = "SLP"
     def serializeVal(self, val): return "OFF" if val==0 else super().serializeVal(val)
     def unserializeVal(self, val): return 0 if val=="OFF" else super().unserializeVal(val)
-    
 
 @Denon.add_feature
-class SoundMode(SelectFeature):
+class SoundMode(SelectFeature): #undocumented
+    category = "General"
+    function = "SSSMG "
+    translation = {"MOV":"Movie", "MUS":"Music", "GAM":"Game", "PUR":"Pure"}
+
+@Denon.add_feature
+class SoundModeSettings(MultipartFeature): # according to current sound mode #undocumented
+    category = "General"
+    type = dict
+    function = 'OPSML '
+    dummy_value = {"010":"Stereo", "020":"Dolby Surround", "030":"DTS Neural:X", "040":"DTS Virtual:X", "050":"Multi Ch Stereo", "061":"Mono Movie", "070":"Virtual"}
+
+    def to_list(self, d):
+        return ["".join([key[:2], str(int(self.target.sound_mode_setting == val)), val])
+            for key, val in d.items()]
+
+    def from_list(self, l): return {data[:3]: data[3:] for data in l}
+
+
+@Denon.add_feature
+class SoundModeSetting(SelectFeature):
+    category = "General"
+    function = 'OPSML '
+    dummy_value = "Stereo"
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.target.features.sound_mode_settings.bind(self.on_sound_modes_change)
+
+    def on_sound_modes_change(self, *args, **xargs):
+        self.translation = self.target.sound_mode_settings
+        if self.isset():
+            self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
+        
+    def matches(self, data): return super().matches(data) and data[len(self.function)+2] == "1"
+    def serializeVal(self, val): return "%s1%s"%(super().serializeVal(val)[:2], val)
+    def unserializeVal(self, data): return data[3:]
+
+
+@Denon.add_feature
+class SoundModeMS(SelectFeature):
     category = "General"
     function = "MS"
     translation = {"MOVIE":"Movie", "MUSIC":"Music", "GAME":"Game", "DIRECT": "Direct", "PURE DIRECT":"Pure Direct", "STEREO":"Stereo", "STANDARD": "Standard", "DOLBY DIGITAL":"Dolby Digital", "DTS SURROUND":"DTS Surround", "MCH STEREO":"Multi ch. Stereo", "ROCK ARENA":"Rock Arena", "JAZZ CLUB":"Jazz Club", "MONO MOVIE":"Mono Movie", "MATRIX":"Matrix", "VIDEO GAME":"Video Game", "VIRTUAL":"Virtual",
         "VIRTUAL:X":"DTS Virtual:X","NEURAL:X":"DTS Neural:X","DOLBY SURROUND":"Dolby Surround","M CH IN+DS":"Multi Channel In + Dolby S.", "M CH IN+NEURAL:X": "Multi Channel In + DTS Neural:X", "M CH IN+VIRTUAL:X":"Multi Channel In + DTS Virtual:X", "MULTI CH IN":"Multi Channel In", #undocumented
     }
+
     def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
     def on_change(self, old, new):
         super().on_change(old,new)
         self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)
+        self.target.features.sound_mode.async_poll(force=True)
 
 
 class _QuickSelect(SelectFeature):
