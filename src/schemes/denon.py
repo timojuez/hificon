@@ -40,7 +40,6 @@ SPEAKERS_2 = [
     ('FL', 'front_left', 'Front Left'),
     ('FR', 'front_right', 'Front Right'),
     ('CEN', 'center', 'Center'),
-    ('SW', 'subwoofer', 'Subwoofer'),
     ('SL', 'surround_left', 'Surround Left'),
     ('SR', 'surround_right', 'Surround Right'),
     ('SBL', 'surround_back_l', 'Surround Back L'),
