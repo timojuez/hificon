@@ -35,6 +35,42 @@ SPEAKERS = [
     ('SDR', 'surround_atmos_r', 'Surround Atmos R'),
 ]
 
+SPEAKERS_2 = [
+    ('FL', 'front_left', 'Front Left'),
+    ('FR', 'front_right', 'Front Right'),
+    ('CEN', 'center', 'Center'),
+    ('SW', 'subwoofer', 'Subwoofer'),
+    ('SL', 'surround_left', 'Surround Left'),
+    ('SR', 'surround_right', 'Surround Right'),
+    ('SBL', 'surround_back_l', 'Surround Back L'),
+    ('SBR', 'surround_back_r', 'Surround Back R'),
+    ('SB', 'surround_back', 'Surround Back'),
+    ('FHL', 'front_height_l', 'Front Height L'),
+    ('FHR', 'front_height_r', 'Front Height R'),
+    ('FWL', 'front_wide_l', 'Front Wide L'),
+    ('FWR', 'front_wide_r', 'Front Wide R'),
+    ('TFL', 'top_front_l', 'Top Front L'),
+    ('TFR', 'top_front_r', 'Top Front R'),
+    ('TML', 'top_middle_l', 'Top Middle L'),
+    ('TMR', 'top_middle_r', 'Top Middle R'),
+    ('FDL', 'front_atmos_l', 'Front Atmos L'),
+    ('FDR', 'front_atmos_r', 'Front Atmos R'),
+    ('SDL', 'surround_atmos_l', 'Surround Atmos L'),
+    ('SDR', 'surround_atmos_r', 'Surround Atmos R'),
+]
+
+SPEAKER_PAIRS = [
+    ("FRO", "front", "front"),
+    ("SUA", "surround", "surround"),
+    ("CEN", "center", "center"),
+    ("SBK", "surround_back", "surround back"),
+    ("FRH", "front_height", "front height"),
+    ("TFR", "top_front", "top front"),
+    ("TPM", "top_middle", "top middle"),
+    ("FRD", "front_atmos", "front atmos"),
+    ("SUD", "surround_atmos", "surround atmos"),
+]
+
 SOURCES = [
     ('PHONO', 'phono', 'Phono'),
     ('CD', 'cd', 'CD'),
@@ -737,51 +773,13 @@ class _Crossover(SelectFeature): #undocumented
 class CrossoverAll(_Crossover): #undocumented
     name = "Crossover (all)"
     function = "SSCFRALL "
-    
-@Denon.add_feature
-class CrossoverFront(_Crossover): #undocumented
-    name = "Crossover (front)"
-    function = "SSCFRFRO "
-    
-@Denon.add_feature
-class CrossoverSurround(_Crossover): #undocumented
-    name = "Crossover (surround)"
-    function = "SSCFRSUA "
 
-@Denon.add_feature
-class CrossoverCenter(_Crossover): #undocumented
-    name = "Crossover (center)"
-    function = "SSCFRCEN "
-
-@Denon.add_feature
-class CrossoverSurroundBack(_Crossover): #undocumented
-    name = "Crossover (surround back)"
-    function = "SSCFRSBK "
-
-@Denon.add_feature
-class CrossoverFrontHeight(_Crossover): #undocumented
-    name = "Crossover (front height)"
-    function = "SSCFRFRH "
-
-@Denon.add_feature
-class CrossoverTopFront(_Crossover): #undocumented
-    name = "Crossover (top front)"
-    function = "SSCFRTFR "
-
-@Denon.add_feature
-class CrossoverTopMiddle(_Crossover): #undocumented
-    name = "Crossover (top middle)"
-    function = "SSCFRTPM "
-
-@Denon.add_feature
-class CrossoverFrontAtmos(_Crossover): #undocumented
-    name = "Crossover (front atmos)"
-    function = "SSCFRFRD "
-
-@Denon.add_feature
-class CrossoverSurroundAtmos(_Crossover): #undocumented
-    name = "Crossover (surround atmos)"
-    function = "SSCFRSUD "
+for code, key, name in SPEAKER_PAIRS:
+    @Denon.add_feature
+    class CrossoverSpeaker(_Crossover): #undocumented
+        name = f"Crossover ({name})"
+        key = f"crossover_{key}"
+        function = f"SSCFR{code} "
 
 @Denon.add_feature
 class SubwooferMode(SelectFeature): #undocumented
