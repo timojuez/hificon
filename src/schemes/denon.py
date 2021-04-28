@@ -264,8 +264,7 @@ class LooseBoolFeature(BoolFeature):
 
 
 
-class MultipartFeature(features.MultipartFeature, DenonFeature, features.Feature):
-    TERMINATOR = " END"
+class MultipartFeature(features.MultipartFeature, DenonFeature, features.Feature): pass
 
 
 ######### Features implementation (see Denon CLI protocol)
@@ -367,6 +366,7 @@ class SourceNames(MultipartFeature): #undocumented
     """
     category = "Input"
     type = dict
+    TERMINATOR = " END"
     function = "SSFUN"
     call = "SSFUN ?"
     default_value = {code: name for code, key, name in SOURCES}
