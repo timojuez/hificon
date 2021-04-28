@@ -358,3 +358,36 @@ class ClientToServerFeature:
 
     def resend(self): isinstance(self.target, ClientType) and super().resend()
 
+
+class MultipartFeature:
+    """ This mixin allows you to send and receive a value in multiple parts. The parts are a
+    list. Implement the conversion of the value to and from a list in to_list() and from_list(). 
+    In Telnet, parts could be rows. """
+    SEPARATOR = "\r"
+    TERMINATOR = "END"
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._buffer = []
+
+    def to_list(self, value): raise NotImplementedError()
+
+    def from_list(self, l): raise NotImplementedError()
+
+    def serialize(self, value):
+        return self.SEPARATOR.join([super(MultipartFeature, self).serialize(e)
+            for e in [*self.to_list(value), self.TERMINATOR]])
+
+    def unserialize(self, data):
+        # will return one element on telnet and at least one on plain_emulator
+        return [super(MultipartFeature, self).unserialize(e) for e in data.split(self.SEPARATOR)]
+
+    def set(self, l):
+        if l in (self.dummy_value, self.default_value): return super().set(l)
+        for line in l:
+            if line == self.TERMINATOR:
+                super().set(self.from_list(self._buffer)) # cause self.on_change()
+                self._buffer.clear()
+            else: self._buffer.append(line)
+
+
