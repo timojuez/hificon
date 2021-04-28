@@ -272,7 +272,7 @@ class LooseBoolFeature(BoolFeature):
 
 
 
-class MultipartFeature(features.MultipartFeature, DenonFeature, features.Feature): pass
+class MultipartFeature(features.MultipartFeatureMixin, DenonFeature, features.Feature): pass
 
 
 ######### Features implementation (see Denon CLI protocol)
@@ -541,7 +541,7 @@ class QuickSelect(_QuickSelect):
 
 
 @Denon.add_feature
-class QuickSelectStore(features.ClientToServerFeature, _QuickSelect):
+class QuickSelectStore(features.ClientToServerFeatureMixin, _QuickSelect):
     name = "Quick Select (save)"
     
     # for server:

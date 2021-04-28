@@ -46,14 +46,14 @@ class AbstractAmp(AbstractScheme):
 class TelnetAmp(AbstractAmp, TelnetScheme): pass
 
 @AbstractAmp.add_feature
-class Power(features.Constant, features.BoolFeature): pass
+class Power(features.ConstantValueMixin, features.BoolFeature): pass
 
 @AbstractAmp.add_feature
-class Source(features.Constant, features.SelectFeature): pass
+class Source(features.ConstantValueMixin, features.SelectFeature): pass
 
 @AbstractAmp.add_feature
-class Volume(features.Constant, features.DecimalFeature): pass
+class Volume(features.ConstantValueMixin, features.DecimalFeature): pass
 
 @AbstractAmp.add_feature
-class Muted(features.Constant, features.BoolFeature): pass
+class Muted(features.ConstantValueMixin, features.BoolFeature): pass
 

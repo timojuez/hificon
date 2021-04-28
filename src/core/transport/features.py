@@ -322,7 +322,7 @@ class DecimalFeature(NumericFeature):
         return super().send((Decimal(value) if isinstance(value, int) else value), force)
 
 
-class PresetValue:
+class PresetValueMixin:
     """ Inherit if feature value shall have a preset value. Set value in inherited class. """
     value = None
 
@@ -332,13 +332,13 @@ class PresetValue:
     def unset(self): self._val = self.value
 
 
-class Constant(PresetValue):
+class ConstantValueMixin(PresetValueMixin):
     """ Inerhit if feature value may not change """
     def matches(self,*args,**xargs): return False
     def set(self,*args,**xargs): pass
 
 
-class ClientToServerFeature:
+class ClientToServerFeatureMixin:
     """ Inheriting features are write only on client and read only on server """
     call = None
 
@@ -359,7 +359,7 @@ class ClientToServerFeature:
     def resend(self): isinstance(self.target, ClientType) and super().resend()
 
 
-class MultipartFeature:
+class MultipartFeatureMixin:
     """ This mixin allows you to send and receive a value in multiple parts. The parts are a
     list. Implement the conversion of the value to and from a list in to_parts() and from_parts(). 
     In Telnet, parts could be rows. """
