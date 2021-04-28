@@ -7,6 +7,7 @@ from threading import Timer
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
 from ..core import config, features
+from ..core.transport.types import ClientType, ServerType
 
 
 ZONES = 4
@@ -60,15 +61,23 @@ SPEAKERS_2 = [
 ]
 
 SPEAKER_PAIRS = [
-    ("FRO", "front", "front"),
-    ("SUA", "surround", "surround"),
-    ("CEN", "center", "center"),
-    ("SBK", "surround_back", "surround back"),
-    ("FRH", "front_height", "front height"),
-    ("TFR", "top_front", "top front"),
-    ("TPM", "top_middle", "top middle"),
-    ("FRD", "front_atmos", "front atmos"),
-    ("SUD", "surround_atmos", "surround atmos"),
+    ("FRO", "front", "Front"),
+    ("SUA", "surround", "Surround"),
+    ("CEN", "center", "Center"),
+    ("SBK", "surround_back", "Surround Back"),
+    ("FRH", "front_height", "Front Height"),
+    ("TFR", "top_front", "Top Front"),
+    ("TPM", "top_middle", "Top Middle"),
+    ("FRD", "front_atmos", "Front Atmos"),
+    ("SUD", "surround_atmos", "Surround Atmos"),
+]
+
+EQ_BOUNDS = ["63 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz"]
+
+EQ_OPTIONS = [
+    ("ALL", "all", "All Channels", [("ALL", "all", "(all ch.)")]),
+    ("LRS", "lr", "Left+Right", SPEAKER_PAIRS),
+    ("EAC", "channel", "Each Channel", SPEAKERS_2)
 ]
 
 SOURCES = [
@@ -1005,6 +1014,75 @@ for source_code, source_key, source_name in SOURCES:
             call = f"SS{input_code} ?"
             translation = {"OFF":"None", "FRO":"Front",
                 **{f"{input_value_code}{i}":f"{input_name} {i}" for i in range(7)}}
+
+
+class Equalizer: category = f"Equalizer"
+
+@Denon.add_feature
+class EqualizerSwitch(Equalizer, BoolFeature): function = "PSGEQ "
+
+@Denon.add_feature
+class EqualizerChannels(Equalizer, SelectFeature):
+    function = "SSGEQSPS "
+    translation = {cat_code: cat_name for cat_code, cat_key, cat_name, l in EQ_OPTIONS}
+
+for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
+    for code, sp_key, name in l:
+
+        @Denon.add_feature
+        class SpeakerEq(Equalizer, DenonFeature, features.Feature): #undocumented
+            name = f"Eq {name}"
+            type = dict
+            key = f"eq_{cat_key}_{sp_key}"
+            function = f"SSAEQ{cat_code}{code} "
+            call = f"SSAEQ{cat_code} ?"
+            dummy_value = {i:0 for i in range(9)}
+            
+            def serializeVal(self, d): return ":".join(["%d"%(v*10+500) for v in d.values()])
+
+            def unserializeVal(self, data):
+                return {i: Decimal(v)/10-50 for i, v in enumerate(data.split(":"))}
+
+            def set_value(self, key, val):
+                self.set({**self.get(), key:DecimalFeature._roundVolume(val)})
+
+            def send_value(self, key, val, *args, **xargs):
+                self.send({**self.get(), key:DecimalFeature._roundVolume(val)}, *args, **xargs)
+
+
+        for bound, bound_name in enumerate(EQ_BOUNDS):
+
+            @Denon.add_feature
+            class Bound(Equalizer, DecimalFeature): #undocumented
+                name = f"Eq {name} {bound_name}"
+                key = f"eq_{cat_key}_{sp_key}_bound{bound}"
+                min = -20
+                max = +6
+                _isset = False
+                
+                def __init__(self, *args, cat_key=cat_key, sp_key=sp_key, **xargs):
+                    super().__init__(*args, **xargs)
+                    self._channels = self.target.features.equalizer_channels
+                    self._channels.bind(on_change = self.update)
+                    self._speaker_eq = self.target.features[f"eq_{cat_key}_{sp_key}"]
+                    self._speaker_eq.bind(on_change = self.update)
+                
+                def matches(self, *args): return False
+                
+                def update(self, val, *args, cat_name=cat_name, bound=bound):
+                    if isinstance(self.target, ServerType): return
+                    isset = self._channels.isset() and self._channels.get() == cat_name \
+                        and self._speaker_eq.isset()
+                    super().set(self._speaker_eq.get()[bound]) if isset else self.unset()
+                
+                def set(self, value, bound=bound): self._speaker_eq.set_value(bound, self.type(value))
+
+                def send(self, value, *args, bound=bound, **xargs):
+                    self._speaker_eq.send_value(bound, self.type(value))
+                
+                def async_poll(self, *args, **xargs):
+                    self._channels.async_poll(*args, **xargs)
+                    self._speaker_eq.async_poll(*args, **xargs)
 
 
 @Denon.add_feature
