@@ -379,12 +379,12 @@ class MultipartFeatureMixin:
         raise NotImplementedError()
 
     def serialize(self, value):
-        return self.SEPARATOR.join([super(MultipartFeature, self).serialize(e)
+        return self.SEPARATOR.join([super(MultipartFeatureMixin, self).serialize(e)
             for e in [*self.to_parts(value), self.TERMINATOR]])
 
     def unserialize(self, data):
         # will return one element on telnet and at least one on plain_emulator
-        return [super(MultipartFeature, self).unserialize(e) for e in data.split(self.SEPARATOR)]
+        return [super(MultipartFeatureMixin, self).unserialize(e) for e in data.split(self.SEPARATOR)]
 
     def set(self, l):
         if l in (self.dummy_value, self.default_value): return super().set(l)
