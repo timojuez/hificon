@@ -266,9 +266,9 @@ class LooseBoolFeature(BoolFeature):
     def matches(self,data):
         return super().matches(data) and isinstance(self.unserialize(data), bool)
 
-    def on_change(self, old, new):
-        super().on_change(old, new)
-        if new == True: self.target.send(self.call) # make target send the nonbool value TODO: only once
+    def on_change(self, val):
+        super().on_change(val)
+        if val == True: self.target.send(self.call) # make target send the nonbool value TODO: only once
 
 
 
@@ -303,8 +303,8 @@ class VolumeLimit(SelectFeature): #undocumented
     function="SSVCTZMALIM "
     call = "SSVCTZMA ?"
     translation = {"OFF":"Off", "060":"60", "070":"70", "080":"80"}
-    def on_change(self, old, new):
-        super().on_change(old, new)
+    def on_change(self, val):
+        super().on_change(val)
         self.target.features.maxvol.async_poll(force=True)
 
 class _SpeakerConfig(SelectFeature):
@@ -400,7 +400,7 @@ class Source(SelectFeature):
             self.translation.update(source_names)
             new = self.unserialize(serialized)
             #self.consume(serialized) # might cause deadlock
-            self.on_change(old, new) # cause listeners to update from self.translation
+            self.on_change(new) # cause listeners to update from self.translation
         else:
             self.translation.update(source_names)
         
@@ -483,8 +483,8 @@ class SoundMode(SelectFeature): #undocumented
     def serialize(self, value):
         return self.translation_inv[value] if isinstance(self.target, ClientType) else super().serialize(value)
 
-    def on_change(self, old, new):
-        super().on_change(old,new)
+    def on_change(self, val):
+        super().on_change(val)
         self.target.features.sound_mode_setting.async_poll(force=True)
         self.target.features.sound_mode_settings.async_poll(force=True)
 
@@ -516,7 +516,7 @@ class SoundModeSetting(SelectFeature):
     def on_sound_modes_change(self, sound_modes):
         self.translation = sound_modes
         if self.isset():
-            self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
+            self.on_change(self.get()) # cause listeners to update from self.translation
         
     def matches(self, data): return super().matches(data) and data[len(self.function)+2] == "1"
     def serialize_val(self, val): return "%s1%s"%(super().serialize_val(val)[:2], val)
@@ -540,8 +540,8 @@ class TechnicalSoundMode(SelectFeature):
         if val in sound_mode.options: sound_mode.set(val)
 
     def matches(self, data): return super().matches(data) and not data.startswith("MSQUICK")
-    def on_change(self, old, new):
-        super().on_change(old,new)
+    def on_change(self, val):
+        super().on_change(val)
         self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)
         #self.target.features.sound_mode.async_poll(force=True)
 
@@ -567,9 +567,9 @@ class QuickSelectStore(features.ClientToServerFeatureMixin, _QuickSelect):
     def serialize_val(self, value): return f"{value} MEMORY"
     def unserialize_val(self, data): return data.split(" ",1)[0]
     
-    def on_change(self, old, new):
-        super().on_change(old, new)
-        self.target.features.quick_select.set(new)
+    def on_change(self, val):
+        super().on_change(val)
+        self.target.features.quick_select.set(val)
         
     def resend(self):
         self.target.schedule(self.target.features.quick_select.resend, requires=("quick_select",))
@@ -869,9 +869,9 @@ class InputSignal(BoolFeature): #undocumented
         
     def matches(self, data): return super().matches(data) and isinstance(self.unserialize(data), bool)
 
-    def on_change(self, old, new):
-        super().on_change(old, new)
-        self.target.on_start_playing() if new == True else self.target.on_stop_playing()
+    def on_change(self, val):
+        super().on_change(val)
+        self.target.on_start_playing() if val == True else self.target.on_stop_playing()
 
     def on_stop_playing(self):
         # undo target.on_stop_playing() if self.get() == True
@@ -1006,8 +1006,8 @@ class PowerOnLevel(SelectFeature):
     function = "SSVCTZMAPON "
     call = "SSVCTZMA ?"
     translation = {"MUT":"Muted", "LAS":"Unchanged"}
-    def on_change(self, val, prev):
-        super().on_change(val, prev)
+    def on_change(self, val):
+        super().on_change(val)
         if not self.target.features.power_on_level_numeric.isset():
             self.target.features.power_on_level_numeric.set(0)
 

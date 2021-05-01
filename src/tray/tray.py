@@ -132,9 +132,9 @@ class NotificationMixin(object):
         self.show_notification(config.volume)
         super().on_key_press(*args,**xargs)
 
-    def show_notification_on_feature_change(self, key, value, prev): # bound to target
+    def show_notification_on_feature_change(self, key, value): # bound to target
         if key in self._notifications: self._notifications[key].update()
-        if prev is not None: self.show_notification(key)
+        if self.target.features[key]._prev_val is not None: self.show_notification(key)
 
     def on_scroll_up(self, *args, **xargs):
         self.show_notification(config.volume)

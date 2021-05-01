@@ -131,6 +131,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         Instead, get the value from the function parameter.
     """
     _val = None
+    _prev_val = None
     _block_on_send = None
     _block_on_send_resetter = None
 
@@ -212,13 +213,13 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     
     def _set(self, value):
         assert(value is not None)
-        old = self._val
+        self._prev_val = self._val
         self._val = value
         if not self.isset(): return
-        if self._val != old: self.on_change(old, self._val)
-        if old == None: self.on_set()
+        if self._val != self._prev_val: self.on_change(self._val)
+        if self._prev_val == None: self.on_set()
         self.on_processed(value)
-        return old, self._val
+        return self._prev_val, self._val
 
     def bind(self, on_change=None, on_set=None, on_unset=None, on_processed=None):
         """ Register an observer with bind() and call the callback as soon as possible
@@ -230,14 +231,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
                 if on_processed: on_processed(self.get())
             elif on_unset: on_unset()
             
-            if on_change: super().bind(on_change = lambda old, new: on_change(new))
+            if on_change: super().bind(on_change = on_change)
             if on_set: super().bind(on_set = on_set)
             if on_unset: super().bind(on_unset = on_unset)
             if on_processed: super().bind(on_processed = on_processed)
             
-    def on_change(self, old, new):
+    def on_change(self, val):
         """ This event is being called when self.options or the return value of self.get() changes """
-        self.target.on_feature_change(self.key, new, old)
+        self.target.on_feature_change(self.key, val)
     
     def on_set(self):
         """ Event is fired on initial set """

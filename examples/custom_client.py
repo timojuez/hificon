@@ -7,13 +7,9 @@ from hificon import Target
 PROMPT = "Enter new volume: "
 
 
-def on_feature_change(key, value, prev_value):
+def on_feature_change(key, value):
     name = target.features[key].name
-
-    if prev_value is None: # initial call
-        print("Initially setting %s"%name)
-    else:
-        print("Changed %s to %s."%(name, value))
+    print("Changed %s to %s."%(name, value))
     print(PROMPT)
     
 

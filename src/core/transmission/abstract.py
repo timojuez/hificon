@@ -101,7 +101,7 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
         else: return features.FunctionCall(self, func, args, kwargs, features_)
 
     @log_call
-    def on_feature_change(self, key, value, previous_val):
+    def on_feature_change(self, key, value):
         """ attribute on server has changed """
         if key and self.verbose > 2:
             print("[%s] $%s = %s"%(self.__class__.__name__,key,repr(value)))
@@ -128,7 +128,7 @@ class Fallback(features.SelectFeature):
         self._val = data
         if self.target.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        if config.getboolean("Target","fallback_feature"): self.on_change(None, data)
+        if config.getboolean("Target","fallback_feature"): self.on_change(data)
 
 
 @SchemeBase.add_feature
