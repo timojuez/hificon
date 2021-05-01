@@ -126,6 +126,9 @@ class _MetaFeature(type):
 class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
     A target attribute for high level communication
+    
+    Warning: Calling get() in the event callbacks can cause deadlocks.
+        Instead, get the value from the function parameter.
     """
     _val = None
     _block_on_send = None
