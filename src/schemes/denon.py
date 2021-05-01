@@ -272,15 +272,17 @@ class LooseBoolFeature(BoolFeature):
 
 
 
-class MultipartFeature(features.MultipartFeatureMixin, DenonFeature, features.Feature):
+class MultipartFeatureMixin(features.MultipartFeatureMixin, DenonFeature, features.Feature):
     TERMINATOR = "END"
     def to_parts(self, val): raise NotImplementedError()
     def from_parts(self, l): raise NotImplementedError()
     def is_complete(self, l): return l[-1] == f"{self.function}{self.TERMINATOR}"
     def serialize(self, value):
-        return [super(MultipartFeature, self).serialize(e) for e in [*self.to_parts(value), self.TERMINATOR]]
+        return [super(MultipartFeatureMixin, self).serialize(e)
+            for e in [*self.to_parts(value), self.TERMINATOR]]
     def unserialize(self, l):
-        return self.from_parts([super(MultipartFeature, self).unserialize(e) for e in l[:-1]])
+        return self.from_parts([super(MultipartFeatureMixin, self).unserialize(e)
+            for e in l[:-1]])
 
 
 ######### Features implementation (see Denon CLI protocol)
@@ -373,7 +375,7 @@ class Muted(BoolFeature):
     function = "MU"
 
 @Denon.add_feature
-class SourceNames(MultipartFeature): #undocumented
+class SourceNames(MultipartFeatureMixin): #undocumented
     """
     SSFUN ?
     SSFUNSAT/CBL CBL/SAT
@@ -498,7 +500,7 @@ class SoundMode(SelectFeature): #undocumented
 
 
 @Denon.add_feature
-class SoundModeSettings(MultipartFeature): # according to current sound mode #undocumented
+class SoundModeSettings(MultipartFeatureMixin): # according to current sound mode #undocumented
     category = "General"
     type = dict
     function = 'OPSML '
