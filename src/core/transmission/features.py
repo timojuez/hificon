@@ -159,7 +159,9 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not force and not isinstance(value, self.type):
             print("WARNING: Value %s is not of type %s."%(repr(value),self.type.__name__), file=sys.stderr)
         serialized = self.serialize(self.type(value))
-        if not self._blocked(serialized): self.target.send(serialized)
+        if not self._blocked(serialized): self._send(serialized)
+
+    def _send(self, serialized): self.target.send(serialized)
 
     @classmethod
     def _blocked(cls, serialized):
@@ -365,37 +367,24 @@ class ClientToServerFeatureMixin:
 
 class MultipartFeatureMixin:
     """ This mixin allows you to send and receive a value in multiple parts. The parts are a
-    list. Implement the conversion of the value to and from a list in to_parts() and from_parts(). 
-    In Telnet, parts could be rows. """
-    SEPARATOR = "\r"
-    TERMINATOR = "END"
+    list. In Telnet, parts could be rows.
+    The function serialize() must return a list and unserialize() will be given a list.
+    is_complete(l) must return True if l contains all parts """
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self._buffer = []
 
-    def to_parts(self, value):
-        """ value is of type self.type. Returns a list of string """
+    def is_complete(self, l):
+        """ @l list, returns True if l contains all parts and can be unserialized """
         raise NotImplementedError()
 
-    def from_parts(self, l):
-        """ l is of type list. Returns object of type self.type """
-        raise NotImplementedError()
+    def _send(self, serialized):
+        for e in serialized: super()._send(e)
 
-    def serialize(self, value):
-        return self.SEPARATOR.join([super(MultipartFeatureMixin, self).serialize(e)
-            for e in [*self.to_parts(value), self.TERMINATOR]])
-
-    def unserialize(self, data):
-        # will return one element on telnet and at least one on plain_emulator
-        return [super(MultipartFeatureMixin, self).unserialize(e) for e in data.split(self.SEPARATOR)]
-
-    def set(self, l):
-        if l in (self.dummy_value, self.default_value): return super().set(l)
-        for line in l:
-            if line == self.TERMINATOR:
-                super().set(self.from_parts(self._buffer)) # cause self.on_change()
-                self._buffer.clear()
-            else: self._buffer.append(line)
-
+    def consume(self, data):
+        self._buffer.append(data)
+        if self.is_complete(self._buffer):
+            super().consume(self._buffer.copy())
+            self._buffer.clear()
 

@@ -272,7 +272,15 @@ class LooseBoolFeature(BoolFeature):
 
 
 
-class MultipartFeature(features.MultipartFeatureMixin, DenonFeature, features.Feature): pass
+class MultipartFeature(features.MultipartFeatureMixin, DenonFeature, features.Feature):
+    TERMINATOR = "END"
+    def to_parts(self, val): raise NotImplementedError()
+    def from_parts(self, l): raise NotImplementedError()
+    def is_complete(self, l): return l[-1] == f"{self.function}{self.TERMINATOR}"
+    def serialize(self, value):
+        return [super(MultipartFeature, self).serialize(e) for e in [*self.to_parts(value), self.TERMINATOR]]
+    def unserialize(self, l):
+        return self.from_parts([super(MultipartFeature, self).unserialize(e) for e in l[:-1]])
 
 
 ######### Features implementation (see Denon CLI protocol)
