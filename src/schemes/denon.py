@@ -393,16 +393,16 @@ class Source(SelectFeature):
         self.translation = self.translation.copy()
         self.target.features.source_names.bind(self.on_source_names_change)
 
-    def on_source_names_change(self, *args, **xargs):
+    def on_source_names_change(self, source_names, *args, **xargs):
         if self.isset():
             old = self._val
             serialized = self.serialize(old)
-            self.translation.update(self.target.source_names)
+            self.translation.update(source_names)
             new = self.unserialize(serialized)
             #self.consume(serialized) # might cause deadlock
             self.on_change(old, new) # cause listeners to update from self.translation
         else:
-            self.translation.update(self.target.source_names)
+            self.translation.update(source_names)
         
     def consume(self, data):
         self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
@@ -513,8 +513,8 @@ class SoundModeSetting(SelectFeature):
         super().__init__(*args, **xargs)
         self.target.features.sound_mode_settings.bind(self.on_sound_modes_change)
 
-    def on_sound_modes_change(self, *args, **xargs):
-        self.translation = self.target.sound_mode_settings
+    def on_sound_modes_change(self, sound_modes, *args, **xargs):
+        self.translation = sound_modes
         if self.isset():
             self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
         
