@@ -393,7 +393,7 @@ class Source(SelectFeature):
         self.translation = self.translation.copy()
         self.target.features.source_names.bind(self.on_source_names_change)
 
-    def on_source_names_change(self, source_names, *args, **xargs):
+    def on_source_names_change(self, source_names):
         if self.isset():
             old = self._val
             serialized = self.serialize(old)
@@ -513,7 +513,7 @@ class SoundModeSetting(SelectFeature):
         super().__init__(*args, **xargs)
         self.target.features.sound_mode_settings.bind(self.on_sound_modes_change)
 
-    def on_sound_modes_change(self, sound_modes, *args, **xargs):
+    def on_sound_modes_change(self, sound_modes):
         self.translation = sound_modes
         if self.isset():
             self.on_change(self.get(), self.get()) # cause listeners to update from self.translation
@@ -535,7 +535,7 @@ class TechnicalSoundMode(SelectFeature):
         super().__init__(*args, **xargs)
         if isinstance(self.target, ServerType): self.bind(on_change=self.update_sound_mode)
 
-    def update_sound_mode(self, val, *_):
+    def update_sound_mode(self, val):
         sound_mode = self.target.features.sound_mode
         if val in sound_mode.options: sound_mode.set(val)
 
@@ -1086,7 +1086,7 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
                 
                 def matches(self, *args): return False
                 
-                def update(self, val, *args, cat_name=cat_name, bound=bound):
+                def update(self, val, cat_name=cat_name, bound=bound):
                     if isinstance(self.target, ServerType): return
                     isset = self._channels.isset() and self._channels.get() == cat_name \
                         and self._speaker_eq.isset()
