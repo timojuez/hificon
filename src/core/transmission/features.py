@@ -221,7 +221,6 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self._val != self._prev_val: self.on_change(self._val)
         if self._prev_val == None: self.on_set()
         self.on_processed(value)
-        return self._prev_val, self._val
 
     def bind(self, on_change=None, on_set=None, on_unset=None, on_processed=None):
         """ Register an observer with bind() and call the callback as soon as possible
