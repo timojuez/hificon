@@ -1079,12 +1079,11 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
         for bound, bound_name in enumerate(EQ_BOUNDS):
 
             @Denon.add_feature
-            class Bound(Equalizer, DecimalFeature): #undocumented
+            class Bound(Equalizer, features.OfflineFeatureMixin, DecimalFeature): #undocumented
                 name = f"Eq {name} {bound_name}"
                 key = f"eq_{cat_key}_{sp_key}_bound{bound}"
                 min = -20
                 max = +6
-                _isset = False
                 
                 def __init__(self, *args, cat_key=cat_key, sp_key=sp_key, **xargs):
                     super().__init__(*args, **xargs)
@@ -1092,8 +1091,6 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
                     self._channels.bind(on_change = self.update)
                     self._speaker_eq = self.target.features[f"eq_{cat_key}_{sp_key}"]
                     self._speaker_eq.bind(on_change = self.update)
-                
-                def matches(self, *args): return False
                 
                 def update(self, val, cat_name=cat_name, bound=bound):
                     if isinstance(self.target, ServerType): return
