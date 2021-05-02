@@ -2,6 +2,7 @@
 Dry software run that emulates a target of another scheme
 """
 
+from threading import Thread
 from .. import get_scheme
 from ..core.transmission import SchemeType, TelnetScheme
 from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer
@@ -26,9 +27,14 @@ class PlainDummyClientMixin(DummyClientMixin):
     def __init__(self, server, *args, **xargs):
         super().__init__(*args, **xargs)
         self._server = server
-        server.bind(send = lambda data: self.on_receive_raw_data(data))
-        self.bind(send = lambda data: server.on_receive_raw_data(data))
+        server.bind(send = self._newthread(self.on_receive_raw_data))
+        self.bind(send = self._newthread(server.on_receive_raw_data))
         self.uri = f"emulate:{self.scheme}"
+
+    def _newthread(self, func):
+        # send() shall not block for avoiding deadlocks
+        return lambda *args, **kwargs: \
+            Thread(target=func, args=args, kwargs=kwargs, name="transmission", daemon=True).start()
 
     def connect(self):
         super().connect()
