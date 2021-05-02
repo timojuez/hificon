@@ -1,6 +1,6 @@
 #!/usr/bin/env hifish
 
-def on_feature_change(key, value, prev):
+def on_feature_change(key, value):
     print("\nChanged %s to %s."%(key,value))
 
 def volume_prompt():
