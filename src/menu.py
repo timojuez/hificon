@@ -71,8 +71,8 @@ class TabPanel(ScrollView):
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[f.key] = row
-        f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), -1))
-        f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), -1))
+        f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), 0))
+        f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), 0))
         self.add_filtered(f.key, row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
@@ -347,8 +347,8 @@ class MenuScreen(_MenuScreen):
         else: self.connecting_tab.activate()
 
     def _visible_when_connected(self, e):
-        self.target.bind(on_connect = lambda:show_widget(e))
-        self.target.bind(on_disconnected = lambda:hide_widget(e))
+        self.target.bind(on_connect = lambda:Clock.schedule_once(lambda *_: show_widget(e), 0))
+        self.target.bind(on_disconnected = lambda:Clock.schedule_once(lambda *_: hide_widget(e), 0))
         if not self.target.connected: hide_widget(e)
         self.ids.headers.add_widget(e)
 
