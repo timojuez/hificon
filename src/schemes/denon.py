@@ -404,15 +404,14 @@ class Source(SelectFeature):
         self.target.features.source_names.bind(self.on_source_names_change)
 
     def on_source_names_change(self, source_names):
-        if self.isset():
-            old = self._val
-            serialized = self.serialize(old)
-            self.translation.update(source_names)
-            new = self.unserialize(serialized)
-            #self.consume(serialized) # might cause deadlock
-            self.on_change(new) # cause listeners to update from self.translation
-        else:
-            self.translation.update(source_names)
+        with self._lock:
+            if self.isset():
+                old = self.serialize(self._val)
+                self.translation.update(source_names)
+                self._val = self.unserialize(old)
+                self.on_change(self._val) # cause listeners to update from self.translation
+            else:
+                self.translation.update(source_names)
         
     def consume(self, data):
         self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
