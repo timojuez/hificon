@@ -44,10 +44,6 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
             "optional features, use Target.schedule.")
             %(repr(self.__class__.__name__),repr(name)))
 
-    def _setfattr(self, key, value):
-        """ This is being called by setattr(self, f, value) if getattr(self, f) is a Feature type """
-        raise NotImplementedError()
-        
     def __enter__(self): self.enter(); return self
 
     def __exit__(self, type, value, tb): self.exit()
@@ -77,16 +73,24 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
                     "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
             setattr(cls, Feature.key, property(
                 lambda self:self.features[Feature.key].get(),
-                lambda self,val:self._setfattr(Feature.key, val)
+                lambda self,val:self.set_feature_value(self.features[Feature.key], val)
             ))
             cls.features.pop(Feature.key, None)
             cls.features[Feature.key] = Feature
             return Feature
         return add(Feature) if Feature else add
     
-    def poll_feature(self, f, *args, **xargs): raise NotImplementedError()
+    def poll_feature(self, f, *args, **xargs):
+        """ Called when a feature value is being requested """
+        raise NotImplementedError()
 
-    def set_feature(self, f, value): raise NotImplementedError()
+    def on_receive_feature_value(self, f, value):
+        """ Called when a value is being received from the other side """
+        raise NotImplementedError()
+
+    def set_feature_value(self, f, value):
+        """ Set a value through the framework. Usually, on a client this will call f.remote_set() """
+        raise NotImplementedError()
 
     def schedule(self, func, args=tuple(), kwargs={}, requires=tuple()):
         """ Use this to call methods that use Target.features.
@@ -146,11 +150,11 @@ class AbstractServer(ServerType, SchemeBase):
     def enter(self): self.connected = True
     def exit(self): self.connected = False
     
-    def _setfattr(self, key, val): return self.features[key].set(val)
+    def set_feature_value(self, f, value): return f.set(value)
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()
 
-    def set_feature(self, f, value): f.set_on_server(value)
+    def on_receive_feature_value(self, f, value): f.set_on_server(value)
 
     def send(self, data): pass
 
@@ -196,7 +200,9 @@ class _FeaturesMixin:
         self._polled.append(f.call)
         f.poll_on_client()
 
-    def set_feature(self, f, value): f.set(value)
+    def on_receive_feature_value(self, f, value): f.set(value)
+
+    def set_feature_value(self, f, val): return f.remote_set(val)
 
 
 class _AbstractClient(ClientType, SchemeBase):
@@ -217,8 +223,6 @@ class _AbstractClient(ClientType, SchemeBase):
         self._stoploop = Event()
         self._connectOnEnter = connect
     
-    def _setfattr(self, key, val): return self.features[key].remote_set(val)
-
     def enter(self):
         if self._connectOnEnter: self.connect()
         self._stoploop.clear()
@@ -297,5 +301,5 @@ class DummyServerMixin:
     """ Server class that fills feature values with some values """
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_dummy()
-    def set_feature(self, f, value): f.set(value)
+    def on_receive_feature_value(self, f, value): f.set(value)
 

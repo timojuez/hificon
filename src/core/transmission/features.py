@@ -208,7 +208,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.__class__._block_on_remote_set = None # for power.consume("PWON")
         try: d = self.unserialize(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
-        else: return self.target.set_feature(self, d)
+        else: return self.target.on_receive_feature_value(self, d)
         
     def set(self, value):
         with self._lock: return self._set(value)
