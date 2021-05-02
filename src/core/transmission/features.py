@@ -389,6 +389,8 @@ class MultipartFeatureMixin:
 
 
 class OfflineFeatureMixin:
+    """ Inherit if the value shall not ever be transmitted """
+
     def matches(self, data): return False
     def send(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
