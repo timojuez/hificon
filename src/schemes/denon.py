@@ -276,7 +276,7 @@ class MultipartFeatureMixin(features.MultipartFeatureMixin, DenonFeature, featur
     TERMINATOR = "END"
     def to_parts(self, val): raise NotImplementedError()
     def from_parts(self, l): raise NotImplementedError()
-    def is_complete(self, l): return l[-1] == f"{self.function}{self.TERMINATOR}"
+    def is_complete(self, l): return l[-1] == super().serialize(self.TERMINATOR)
     def serialize(self, value):
         return [super(MultipartFeatureMixin, self).serialize(e)
             for e in [*self.to_parts(value), self.TERMINATOR]]
