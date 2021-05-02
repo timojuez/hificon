@@ -387,3 +387,10 @@ class MultipartFeatureMixin:
             super().consume(self._buffer.copy())
             self._buffer.clear()
 
+
+class OfflineFeatureMixin:
+    def matches(self, data): return False
+    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def async_poll(self, *args, **xargs): pass
+    def resend(self, *args, **xargs): pass
+

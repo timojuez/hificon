@@ -115,13 +115,9 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
 
 
 @SchemeBase.add_feature
-class Fallback(features.SelectFeature):
+class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
     """ Matches always, if no other feature matched """
     
-    def matches(self, data): return False
-    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
-    def resend(self, *args, **xargs): pass
-    def async_poll(self, *args, **xargs): pass
     def isset(self): return super().isset() and config.getboolean("Target","fallback_feature")
 
     def consume(self, data):
@@ -132,15 +128,11 @@ class Fallback(features.SelectFeature):
 
 
 @SchemeBase.add_feature
-class Name(features.SelectFeature):
+class Name(features.OfflineFeatureMixin, features.SelectFeature):
     
     def get(self): return self.target.uri
-    def matches(self, data): return False
-    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
-    def async_poll(self, *args, **xargs): pass
     def isset(self): return True
     def unset(self): pass
-    def resend(self, *args, **xargs): pass
 
 
 class AbstractServer(ServerType, SchemeBase):
