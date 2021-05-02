@@ -292,7 +292,7 @@ class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
 
-    def send(self, value, **xargs): super().send(min(max(self.min,value),self.max), **xargs)
+    def remote_set(self, value, **xargs): super().remote_set(min(max(self.min,value),self.max), **xargs)
 
     def matches(self, data): return data.startswith(self.function) and (
         data[len(self.function):].isnumeric() or data[len(self.function):] in ["UP", "DOWN"])
@@ -305,7 +305,7 @@ class Maxvol(DecimalFeature): #undocumented
     function="MVMAX "
     call="MV?"
     default_value = 98
-    def send(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
+    def remote_set(self, val, **xargs): raise RuntimeError("Cannot set MVMAX! Set '%s' instead."%VolumeLimit.name)
 
 @Denon.add_feature
 class VolumeLimit(SelectFeature): #undocumented
@@ -388,7 +388,7 @@ class SourceNames(MultipartFeatureMixin): #undocumented
     function = "SSFUN"
     call = "SSFUN ?"
     default_value = {code: name for code, key, name in SOURCES}
-    def send(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
+    def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def to_parts(self, d): return [" ".join(e) for e in d.items()]
     def from_parts(self, l): return dict([line.split(" ",1) for line in l])
 
@@ -416,15 +416,15 @@ class Source(SelectFeature):
     def consume(self, data):
         self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
     
-    def send(self, *args, **xargs):
-        self.target.schedule(lambda:super(Source, self).send(*args, **xargs), requires=("source_names",))
+    def remote_set(self, *args, **xargs):
+        self.target.schedule(lambda:super(Source, self).remote_set(*args, **xargs), requires=("source_names",))
 
 
 @Denon.add_feature(overwrite=True)
 class Name(SelectFeature): #undocumented
     default_value = "Denon AVR"
     function = "NSFRN "
-    def send(self, *args, **xargs): raise RuntimeError("Cannot set value!")
+    def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
     def poll_on_dummy(self): self.set("Dummy X7800H")
 
 for code, key, name in SPEAKERS:
@@ -970,8 +970,8 @@ for code, key, name in SOURCES:
         max = 12
         call = "SSSLV ?"
         function = f"SSSLV{code} "
-        def send(self, *args, **xargs):
-            super().send(*args, **xargs)
+        def remote_set(self, *args, **xargs):
+            super().remote_set(*args, **xargs)
             self.async_poll(force=True) #Denon workaround: missing echo
 
 
@@ -1072,8 +1072,8 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
             def set_value(self, key, val):
                 self.set({**self.get(), key:DecimalFeature._roundVolume(val)})
 
-            def send_value(self, key, val, *args, **xargs):
-                self.send({**self.get(), key:DecimalFeature._roundVolume(val)}, *args, **xargs)
+            def remote_set_value(self, key, val, *args, **xargs):
+                self.remote_set({**self.get(), key:DecimalFeature._roundVolume(val)}, *args, **xargs)
 
 
         for bound, bound_name in enumerate(EQ_BOUNDS):
@@ -1100,8 +1100,8 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
                 
                 def set(self, value, bound=bound): self._speaker_eq.set_value(bound, self.type(value))
 
-                def send(self, value, *args, bound=bound, **xargs):
-                    self._speaker_eq.send_value(bound, self.type(value))
+                def remote_set(self, value, *args, bound=bound, **xargs):
+                    self._speaker_eq.remote_set_value(bound, self.type(value))
                 
                 def async_poll(self, *args, **xargs):
                     self._channels.async_poll(*args, **xargs)

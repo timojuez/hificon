@@ -46,7 +46,8 @@ class AmpController(AutoPower, SoundMixin, TargetController):
 
     def _poweron(self):
         if getattr(self.target, config.power): return
-        if config["Amp"].get("source"): self.target.features[config.source].send(config.getlist("Amp","source")[0])
+        if config["Amp"].get("source"):
+            self.target.features[config.source].remote_set(config.getlist("Amp","source")[0])
         setattr(self.target, config.power, True)
 
     can_poweroff = property(

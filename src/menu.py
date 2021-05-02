@@ -147,7 +147,7 @@ class TabPanel(ScrollView):
     def bind_widget_to_feature(self, f, widget_getter, widget_setter):
         """ @f Feature object """
         on_value_change, on_widget_change = bind_widget_to_value(
-            f.get, f.send, widget_getter, widget_setter)
+            f.get, f.remote_set, widget_getter, widget_setter)
         f.bind(on_value_change)
         return on_widget_change
 

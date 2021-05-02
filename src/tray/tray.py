@@ -163,13 +163,13 @@ class TrayMixin(gui.Tray):
     def on_scroll_up(self, steps):
         volume = self.target.features[config.volume]
         try:
-            if volume.isset(): volume.send(volume.get()+self.scroll_delta*steps)
+            if volume.isset(): volume.remote_set(volume.get()+self.scroll_delta*steps)
         except ConnectionError: pass
 
     def on_scroll_down(self, steps):
         volume = self.target.features[config.volume]
         try:
-            if volume.isset(): volume.send(volume.get()-self.scroll_delta*steps)
+            if volume.isset(): volume.remote_set(volume.get()-self.scroll_delta*steps)
         except ConnectionError: pass
     
     def poweron(self, force=False):

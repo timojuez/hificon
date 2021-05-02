@@ -132,8 +132,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
     _val = None
     _prev_val = None
-    _block_on_send = None
-    _block_on_send_resetter = None
+    _block_on_remote_set = None
+    _block_on_remote_set_resetter = None
 
     def __init__(self, target):
         super().__init__()
@@ -153,7 +153,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not self.isset(): raise AttributeError(f"`{self.key}` not available. Use Target.schedule")
         else: return self._val
     
-    def send(self, value, force=False):
+    def remote_set(self, value, force=False):
         """ request update to @value on other side """
         assert(value is not None)
         if not force and not isinstance(value, self.type):
@@ -166,12 +166,12 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     @classmethod
     def _blocked(cls, serialized):
         """ prevent sending the same line many times """
-        if cls._block_on_send == serialized: return True
-        cls._block_on_send = serialized
-        try: cls._block_on_send_resetter.cancel()
+        if cls._block_on_remote_set == serialized: return True
+        cls._block_on_remote_set = serialized
+        try: cls._block_on_remote_set_resetter.cancel()
         except AttributeError: pass
-        cls._block_on_send_resetter = Timer(1, lambda: setattr(cls, "_block_on_send", None))
-        cls._block_on_send_resetter.start()
+        cls._block_on_remote_set_resetter = Timer(1, lambda: setattr(cls, "_block_on_remote_set", None))
+        cls._block_on_remote_set_resetter.start()
     
     def isset(self): return self._val != None
         
@@ -201,11 +201,11 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         with self._lock:
             if not self.isset(): self._set(self.default_value)
     
-    def resend(self): return AsyncFeature.send(self, self._val, force=True)
+    def resend(self): return AsyncFeature.remote_set(self, self._val, force=True)
     
     def consume(self, cmd):
         """ unserialize and apply @cmd to this object """
-        self.__class__._block_on_send = None # for power.consume("PWON")
+        self.__class__._block_on_remote_set = None # for power.consume("PWON")
         try: d = self.unserialize(cmd)
         except: print(traceback.format_exc(), file=sys.stderr)
         else: return self.target.set_feature(self, d)
@@ -306,11 +306,11 @@ class SelectFeature(Feature):
     options = []
     dummy_value = property(lambda self: self.options[0] if self.options else "?")
 
-    def send(self, value, force=False):
+    def remote_set(self, value, force=False):
         if not force and value not in self.options:
-            raise ValueError("Value must be one of %s or try target.features.%s.send(value, force=True)"
+            raise ValueError("Value must be one of %s or try target.features.%s.remote_set(value, force=True)"
                 %(self.options, self.key))
-        return super().send(value, force)
+        return super().remote_set(value, force)
     
 
 class BoolFeature(SelectFeature):
@@ -323,8 +323,8 @@ class DecimalFeature(NumericFeature):
     type=Decimal
     dummy_value = property(lambda self: Decimal(self.max+self.min)/2)
     
-    def send(self, value, force=False):
-        return super().send((Decimal(value) if isinstance(value, int) else value), force)
+    def remote_set(self, value, force=False):
+        return super().remote_set((Decimal(value) if isinstance(value, int) else value), force)
 
 
 class PresetValueMixin:
@@ -357,8 +357,8 @@ class ClientToServerFeatureMixin:
         return self.target.connected if isinstance(self.target, ClientType) else super().isset()
 
     # for server
-    def send(self, *args, **xargs):
-        if isinstance(self.target, ClientType): return super().send(*args, **xargs)
+    def remote_set(self, *args, **xargs):
+        if isinstance(self.target, ClientType): return super().remote_set(*args, **xargs)
         else: raise ValueError("This is a unidirectional feature")
 
     def resend(self): isinstance(self.target, ClientType) and super().resend()
@@ -392,7 +392,7 @@ class OfflineFeatureMixin:
     """ Inherit if the value shall not ever be transmitted """
 
     def matches(self, data): return False
-    def send(self, *args, **xargs): raise ValueError("Cannot set value!")
+    def remote_set(self, *args, **xargs): raise ValueError("Cannot set value!")
     def async_poll(self, *args, **xargs): pass
     def resend(self, *args, **xargs): pass
 

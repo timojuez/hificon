@@ -160,7 +160,7 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
     @gtk
     def show(self, f):
         self.on_value_change, self.on_widget_change = bind_widget_to_value(
-            f.get, f.send, self.scale.get_value,
+            f.get, f.remote_set, self.scale.get_value,
             lambda value: f==self._current_feature and self.set_value(value))
         self.title.set_text(f.name)
         self.adj.set_lower(f.min)
@@ -261,7 +261,7 @@ class MenuMixin:
         if not compact: return self._add_select_feature(f, compact)
         item = Gtk.CheckMenuItem(f.name)
         on_value_change, on_widget_change = bind_widget_to_value(
-            f.get, f.send, item.get_active, item.set_active)
+            f.get, f.remote_set, item.get_active, item.set_active)
         f.bind(gtk(on_value_change))
         item.connect("toggled", lambda event:on_widget_change())
         return item
@@ -295,7 +295,7 @@ class MenuMixin:
             def on_activate(item, o=o, active=active):
                 if item.get_active() != active:
                     item.set_active(active)
-                    f.send(o)
+                    f.remote_set(o)
             item.connect("activate", on_activate)
             submenu.append(item)
         submenu.show_all()

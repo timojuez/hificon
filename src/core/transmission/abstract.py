@@ -217,7 +217,7 @@ class _AbstractClient(ClientType, SchemeBase):
         self._stoploop = Event()
         self._connectOnEnter = connect
     
-    def _setfattr(self, key, val): return self.features[key].send(val)
+    def _setfattr(self, key, val): return self.features[key].remote_set(val)
 
     def enter(self):
         if self._connectOnEnter: self.connect()
