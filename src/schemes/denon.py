@@ -552,7 +552,7 @@ class TechnicalSoundMode(SelectFeature):
     def on_change(self, val):
         super().on_change(val)
         self.target.features["%s_volume"%SPEAKERS[0][1]].async_poll(force=True)
-        #self.target.features.sound_mode.async_poll(force=True)
+        self.target.features.sound_mode_setting.async_poll(force=True)
 
 
 class _QuickSelect(SelectFeature):
