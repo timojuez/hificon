@@ -337,9 +337,9 @@ class MenuScreen(_MenuScreen):
             e = self._newTab(cat)
             tabs[cat] = e
             hide_widget(e)
-            self.target.bind(on_disconnected = lambda e=e:hide_widget(e))
+            self.target.bind(on_disconnected = lambda e=e:Clock.schedule_once(lambda *_:hide_widget(e), 0))
         for key, f in self.target.features.items():
-            f.bind(on_set = lambda cat=f.category: show_widget(tabs[cat]))
+            f.bind(on_set = lambda cat=f.category: Clock.schedule_once(lambda *_:show_widget(tabs[cat]), 0))
         super().build()
         self.target.bind(on_connect=lambda:Clock.schedule_once(lambda *_:self.pinned_tab.activate(), 0))
         self.target.bind(on_disconnected=lambda:Clock.schedule_once(lambda *_:self.connecting_tab.activate(), 0))
