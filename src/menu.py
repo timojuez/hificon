@@ -45,7 +45,7 @@ class TabPanel(ScrollView):
         chunk, self._features_stack = self._features_stack[:chunksize], self._features_stack[chunksize:]
         for f in chunk:
             print("adding %s"%f.name)
-            self.addFeature(f)
+            Clock.schedule_once(lambda *_, f=f: self.addFeature(f), 0)
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, f):
@@ -71,6 +71,7 @@ class TabPanel(ScrollView):
         row.ids.checkbox.bind(active=on_checkbox)
 
         self.features[f.key] = row
+        hide_widget(row)
         f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), 0))
         f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), 0))
         self.add_filtered(f.key, row)
