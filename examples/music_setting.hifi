@@ -1,15 +1,28 @@
 #!/usr/bin/env hifish
 $power = True
-$front_speaker_config = 'Large'
-$subwoofer_mode = 'LFE + Main'
-$display = 'Bright'
+#$display = 'Bright'
 $front_speaker = 'B'
-#$source = 'CBL/SAT'
-$sound_mode = 'Stereo'
-$mult_eq = 'Off'
-$tone_control = True
-$bass = 5
-$treble = 4
-wait(1)
-$subwoofer_volume = Decimal('0')
+$sound_mode = 'Music'
+#$mult_eq = 'Off'
+#$tone_control = True
+#$bass = 0
+#$treble = 4
+$center_speaker_config = 'None'
+
+$crossover_front = '100 Hz'
+
+$front_left_level = Decimal('-6')
+$front_right_level = Decimal('-6')
+#$center_level = Decimal('-2')
+$surround_left_level = Decimal('-0.5')
+$surround_right_level = Decimal('1')
+$subwoofer_level = Decimal('3.5')
+#$subwoofer_level = Decimal('0.5')
+
+$front_left_distance = 96
+$front_right_distance = 96
+#$center_distance = 195
+$surround_left_distance = 168
+$surround_right_distance = 327
+$subwoofer_distance = 234
 

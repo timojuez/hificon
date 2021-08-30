@@ -1,13 +1,33 @@
 #!/usr/bin/env -S hifish -vvvvvv
 $power = True
-$front_speaker_config = 'Small'
-$subwoofer_mode = 'LFE'
-$display = 'Dark'
+#$display = 'Dark'
+$sound_mode = 'Movie'
+#$sound_mode = 'Multi Channel In'
+#$sound_mode = 'Dolby Digital'
+#$mult_eq = 'L/R Bypass'
+$center_speaker_config = 'Small'
+
+#$front_left_level = Decimal('-3')
+$front_left_level = Decimal('-2.5')
+$front_right_level = Decimal('-2.5')
+$center_level = Decimal('-4')
+$surround_left_level = Decimal('-3')
+$surround_right_level = Decimal('-1.5')
+$subwoofer_level = Decimal('5.5')
+
+#$front_speaker_config = 'Large'
+#$center_speaker_config = 'Large'
+#$surround_back_speaker_config = '2SP'
+#$front_left_distance = 237
+#$center_distance = 243
+$front_left_distance = 231
+$front_right_distance = 231
+$center_distance = 231
+$surround_left_distance = 162
+$surround_right_distance = 147
+$subwoofer_distance = 18
+
 $front_speaker = 'A'
-#$source = 'CBL/SAT'
-$sound_mode = 'Multi Channel In'
-$sound_mode = 'Dolby Digital'
-$mult_eq = 'Flat'
-wait(1)
-$subwoofer_volume = Decimal('-3.5')
+#$crossover_front = '40 Hz'
+$crossover_front = '80 Hz'
 
