@@ -349,8 +349,8 @@ class ClientToServerFeatureMixin:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        if isinstance(self.target, ClientType): self.target.bind(on_connect=self.on_set)
-
+        if isinstance(self.target, ClientType): self.target.bind(on_connect=lambda:self.on_set())
+    
     # for client
     def get(self): return "(select)" if isinstance(self.target, ClientType) else super().get()
     def isset(self):
