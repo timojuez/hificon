@@ -58,8 +58,8 @@ def zone_setup():
         ans = input("Which amp zone do you want to control with the %s icon? [M]ain/%s "
             %(NAME, "/".join(map(lambda e:"[%s]"%e, zones))))
         if ans in zones or ans in ("","M","m"):
-            for key in ("power","source","volume","muted"):
-                config["Amp"]["%s_feature_key"%key] = "zone%s_%s"%(ans,key) if ans in zones else key
+            for f_id in ("power","source","volume","muted"):
+                config["Amp"]["%s_feature_id"%f_id] = "zone%s_%s"%(ans,f_id) if ans in zones else f_id
             break
 
 

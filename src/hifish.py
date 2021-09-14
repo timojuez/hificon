@@ -122,11 +122,11 @@ class CLI:
             initial_indent=" "*8, subsequent_indent=" "*12, width=shutil.get_terminal_size().columns)
         print(f"Scheme '{self.target.scheme}' supports the following features.\n")
         features_ = map(self.target.features.get, self.target.__class__.features.keys())
-        features_ = sorted(features_, key=lambda f: (f.category, f.key))
+        features_ = sorted(features_, key=lambda f: (f.category, f.id))
         for category, ff in groupby(features_, key=lambda f:f.category):
             print(bright(category.upper()))
             for f in ff:
-                print(bright(f"    ${f.key}"))
+                print(bright(f"    ${f.id}"))
                 s = f"{(f.name)}  {(f.type.__name__)}  "
                 if isinstance(f,features.NumericFeature):
                     s += f"[{f.min}..{f.max}]"

@@ -74,8 +74,8 @@ class Icon(Bindable):
         self.set_icon()
         self.update_icon()
 
-    def on_feature_change(self, key, value, *args): # bound to target
-        if key in (config.volume, config.muted, config.power): self.update_icon()
+    def on_feature_change(self, f_id, value, *args): # bound to target
+        if f_id in (config.volume, config.muted, config.power): self.update_icon()
 
     def update_icon(self):
         self.target.schedule(self._update_icon, requires=(config.muted, config.volume, config.power))
@@ -116,9 +116,9 @@ class NotificationMixin(object):
         notification_whitelist = config.getlist("Tray","notification_whitelist")
         notification_blacklist = config.getlist("Tray","notification_blacklist")
         n_features = [f for f in self.target.features.values()
-            if f.key not in notification_blacklist
-            and ("*" in notification_whitelist or f.key in notification_whitelist)]
-        self._notifications = {f.key: n for f in n_features for n in [self.create_notification(f)] if n}
+            if f.id not in notification_blacklist
+            and ("*" in notification_whitelist or f.id in notification_whitelist)]
+        self._notifications = {f.id: n for f in n_features for n in [self.create_notification(f)] if n}
         self.target.preload_features.add(config.volume)
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
@@ -126,15 +126,15 @@ class NotificationMixin(object):
         if isinstance(f, features.NumericFeature): return NumericNotification(f)
         if isinstance(f, features.SelectFeature): return TextNotification(f)
 
-    def show_notification(self, key): key in self._notifications and self._notifications[key].show()
+    def show_notification(self, f_id): f_id in self._notifications and self._notifications[f_id].show()
     
     def on_key_press(self,*args,**xargs):
         self.show_notification(config.volume)
         super().on_key_press(*args,**xargs)
 
-    def show_notification_on_feature_change(self, key, value): # bound to target
-        if key in self._notifications: self._notifications[key].update()
-        if self.target.features[key]._prev_val is not None: self.show_notification(key)
+    def show_notification_on_feature_change(self, f_id, value): # bound to target
+        if f_id in self._notifications: self._notifications[f_id].update()
+        if self.target.features[f_id]._prev_val is not None: self.show_notification(f_id)
 
     def on_scroll_up(self, *args, **xargs):
         self.show_notification(config.volume)

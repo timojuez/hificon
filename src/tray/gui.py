@@ -183,11 +183,11 @@ class MenuMixin:
         menu = Gtk.Menu()
 
         # header features
-        for key in config.getlist("Tray","tray_menu_features"):
-            key = config.get("Amp", key[1:]) if key.startswith("@") else key
-            f = getattr(self.target.features, key, None)
+        for f_id in config.getlist("Tray","tray_menu_features"):
+            f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
+            f = getattr(self.target.features, f_id, None)
             if f: menu.append(self.add_feature(f, True))
-            if f: self.target.preload_features.add(key)
+            if f: self.target.preload_features.add(f_id)
 
         item_disconnected = Gtk.MenuItem("Connecting ...", sensitive=False)
         menu.append(item_disconnected)

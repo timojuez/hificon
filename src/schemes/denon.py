@@ -135,7 +135,7 @@ class Denon(TelnetAmp):
         _function = cmd.upper().replace("?","")
         if "?" not in cmd: return self.send(cmd)
         class _Feature(SelectFeature):
-            key=None
+            id=None
             function=_function
             matches = lambda self, data: (matches(data) if matches else super().matches(data))
         _Feature.__name__ = _function
@@ -189,7 +189,7 @@ class NumericFeature(DenonFeature):
     def unserialize_val(self, val):
         if val == "UP": return self.get()+self.step
         elif val == "DOWN": return self.get()-self.step
-        else: raise ValueError(f"Invalid value `{val}` for feature `{self.key}`")
+        else: raise ValueError(f"Invalid value `{val}` for feature `{self.id}`")
 
 
 class DecimalFeature(NumericFeature, features.DecimalFeature):
@@ -387,7 +387,7 @@ class SourceNames(MultipartFeatureMixin): #undocumented
     TERMINATOR = " END"
     function = "SSFUN"
     call = "SSFUN ?"
-    default_value = {code: name for code, key, name in SOURCES}
+    default_value = {code: name for code, f_id, name in SOURCES}
     def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value! Set source instead")
     def to_parts(self, d): return [" ".join(e) for e in d.items()]
     def from_parts(self, l): return dict([line.split(" ",1) for line in l])
@@ -427,11 +427,11 @@ class Name(SelectFeature): #undocumented
     def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
     def poll_on_dummy(self): self.set("Dummy X7800H")
 
-for code, key, name in SPEAKERS:
+for code, f_id, name in SPEAKERS:
     @Denon.add_feature
     class ChannelVolume(RelativeDecimal):
         name = f"{name} Volume"
-        key = f"{key}_volume"
+        id = f"{f_id}_volume"
         category = "Volume"
         call = "CV?"
         function = f"CV{code} "
@@ -439,7 +439,7 @@ for code, key, name in SPEAKERS:
     @Denon.add_feature
     class SpeakerLevel(RelativeDecimal): #undocumented
         name = f"{name} Level"
-        key = f"{key}_level"
+        id = f"{f_id}_level"
         category = "Speakers"
         call = "SSLEV ?"
         function = f"SSLEV{code} "
@@ -447,7 +447,7 @@ for code, key, name in SPEAKERS:
 
 @Denon.add_feature(overwrite=True)
 class MainZonePower(BoolFeature):
-    key = "power"
+    id = "power"
     category = "General"
     function = "ZM"
     
@@ -836,11 +836,11 @@ class CrossoverAll(_Crossover): #undocumented
     name = "Crossover (all)"
     function = "SSCFRALL "
 
-for code, key, name in SPEAKER_PAIRS:
+for code, f_id, name in SPEAKER_PAIRS:
     @Denon.add_feature
     class CrossoverSpeaker(_Crossover): #undocumented
         name = f"Crossover ({name})"
-        key = f"crossover_{key}"
+        id = f"crossover_{f_id}"
         function = f"SSCFR{code} "
 
 @Denon.add_feature
@@ -884,7 +884,7 @@ class InputSignal(BoolFeature): #undocumented
 
     def on_stop_playing(self):
         # undo target.on_stop_playing() if self.get() == True
-        self.target.schedule(lambda:self.get() and self.target.on_start_playing(), requires=(self.key,))
+        self.target.schedule(lambda:self.get() and self.target.on_start_playing(), requires=(self.id,))
 
 
 @Denon.add_feature
@@ -949,22 +949,22 @@ class EcoMode(SelectFeature): #undocumented
     translation = {"AUTO":"Auto","ON":"On","OFF":"Off"}
 
 
-for code, key, name in SOURCES:
+for code, f_id, name in SOURCES:
     @Denon.add_feature
     class InputVisibility(BoolFeature): #undocumented
         name = f"Enable {name} Input"
-        key = f"enable_{key}"
+        id = f"enable_{f_id}"
         category = "Input"
         call = "SSSOD ?"
         function = f"SSSOD{code} "
         translation = {"USE":True, "DEL":False}
 
 
-for code, key, name in SOURCES:
+for code, f_id, name in SOURCES:
     @Denon.add_feature
     class SourceVolumeLevel(RelativeInt): #undocumented
         name = f"{name} Volume Level"
-        key = f"{key}_volume_level"
+        id = f"{f_id}_volume_level"
         category = "Input"
         min = -12
         max = 12
@@ -975,11 +975,11 @@ for code, key, name in SOURCES:
             self.async_poll(force=True) #Denon workaround: missing echo
 
 
-for code, key, name in SPEAKERS:
+for code, f_id, name in SPEAKERS:
     @Denon.add_feature
     class SpeakerDistance(IntFeature): #undocumented
         name = f"{name} Distance"
-        key = f"{key}_distance"
+        id = f"{f_id}_distance"
         category = "Speakers"
         min = 0
         max = 1800
@@ -1004,7 +1004,7 @@ class VolumeScale(SelectFeature):
 @Denon.add_feature
 class PowerOnLevel(LooseIntFeature):
     category = "Volume"
-    key = "power_on_level_numeric"
+    id = "power_on_level_numeric"
     function = "SSVCTZMAPON "
     call = "SSVCTZMA ?"
 
@@ -1029,12 +1029,12 @@ class MuteMode(SelectFeature):
     translation = {"MUT":"Full", "040":"-40 dB", "060":"-20 dB"}
 
 
-for source_code, source_key, source_name in SOURCES:
-    for input_code, input_value_code, input_key, input_name in INPUTS:
+for source_code, source_id, source_name in SOURCES:
+    for input_code, input_value_code, input_id, input_name in INPUTS:
         @Denon.add_feature
         class SourceInputAssign(SelectFeature):
             name = f"{source_name} {input_name} Input"
-            key = f"input_{source_key}_{input_key}"
+            id = f"input_{source_id}_{input_id}"
             category = "Input"
             function = f"SS{input_code}{source_code} "
             call = f"SS{input_code} ?"
@@ -1050,16 +1050,16 @@ class EqualizerSwitch(Equalizer, BoolFeature): function = "PSGEQ "
 @Denon.add_feature
 class EqualizerChannels(Equalizer, SelectFeature):
     function = "SSGEQSPS "
-    translation = {cat_code: cat_name for cat_code, cat_key, cat_name, l in EQ_OPTIONS}
+    translation = {cat_code: cat_name for cat_code, cat_id, cat_name, l in EQ_OPTIONS}
 
-for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
-    for code, sp_key, name in l:
+for cat_code, cat_id, cat_name, l in EQ_OPTIONS:
+    for code, sp_id, name in l:
 
         @Denon.add_feature
         class SpeakerEq(Equalizer, DenonFeature, features.Feature): #undocumented
             name = f"Eq {name}"
             type = dict
-            key = f"eq_{cat_key}_{sp_key}"
+            id = f"eq_{cat_id}_{sp_id}"
             function = f"SSAEQ{cat_code}{code} "
             call = f"SSAEQ{cat_code} ?"
             dummy_value = {i:0 for i in range(9)}
@@ -1081,15 +1081,15 @@ for cat_code, cat_key, cat_name, l in EQ_OPTIONS:
             @Denon.add_feature
             class Bound(Equalizer, features.OfflineFeatureMixin, DecimalFeature): #undocumented
                 name = f"Eq {name} {bound_name}"
-                key = f"eq_{cat_key}_{sp_key}_bound{bound}"
+                id = f"eq_{cat_id}_{sp_id}_bound{bound}"
                 min = -20
                 max = +6
                 
-                def __init__(self, *args, cat_key=cat_key, sp_key=sp_key, **xargs):
+                def __init__(self, *args, cat_id=cat_id, sp_id=sp_id, **xargs):
                     super().__init__(*args, **xargs)
                     self._channels = self.target.features.equalizer_channels
                     self._channels.bind(on_change = self.update)
-                    self._speaker_eq = self.target.features[f"eq_{cat_key}_{sp_key}"]
+                    self._speaker_eq = self.target.features[f"eq_{cat_id}_{sp_id}"]
                     self._speaker_eq.bind(on_change = self.update)
                 
                 def update(self, val, cat_name=cat_name, bound=bound):
@@ -1124,20 +1124,20 @@ for zone in range(2,ZONES+1):
     @Denon.add_feature
     class ZVolume(Zone, Volume):
         name = "Zone %s Volume"%zone
-        key = "zone%s_volume"%zone
+        id = "zone%s_volume"%zone
         function = "Z%s"%zone
         
     @Denon.add_feature
     class ZPower(Zone, BoolFeature):
         name = "Zone %s Power"%zone
-        key = "zone%s_power"%zone
+        id = "zone%s_power"%zone
         function = "Z%s"%zone
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
     
     @Denon.add_feature
     class ZSource(Zone, Source):
         name = "Zone %s Source"%zone
-        key = "zone%s_source"%zone
+        id = "zone%s_source"%zone
         function = "Z%s"%zone
         translation = {**Source.translation, "SOURCE": "Main Zone"}
         _from_mainzone = False
@@ -1164,51 +1164,51 @@ for zone in range(2,ZONES+1):
     @Denon.add_feature
     class ZMuted(Zone, Muted):
         name = "Zone %s Muted"%zone
-        key = "zone%s_muted"%zone
+        id = "zone%s_muted"%zone
         function = "Z%sMU"%zone
     
     @Denon.add_feature
     class ChannelSetting(Zone, SelectFeature):
-        key = "zone%s_channel_setting"%zone
+        id = "zone%s_channel_setting"%zone
         function = "Z%sCS"%zone
         translation = {"MONO":"Mono","ST":"Stereo"}
     
     @Denon.add_feature
     class ZFrontLeftVolume(Zone, RelativeDecimal):
-        key = "zone%s_front_left_volume"%zone
+        id = "zone%s_front_left_volume"%zone
         name = "Front Left Volume"
         function = "Z%sFL "%zone
         call = "Z%sCV?"%zone
         
     @Denon.add_feature
     class ZFrontRightVolume(Zone, RelativeDecimal):
-        key = "zone%s_front_right_volume"%zone
+        id = "zone%s_front_right_volume"%zone
         name = "Front Right Volume"
         function = "Z%sFR "%zone
         call = "Z%sCV?"%zone
         
     @Denon.add_feature
     class Hpf(Zone, BoolFeature):
-        key = "zone%s_hpf"%zone
+        id = "zone%s_hpf"%zone
         name = "HPF"
         function = "Z%sHPF"%zone
     
     @Denon.add_feature
     class ZBass(Zone, RelativeInt):
         name = "Zone %s Bass"%zone
-        key = "zone%s_bass"%zone
+        id = "zone%s_bass"%zone
         function = "Z%sPSBAS "%zone
         
     @Denon.add_feature
     class ZTreble(Zone, RelativeInt):
         name = "Zone %s Treble"%zone
-        key = "zone%s_treble"%zone
+        id = "zone%s_treble"%zone
         function = "Z%sPSTRE "%zone
         
     @Denon.add_feature
     class Mdmi(Zone, SelectFeature):
         name = "MDMI Out"
-        key = "zone%s_mdmi"%zone
+        id = "zone%s_mdmi"%zone
         function = "Z%sHDA "%zone
         call = "Z%sHDA?"%zone
         translation = {"THR":"THR", "PCM":"PCM"}
@@ -1216,13 +1216,13 @@ for zone in range(2,ZONES+1):
     @Denon.add_feature
     class ZSleep(Zone, Sleep):
         name = "Zone %s Sleep (min.)"%zone
-        key = "zone%s_sleep"%zone
+        id = "zone%s_sleep"%zone
         function = "Z%sSLP"%zone
         
     @Denon.add_feature
     class AutoStandby(Zone, SelectFeature):
         name = "Zone %s Auto Standby"%zone
-        key = "zone%s_auto_standby"%zone
+        id = "zone%s_auto_standby"%zone
         function = "Z%sSTBY"%zone
         translation = {"2H":"2 hours","4H":"4 hours","8H":"8 hours","OFF":"Off"}
 

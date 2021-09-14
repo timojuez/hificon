@@ -11,11 +11,11 @@ secure_mode = yes
 
 
 [Amp]
-# Feature keys to be controlled by this program:
-power_feature_key = power
-source_feature_key = source
-volume_feature_key = volume
-muted_feature_key = muted
+# Feature ids to be controlled by this program:
+power_feature_id = power
+source_feature_id = source
+volume_feature_id = volume
+muted_feature_id = muted
 
 # Amp input source that this program controls. Important for power control. Empty means "all"
 source = 
@@ -31,7 +31,7 @@ notification_blacklist = maxvol, input_signal, source_names
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
-tray_menu_features = @volume_feature_key, @power_feature_key, sound_mode, sound_mode_setting, @source_feature_key
+tray_menu_features = @volume_feature_id, @power_feature_id, sound_mode, sound_mode_setting, @source_feature_id
 
 
 [MouseBinding]

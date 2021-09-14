@@ -37,7 +37,7 @@ class TabPanel(ScrollView):
         super().__init__()
         self.features = {}
         pinned = {True:[], False:[]}
-        for f in self.target.features.values(): pinned[f.key in self.config["pinned"]].append(f)
+        for f in self.target.features.values(): pinned[f.id in self.config["pinned"]].append(f)
         self._features_stack = [*pinned[True], *pinned[False]]
         self.addFeaturesFromStack(chunksize=50, repeat=None)
         
@@ -49,13 +49,13 @@ class TabPanel(ScrollView):
         if repeat and self._features_stack: Clock.schedule_once(self.addFeaturesFromStack, repeat)
 
     def addFeature(self, f):
-        self.target.preload_features.add(f.key)
+        self.target.preload_features.add(f.id)
         if self.target.connected:
             try: f.async_poll()
             except ConnectionError: pass
         row = FeatureRow()
         row.ids.text.text = f.name
-        row.ids.checkbox.active = f.key in self.config["pinned"]
+        row.ids.checkbox.active = f.id in self.config["pinned"]
 
         if f.type == bool: w = self.addBoolFeature(f)
         elif f.type == str: w = self.addSelectFeature(f)
@@ -65,16 +65,16 @@ class TabPanel(ScrollView):
         if w: row.ids.content.add_widget(w)
         
         def on_checkbox(checkbox, active):
-            if active: self.config["pinned"].append(f.key)
-            else: self.config["pinned"].remove(f.key)
+            if active: self.config["pinned"].append(f.id)
+            else: self.config["pinned"].remove(f.id)
             self.config.save()
         row.ids.checkbox.bind(active=on_checkbox)
 
-        self.features[f.key] = row
+        self.features[f.id] = row
         hide_widget(row)
         f.bind(on_set=lambda: Clock.schedule_once(lambda *_: show_widget(row), 0))
         f.bind(on_unset=lambda: Clock.schedule_once(lambda *_: hide_widget(row), 0))
-        self.add_filtered(f.key, row)
+        self.add_filtered(f.id, row)
         
     def _addNumericFeature(self, f, from_widget=lambda n:n, step=None):
         panel = NumericFeature()
@@ -236,7 +236,7 @@ class SelectFeatureOption(Button): pass
 
 class PinnedTab(CategoryTabHeader):
     text = "Pinned"
-    filter = lambda self,f: f.key in self.panel.config["pinned"]
+    filter = lambda self,f: f.id in self.panel.config["pinned"]
 
 class AllTab(CategoryTabHeader):
     text = "All"

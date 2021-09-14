@@ -11,7 +11,7 @@ class RawTelnet(TelnetScheme):
         """
         if not matches: return self.send(cmd)
         class RawFeature(features.Feature):
-            key = None
+            id = None
             call = cmd
             matches = lambda self, data: matches(data)
             def serialize(self, value): return value

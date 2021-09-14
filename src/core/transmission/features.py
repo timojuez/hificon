@@ -81,7 +81,7 @@ class FeatureInterface(object):
     default_value = None # if no response from server
     dummy_value = None # for dummy server
     type = object # value data type, e.g. int, bool, str
-    #key = "key" # feature will be available as target.key; default: key = class name
+    #id = "id" # feature will be available as target.id; default: id = class name
 
     def init_on_server(self):
         """ called after __init__ on server side """
@@ -116,8 +116,8 @@ class FeatureInterface(object):
 class _MetaFeature(type):
 
     def __init__(cls, name, bases, dct):
-        if "key" not in dct:
-            cls.key = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
+        if "id" not in dct:
+            cls.id = re.sub(r'(?<!^)(?=[A-Z])', '_', cls.__name__).lower()
         if "name" not in dct:
             cls.name = re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
             cls.name = " ".join(["%s%s"%(x[0].upper(),x[1:]) if len(x)>0 else "" for x in cls.name.split("_")])
@@ -143,14 +143,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.target = target
         self._lock = Lock()
         self._event_on_set = Event()
-        target.features[self.key] = self
+        target.features[self.id] = self
         
     name = property(lambda self:self.__class__.__name__)
     
     def __str__(self): return str(self.get()) if self.isset() else "..."
     
     def get(self):
-        if not self.isset(): raise AttributeError(f"`{self.key}` not available. Use Target.schedule")
+        if not self.isset(): raise AttributeError(f"`{self.id}` not available. Use Target.schedule")
         else: return self._val
     
     def remote_set(self, value, force=False):
@@ -239,7 +239,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             
     def on_change(self, val):
         """ This event is being called when self.options or the return value of self.get() changes """
-        self.target.on_feature_change(self.key, val)
+        self.target.on_feature_change(self.id, val)
     
     def on_set(self):
         """ Event is fired on initial set """
@@ -309,7 +309,7 @@ class SelectFeature(Feature):
     def remote_set(self, value, force=False):
         if not force and value not in self.options:
             raise ValueError("Value must be one of %s or try target.features.%s.remote_set(value, force=True)"
-                %(self.options, self.key))
+                %(self.options, self.id))
         return super().remote_set(value, force)
     
 

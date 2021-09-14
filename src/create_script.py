@@ -52,11 +52,11 @@ class Main:
         if self.raw: self.t.bind(on_receive_raw_data=lambda data: self.append(f"${repr(data)}"))
         else: self.t.bind(on_feature_change = self.record_parsed)
 
-    def record_parsed(self, key, value):
-        prev = self.t.features[key]._prev_val
-        if self.relative and prev and isinstance(self.t.features[key], NumericFeature):
-            self.append(f"${key} += {repr(value-prev)}")
-        else: self.append(f"${key} = {repr(value)}")
+    def record_parsed(self, f_id, value):
+        prev = self.t.features[f_id]._prev_val
+        if self.relative and prev and isinstance(self.t.features[f_id], NumericFeature):
+            self.append(f"${f_id} += {repr(value-prev)}")
+        else: self.append(f"${f_id} = {repr(value)}")
 
 
 if __name__ == '__main__': Main()

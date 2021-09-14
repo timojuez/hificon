@@ -56,7 +56,7 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     def add_feature(cls, Feature=None, overwrite=False):
         """
         This is a decorator to be used on Feature class definitions that belong to the current class.
-        @overwrite: If true, proceeds if a feature with same key already exists.
+        @overwrite: If true, proceeds if a feature with same id already exists.
         Example:
             from client.feature import Feature
             @AbstractClient.add_feature
@@ -65,18 +65,18 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
         def add(Feature, overwrite=overwrite):
             if not issubclass(Feature, features.Feature):
                 raise TypeError(f"Feature must be of type {features.Feature}")
-            if Feature.key.startswith("_"): raise KeyError("Feature.key may not start with '_'")
-            if hasattr(cls.features.__class__, Feature.key):
-                raise KeyError("Feature.key `%s` is already occupied."%Feature.key)
-            if not overwrite and any([hasattr(a, Feature.key) for a in (cls, cls.Server, cls.Client)]):
+            if Feature.id.startswith("_"): raise KeyError("Feature.id may not start with '_'")
+            if hasattr(cls.features.__class__, Feature.id):
+                raise KeyError("Feature.id `%s` is already occupied."%Feature.id)
+            if not overwrite and any([hasattr(a, Feature.id) for a in (cls, cls.Server, cls.Client)]):
                 raise KeyError(
-                    "Feature.key `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.key)
-            setattr(cls, Feature.key, property(
-                lambda self:self.features[Feature.key].get(),
-                lambda self,val:self.set_feature_value(self.features[Feature.key], val)
+                    "Feature.id `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.id)
+            setattr(cls, Feature.id, property(
+                lambda self:self.features[Feature.id].get(),
+                lambda self,val:self.set_feature_value(self.features[Feature.id], val)
             ))
-            cls.features.pop(Feature.key, None)
-            cls.features[Feature.key] = Feature
+            cls.features.pop(Feature.id, None)
+            cls.features[Feature.id] = Feature
             return Feature
         return add(Feature) if Feature else add
     
@@ -105,16 +105,16 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
         else: return features.FunctionCall(self, func, args, kwargs, features_)
 
     @log_call
-    def on_feature_change(self, key, value):
+    def on_feature_change(self, f_id, value):
         """ attribute on server has changed """
-        if key and self.verbose > 2:
-            print("[%s] $%s = %s"%(self.__class__.__name__,key,repr(value)))
+        if f_id and self.verbose > 2:
+            print("[%s] $%s = %s"%(self.__class__.__name__,f_id,repr(value)))
         
     def send(self, data): raise NotImplementedError()
 
     def on_receive_raw_data(self, data):
         if self.verbose > 4: print(data, file=sys.stderr)
-        consumed = [f.consume(data) for key,f in self.features.items() if f.matches(data)]
+        consumed = [f.consume(data) for f_id,f in self.features.items() if f.matches(data)]
         if not consumed: self.features.fallback.consume(data)
 
 
@@ -145,7 +145,7 @@ class AbstractServer(ServerType, SchemeBase):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         for f in self.features.values(): f.init_on_server()
-        for f in self.features.values(): not f.key=="fallback" and f.bind(on_change=lambda *_,f=f:f.resend())
+        for f in self.features.values(): not f.id=="fallback" and f.bind(on_change=lambda *_,f=f:f.resend())
     
     def enter(self): self.connected = True
     def exit(self): self.connected = False
@@ -159,7 +159,7 @@ class AbstractServer(ServerType, SchemeBase):
     def send(self, data): pass
 
     def on_receive_raw_data(self, data):
-        called_features = [f for key, f in self.features.items() if f.call == data]
+        called_features = [f for f_id, f in self.features.items() if f.call == data]
         if called_features:
             # data is a request
             for f in called_features:
@@ -172,7 +172,7 @@ class AbstractServer(ServerType, SchemeBase):
 
 class _FeaturesMixin:
     _polled = list
-    preload_features = set() # feature keys to be polled on_connect
+    preload_features = set() # feature ids to be polled on_connect
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -181,8 +181,8 @@ class _FeaturesMixin:
 
     def on_connect(self):
         super().on_connect()
-        for key in set(self.preload_features):
-            if key in self.features: self.features[key].async_poll()
+        for f_id in set(self.preload_features):
+            if f_id in self.features: self.features[f_id].async_poll()
 
     def on_disconnected(self):
         super().on_disconnected()

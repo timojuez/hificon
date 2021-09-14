@@ -61,10 +61,10 @@ class ConfigDiffMixin:
 
 
 class ShortcutsMixin:
-    volume = property(lambda self: self.get("Amp","volume_feature_key"))
-    muted = property(lambda self: self.get("Amp","muted_feature_key"))
-    power = property(lambda self: self.get("Amp","power_feature_key"))
-    source = property(lambda self: self.get("Amp","source_feature_key"))
+    volume = property(lambda self: self.get("Amp","volume_feature_id"))
+    muted = property(lambda self: self.get("Amp","muted_feature_id"))
+    power = property(lambda self: self.get("Amp","power_feature_id"))
+    source = property(lambda self: self.get("Amp","source_feature_id"))
 
 
 class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass

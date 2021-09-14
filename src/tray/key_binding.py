@@ -63,8 +63,8 @@ class VolumeChanger:
                 getattr(self.target,config.volume) + self.step*(int(self.button)*2-1))
             if self.interval: time.sleep(self.interval)
 
-    def on_feature_change(self, key, value): # bound to target
-        if key != config.volume or self.keys_pressed <= 0: return
+    def on_feature_change(self, f_id, value): # bound to target
+        if f_id != config.volume or self.keys_pressed <= 0: return
         with suppress(RuntimeError): self._volume_step.release()
 
 
