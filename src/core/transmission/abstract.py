@@ -202,7 +202,7 @@ class _FeaturesMixin:
 
     def on_receive_feature_value(self, f, value): f.set(value)
 
-    def set_feature_value(self, f, val): return f.remote_set(val)
+    def set_feature_value(self, f, value): f.remote_set(value)
 
 
 class _AbstractClient(ClientType, SchemeBase):
