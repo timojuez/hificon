@@ -183,6 +183,7 @@ class TrayMixin(gui.Tray):
 class NotifyPoweroff:
     """ Adds a notification warning to poweroff when on_idle """
     notification_timeout = 10
+    _button_clicked = False
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -192,14 +193,22 @@ class NotifyPoweroff:
             on_poweroff = self.close_popup,
             on_disconnected = self.close_popup)
         self._n = gui.Notification()
-        self._n.add_action("cancel", "Cancel", lambda *args,**xargs: None)
-        self._n.add_action("ok", "OK", lambda *args,**xargs: self.poweroff())
+        buttons = [("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)]
+        for name, func in buttons:
+            self._n.add_action(name, name,
+                lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
         self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.notification_timeout*1000)
     
+    def snooze_notification(self):
+        self.target.start_idle_timer()
+
     def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
             self.poweroff()
+        elif self._n.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
+            self.snooze_notification()
+        self._button_clicked = False
     
     def on_target_idle(self): self.target.schedule(self._on_target_idle, requires=("name",))
 
