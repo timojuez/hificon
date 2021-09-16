@@ -174,11 +174,11 @@ class TrayMixin(gui.Tray):
     
     def poweron(self, force=False):
         """ poweron target """
-        if force or self.config["control_power_on"]: super().poweron()
+        if force or self.config["auto_power_on"]: super().poweron()
         
-    @property # read by poweroff()
-    def can_poweroff(self): return self.config["control_power_off"] and super().can_poweroff
-    
+    def poweroff(self, force=False):
+        if force or self.config["control_power_off"]: super().poweroff(force=force)
+
 
 class NotifyPoweroff:
     """ Adds a notification warning to poweroff when on_idle """
@@ -214,7 +214,7 @@ class NotifyPoweroff:
         self.target.schedule(self._on_target_idle, requires=("name", config.power, config.source))
 
     def _on_target_idle(self):
-        if self.can_poweroff:
+        if self.config["auto_power_off"] and self.can_poweroff:
             self._n.update("Power off %s"%self.target.name)
             self._n.show()
         
