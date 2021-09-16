@@ -210,7 +210,8 @@ class NotifyPoweroff:
             self.snooze_notification()
         self._button_clicked = False
     
-    def on_target_idle(self): self.target.schedule(self._on_target_idle, requires=("name",))
+    def on_target_idle(self):
+        self.target.schedule(self._on_target_idle, requires=("name", config.power, config.source))
 
     def _on_target_idle(self):
         if self.can_poweroff:
