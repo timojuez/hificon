@@ -34,7 +34,7 @@ interval = 100
 # keyboard hotkey options
 step = 3
 # mouse gesture options
-mouse_button = button9
+mouse_button = 9
 mouse_sensitivity = 0.06
 mouse_max_volume_step = 8
 

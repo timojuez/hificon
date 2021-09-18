@@ -124,7 +124,9 @@ class InputDeviceListener:
         self.key_listener.stop()
 
     def on_mouse_click(self, x, y, button, pressed):
-        if button != getattr(mouse.Button, config["Hotkeys"]["mouse_button"], None): return
+        try: config_button = config.getint("Hotkeys","mouse_button")
+        except ValueError: return
+        if button.value != config_button: return
         self._pressed = pressed
         if pressed: self.on_mouse_down(x, y)
         else: self.on_mouse_up(x, y)
