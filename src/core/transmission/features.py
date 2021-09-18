@@ -161,7 +161,9 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         serialized = self.serialize(self.type(value))
         if not self._blocked(serialized): self._send(serialized)
 
-    def _send(self, serialized): self.target.send(serialized)
+    def _send(self, serialized):
+        self.on_send()
+        self.target.send(serialized)
 
     @classmethod
     def _blocked(cls, serialized):
@@ -222,7 +224,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self._prev_val == None: self.on_set()
         self.on_processed(value)
 
-    def bind(self, on_change=None, on_set=None, on_unset=None, on_processed=None):
+    def bind(self, on_change=None, on_set=None, on_unset=None, on_processed=None, on_send=None):
         """ Register an observer with bind() and call the callback as soon as possible
         to stay synchronised """
         with self._lock:
@@ -236,6 +238,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
             if on_set: super().bind(on_set = on_set)
             if on_unset: super().bind(on_unset = on_unset)
             if on_processed: super().bind(on_processed = on_processed)
+            if on_send: super().bind(on_send = on_send)
             
     def on_change(self, val):
         """ This event is being called when self.options or the return value of self.get() changes """
@@ -262,6 +265,10 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def on_processed(self, value):
         """ This event is being called each time the feature is being set to a value
         even if the value is the same as the previous one """
+        pass
+
+    def on_send(self):
+        """ This event is being fired when a value update has been sent to remote """
         pass
 
 
