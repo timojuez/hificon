@@ -4,12 +4,6 @@ uri = auto
 fallback_feature = no
 
 
-[Service]
-# IPC service port
-ipc_port = 0
-secure_mode = yes
-
-
 [Amp]
 # Feature ids to be controlled by this program:
 power_feature_id = power
@@ -34,12 +28,13 @@ tray_scroll_delta = 2.0
 tray_menu_features = @volume_feature_id, @power_feature_id, sound_mode, sound_mode_setting, @source_feature_id
 
 
-[MouseBinding]
-# mouse_binding options, see also your ~/.xbindkeysrc
-vol_up = button9
-vol_down = button8
-# Wait @interval milliseconds after each @step volume steps
-interval = 45
-# volume steps while key is pressed
-step = 1.5
+[Hotkeys]
+# Wait @interval milliseconds after each volume change
+interval = 100
+# keyboard hotkey options
+step = 3
+# mouse gesture options
+mouse_button = button9
+mouse_sensitivity = 0.06
+mouse_max_volume_step = 8
 

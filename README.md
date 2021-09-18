@@ -74,13 +74,8 @@ Then execute:
 
 `$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[nongnu_desktop] && rm -R ./hificon && python3 -m hificon`
 
-To connect the extra mouse buttons, start `hificon_mouse_binding`. You may want to add the command to autostart.
-
 ### Uninstall
 To uninstall: `pip3 uninstall hificon`
-
-Ggf remove the lines after ## HIFICON in ~/.xbindkeysrc and restart xbindkeys.
-
 
 ### Configuration
 See configuration options in ~/.hificon/main.cfg and src/share/main.cfg.default.

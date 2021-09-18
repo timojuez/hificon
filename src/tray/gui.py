@@ -232,11 +232,17 @@ class MenuMixin:
             self.config.__setitem__("auto_power_off",item_poweroff.get_active()))
         menu.append(item_poweroff)
 
-        item_poweroff = Gtk.CheckMenuItem("Power off on shutdown")
-        item_poweroff.set_active(self.config["control_power_off"])
-        item_poweroff.connect("toggled", lambda *args:
-            self.config.__setitem__("control_power_off",item_poweroff.get_active()))
-        menu.append(item_poweroff)
+        item_poweroffsd = Gtk.CheckMenuItem("Power off on shutdown")
+        item_poweroffsd.set_active(self.config["control_power_off"])
+        item_poweroffsd.connect("toggled", lambda *args:
+            self.config.__setitem__("control_power_off",item_poweroffsd.get_active()))
+        menu.append(item_poweroffsd)
+
+        item_hotkeys = Gtk.CheckMenuItem("Keyboard media keys")
+        item_hotkeys.set_active(self.config["volume_hotkeys"])
+        item_hotkeys.connect("toggled", lambda *args:
+            self.config.__setitem__("volume_hotkeys",item_hotkeys.get_active()))
+        menu.append(item_hotkeys)
 
         menu.append(Gtk.SeparatorMenuItem())
 

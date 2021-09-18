@@ -17,7 +17,7 @@ setup(name=PKG_NAME,
       package_dir={PKG_NAME: "src"},
       install_requires=["argparse"],
       extras_require={
-        "gnu_desktop": ["PyGObject","pycairo","pulsectl","kivy"],
+        "gnu_desktop": ["PyGObject","pycairo","pynput","pulsectl","kivy"],
         "nongnu_desktop": ["PyGObject","pycairo","pynput","kivy"],
       },
       include_package_data=True,
@@ -27,7 +27,6 @@ setup(name=PKG_NAME,
         "%(name)s_menu = %(name)s.menu:main"%dict(name=PKG_NAME),
         '%(name)s_tray = %(name)s.tray:main'%dict(name=PKG_NAME),
         '%(name)s_setup = %(name)s.tray.setup:main'%dict(name=PKG_NAME),
-        '%(name)s_mouse_binding = %(name)s.tray.mouse_binding:main [nongnu_desktop]'%dict(name=PKG_NAME),
       ]},
 )
 

@@ -7,7 +7,7 @@ from ..core.util import Bindable
 from ..core.config import config, ConfigDict
 from ..amp import AmpController
 from . import gui
-from .key_binding import RemoteControlService, VolumeChanger
+from .key_binding import KeyBinding
 from .setup import Setup
 
 
@@ -56,6 +56,8 @@ class NumericNotification(FeatureNotification):
             min=self.f.min,
             max=self.f.max)
         self._n.show()
+
+    def hide(self): self._n.hide()
         
 
 class Icon(Bindable):
@@ -128,9 +130,13 @@ class NotificationMixin(object):
 
     def show_notification(self, f_id): f_id in self._notifications and self._notifications[f_id].show()
     
-    def on_key_press(self,*args,**xargs):
+    def on_mouse_down(self,*args,**xargs):
         self.show_notification(config.volume)
-        super().on_key_press(*args,**xargs)
+        super().on_mouse_down(*args,**xargs)
+
+    def on_volume_key_press(self,*args,**xargs):
+        self.show_notification(config.volume)
+        super().on_volume_key_press(*args,**xargs)
 
     def show_notification_on_feature_change(self, f_id, value): # bound to target
         if f_id in self._notifications: self._notifications[f_id].update()
@@ -223,7 +229,7 @@ class NotifyPoweroff:
         except: pass
 
 
-class Main(NotificationMixin, NotifyPoweroff, VolumeChanger, TrayMixin, gui.GUI_Backend, AmpController):
+class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend, AmpController):
     
     def mainloop(self):
         Thread(name="AmpController",target=lambda:AmpController.mainloop(self),daemon=True).start()
@@ -241,6 +247,5 @@ def main():
     target = Target(args.target, connect=False, verbose=args.verbose+1)
     with Icon(target) as icon:
         app = Main(target, icon=icon, verbose=args.verbose+1)
-        rcs = RemoteControlService(app,verbose=args.verbose)
-        with target, rcs: app.mainloop()
+        with target, app: app.mainloop()
 

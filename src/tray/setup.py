@@ -33,21 +33,6 @@ def source_setup():
     config.setlist("Amp", "source", [source])
 
 
-def setup_xorg_key_binding():
-    if sys.platform != "linux": return
-    if input("Bind mouse keys to volume and modify ~/.xbindkeysrc? [Y/n] ") == "n": return
-    xbindkeysrc = os.path.expanduser("~/.xbindkeysrc")
-    if not os.path.exists(xbindkeysrc):
-        os.system("xbindkeys -d > %s"%xbindkeysrc)
-    content = pkgutil.get_data(__name__,"../share/xbindkeysrc").decode()
-    with open(xbindkeysrc,"a+") as fp:
-        fp.write("\n%s"%content)
-    print("Written to %s."%xbindkeysrc)
-    print("Restarting xbindkeys...")
-    os.system("killall xbindkeys")
-    os.system("xbindkeys")
-
-
 def zone_setup():
     target = Target()
     comp = re.compile("^zone(\d*)_volume$")
@@ -104,7 +89,6 @@ class BasicSetup:
 class TraySetup(BasicSetup):
     add_tasks = [
         ("autostart", autostart, "Add tray icon to autostart", True),
-        ("keys", setup_xorg_key_binding, "Setup Xorg mouse and keyboard volume keys binding for current user", True),
         ("zone-setup", zone_setup, "Specify a zone to be controlled by this app", True),
         ("source-setup", source_setup, "Connect an input source to the computer", True),
     ]
