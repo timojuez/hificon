@@ -40,16 +40,19 @@ class VolumeChanger:
         self._y_ref, self._volume_ref = y, vol
 
     def on_mouse_down(self, x, y):
+        self._new_vol = None
         try: self.set_volume_reference(y, self.target.features[config.volume].get())
         except ConnectionError: pass
-        self._new_vol = None
         if self.interval: time.sleep(self.interval)
 
     def on_mouse_up(self, x, y):
         self._volume_ref = None
         #Thread(target=self.poweron, args=(True,), name="poweron", daemon=True).start()
 
-    def on_mouse_move(self, x, y):
+    def on_activated_mouse_move(self, x, y):
+        self.target.schedule(lambda:self._on_activated_mouse_move(x,y), requires=(config.volume,))
+
+    def _on_activated_mouse_move(self, x, y):
         if self._volume_ref is not None:
             vol = self.target.features[config.volume]
             new_vol = self._volume_ref-int((y-self._y_ref)*config.getdecimal("Hotkeys", "mouse_sensitivity"))
@@ -103,7 +106,7 @@ class InputDeviceListener:
         super().__init__(*args, **xargs)
         self.mouse_listener = mouse.Listener(
             on_click=self.on_mouse_click,
-            on_move=self._on_mouse_move,
+            on_move=self.on_mouse_move,
         )
         self.key_listener = keyboard.Listener(
             on_press=self.on_hotkey_press,
@@ -126,8 +129,8 @@ class InputDeviceListener:
         if pressed: self.on_mouse_down(x, y)
         else: self.on_mouse_up(x, y)
 
-    def _on_mouse_move(self, x, y):
-        if self._pressed: self.on_mouse_move(x, y)
+    def on_mouse_move(self, x, y):
+        if self._pressed: self.on_activated_mouse_move(x, y)
 
     def on_hotkey_press(self, key):
         if not self.config["volume_hotkeys"]: return
