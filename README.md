@@ -59,20 +59,15 @@ For a complete list, run `hifish --help-schemes`
 
 ## Install
 
-### Ubuntu and other GNU OS
-Install the requirements:
-
+On Ubuntu and other GNU OS do
 `sudo apt-get install python3-dev python3-pip python3-gi`
 
-Cloning this repository in the current directory and installing via pip:
+On Mac/Windows, download and install Python3 and Pip.
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gnu_desktop] && rm -R ./hificon && python3 -m hificon`
+Clone this repository in the current directory and install via pip:
 
-### Proprietary OS
-On Mac/Windows, download and install Python3 with Pip.
-Then execute:
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gui] && rm -R ./hificon && python3 -m hificon`
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[nongnu_desktop] && rm -R ./hificon && python3 -m hificon`
 
 ### Uninstall
 To uninstall: `pip3 uninstall hificon`
