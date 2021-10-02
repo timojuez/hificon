@@ -6,6 +6,8 @@ from contextlib import suppress
 from ..core import config
 from ..info import PKG_NAME
 from pynput import mouse, keyboard
+LINUX = sys.platform == "linux"
+if LINUX: from ..core.util.x11_grab import XGrab
 
 
 MAX_VOL_CHANGE = config.getint("Hotkeys", "mouse_max_volume_step")
@@ -104,13 +106,18 @@ class InputDeviceListener:
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self._ctrl = False
         self.mouse_listener = mouse.Listener(
             on_click=self.on_mouse_click,
             on_move=self.on_mouse_move,
         )
         self.key_listener = keyboard.Listener(
             on_press=self.on_hotkey_press,
+            on_release=self.on_hotkey_release,
         )
+        self._config_button = config["Hotkeys"]["mouse_button"]
+        if LINUX: self._xgrab = XGrab()
+        self._controller = keyboard.Controller()
 
     def __enter__(self): self.enter(); return self
     def __exit__(self, *args, **xargs): self.exit()
@@ -118,15 +125,19 @@ class InputDeviceListener:
     def enter(self):
         self.mouse_listener.start()
         self.key_listener.start()
+        self.set_key_grabbing(self.config["volume_hotkeys"])
+        self.set_button_grabbing(bool(self._config_button))
+        if LINUX: self._xgrab.enter()
 
     def exit(self):
         self.mouse_listener.stop()
         self.key_listener.stop()
+        self.set_key_grabbing(False)
+        self.set_button_grabbing(False)
+        if LINUX: self._xgrab.exit()
 
     def on_mouse_click(self, x, y, button, pressed):
-        try: config_button = config.getint("Hotkeys","mouse_button")
-        except ValueError: return
-        if button.value != config_button: return
+        if button.name != self._config_button: return
         self._pressed = pressed
         if pressed: self.on_mouse_down(x, y)
         else: self.on_mouse_up(x, y)
@@ -136,9 +147,41 @@ class InputDeviceListener:
 
     def on_hotkey_press(self, key):
         if not self.config["volume_hotkeys"]: return
-        if key == keyboard.Key.media_volume_up: self.on_volume_key_press(True)
+        key = self.key_listener.canonical(key)
+        if key == keyboard.Key.ctrl: self._ctrl = True
+        elif not self._ctrl: return
+        elif key == keyboard.Key.media_volume_up: self.on_volume_key_press(True)
         elif key == keyboard.Key.media_volume_down: self.on_volume_key_press(False)
         elif key == keyboard.Key.media_volume_mute: self.on_mute_key_press()
+
+    def on_hotkey_release(self, key):
+        key = self.key_listener.canonical(key)
+        if key == keyboard.Key.ctrl: self._ctrl = False
+
+    def set_keyboard_media_keys(self, *args, **xargs):
+        self.set_key_grabbing(False)
+        super().set_keyboard_media_keys(*args, **xargs)
+        self.set_key_grabbing(self.config["volume_hotkeys"])
+
+    def set_key_grabbing(self, value):
+        """ stop forwarding volume media buttons to other programs """
+        if not LINUX: return
+        for key in [keyboard.Key.media_volume_up, keyboard.Key.media_volume_up, keyboard.Key.media_volume_mute]:
+            if value: self._xgrab.grab_key(key.value.vk, "Control")
+            else: self._xgrab.ungrab_key(key.value.vk)
+
+    def set_mouse_key(self, key):
+        self.set_button_grabbing(False)
+        self._config_button = key
+        super().set_mouse_key(key)
+        self.set_button_grabbing(bool(self._config_button))
+
+    def set_button_grabbing(self, value):
+        """ stop forwarding configured mouse button events to other programs """
+        if not LINUX or not self._config_button: return
+        button_int = getattr(mouse.Button, self._config_button).value
+        if value: self._xgrab.grab_button(button_int)
+        else: self._xgrab.ungrab_button(button_int)
 
 
 class KeyBinding(VolumeChanger, InputDeviceListener): pass

@@ -241,7 +241,7 @@ class MenuMixin:
         item_hotkeys = Gtk.CheckMenuItem("Keyboard media keys")
         item_hotkeys.set_active(self.config["volume_hotkeys"])
         item_hotkeys.connect("toggled", lambda *args:
-            self.config.__setitem__("volume_hotkeys",item_hotkeys.get_active()))
+            self.set_keyboard_media_keys(item_hotkeys.get_active()))
         menu.append(item_hotkeys)
 
         menu.append(Gtk.SeparatorMenuItem())
@@ -256,7 +256,13 @@ class MenuMixin:
 
         menu.show_all()
         return menu
-    
+
+    def set_keyboard_media_keys(self, active):
+        self.config.__setitem__("volume_hotkeys", active)
+
+    def set_mouse_key(self, key):
+        pass
+
     def add_feature(self, f, compact=True):
         """ compact: If true, SelectFeatures show the value in the label.
         and BoolFeatures are Checkboxes without submenus. """
