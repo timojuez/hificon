@@ -30,8 +30,8 @@ setup(name=PKG_NAME,
       entry_points={'console_scripts': [
         'hifish = %(name)s.hifish:main'%dict(name=PKG_NAME),
         "%(name)s_server = %(name)s.server:main"%dict(name=PKG_NAME),
-        "%(name)s_menu = %(name)s.menu:main"%dict(name=PKG_NAME),
-        '%(name)s_tray = %(name)s.tray:main'%dict(name=PKG_NAME),
+        "%(name)s_menu_control = %(name)s.menu:main"%dict(name=PKG_NAME),
+        '%(name)s_tray_control = %(name)s.tray:main'%dict(name=PKG_NAME),
         '%(name)s_setup = %(name)s.tray.setup:main'%dict(name=PKG_NAME),
       ]},
 )
