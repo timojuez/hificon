@@ -416,8 +416,12 @@ class Source(SelectFeature):
     def consume(self, data):
         self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
     
+    def _remote_set(self, *args, **xargs):
+        super(Source, self).remote_set(*args, **xargs)
+        self.async_poll()
+
     def remote_set(self, *args, **xargs):
-        self.target.schedule(lambda:super(Source, self).remote_set(*args, **xargs), requires=("source_names",))
+        self.target.schedule(lambda:self._remote_set(*args, **xargs), requires=("source_names",))
 
 
 @Denon.add_feature(overwrite=True)
