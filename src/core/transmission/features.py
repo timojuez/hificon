@@ -354,14 +354,15 @@ class ClientToServerFeatureMixin:
     """ Inheriting features are write only on client and read only on server """
     call = None
 
+    # for client
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         if isinstance(self.target, ClientType): self.target.bind(on_connect=lambda:self.on_set())
-    
-    # for client
+
     def get(self): return "(select)" if isinstance(self.target, ClientType) else super().get()
+
     def isset(self):
-        return self.target.connected if isinstance(self.target, ClientType) else super().isset()
+        return True if isinstance(self.target, ClientType) else super().isset()
 
     # for server
     def remote_set(self, *args, **xargs):
