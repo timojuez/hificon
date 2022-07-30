@@ -17,6 +17,7 @@ class _SchemeBaseMeta(type):
 
     def __init__(cls, name, bases, dct):
         cls.features = cls.features.copy()
+        cls.feature_categories = cls.feature_categories.copy()
 
 
 class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
@@ -24,6 +25,7 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     connected = False
     uri = ""
     features = features.Features()
+    feature_categories = dict()
     _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
@@ -77,6 +79,7 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
             ))
             cls.features.pop(Feature.id, None)
             cls.features[Feature.id] = Feature
+            cls.feature_categories[Feature.category] = None
             return Feature
         return add(Feature) if Feature else add
     

@@ -198,9 +198,8 @@ class MenuMixin:
         self.target.bind(on_connect = gtk(item_more.show))
         self.target.bind(on_disconnected = gtk(item_more.hide))
         submenu = Gtk.Menu()
-        categories = list(dict.fromkeys([f.category for f in self.target.features.values()]))
         categories = {cat: {"menu":Gtk.Menu(), "item":Gtk.MenuItem(cat, no_show_all=True)}
-            for cat in categories}
+            for cat in self.target.feature_categories}
         for d in categories.values():
             submenu.append(d["item"])
             d["item"].set_submenu(d["menu"])
