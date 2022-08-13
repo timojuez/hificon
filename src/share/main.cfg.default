@@ -25,7 +25,6 @@ notification_blacklist = maxvol, input_signal, source_names, device_power, techn
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
-tray_menu_features = @volume_feature_id, @power_feature_id, sound_mode, sound_mode_setting, @source_feature_id
 
 
 [Hotkeys]

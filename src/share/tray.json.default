@@ -9,5 +9,7 @@
     "control_power_off": true,
 
     "_volume_hotkeys_comment": "Use volume media keys from keyboard to control target",
-    "volume_hotkeys": true
+    "volume_hotkeys": true,
+
+    "tray_menu_features": ["@volume_feature_id", "@power_feature_id", "sound_mode", "sound_mode_setting", "@source_feature_id"]
 }

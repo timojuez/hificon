@@ -2,7 +2,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
-from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio
+from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio, GObject
 import sys, pkgutil
 from threading import Timer
 from ..core.util.async_widget import bind_widget_to_value
@@ -12,6 +12,7 @@ from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
 
 
 Notify.init(NAME)
+DND_FROM_MENU = 1000
 
 
 class Singleton(type):
@@ -61,6 +62,131 @@ class GladeGtk(metaclass=Singleton):
 
     @gtk
     def hide(self): self.window.hide()
+
+
+class Settings(GladeGtk):
+    GLADE = "../share/settings.glade"
+
+    def __init__(self, target, config, on_menu_settings_change=None, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.on_menu_settings_change = on_menu_settings_change
+        self.target = target
+        self.window = self.builder.get_object("window")
+        self.menu_list = self.builder.get_object("menu_list")
+        self.available_list = self.builder.get_object("available_list")
+        self.menu_column = self.builder.get_object("menu_column")
+        self.available_column = self.builder.get_object("available_column")
+        self.menu_view = self.builder.get_object("menu_view")
+        self.avail_view = self.builder.get_object("avail_view")
+        self.config = config
+        item_poweroffsd = self.builder.get_object("poweroff")
+        item_poweroffsd.set_active(self.config["control_power_off"])
+        item_poweroffsd.connect("toggled", lambda *args:
+            self.config.__setitem__("control_power_off",item_poweroffsd.get_active()))
+        item_hotkeys = self.builder.get_object("hotkeys")
+        item_hotkeys.set_active(self.config["volume_hotkeys"])
+        item_hotkeys.connect("toggled", lambda *args:
+            self.set_keyboard_media_keys(item_hotkeys.get_active()))
+        
+        self.menu_list = Gtk.ListStore(GObject.TYPE_PYOBJECT)
+        self.menu_view.set_model(self.menu_list)
+        avail_list = Gtk.TreeStore(GObject.TYPE_PYOBJECT)
+        category = {c:avail_list.append(None, [c]) for c in target.feature_categories}
+        for f in target.features.values(): avail_list.append(category[f.category], [f])
+        self.avail_view.set_model(avail_list)
+        cell = Gtk.CellRendererText()
+        self.available_column.set_cell_data_func(cell, self._set_avail_cell_text)
+        self.available_column.pack_start(cell, True)
+        self.menu_column.set_cell_data_func(cell, self._set_menu_cell_text)
+        self.menu_column.pack_start(cell, True)
+        #self.available_column.add_attribute(cell, "text", 0)
+
+        dnd_from_avail = [('a', Gtk.TargetFlags.SAME_APP, DND_FROM_MENU+1)]
+        dnd_from_menu = [('b', Gtk.TargetFlags.SAME_APP, DND_FROM_MENU)]
+        self.avail_view.enable_model_drag_source(
+            Gdk.ModifierType.BUTTON1_MASK, dnd_from_avail, Gdk.DragAction.COPY)
+        self.avail_view.enable_model_drag_dest(dnd_from_menu, Gdk.DragAction.MOVE)
+        self.menu_view.enable_model_drag_source(
+            Gdk.ModifierType.BUTTON1_MASK, dnd_from_menu, Gdk.DragAction.MOVE)
+        self.menu_view.enable_model_drag_dest(dnd_from_avail+dnd_from_menu, Gdk.DragAction.MOVE)
+
+        self._load_tray_menu_features()
+
+    def _load_tray_menu_features(self):
+        features = []
+        for f_id in self.config["tray_menu_features"]:
+            f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
+            f = getattr(self.target.features, f_id, None)
+            if f: features.append(f)
+        for f in features: self.menu_list.append([f])
+        if self.on_menu_settings_change: self.on_menu_settings_change(features)
+
+    def _save_tray_menu_features(self, features):
+        # TODO
+        pass
+
+    def _set_menu_cell_text(self, column, cell, model, it, data):
+        obj = model.get_value(it, 0)
+        s = f"{obj.name} ({obj.category})"
+        cell.set_property('text', s)
+
+    def _set_avail_cell_text(self, column, cell, model, it, data):
+        obj = model.get_value(it, 0)
+        s = obj if isinstance(obj, str) else obj.name
+        cell.set_property('text', s)
+
+    def set_keyboard_media_keys(self, active):
+        self.config.__setitem__("volume_hotkeys", active)
+
+    def set_mouse_key(self, key):
+        pass
+
+    def on_close_click(self, *args, **xargs):
+        self.hide()
+        return True
+
+    def on_avail_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
+        context.finish(True, True, timestamp)
+        self.on_menu_change()
+
+    def on_menu_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
+        f_id = selection.get_text()
+        f = self.target.features.get(f_id)
+        if not f:
+            sys.stderr.write(f"DnD error: Cannot find feature with id {f_id}.\n")
+            context.finish(False, False, timestamp)
+        else:
+            drop_info = treeview.get_dest_row_at_pos(x, y)
+            if drop_info:
+                path, pos = drop_info
+                drop_before = pos in (Gtk.TreeViewDropPosition.BEFORE, Gtk.TreeViewDropPosition.INTO_OR_BEFORE)
+                insert = (self.menu_list.insert_before if drop_before
+                    else self.menu_list.insert_after)
+                insert(self.menu_list.get_iter(path), [f])
+                #widget.stop_emission('drag_data_received')
+            else:
+                self.menu_list.append([f])
+            context.finish(True, info == DND_FROM_MENU, timestamp)
+            self.on_menu_change()
+
+    def on_menu_change(self):
+        features = []
+        it = self.menu_list.get_iter_first()
+        while it:
+            features.append(self.menu_list.get_value(it, 0))
+            it = self.menu_list.iter_next(it)
+        self._save_tray_menu_features(features)
+        if self.on_menu_settings_change: self.on_menu_settings_change(features)
+
+    def on_view_drag_data_get(self, treeview, context, selection, info, timestamp):
+        treeselection = treeview.get_selection()
+        model, iter = treeselection.get_selected()
+        f = model.get_value(iter, 0)
+        if isinstance(f, features.Feature):
+            selection.set(Gdk.TARGET_STRING, 8, f.id.encode())
+
+    def on_menu_view_drag_drop(self, treeview, context, x, y, time):
+        context.finish(True, False, time)
 
 
 class GaugeNotification(GladeGtk, _Notification):
@@ -178,19 +304,21 @@ class Notification(_Notification, Notify.Notification):
 
 
 class MenuMixin:
+    _header_items = {}
+    _footer_items = []
 
-    def build_menu(self):
-        menu = Gtk.Menu()
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._menu = Gtk.Menu()
 
         # header features
-        for f_id in config.getlist("Tray","tray_menu_features"):
-            f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
-            f = getattr(self.target.features, f_id, None)
-            if f: menu.append(self.add_feature(f, True))
-            if f: self.target.preload_features.add(f_id)
+        for f in self.target.features.values():
+            try: item = self.add_feature(f, True)
+            except TypeError: pass
+            else: self._header_items[f] = item
 
         item_disconnected = Gtk.MenuItem("Connecting ...", sensitive=False)
-        menu.append(item_disconnected)
+        self._footer_items.append(item_disconnected)
         self.target.bind(on_connect = gtk(item_disconnected.hide))
         self.target.bind(on_disconnected = gtk(item_disconnected.show))
 
@@ -207,7 +335,7 @@ class MenuMixin:
         for key, f in self.target.features.items():
             d = categories[f.category]
             try: d["menu"].append(self.add_feature(f, False))
-            except RuntimeError: pass
+            except TypeError: pass
             else: f.bind(on_set = gtk(lambda i=d["item"]: i.show()))
         def poll_all():
             try:
@@ -215,52 +343,47 @@ class MenuMixin:
             except ConnectionError: pass
         self.target.bind(on_connect=lambda:Timer(1, poll_all).start())
         item_more.set_submenu(submenu)
-        menu.append(item_more)
+        self._footer_items.append(item_more)
 
-        menu.append(Gtk.SeparatorMenuItem())
+        self._footer_items.append(Gtk.SeparatorMenuItem())
 
         item_poweron = Gtk.CheckMenuItem("Auto power on")
         item_poweron.set_active(self.config["auto_power_on"])
         item_poweron.connect("toggled", lambda *args:
             self.config.__setitem__("auto_power_on",item_poweron.get_active()))
-        menu.append(item_poweron)
+        self._footer_items.append(item_poweron)
 
         item_poweroff = Gtk.CheckMenuItem("Auto power off")
         item_poweroff.set_active(self.config["auto_power_off"])
         item_poweroff.connect("toggled", lambda *args:
             self.config.__setitem__("auto_power_off",item_poweroff.get_active()))
-        menu.append(item_poweroff)
+        self._footer_items.append(item_poweroff)
 
-        item_poweroffsd = Gtk.CheckMenuItem("Power off on shutdown")
-        item_poweroffsd.set_active(self.config["control_power_off"])
-        item_poweroffsd.connect("toggled", lambda *args:
-            self.config.__setitem__("control_power_off",item_poweroffsd.get_active()))
-        menu.append(item_poweroffsd)
+        self._footer_items.append(Gtk.SeparatorMenuItem())
 
-        item_hotkeys = Gtk.CheckMenuItem("Keyboard media keys")
-        item_hotkeys.set_active(self.config["volume_hotkeys"])
-        item_hotkeys.connect("toggled", lambda *args:
-            self.set_keyboard_media_keys(item_hotkeys.get_active()))
-        menu.append(item_hotkeys)
-
-        menu.append(Gtk.SeparatorMenuItem())
+        item_settings = Gtk.MenuItem('Program Settings')
+        item_settings.connect('activate', lambda *args: Settings().show())
+        self._footer_items.append(item_settings)
 
         item_about = Gtk.MenuItem('About %s'%NAME)
         item_about.connect('activate', lambda *args: self.build_about_dialog())
-        menu.append(item_about)
+        self._footer_items.append(item_about)
 
         item_quit = Gtk.MenuItem('Quit')
         item_quit.connect('activate', lambda *args: (self.target.exit(), GUI_Backend.exit()))
-        menu.append(item_quit)
+        self._footer_items.append(item_quit)
 
-        menu.show_all()
-        return menu
+        for e in self._footer_items+list(self._header_items.values()): e.show_all()
 
-    def set_keyboard_media_keys(self, active):
-        self.config.__setitem__("volume_hotkeys", active)
+    def on_menu_settings_change(self, features): self._refill_menu(features)
 
-    def set_mouse_key(self, key):
-        pass
+    @gtk
+    def _refill_menu(self, header_features):
+        for child in self._menu.get_children(): self._menu.remove(child)
+        for f in header_features: self.target.preload_features.add(f.id)
+        for f in header_features:
+            if item := self._header_items.get(f, None): self._menu.append(item)
+        for item in self._footer_items: self._menu.append(item)
 
     def add_feature(self, f, compact=True):
         """ compact: If true, SelectFeatures show the value in the label.
@@ -268,7 +391,7 @@ class MenuMixin:
         if isinstance(f, features.BoolFeature): item = self._add_bool_feature(f, compact)
         elif isinstance(f, features.NumericFeature): item = self._add_numeric_feature(f, compact)
         elif isinstance(f, features.SelectFeature): item = self._add_select_feature(f, compact)
-        else: raise RuntimeError("Unsupported feature type: %s"%f.type)
+        else: raise TypeError(f"Unsupported feature type for {f.id}: {f.type}")
         item.set_no_show_all(True)
         f.bind(on_set = gtk(item.show))
         f.bind(on_unset = gtk(item.hide))
@@ -322,10 +445,11 @@ class Tray(MenuMixin):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        Settings(self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)
-        self.icon.set_menu(self.build_menu())
+        self.icon.set_menu(self._menu)
         
     def on_scroll_up(self, steps): pass
     
