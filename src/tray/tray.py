@@ -247,9 +247,9 @@ class NotifyPoweroff(TargetController):
     
     def on_target_feature_change(self, f_id, value):
         if f_id == config.power:
-            if value == True: # poweron
+            if value == True: # poweron event
                 self._start_idle_timer()
-            elif value == False: # poweroff
+            elif value == False: # poweroff event
                 self.close_popup()
                 if self._idle_timer: self._idle_timer.cancel()
 

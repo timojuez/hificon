@@ -16,8 +16,8 @@ class _Abstract(object):
     def __init__(self, *args, verbose=0, **xargs):
         super().__init__(*args,**xargs)
         
-    def mainloop(self,*args,**xargs):
-        if hasattr(super(),"mainloop"): return super().mainloop(*args,**xargs)
+    def mainloop(self, *args, **xargs):
+        if hasattr(super(), "mainloop"): return super().mainloop(*args, **xargs)
         else:
             try:
                 while True: time.sleep(1000)
