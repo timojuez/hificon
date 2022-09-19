@@ -291,12 +291,15 @@ class NotifyPoweroff(TargetController):
         self.target.schedule(lambda:(force or self.can_poweroff) and setattr(self.target,config.power,False),
             requires=(config.power, config.source))
 
-
-class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend):
-    
     def mainloop(self):
-        Thread(name="TargetController",target=lambda:TargetController.mainloop(self),daemon=True).start()
-        gui.GUI_Backend.mainloop(self)
+        Thread(name="TargetController", target=lambda:TargetController.mainloop(self), daemon=True).start()
+        super().mainloop()
+
+    def exit(self):
+        gui.GUI_Backend.exit()
+
+
+class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend): pass
 
 
 def main():
