@@ -3,8 +3,8 @@ Common abstract amplifier classes for creating an amp scheme.
 Examples in src/schemes
 """
 
-from ..core.util import log_call
-from ..core import config, AbstractScheme, TelnetScheme, features
+from .core.util import log_call
+from .core import config, AbstractScheme, TelnetScheme, features
 
 
 class AbstractAmp(AbstractScheme):
