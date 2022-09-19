@@ -11,11 +11,11 @@ class SoundMixin:
         self.target.bind(on_connect=self.on_target_connect)
 
     @log_call
-    def on_start_playing(self): self.target.on_start_playing()
+    def on_start_playing(self): pass
 
     @log_call
-    def on_stop_playing(self): self.target.on_stop_playing()
-    
+    def on_stop_playing(self): pass
+
     def on_target_connect(self):
         if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
             self.on_start_playing()
@@ -27,9 +27,6 @@ class AutoPower:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.target.bind(on_start_playing = self.poweron)
-        self.target.bind(on_idle = self.on_target_idle)
-    
-    def on_target_idle(self): self.target.poweroff()
 
 
 class AmpController(AutoPower, SoundMixin, TargetController):

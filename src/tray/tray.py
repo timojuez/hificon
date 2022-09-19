@@ -1,5 +1,5 @@
 import sys, math, pkgutil, os, tempfile, argparse
-from threading import Thread, Timer
+from threading import Thread, Timer, Lock
 from .. import Target
 from .. import NAME
 from ..core import features
@@ -185,16 +185,23 @@ class TrayMixin(gui.Tray):
 
 
 class NotifyPoweroff:
-    """ Adds a notification warning to poweroff when on_idle """
+    """ Adds a notification warning to poweroff when idling """
     notification_timeout = 10
     _button_clicked = False
+    _playing_lock = Lock
+    _playing = False
+    _idle_timer_lock = Lock
+    _idle_timer = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self._playing_lock = self._playing_lock()
+        self._idle_timer_lock = self._idle_timer_lock()
         self.target.preload_features.add("name")
         self.target.bind(
-            on_start_playing = self.close_popup,
-            on_poweroff = self.close_popup,
+            on_start_playing = self.on_unidle,
+            on_stop_playing = self.start_idle_timer,
+            on_feature_change = self.on_target_feature_change,
             on_disconnected = self.close_popup)
         self._n = gui.Notification()
         buttons = [("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)]
@@ -203,9 +210,49 @@ class NotifyPoweroff:
                 lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
         self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.notification_timeout*1000)
+
+    def on_start_playing(self):
+        """ start playing locally, e.g. via pulse """
+        super().on_start_playing()
+        self.on_unidle()
+
+    def on_stop_playing(self):
+        """ stop playing locally """
+        super().on_stop_playing()
+        if not self.target._playing: self.start_idle_timer()
+
+    def start_idle_timer(self):
+        with self._playing_lock:
+            self._playing = False
+            self._start_idle_timer()
+
+    def on_unidle(self):
+        """ when starting to play something locally or on amp """
+        self.close_popup()
+        with self._playing_lock:
+            self._playing = True
+            with self._idle_timer_lock:
+                if self._idle_timer: self._idle_timer.cancel()
+
+    def _start_idle_timer(self):
+        with self._idle_timer_lock:
+            if self._playing or self._idle_timer and self._idle_timer.is_alive(): return
+            try: timeout = config.getfloat("Amp","poweroff_after")*60
+            except ValueError: return
+            if not timeout: return
+            self._idle_timer = Timer(timeout, self.on_idle)
+            self._idle_timer.start()
     
+    def on_target_feature_change(self, f_id, value):
+        if f_id == config.power:
+            if value == True: # poweron
+                self._start_idle_timer()
+            elif value == False: # poweroff
+                self.close_popup()
+                if self._idle_timer: self._idle_timer.cancel()
+
     def snooze_notification(self):
-        self.target.start_idle_timer()
+        self._start_idle_timer()
 
     def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
@@ -214,10 +261,10 @@ class NotifyPoweroff:
             self.snooze_notification()
         self._button_clicked = False
     
-    def on_target_idle(self):
-        self.target.schedule(self._on_target_idle, requires=("name", config.power, config.source))
+    def on_idle(self):
+        self.target.schedule(self._on_idle, requires=("name", config.power, config.source))
 
-    def _on_target_idle(self):
+    def _on_idle(self):
         if self.config["auto_power_off"] and self.can_poweroff:
             self._n.update("Power off %s"%self.target.name)
             self._n.show()

@@ -875,20 +875,12 @@ class InputSignal(BoolFeature): #undocumented
     category = "Input"
     function = "SSINFAISSIG "
     translation = {"01": False, "02": True, "12": False} #01: analog, 02: PCM
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.target.bind(on_stop_playing = self.on_stop_playing)
-        
+
     def matches(self, data): return super().matches(data) and isinstance(self.unserialize(data), bool)
 
     def on_change(self, val):
         super().on_change(val)
         self.target.on_start_playing() if val == True else self.target.on_stop_playing()
-
-    def on_stop_playing(self):
-        # undo target.on_stop_playing() if self.get() == True
-        self.target.schedule(lambda:self.get() and self.target.on_start_playing(), requires=(self.id,))
 
 
 @Denon.add_feature
