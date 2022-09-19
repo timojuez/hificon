@@ -17,8 +17,6 @@ poweroff_after = 2.5
 
 
 [Tray]
-# values: "*" (all), "" (none) or list of attributes separated by ","
-notification_whitelist = *
 notification_blacklist = fallback, maxvol, input_signal, source_names, device_power, technical_sound_mode
 # on screen notification timeout in milliseconds
 notification_timeout = 2000

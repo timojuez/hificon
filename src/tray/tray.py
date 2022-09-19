@@ -115,11 +115,9 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        notification_whitelist = config.getlist("Tray","notification_whitelist")
         notification_blacklist = config.getlist("Tray","notification_blacklist")
         n_features = [f for f in self.target.features.values()
-            if f.id not in notification_blacklist
-            and ("*" in notification_whitelist or f.id in notification_whitelist)]
+            if f.id not in notification_blacklist]
         self._notifications = {f.id: n for f in n_features for n in [self.create_notification(f)] if n}
         self.target.preload_features.add(config.volume)
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
