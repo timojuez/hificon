@@ -12,7 +12,7 @@ from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
 
 
 Notify.init(NAME)
-DND_FROM_MENU = 1000
+DND_FROM_MENU = 1000 # drag n drop id
 
 
 class Singleton(type):
