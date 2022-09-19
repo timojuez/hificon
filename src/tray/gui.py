@@ -122,8 +122,7 @@ class Settings(GladeGtk):
         if self.on_menu_settings_change: self.on_menu_settings_change(features)
 
     def _save_tray_menu_features(self, features):
-        # TODO
-        pass
+        self.config["tray_menu_features"] = [f.id for f in features]
 
     def _set_menu_cell_text(self, column, cell, model, it, data):
         obj = model.get_value(it, 0)
