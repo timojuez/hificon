@@ -5,7 +5,7 @@ from .. import NAME
 from ..core import features
 from ..core.util import Bindable
 from ..core.config import config, ConfigDict
-from ..amp import AmpController
+from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
@@ -184,7 +184,7 @@ class TrayMixin(gui.Tray):
         if force or self.config["control_power_off"]: super().poweroff(force=force)
 
 
-class NotifyPoweroff:
+class NotifyPoweroff(TargetController):
     """ Adds a notification warning to poweroff when idling """
     notification_timeout = 10
     _button_clicked = False
@@ -197,6 +197,7 @@ class NotifyPoweroff:
         super().__init__(*args, **xargs)
         self._playing_lock = self._playing_lock()
         self._idle_timer_lock = self._idle_timer_lock()
+        self.target.preload_features.update((config.source, config.power))
         self.target.preload_features.add("name")
         self.target.bind(
             on_start_playing = self.on_unidle,
@@ -233,6 +234,7 @@ class NotifyPoweroff:
             self._playing = True
             with self._idle_timer_lock:
                 if self._idle_timer: self._idle_timer.cancel()
+        self.poweron()
 
     def _start_idle_timer(self):
         with self._idle_timer_lock:
@@ -273,11 +275,27 @@ class NotifyPoweroff:
         try: self._n.close()
         except: pass
 
+    def poweron(self): self.target.schedule(self._poweron, requires=(config.power, config.source))
 
-class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend, AmpController):
+    def _poweron(self):
+        if getattr(self.target, config.power): return
+        if config["Amp"].get("source"):
+            self.target.features[config.source].remote_set(config.getlist("Amp","source")[0])
+        setattr(self.target, config.power, True)
+
+    can_poweroff = property(
+        lambda self: getattr(self.target,config.power)
+        and (not config["Amp"]["source"] or getattr(self.target,config.source) in config.getlist("Amp","source")))
+
+    def poweroff(self, force=False):
+        self.target.schedule(lambda:(force or self.can_poweroff) and setattr(self.target,config.power,False),
+            requires=(config.power, config.source))
+
+
+class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend):
     
     def mainloop(self):
-        Thread(name="AmpController",target=lambda:AmpController.mainloop(self),daemon=True).start()
+        Thread(name="TargetController",target=lambda:TargetController.mainloop(self),daemon=True).start()
         gui.GUI_Backend.mainloop(self)
 
 

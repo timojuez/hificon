@@ -53,7 +53,26 @@ class AutoPower(_Base):
         super().on_suspend()
 
 
-class TargetController(AutoPower, AutoConnect, _Base):
+class SoundMixin:
+    """ calls on_start_playing and on_stop_playing when pulse decides.
+    This mixin causes on_start_playing() to be called when necessary after a reconnection """
+    
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.target.bind(on_connect=self.on_target_connect)
+
+    @log_call
+    def on_start_playing(self): pass
+
+    @log_call
+    def on_stop_playing(self): pass
+
+    def on_target_connect(self):
+        if hasattr(self,"pulse") and self.pulse.connected and self.pulse.is_playing:
+            self.on_start_playing()
+
+
+class TargetController(SoundMixin, AutoPower, AutoConnect, _Base):
     """
     Adds system events listener. Keep target connected whenever possible
     Features: Auto power, auto reconnecting, 
