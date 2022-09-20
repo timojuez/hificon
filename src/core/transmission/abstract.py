@@ -125,13 +125,16 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
 class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
     """ Matches always, if no other feature matched """
     
-    def isset(self): return super().isset() and config.getboolean("Target","fallback_feature")
-
     def consume(self, data):
-        self._val = data
         if self.target.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        if config.getboolean("Target","fallback_feature"): self.on_change(data)
+        with self._lock:
+            self._prev_val = self._val
+            self._val = data
+            self.on_change(data)
+            #TODO: must call on_set() according to architecture. but shall not be visible in settings
+            #if self._prev_val == None: self.on_set()
+            self.on_processed(data)
 
 
 @SchemeBase.add_feature
