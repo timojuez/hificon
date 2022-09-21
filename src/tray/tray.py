@@ -200,10 +200,9 @@ class NotifyPoweroff(TargetController):
         self.target.preload_features.update((config.source, config.power))
         self.target.preload_features.add("name")
         self.target.bind(
-            on_start_playing = self.on_unidle,
-            on_stop_playing = self.start_idle_timer,
             on_feature_change = self.on_target_feature_change,
             on_disconnected = self.close_popup)
+        self.target.features.is_playing.bind(self.on_target_playing)
         self._n = gui.Notification()
         buttons = [("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)]
         for name, func in buttons:
@@ -211,6 +210,10 @@ class NotifyPoweroff(TargetController):
                 lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
         self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.notification_timeout*1000)
+
+    def on_target_playing(self, playing):
+        if playing: self.on_unidle()
+        else: self.start_idle_timer()
 
     def on_start_playing(self):
         """ start playing locally, e.g. via pulse """
@@ -220,7 +223,9 @@ class NotifyPoweroff(TargetController):
     def on_stop_playing(self):
         """ stop playing locally """
         super().on_stop_playing()
-        if not self.target._playing: self.start_idle_timer()
+        if self.target.is_playing.isset():
+            if not self.target.is_playing.get(): self.start_idle_timer()
+        else: self.target.is_playing.async_poll()
 
     def start_idle_timer(self):
         with self._playing_lock:

@@ -866,8 +866,8 @@ class Display(SelectFeature):
     function = "DIM "
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
-@Denon.add_feature
-class InputSignal(BoolFeature): #undocumented
+@Denon.add_feature(overwrite=True)
+class IsPlaying(BoolFeature): #undocumented
     """
     Information on Audio Input Signal
     Value seems to indicate if amp is playing something via HDMI
@@ -877,10 +877,6 @@ class InputSignal(BoolFeature): #undocumented
     translation = {"01": False, "02": True, "12": False} #01: analog, 02: PCM
 
     def matches(self, data): return super().matches(data) and isinstance(self.unserialize(data), bool)
-
-    def on_change(self, val):
-        super().on_change(val)
-        self.target.on_start_playing() if val == True else self.target.on_stop_playing()
 
 
 @Denon.add_feature

@@ -17,7 +17,7 @@ poweroff_after = 2.5
 
 
 [Tray]
-notification_blacklist = fallback, maxvol, input_signal, source_names, device_power, technical_sound_mode
+notification_blacklist = fallback, maxvol, is_playing, source_names, device_power, technical_sound_mode
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
