@@ -431,9 +431,9 @@ class Source(SelectFeature):
 @Denon.add_feature(overwrite=True)
 class Name(SelectFeature): #undocumented
     default_value = "Denon AVR"
+    dummy_value = "Dummy X7800H"
     function = "NSFRN "
     def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
-    def poll_on_dummy(self): self.set("Dummy X7800H")
 
 for code, f_id, name in SPEAKERS:
     @Denon.add_feature
