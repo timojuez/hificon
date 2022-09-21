@@ -213,7 +213,7 @@ class NotifyPoweroff(TargetController):
 
     def on_target_playing(self, playing):
         if playing: self.on_unidle()
-        else: self.start_idle_timer()
+        else: self.on_idle()
 
     def on_start_playing(self):
         """ start playing locally, e.g. via pulse """
@@ -224,42 +224,44 @@ class NotifyPoweroff(TargetController):
         """ stop playing locally """
         super().on_stop_playing()
         if self.target.is_playing.isset():
-            if not self.target.is_playing.get(): self.start_idle_timer()
+            if not self.target.is_playing.get(): self.on_idle()
         else: self.target.is_playing.async_poll()
 
-    def start_idle_timer(self):
+    def on_idle(self):
         with self._playing_lock:
             self._playing = False
-            self._start_idle_timer()
+            self.start_idle_timer()
 
     def on_unidle(self):
         """ when starting to play something locally or on amp """
-        self.close_popup()
         with self._playing_lock:
             self._playing = True
-            with self._idle_timer_lock:
-                if self._idle_timer: self._idle_timer.cancel()
+            self.stop_idle_timer()
         self.poweron()
 
-    def _start_idle_timer(self):
+    def start_idle_timer(self):
         with self._idle_timer_lock:
             if self._playing or self._idle_timer and self._idle_timer.is_alive(): return
             try: timeout = config.getfloat("Amp","poweroff_after")*60
             except ValueError: return
             if not timeout: return
-            self._idle_timer = Timer(timeout, self.on_idle)
+            self._idle_timer = Timer(timeout, self.on_idle_timeout)
             self._idle_timer.start()
-    
+
+    def stop_idle_timer(self):
+        with self._idle_timer_lock:
+            if self._idle_timer: self._idle_timer.cancel()
+        self.close_popup()
+
     def on_target_feature_change(self, f_id, value):
         if f_id == config.power:
             if value == True: # poweron event
-                self._start_idle_timer()
+                self.start_idle_timer()
             elif value == False: # poweroff event
-                self.close_popup()
-                if self._idle_timer: self._idle_timer.cancel()
+                self.stop_idle_timer()
 
     def snooze_notification(self):
-        self._start_idle_timer()
+        self.start_idle_timer()
 
     def on_popup_closed(self, *args):
         if self._n.get_closed_reason() == 1: # timeout
@@ -268,10 +270,10 @@ class NotifyPoweroff(TargetController):
             self.snooze_notification()
         self._button_clicked = False
     
-    def on_idle(self):
-        self.target.schedule(self._on_idle, requires=("name", config.power, config.source))
+    def on_idle_timeout(self):
+        self.target.schedule(self._on_idle_timeout, requires=("name", config.power, config.source))
 
-    def _on_idle(self):
+    def _on_idle_timeout(self):
         if self.config["auto_power_off"] and self.can_poweroff:
             self._n.update("Power off %s"%self.target.name)
             self._n.show()
