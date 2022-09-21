@@ -9,8 +9,6 @@ from .core import config, AbstractScheme, TelnetScheme, features
 
 class AbstractAmp(AbstractScheme): pass
 
-class TelnetAmp(AbstractAmp, TelnetScheme): pass
-
 @AbstractAmp.add_feature
 class Power(features.ConstantValueMixin, features.BoolFeature): pass
 
@@ -25,4 +23,6 @@ class Muted(features.ConstantValueMixin, features.BoolFeature): pass
 
 @AbstractAmp.add_feature
 class IsPlaying(features.ConstantValueMixin, features.BoolFeature): pass
+
+class TelnetAmp(AbstractAmp, TelnetScheme): pass
 
