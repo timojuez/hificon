@@ -223,9 +223,13 @@ class NotifyPoweroff(TargetController):
     def on_stop_playing(self):
         """ stop playing locally """
         super().on_stop_playing()
-        if self.target.is_playing.isset():
-            if not self.target.is_playing.get(): self.on_idle()
-        else: self.target.is_playing.async_poll()
+        # execute on_idle() if target is not playing
+        try: target_playing = self.target.features.is_playing.isset() and self.target.is_playing
+        except ConnectionError: target_playing = False
+        if not target_playing: self.on_idle()
+        if not self.target.features.is_playing.isset():
+            try: self.target.features.is_playing.async_poll()
+            except ConnectionError: pass
 
     def on_idle(self):
         with self._playing_lock:
