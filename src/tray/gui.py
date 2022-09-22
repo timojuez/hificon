@@ -64,6 +64,19 @@ class GladeGtk(metaclass=Singleton):
     def hide(self): self.window.hide()
 
 
+class MyTreeStore(Gtk.TreeStore):
+    """ Forbid dragging category items """
+
+    def __init__(self, view, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self._view = view
+
+    def do_row_draggable(self, path):
+        #return path.get_depth() > 1
+        obj = self._view.get_model().get_value(self._view.get_model().get_iter(path), 0)
+        return isinstance(obj, features.Feature)
+
+
 class Settings(GladeGtk):
     GLADE = "../share/settings.glade"
 
@@ -90,7 +103,7 @@ class Settings(GladeGtk):
         
         self.menu_list = Gtk.ListStore(GObject.TYPE_PYOBJECT)
         self.menu_view.set_model(self.menu_list)
-        avail_list = Gtk.TreeStore(GObject.TYPE_PYOBJECT)
+        avail_list = MyTreeStore(self.avail_view, GObject.TYPE_PYOBJECT)
         category = {c:avail_list.append(None, [c]) for c in target.feature_categories}
         for f in target.features.values(): avail_list.append(category[f.category], [f])
         self.avail_view.set_model(avail_list)
@@ -113,25 +126,26 @@ class Settings(GladeGtk):
         self._load_tray_menu_features()
 
     def _load_tray_menu_features(self):
-        features = []
-        for f_id in self.config["tray_menu_features"]:
-            f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
-            f = getattr(self.target.features, f_id, None)
-            if f: features.append(f)
-        for f in features: self.menu_list.append([f])
-        if self.on_menu_settings_change: self.on_menu_settings_change(features)
+        features = self.config["tray_menu_features"]
+        for f_id in features: self.menu_list.append([f_id])
+        self._update_listeners(features)
 
     def _save_tray_menu_features(self, features):
-        self.config["tray_menu_features"] = [f.id for f in features]
+        self.config["tray_menu_features"] = features
+
+    def _id_to_feature(self, f_id):
+        f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
+        return self.target.features.get(f_id)
 
     def _set_menu_cell_text(self, column, cell, model, it, data):
-        obj = model.get_value(it, 0)
-        s = f"{obj.name} ({obj.category})"
+        f_id = model.get_value(it, 0)
+        f = self._id_to_feature(f_id)
+        s = f"{f.name} ({f.category})" if f else f"{f_id} (Unavailable)"
         cell.set_property('text', s)
 
     def _set_avail_cell_text(self, column, cell, model, it, data):
         obj = model.get_value(it, 0)
-        s = obj if isinstance(obj, str) else obj.name
+        s = getattr(obj, "name", obj)
         cell.set_property('text', s)
 
     def set_keyboard_media_keys(self, active):
@@ -150,39 +164,40 @@ class Settings(GladeGtk):
 
     def on_menu_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
         f_id = selection.get_text()
-        f = self.target.features.get(f_id)
-        if not f:
-            sys.stderr.write(f"DnD error: Cannot find feature with id {f_id}.\n")
-            context.finish(False, False, timestamp)
+        drop_info = treeview.get_dest_row_at_pos(x, y)
+        if drop_info:
+            path, pos = drop_info
+            drop_before = pos in (Gtk.TreeViewDropPosition.BEFORE, Gtk.TreeViewDropPosition.INTO_OR_BEFORE)
+            insert = (self.menu_list.insert_before if drop_before
+                else self.menu_list.insert_after)
+            insert(self.menu_list.get_iter(path), [f_id])
+            #widget.stop_emission('drag_data_received')
         else:
-            drop_info = treeview.get_dest_row_at_pos(x, y)
-            if drop_info:
-                path, pos = drop_info
-                drop_before = pos in (Gtk.TreeViewDropPosition.BEFORE, Gtk.TreeViewDropPosition.INTO_OR_BEFORE)
-                insert = (self.menu_list.insert_before if drop_before
-                    else self.menu_list.insert_after)
-                insert(self.menu_list.get_iter(path), [f])
-                #widget.stop_emission('drag_data_received')
-            else:
-                self.menu_list.append([f])
-            context.finish(True, info == DND_FROM_MENU, timestamp)
-            self.on_menu_change()
+            self.menu_list.append([f_id])
+        context.finish(True, info == DND_FROM_MENU, timestamp)
+        self.on_menu_change()
 
     def on_menu_change(self):
-        features = []
+        f_ids = []
         it = self.menu_list.get_iter_first()
         while it:
-            features.append(self.menu_list.get_value(it, 0))
+            f_id = self.menu_list.get_value(it, 0)
+            f_ids.append(f_id)
             it = self.menu_list.iter_next(it)
-        self._save_tray_menu_features(features)
-        if self.on_menu_settings_change: self.on_menu_settings_change(features)
+        self._save_tray_menu_features(f_ids)
+        self._update_listeners(f_ids)
+
+    def _update_listeners(self, f_ids):
+        if not self.on_menu_settings_change: return
+        features = [f for f_id in f_ids for f in [self._id_to_feature(f_id)] if f]
+        self.on_menu_settings_change(features)
 
     def on_view_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
         model, iter = treeselection.get_selected()
-        f = model.get_value(iter, 0)
-        if isinstance(f, features.Feature):
-            selection.set(Gdk.TARGET_STRING, 8, f.id.encode())
+        obj = model.get_value(iter, 0)
+        b = getattr(obj, "id", obj).encode()
+        selection.set(Gdk.TARGET_STRING, 8, b)
 
     def on_menu_view_drag_drop(self, treeview, context, x, y, time):
         context.finish(True, False, time)
