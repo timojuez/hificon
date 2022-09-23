@@ -126,6 +126,10 @@ class Denon(TelnetAmp):
     description = "Denon/Marantz AVR compatible (tested with Denon X1400H)"
     _pulse = "CV?" # workaround for denon to retrieve CV?
     
+    @staticmethod
+    def matches_ssdp_response(response):
+        return "denon" in response.st.lower() or "marantz" in response.st.lower()
+
     def query(self, cmd, matches=None):
         """
         Send command to target

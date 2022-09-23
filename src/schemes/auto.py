@@ -2,27 +2,42 @@ import socket
 from urllib.parse import urlparse
 from ..core.util import ssdp
 from ..core import AbstractScheme
-from .. import Target
+from .. import Target, get_schemes
 
 
-def check_target(host):
-    uri = f"denon://{host}:23"
+def check_target(uri): return bool(get_name(uri))
+
+def get_name(uri):
     try:
         with Target(uri) as target: name = target.name
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
         return False
-    print("Found %s on %s."%(name, host))
-    return uri
+    print("Found %s on %s."%(name, uri))
+    return name
+
+
+def discover_targets():
+    """
+    Search local network for supported devices and yield uri, name
+    """
+    schemes = list(get_schemes())
+    discovered_hosts = set()
+    for response in ssdp.discover():
+        host = urlparse(response.location).hostname
+        port = 23 # TODO
+        if host in discovered_hosts: continue
+        for Scheme in schemes:
+            if not Scheme.matches_ssdp_response(response): continue
+            discovered_hosts.add(host)
+            #yield Scheme.scheme, host, port
+            t = Target(Scheme.scheme, host, port)
+            if name := get_name(t.uri):
+                yield t.uri, name
 
 
 def discover_target():
-    """
-    Search local network for Denon amp
-    """
-    for response in ssdp.discover():
-        if "denon" in response.st.lower() or "marantz" in response.st.lower():
-            host = urlparse(response.location).hostname
-            if uri := check_target(host): return uri
+    """ guess amp and return uri """
+    for uri, name in discover_targets(): return uri
     raise Exception("No target found. Check if device is connected or set IP manually.")
 
 

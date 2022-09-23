@@ -24,6 +24,13 @@ class SchemeType:
         if args is None: args = getattr(cls.Server,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
 
+    @staticmethod
+    def matches_ssdp_response(response):
+        """ Implement in scheme whether it can handle the service in @response or not.
+        Must be static
+        return boolean """
+        return False
+
 
 class ServerType: pass
 class ClientType: pass
