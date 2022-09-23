@@ -16,6 +16,7 @@ class TelnetClient(AbstractClient):
     port = None
     _host = None
     _port = None
+    _server = None
     _pulse = "" # this is being sent regularly to keep connection
     _telnet = None
     _send_lock = None
@@ -26,22 +27,24 @@ class TelnetClient(AbstractClient):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
-        self._host = host
-        self._port = port
+        if isinstance(host, AbstractServer): self._server = host
+        else: self._update_vars(host, port)
+
+    def _update_vars(self, host, port):
+        if host.startswith("//"): host = host[2:]
+        self.host = host
+        self.port = port
+        self.uri = f"{self.scheme}://{self.host}:{self.port}"
     
     def enter(self):
-        # set self.host and self.port, handle case self._host is server instance
-        if isinstance(self._host, AbstractServer):
+        # set self.host and self.port, handle case host was a server instance
+        if self._server is not None:
             try:
-                self.host = self._host.host
-                self.port = self._host.port
+                host = self._server.host
+                port = self._server.port
             except AttributeError:
                 raise RuntimeError("Maybe missed to call server.__enter__()?")
-        else:
-            self.host = self._host
-            self.port = self._port
-        if self.host.startswith("//"): self.host = self.host[2:]
-        self.uri = f"{self.scheme}://{self.host}:{self.port}"
+            self._update_vars(host, port)
         super().enter()
 
     def send(self, cmd):
