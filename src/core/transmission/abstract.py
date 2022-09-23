@@ -140,7 +140,7 @@ class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
 @SchemeBase.add_feature
 class Name(features.OfflineFeatureMixin, features.SelectFeature):
     
-    def get(self): return self.target.uri
+    def get(self): return self.target.get_title()
     def isset(self): return True
     def unset(self): pass
 
