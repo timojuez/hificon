@@ -24,7 +24,7 @@ def get_scheme(cls_path):
     return Scheme
 
 
-def Target(uri=None, role="client", *args, **xargs):
+def Target(uri=None, *args, role="client", **xargs):
     """
     Returns a scheme instance. The scheme class path must be contained in the URI.
     @uri: URI to connect to. Syntax: scheme_cls:arg_1:...:arg_n. Will be read from config by default.
