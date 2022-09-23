@@ -109,13 +109,13 @@ class CLI:
         print(f"A scheme defines a class that extends {PKG_NAME}.core.transmission.SchemeType.")
         print("The following schemes are being supported internally:")
         print()
-        for P in get_schemes():
-            print(bright(P.get_title()))
-            if isinstance(P.description, str): print(tw.fill(f"{P.description}"))
-            if uri := P.get_client_uri(): print(tw.fill(f"URI (Client): {uri}"))
-            if uri := P.get_server_uri(): print(tw.fill(f"URI (Server): {uri}"))
+        for S in get_schemes():
+            print(bright(S.get_title()))
+            if isinstance(S.description, str): print(tw.fill(f"{S.description}"))
+            if uri := S.get_client_uri(): print(tw.fill(f"URI (Client): {uri}"))
+            if uri := S.get_server_uri(): print(tw.fill(f"URI (Server): {uri}"))
             print()
-            #print(tw.fill("%-20s%-20s%s"%(bright(p), P.scheme, getattr(P, "help", ""))))
+            #print(tw.fill("%-20s%-20s%s"%(bright(p), S.scheme, getattr(S, "help", ""))))
 
     def print_help_features(self):
         tw = TextWrapper(
