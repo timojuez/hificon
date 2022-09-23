@@ -5,13 +5,12 @@ from ..core import AbstractScheme
 from .. import Target, get_schemes
 
 
-def check_target(uri): return bool(get_name(uri))
+def check_target(uri): return get_name(uri) is not None
 
 def get_name(uri):
     try:
         with Target(uri) as target: name = target.name
-    except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError):
-        return False
+    except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError): return
     print("Found %s on %s."%(name, uri))
     return name
 
@@ -29,15 +28,14 @@ def discover_targets():
         for Scheme in schemes:
             if not Scheme.matches_ssdp_response(response): continue
             discovered_hosts.add(host)
-            #yield Scheme.scheme, host, port
             t = Target(Scheme.scheme, host, port)
-            if name := get_name(t.uri):
-                yield t.uri, name
+            yield t.uri
 
 
 def discover_target():
     """ guess amp and return uri """
-    for uri, name in discover_targets(): return uri
+    for uri in discover_targets():
+        if check_target(uri): return uri
     raise Exception("No target found. Check if device is connected or set IP manually.")
 
 
