@@ -193,8 +193,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if self.call is not None: self.target.send(self.call)
     
     def poll_on_dummy(self):
-        if self.default_value is not None: val = self.default_value
-        elif self.dummy_value is not None: val = self.dummy_value
+        if self.dummy_value is not None: val = self.dummy_value
+        elif self.default_value is not None: val = self.default_value
         else: raise ValueError("Feature type %s has no dummy value."%f)
         #self.on_receive_raw_data(f.serialize(val)) # TODO: handle cases where f.call matches but f.matches() is False and maybe f'.matches() is True
         self.set(val)
@@ -305,13 +305,13 @@ class NumericFeature(Feature):
 
 class IntFeature(NumericFeature):
     type=int
-    dummy_value = property(lambda self: math.ceil((self.max+self.min)/2))
+    dummy_value = property(lambda self: self.default_value or math.ceil((self.max+self.min)/2))
 
 
 class SelectFeature(Feature):
     type=str
     options = []
-    dummy_value = property(lambda self: self.options[0] if self.options else "?")
+    dummy_value = property(lambda self: self.default_value or (self.options[0] if self.options else "?"))
 
     def remote_set(self, value, force=False):
         if not force and value not in self.options:
@@ -323,12 +323,12 @@ class SelectFeature(Feature):
 class BoolFeature(SelectFeature):
     type=bool
     options = [True, False]
-    dummy_value = False
+    dummy_value = property(lambda self: self.default_value or False)
 
 
 class DecimalFeature(NumericFeature):
     type=Decimal
-    dummy_value = property(lambda self: Decimal(self.max+self.min)/2)
+    dummy_value = property(lambda self: self.default_value or Decimal(self.max+self.min)/2)
     
     def remote_set(self, value, force=False):
         return super().remote_set((Decimal(value) if isinstance(value, int) else value), force)
