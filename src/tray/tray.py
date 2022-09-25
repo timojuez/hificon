@@ -175,17 +175,10 @@ class TrayMixin(gui.Tray):
         try:
             if volume.isset(): volume.remote_set(volume.get()-self.scroll_delta*steps)
         except ConnectionError: pass
-    
-    def poweron(self, force=False):
-        """ poweron target """
-        if force or self.config["auto_power_on"]: super().poweron()
-        
-    def poweroff(self, force=False):
-        if force or self.config["control_power_off"]: super().poweroff(force=force)
 
 
-class NotifyPoweroff(TargetController):
-    """ Adds a notification warning to poweroff when idling """
+class AutoPower(TargetController):
+    """ Power on when playing starts and show a notification warning to poweroff when idling """
     notification_timeout = 10
     _button_clicked = False
     _playing_lock = Lock
@@ -286,7 +279,10 @@ class NotifyPoweroff(TargetController):
         try: self._n.close()
         except: pass
 
-    def poweron(self): self.target.schedule(self._poweron, requires=(config.power, config.source))
+    def poweron(self):
+        """ poweron target """
+        if self.config["auto_power_on"]:
+            self.target.schedule(self._poweron, requires=(config.power, config.source))
 
     def _poweron(self):
         if getattr(self.target, config.power): return
@@ -298,8 +294,9 @@ class NotifyPoweroff(TargetController):
         lambda self: getattr(self.target,config.power)
         and (not config["Amp"]["source"] or getattr(self.target,config.source) in config.getlist("Amp","source")))
 
-    def poweroff(self, force=False):
-        self.target.schedule(lambda:(force or self.can_poweroff) and setattr(self.target,config.power,False),
+    def poweroff(self):
+        if not self.config["control_power_off"]: return
+        self.target.schedule(lambda:self.can_poweroff and setattr(self.target,config.power,False),
             requires=(config.power, config.source))
 
     def mainloop(self):
@@ -310,7 +307,7 @@ class NotifyPoweroff(TargetController):
         gui.GUI_Backend.exit()
 
 
-class Main(NotificationMixin, NotifyPoweroff, KeyBinding, TrayMixin, gui.GUI_Backend): pass
+class Main(NotificationMixin, AutoPower, KeyBinding, TrayMixin, gui.GUI_Backend): pass
 
 
 def main():
