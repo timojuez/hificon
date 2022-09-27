@@ -75,12 +75,13 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         if args is None: args = getattr(cls.Server,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
 
-    @staticmethod
-    def matches_ssdp_response(response):
-        """ Implement in scheme whether it can handle the service in @response or not.
-        Must be static
-        return boolean """
-        return False
+    @classmethod
+    def ssdp_to_uri(cls, response):
+        """ Must be implemented in scheme as classmethod.
+        Returns an uri if the scheme can handle the service in @response otherwise None.
+        response: An SSDP response.
+        returns: uri (string) or None """
+        return None
 
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):

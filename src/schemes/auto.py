@@ -23,13 +23,11 @@ def discover_targets():
     discovered_hosts = set()
     for response in ssdp.discover():
         host = urlparse(response.location).hostname
-        port = 23 # TODO
         if host in discovered_hosts: continue
         for Scheme in schemes:
-            if not Scheme.matches_ssdp_response(response): continue
-            discovered_hosts.add(host)
-            t = Target(Scheme.scheme, host, port)
-            yield t.uri
+            if uri := Scheme.ssdp_to_uri(response):
+                discovered_hosts.add(host)
+                yield uri
 
 
 def discover_target():

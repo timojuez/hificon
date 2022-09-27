@@ -3,8 +3,10 @@ Compatible with Denon Firmware Version 4600-6121-1061-3085
 """
 
 import sys, math
+from urllib.parse import urlparse
 from threading import Timer
 from decimal import Decimal, InvalidOperation
+from .. import Target
 from ..amp import TelnetAmp
 from ..core import config, features
 from ..core.transmission.types import ClientType, ServerType
@@ -126,9 +128,12 @@ class Denon(TelnetAmp):
     description = "Denon/Marantz AVR compatible (tested with Denon X1400H)"
     _pulse = "CV?" # workaround for denon to retrieve CV?
     
-    @staticmethod
-    def matches_ssdp_response(response):
-        return "denon" in response.st.lower() or "marantz" in response.st.lower()
+    @classmethod
+    def ssdp_to_uri(cls, response):
+        if "denon" in response.st.lower() or "marantz" in response.st.lower():
+            host = urlparse(response.location).hostname
+            port = 23 # TODO
+            return Target(cls.scheme, host, port).uri
 
     def query(self, cmd, matches=None):
         """
