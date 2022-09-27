@@ -1,4 +1,4 @@
-from ..core.transmission import SchemeType
+from ..core.transmission import AbstractScheme
 from .. import Target
 
 
@@ -25,7 +25,7 @@ class ClientRepeaterMixin:
         except ConnectionError as e: print(repr(e))
 
 
-class Repeat(SchemeType):
+class Repeat(AbstractScheme):
     title = "Repeater"
     description = "A server that connects to another server and repeats the data"
     server_args_help = ("CLIENT_URI",)
@@ -37,4 +37,8 @@ class Repeat(SchemeType):
     def new_server(cls, *args, **xargs):
         target = Target(":".join(args), connect=False)
         return type("Server", (ClientRepeaterMixin, target.Server, cls), {})(target, **xargs)
+
+    @classmethod
+    def new_dummyserver(cls, *args, **xargs):
+        raise NotImplementedError("Will not emulate the repeater.")
 

@@ -3,13 +3,13 @@ The classes AbstractClient and TelnetClient help you to stay synchronised with
 values from a Telnet or non-Telnet server. A client supports features. See features.py.
 """
 
-import sys
+import sys, re
 from threading import Thread, Event
 from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
-from .types import SchemeType, ServerType, ClientType
+from .types import ServerType, ClientType
 from . import features
 
 
@@ -20,7 +20,13 @@ class _SchemeBaseMeta(type):
         cls.feature_categories = cls.feature_categories.copy()
 
 
-class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
+class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
+    title = None
+    description = None
+    Client = None
+    Server = None
+    client_args_help = None # tuple, if None, will be read from Client.init_args_help
+    server_args_help = None # tuple
     verbose = 0
     connected = False
     uri = ""
@@ -54,6 +60,28 @@ class SchemeBase(Bindable, SchemeType, metaclass=_SchemeBaseMeta):
     
     def exit(self): pass
     
+    @classmethod
+    def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
+
+    @classmethod
+    def get_client_uri(cls):
+        args = cls.client_args_help
+        if args is None: args = getattr(cls.Client,"init_args_help",None)
+        if args is not None: return ":".join((cls.scheme, *args))
+
+    @classmethod
+    def get_server_uri(cls):
+        args = cls.server_args_help
+        if args is None: args = getattr(cls.Server,"init_args_help",None)
+        if args is not None: return ":".join((cls.scheme, *args))
+
+    @staticmethod
+    def matches_ssdp_response(response):
+        """ Implement in scheme whether it can handle the service in @response or not.
+        Must be static
+        return boolean """
+        return False
+
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
         """

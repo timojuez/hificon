@@ -1,6 +1,6 @@
 import importlib
 from urllib.parse import parse_qsl
-from .core import SchemeType, config, AbstractScheme, AbstractServer, AbstractClient, features
+from .core import config, AbstractScheme, AbstractServer, AbstractClient, features
 from .info import *
 from .schemes import schemes
 
@@ -20,7 +20,7 @@ def get_scheme(cls_path):
     module = importlib.import_module(module_path, "%s.schemes"%__name__)
     Scheme = getattr(module, cls)
     Scheme.scheme = cls_path
-    assert(issubclass(Scheme, SchemeType))
+    assert(issubclass(Scheme, AbstractScheme))
     return Scheme
 
 

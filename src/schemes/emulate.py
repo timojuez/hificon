@@ -4,7 +4,7 @@ Dry software run that emulates a target of another scheme
 
 from threading import Thread
 from .. import get_scheme
-from ..core.transmission import SchemeType, TelnetScheme
+from ..core.transmission import AbstractScheme, TelnetScheme
 from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer
 
 
@@ -52,7 +52,7 @@ class PlainDummyClientMixin(DummyClientMixin):
         if not self.connected: raise BrokenPipeError("Not connected")
 
 
-class Emulate(SchemeType):
+class Emulate(AbstractScheme):
     title = "Emulator"
     description = "Emulates a target"
     client_args_help = ("SCHEME",)
@@ -70,8 +70,12 @@ class Emulate(SchemeType):
         Scheme = get_scheme(scheme)
         return Scheme.new_dummyserver(*args, **xargs)
 
+    @classmethod
+    def new_dummyserver(cls, *args, **xargs):
+        raise NotImplementedError("Will not emulate the emulator.")
 
-class PlainEmulate(SchemeType):
+
+class PlainEmulate(AbstractScheme):
     """ Emulator without network connection. Only internal variables are being used. """
     title = "Plain Emulator"
     description = "Emulator that skips network"
@@ -87,4 +91,8 @@ class PlainEmulate(SchemeType):
     def new_server(cls, scheme, *args, **xargs):
         Scheme = get_scheme(scheme)
         return type("Server", (DummyServerMixin, Scheme, AbstractServer), {})(*args, **xargs)
+
+    @classmethod
+    def new_dummyserver(cls, *args, **xargs):
+        raise NotImplementedError("Will not emulate the emulator.")
 
