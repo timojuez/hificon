@@ -31,7 +31,8 @@ def Target(uri=None, *args, role="client", **xargs):
         Examples:
             denon://192.168.1.15:23
             emulate:denon
-    @role: Method "new_@role" will be called on the scheme for instantiation. Can be "server" or "client".
+            ?volume=20
+    @role: Method "new_@role" will be called on the scheme for instantiation. Can be "client", "server" or "dummyserver".
     """
     if uri and "?" in uri: uri, query = uri.split("?",1)
     else: query = None
