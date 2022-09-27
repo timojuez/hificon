@@ -4,6 +4,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 """
 
 import sys, re
+from urllib.parse import parse_qsl
 from threading import Thread, Event
 from ..util.function_bind import Bindable
 from ..util import log_call
@@ -148,6 +149,15 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         if self.verbose > 4: print(data, file=sys.stderr)
         consumed = [f.consume(data) for f_id,f in self.features.items() if f.matches(data)]
         if not consumed: self.features.fallback.consume(data)
+
+    def handle_query(self, query):
+        with self:
+            for key, val in parse_qsl(query, True):
+                if val: # ?fkey=val
+                    f = self.features[key]
+                    convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
+                    self.set_feature_value(f, convert(val))
+                else: self.send(key) # ?COMMAND #FIXME: use self.on_receive_raw_data for server
 
 
 @SchemeBase.add_feature

@@ -1,5 +1,4 @@
 import importlib
-from urllib.parse import parse_qsl
 from .core import config, AbstractScheme, AbstractServer, AbstractClient, features
 from .info import *
 from .schemes import schemes
@@ -40,13 +39,6 @@ def Target(uri=None, *args, role="client", **xargs):
     uri = uri.split(":")
     Scheme = getattr(get_scheme(uri.pop(0)), f"new_{role}")
     target = Scheme(*uri, *args, **xargs)
-    if query:
-        with target:
-            for key, val in parse_qsl(query, True):
-                if val: # ?fkey=val
-                    f = target.features[key]
-                    convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
-                    target.set_feature_value(f, convert(val))
-                else: target.send(key) # ?COMMAND #FIXME: use target.on_receive_raw_data for server
+    if query: target.handle_query(query)
     return target
 
