@@ -27,8 +27,7 @@ class TelnetClient(AbstractClient):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
-        if isinstance(host, AbstractServer): self._server = host
-        else: self._update_vars(host, port)
+        if host: self._update_vars(host, port)
 
     def _update_vars(self, host, port):
         if host.startswith("//"): host = host[2:]
@@ -36,17 +35,6 @@ class TelnetClient(AbstractClient):
         self.port = port
         self.uri = f"{self.scheme}://{self.host}:{self.port}"
     
-    def enter(self):
-        # set self.host and self.port, handle case host was a server instance
-        if self._server is not None:
-            try:
-                host = self._server.host
-                port = self._server.port
-            except AttributeError:
-                raise RuntimeError("Maybe missed to call server.__enter__()?")
-            self._update_vars(host, port)
-        super().enter()
-
     def send(self, cmd):
         super().send(cmd)
         try:
@@ -165,6 +153,11 @@ class TelnetServer(AbstractServer):
         time.sleep(.1)
         super().exit()
         self._server.exit()
+
+    def new_attached_client(self, *args, **xargs):
+        client = super().new_attached_client(None, *args, **xargs)
+        self.bind(enter=lambda:client._update_vars(self.host, self.port))
+        return client
 
     def send(self, data): return self._server.on_target_send(data)
 

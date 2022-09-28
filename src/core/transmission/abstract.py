@@ -184,6 +184,21 @@ class Name(features.OfflineFeatureMixin, features.SelectFeature):
     def unset(self): pass
 
 
+class AttachedClientMixin:
+    """ This client class automatically connects to an internal server instance """
+    _server = None
+    _control_server = False
+
+    def enter(self):
+        if control_server := not self._server.connected: self._server.enter()
+        self._control_server = control_server
+        super().enter()
+
+    def exit(self):
+        if self._control_server: self._server.exit()
+        super().exit()
+
+
 class AbstractServer(ServerType, SchemeBase):
     init_args_help = None # tuple
 
@@ -195,6 +210,12 @@ class AbstractServer(ServerType, SchemeBase):
     def enter(self): self.connected = True
     def exit(self): self.connected = False
     
+    def new_attached_client(self, *args, **xargs):
+        """ return new Client instance that connects to this server. Should be overwritten in inheriting classes """
+        Client = self.new_client(*args, **xargs).__class__
+        AttachedClient = type(Client.__name__, (AttachedClientMixin, Client), {"_server":self})
+        return AttachedClient(*args, **xargs)
+
     def set_feature_value(self, f, value): return f.set(value)
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_server()

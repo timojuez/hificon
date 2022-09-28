@@ -5,23 +5,10 @@ Dry software run that emulates a target of another scheme
 from threading import Thread
 from .. import get_scheme
 from ..core.transmission import AbstractScheme, TelnetScheme
-from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer
+from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer, AttachedClientMixin
 
 
-class DummyClientMixin:
-    """ This client class automatically connects to an internal server instance """
-    _server = None
-
-    def enter(self):
-        self._server.enter()
-        super().enter()
-    
-    def exit(self):
-        self._server.exit()
-        super().exit()
-
-
-class PlainDummyClientMixin(DummyClientMixin):
+class PlainDummyClientMixin(AttachedClientMixin):
     """ This client skips connection related methods """
 
     def __init__(self, server, *args, **xargs):
@@ -59,11 +46,10 @@ class Emulate(AbstractScheme):
     server_args_help = ("SCHEME",)
 
     @classmethod
-    def new_client(cls, scheme, *args, **xargs):
-        Scheme = get_scheme(scheme)
-        server = cls.new_server(scheme)
-        Client = type(Scheme.__name__, (DummyClientMixin, Scheme, Scheme.Client), {"_server":server})
-        return Client(server, *args, **xargs)
+    def new_client(cls, *args, **xargs):
+        """ Create a server and return a client attached to it """
+        server = cls.new_server(*args)
+        return server.new_attached_client(**xargs)
 
     @classmethod
     def new_server(cls, scheme, *args, **xargs):
