@@ -330,16 +330,16 @@ class AbstractScheme(SchemeBase):
 
     @classmethod
     def new_client(cls, *args, **xargs):
-        return type(cls.__name__, (cls, cls.Client), {})(*args, **xargs)
+        return type(cls.__name__, (cls.Scheme, cls.Client), {})(*args, **xargs)
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        return type(cls.__name__, (cls, cls.Server), {})(*args, **xargs)
+        return type(cls.__name__, (cls.Scheme, cls.Server), {})(*args, **xargs)
 
     @classmethod
     def new_dummyserver(cls, *args, **xargs):
         """ Returns a server instance that stores bogus values """
-        return type(cls.__name__, (DummyServerMixin, cls, cls.Server), {})(*args, **xargs)
+        return type(cls.__name__, (DummyServerMixin, cls.Scheme, cls.Server), {})(*args, **xargs)
 
 
 class DummyServerMixin:

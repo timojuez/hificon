@@ -26,6 +26,7 @@ def get_scheme(cls_path):
     module = importlib.import_module(module_path, __name__)
     Scheme = getattr(module, cls)
     Scheme.scheme = cls_path
+    Scheme.Scheme = Scheme
     assert(issubclass(Scheme, AbstractScheme))
     return Scheme
 
