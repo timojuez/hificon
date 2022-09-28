@@ -263,7 +263,7 @@ class _AbstractClient(ClientType, SchemeBase):
     _stoploop = None
     _connectOnEnter = False
 
-    def __init__(self, connect=True, *args, **xargs):
+    def __init__(self, *args, connect=True, **xargs):
         super().__init__(*args, **xargs)
         self._stoploop = Event()
         self._connectOnEnter = connect
