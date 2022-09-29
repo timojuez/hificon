@@ -1,4 +1,4 @@
-from ..core.transmission import AbstractScheme
+from .emulate import Emulate
 from .. import Target
 
 
@@ -11,6 +11,9 @@ class ClientRepeaterMixin:
         self._client.bind(on_receive_raw_data = lambda data:self.send(data))
         super().__init__(*args, **xargs)
     
+    def new_attached_client(self, *args, **xargs):
+        return self._client
+
     def enter(self):
         super().enter()
         self._client.enter()
@@ -25,20 +28,14 @@ class ClientRepeaterMixin:
         except ConnectionError as e: print(repr(e))
 
 
-class Repeat(AbstractScheme):
+class Repeat(Emulate):
     title = "Repeater"
     description = "A server that connects to another server and repeats the data"
     server_args_help = ("CLIENT_URI",)
-
-    @classmethod
-    def new_client(cls, scheme, *args, **xargs): raise NotImplementedError()
+    client_args_help = None
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        target = Target(":".join(args), connect=False)
-        return type("Server", (ClientRepeaterMixin, target.Server, cls), {})(target, **xargs)
-
-    @classmethod
-    def new_dummyserver(cls, *args, **xargs):
-        raise NotImplementedError("Will not emulate the repeater.")
+        target = Target(*args, connect=False)
+        return type("Server", (ClientRepeaterMixin, target.Server, cls.Scheme), {})(target, **xargs)
 
