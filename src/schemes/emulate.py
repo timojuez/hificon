@@ -52,13 +52,13 @@ class Emulate(AbstractScheme):
         return server.new_attached_client(**xargs)
 
     @classmethod
-    def new_server(cls, scheme, *args, **xargs):
-        Scheme = get_scheme(scheme)
-        return Scheme.new_dummyserver(*args, **xargs)
+    def new_server(cls, *args, **xargs):
+        return cls.new_dummyserver(*args, **xargs)
 
     @classmethod
-    def new_dummyserver(cls, *args, **xargs):
-        raise NotImplementedError("Will not emulate the emulator.")
+    def new_dummyserver(cls, scheme, *args, **xargs):
+        Scheme = get_scheme(scheme)
+        return Scheme.new_dummyserver(*args, **xargs)
 
 
 class PlainEmulate(AbstractScheme):
