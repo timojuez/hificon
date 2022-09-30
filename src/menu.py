@@ -267,7 +267,7 @@ class SettingsTab(StackLayout):
             self.ids.scheme.text = scheme_names.get(scheme, scheme)
         dropdown.bind(on_select=on_select)
         
-        uri = config.get("Target","uri").split(":")
+        uri = config.get("Target", "uri").split(":", 2)
         try:
             on_select(None, uri[0])
             self.ids.host.text = uri[1]
@@ -276,7 +276,7 @@ class SettingsTab(StackLayout):
 
     def apply(self):
         parts = [self.scheme, self.ids.host.text.strip(), self.ids.port.text.strip()]
-        config["Target"]["uri"] = ":".join(parts)
+        config["Target"]["uri"] = ":".join(filter(lambda x:x, parts))
         App.get_running_app().load_screen()
 
 
