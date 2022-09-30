@@ -73,12 +73,12 @@ class VolumeChanger:
 
     def on_volume_key_press(self, button):
         self.target.schedule(
-            lambda:self.set_volume(getattr(self.target, config.volume) + self.step*(int(button)*2-1)),
+            lambda:self.set_volume(self.target.features[config.volume].get() + self.step*(int(button)*2-1)),
             requires=(config.volume,))
 
     def on_mute_key_press(self):
         self.target.schedule(
-            lambda:setattr(self.target, config.muted, not getattr(self.target, config.muted)),
+            lambda:self.target.features[config.muted].remote_set(not self.target.features[config.muted].get()),
             requires=(config.muted,))
 
     def volume_thread(self):

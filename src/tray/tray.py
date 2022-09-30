@@ -84,8 +84,8 @@ class Icon(Bindable):
 
     def _update_icon(self):
         volume = self.target.features[config.volume]
-        if not getattr(self.target,config.power): self.set_icon("power")
-        elif getattr(self.target,config.muted) or volume.get() == volume.min:
+        if not self.target.features[config.power].get(): self.set_icon("power")
+        elif self.target.features[config.muted].get() or volume.get() == volume.min:
             self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
@@ -285,18 +285,18 @@ class AutoPower(TargetController):
             self.target.schedule(self._poweron, requires=(config.power, config.source))
 
     def _poweron(self):
-        if getattr(self.target, config.power): return
+        if self.target.features[config.power].get(): return
         if config["Amp"].get("source"):
             self.target.features[config.source].remote_set(config.getlist("Amp","source")[0])
-        setattr(self.target, config.power, True)
+        self.target.features[config.power].remote_set(True)
 
     can_poweroff = property(
-        lambda self: getattr(self.target,config.power)
-        and (not config["Amp"]["source"] or getattr(self.target,config.source) in config.getlist("Amp","source")))
+        lambda self: self.target.features[config.power].get()
+        and (not config["Amp"]["source"] or self.target.features[config.source].get() in config.getlist("Amp","source")))
 
     def poweroff(self):
         if not self.config["control_power_off"]: return
-        self.target.schedule(lambda:self.can_poweroff and setattr(self.target,config.power,False),
+        self.target.schedule(lambda:self.can_poweroff and self.target.features[config.power].remote_set(False),
             requires=(config.power, config.source))
 
     def mainloop(self):
