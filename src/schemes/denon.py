@@ -6,7 +6,6 @@ import sys, math
 from urllib.parse import urlparse
 from threading import Timer
 from decimal import Decimal, InvalidOperation
-from .. import Target
 from ..amp import TelnetAmp
 from ..core import config, features
 from ..core.transmission.types import ClientType, ServerType
@@ -133,7 +132,7 @@ class Denon(TelnetAmp):
         if "denon" in response.st.lower() or "marantz" in response.st.lower():
             host = urlparse(response.location).hostname
             port = 23 # TODO
-            return Target(cls.scheme, host, port).uri
+            return cls.new_client(host, port).uri
 
     def query(self, cmd, matches=None):
         """

@@ -57,8 +57,7 @@ class Emulate(AbstractScheme):
 
     @classmethod
     def new_dummyserver(cls, scheme, *args, **xargs):
-        Scheme = get_scheme(scheme)
-        return Scheme.new_dummyserver(*args, **xargs)
+        return get_scheme(scheme).new_dummyserver(*args, **xargs)
 
 
 class PlainEmulate(AbstractScheme):

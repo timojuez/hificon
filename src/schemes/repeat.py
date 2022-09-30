@@ -1,5 +1,5 @@
 from .emulate import Emulate
-from .. import Target
+from .. import get_scheme
 
 
 class ClientRepeaterMixin:
@@ -35,7 +35,7 @@ class Repeat(Emulate):
     client_args_help = None
 
     @classmethod
-    def new_server(cls, *args, **xargs):
-        target = Target(*args, connect=False)
+    def new_server(cls, scheme, *args, **xargs):
+        target = get_scheme(scheme).new_client(*args, connect=False)
         return type("Server", (ClientRepeaterMixin, target.Server, cls.Scheme), {})(target, **xargs)
 
