@@ -16,7 +16,6 @@ class PlainDummyClientMixin(AttachedClientMixin):
         self._server = server
         server.bind(send = self._newthread(self.on_receive_raw_data))
         self.bind(send = self._newthread(server.on_receive_raw_data))
-        self.uri = f"emulate:{self.scheme}"
 
     def _newthread(self, func):
         # send() shall not block for avoiding deadlocks
@@ -70,7 +69,9 @@ class PlainEmulate(AbstractScheme):
     @classmethod
     def new_client(cls, scheme, *args, **xargs):
         Client = type("Client", (PlainDummyClientMixin, get_scheme(scheme), AbstractClient), {})
-        return Client(cls.new_server(scheme), *args, **xargs)
+        client = Client(cls.new_server(scheme), *args, **xargs)
+        client.uri = f"{cls.scheme}:{client.scheme}"
+        return client
 
     @classmethod
     def new_server(cls, scheme, *args, **xargs):
