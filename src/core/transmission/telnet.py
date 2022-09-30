@@ -14,9 +14,6 @@ class TelnetClient(AbstractClient):
     init_args_help = ("//SERVER_IP", "SERVER_PORT")
     host = None
     port = None
-    _host = None
-    _port = None
-    _server = None
     _pulse = "" # this is being sent regularly to keep connection
     _telnet = None
     _send_lock = None
