@@ -37,7 +37,7 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
 
     def __init__(self, *args, verbose=0, **xargs):
         self.verbose = verbose
-        self.uri = self.scheme
+        self.update_uri()
         self.features = self.features.__class__()
         self._pending = self._pending()
         def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
@@ -60,7 +60,7 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
     def enter(self): pass
     
     def exit(self): pass
-    
+
     @classmethod
     def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
 
@@ -113,6 +113,8 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
             return Feature
         return add(Feature) if Feature else add
     
+    def update_uri(self, *args): self.uri = ":".join(map(str, [self.scheme, *args]))
+
     def poll_feature(self, f, *args, **xargs):
         """ Called when a feature value is being requested """
         raise NotImplementedError()

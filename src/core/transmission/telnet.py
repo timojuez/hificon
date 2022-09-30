@@ -33,7 +33,7 @@ class TelnetClient(AbstractClient):
         if host.startswith("//"): host = host[2:]
         self.host = host
         self.port = port
-        self.uri = f"{self.scheme}://{self.host}:{self.port}"
+        self.update_uri(f"//{host}", port)
     
     def send(self, cmd):
         super().send(cmd)
