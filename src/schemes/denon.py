@@ -128,11 +128,11 @@ class Denon(TelnetAmp):
     _pulse = "CV?" # workaround for denon to retrieve CV?
     
     @classmethod
-    def ssdp_to_uri(cls, response):
+    def new_client_by_ssdp(cls, response, *args, **xargs):
         if "denon" in response.st.lower() or "marantz" in response.st.lower():
             host = urlparse(response.location).hostname
             port = 23 # TODO
-            return cls.new_client(host, port).uri
+            return cls.new_client(host, port, *args, **xargs)
 
     def query(self, cmd, matches=None):
         """

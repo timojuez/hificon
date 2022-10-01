@@ -5,19 +5,17 @@ from ..core import AbstractScheme
 from .. import Target, get_schemes
 
 
-def check_target(uri): return get_name(uri) is not None
+def check_target(target): return get_name(target) is not None
 
-def get_name(uri):
+def get_name(target):
     try:
-        with Target(uri) as target: name = target.name
+        with target: return target.name
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError): return
-    print("Found %s on %s."%(name, uri))
-    return name
 
 
 def discover_targets():
     """
-    Search local network for supported devices and yield uri, name
+    Search local network for supported devices and yield client instance
     """
     schemes = list(get_schemes())
     discovered_hosts = set()
@@ -25,16 +23,18 @@ def discover_targets():
         host = urlparse(response.location).hostname
         if host in discovered_hosts: continue
         for Scheme in schemes:
-            if uri := Scheme.ssdp_to_uri(response):
+            if target := Scheme.new_client_by_ssdp(response):
                 discovered_hosts.add(host)
-                yield uri
+                yield target
 
 
 def discover_target():
-    """ guess amp and return uri """
-    for uri in discover_targets():
-        if check_target(uri): return uri
-    raise Exception("No target found. Check if device is connected or set IP manually.")
+    """ guess server and return attached target instance """
+    for target in discover_targets():
+        if name := get_name(target):
+            print("Found %s on %s."%(name, target.uri))
+            return target
+    raise Exception("No target found. Check if device is connected or configure manually.")
 
 
 class Auto(AbstractScheme):
@@ -42,5 +42,5 @@ class Auto(AbstractScheme):
     client_args_help = tuple()
 
     def __new__(self, *args, **xargs):
-        return Target(discover_target(), *args,**xargs)
+        return Target(discover_target().uri, *args, **xargs)
 

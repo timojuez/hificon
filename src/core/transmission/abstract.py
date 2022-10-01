@@ -77,11 +77,11 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         if args is not None: return ":".join((cls.scheme, *args))
 
     @classmethod
-    def ssdp_to_uri(cls, response):
+    def new_client_by_ssdp(cls, response, *client_args, **client_kwargs):
         """ Must be implemented in scheme as classmethod.
-        Returns an uri if the scheme can handle the service in @response otherwise None.
+        Returns a target instance if the scheme can handle the service in @response otherwise None.
         response: An SSDP response.
-        returns: uri (string) or None """
+        returns: cls.new_client(*client_args, **client_kwargs) or None """
         return None
 
     @classmethod
