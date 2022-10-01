@@ -10,7 +10,7 @@ from ..util.function_bind import Bindable
 from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
-from .types import ServerType, ClientType
+from .types import SchemeType, ServerType, ClientType
 from . import features
 
 
@@ -343,7 +343,7 @@ class _AbstractClient(ClientType, SchemeBase):
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
-class AbstractScheme(SchemeBase):
+class AbstractScheme(SchemeBase, SchemeType):
     Client = AbstractClient
     Server = AbstractServer
 

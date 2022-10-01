@@ -1,5 +1,5 @@
 import importlib
-from ..core import AbstractScheme
+from ..core.transmission import SchemeType
 
 schemes = {
     "denon": ".denon.Denon",
@@ -27,6 +27,6 @@ def get_scheme(cls_path):
     Scheme = getattr(module, cls)
     Scheme.scheme = cls_path
     Scheme.Scheme = Scheme
-    assert(issubclass(Scheme, AbstractScheme))
+    assert(issubclass(Scheme, SchemeType))
     return Scheme
 
