@@ -1,5 +1,5 @@
 import importlib
-from ..core.transmission import SchemeType
+from . import SchemeType
 
 schemes = {
     "denon": ".denon.Denon",
@@ -23,7 +23,8 @@ def get_scheme(cls_path):
         schemes_str = ", ".join(schemes.keys())
         raise ValueError(f"cls_path must be {schemes_str} or MODULE.CLASS but was '{cls_path}'.")
     module_path, cls = cls_path_.rsplit(".", 1)
-    module = importlib.import_module(module_path, __name__)
+    root_module = __package__.rsplit(".", 2)[0]
+    module = importlib.import_module(module_path, f"{root_module}.schemes")
     Scheme = getattr(module, cls)
     Scheme.scheme = cls_path
     Scheme.Scheme = Scheme

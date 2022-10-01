@@ -1,6 +1,6 @@
 from .core import config, AbstractScheme, AbstractServer, AbstractClient, features
 from .info import *
-from .schemes import schemes, get_scheme, get_schemes
+from .core.transmission.schemes import schemes, get_scheme, get_schemes
 
 
 def Target(uri=None, *args, role="client", **xargs):
