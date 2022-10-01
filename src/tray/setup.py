@@ -1,7 +1,7 @@
 import sys, os, argparse, pkgutil, re
 from contextlib import suppress
 from ..core.config import config, FILE
-from ..schemes.auto import discover_target, check_target
+from ..core.transmission.discovery import discover_target, check_target
 from .. import NAME, PKG_NAME, Target
 
 

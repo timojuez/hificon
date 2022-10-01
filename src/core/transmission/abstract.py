@@ -11,6 +11,7 @@ from ..util import log_call
 from ..config import config
 from ..config import FILE as CONFFILE
 from .types import SchemeType, ServerType, ClientType
+from .discovery import DiscoverySchemeMixin
 from . import features
 
 
@@ -75,14 +76,6 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         args = cls.server_args_help
         if args is None: args = getattr(cls.Server,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
-
-    @classmethod
-    def new_client_by_ssdp(cls, response, *client_args, **client_kwargs):
-        """ Must be implemented in scheme as classmethod.
-        Returns a target instance if the scheme can handle the service in @response otherwise None.
-        response: An SSDP response.
-        returns: cls.new_client(*client_args, **client_kwargs) or None """
-        return None
 
     @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
@@ -343,7 +336,7 @@ class _AbstractClient(ClientType, SchemeBase):
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
-class AbstractScheme(SchemeBase, SchemeType):
+class AbstractScheme(DiscoverySchemeMixin, SchemeBase, SchemeType):
     Client = AbstractClient
     Server = AbstractServer
 
