@@ -5,7 +5,7 @@ Functions for auto discovery using SSDP
 import socket
 from urllib.parse import urlparse
 from ..util import ssdp
-from .schemes import get_schemes
+from .scheme_management import get_schemes
 
 
 def check_target(target): return get_name(target) is not None
