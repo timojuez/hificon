@@ -47,6 +47,11 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         for F in self.__class__.features.values(): F(self)
         super().__init__(*args, **xargs)
 
+    def __eq__(self, target):
+        return (isinstance(target, SchemeBase)
+            and self.uri == target.uri
+            and isinstance(self, self.Scheme.Client) == isinstance(target, self.Scheme.Client))
+
     def __setattr__(self, name, value):
         """ @name must match an existing attribute """
         if hasattr(self.__class__, name): super().__setattr__(name, value)
