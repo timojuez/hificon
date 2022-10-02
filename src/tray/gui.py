@@ -259,7 +259,7 @@ class MenuMixin:
         item = Gtk.MenuItem(f.name)
         def set(value): item.set_label(f"{f.name}   {f}")
         f.bind(gtk(set))
-        item.connect("activate", lambda event:self.popup.show(f))
+        item.connect("activate", lambda event:self.scale_popup.show(f))
         return item
 
     def _add_select_feature(self, f, compact):
@@ -296,7 +296,7 @@ class Tray(MenuMixin):
         super().__init__(*args, **xargs)
         Settings(self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
-        self.popup = ScalePopup(self.target)
+        self.scale_popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)
         self.icon.set_menu(self._menu)
         

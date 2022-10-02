@@ -40,15 +40,16 @@ class TextNotification(FeatureNotification, gui.Notification):
 
 class NumericNotification(FeatureNotification):
     
-    def __init__(self, *args, **xargs):
+    def __init__(self, scale_popup, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.scale_popup = scale_popup
         self._n = gui.GaugeNotification()
         self._n.set_timeout(config.getint("Tray","notification_timeout"))
 
     def update(self): pass
 
     def show(self):
-        if gui.ScalePopup()._current_feature == self.f and gui.ScalePopup().visible: return
+        if self.scale_popup._current_feature == self.f and self.scale_popup.visible: return
         self._n.update(
             title=self.f.name,
             message=str(self.f),
@@ -123,7 +124,7 @@ class NotificationMixin(object):
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
     def create_notification(self, f):
-        if isinstance(f, features.NumericFeature): return NumericNotification(f)
+        if isinstance(f, features.NumericFeature): return NumericNotification(self.scale_popup, f)
         if isinstance(f, features.SelectFeature): return TextNotification(f)
 
     def show_notification(self, f_id): f_id in self._notifications and self._notifications[f_id].show()
@@ -161,7 +162,7 @@ class TrayMixin(gui.Tray):
         self.show()
 
     def on_icon_change(self, path, name):
-        gui.ScalePopup(self.target).set_image(path)
+        self.scale_popup.set_image(path)
         self.set_icon(path, name)
     
     def on_scroll_up(self, steps):
