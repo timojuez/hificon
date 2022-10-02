@@ -9,7 +9,7 @@ from ..core.util.async_widget import bind_widget_to_value
 from ..core import features, config
 from ..core.util.function_bind import Bindable
 from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
-from .common import gtk, GladeGtk
+from .common import gtk, GladeGtk, Singleton
 from .settings import Settings
 
 
@@ -38,7 +38,7 @@ class GUI_Backend:
 
 
 
-class GaugeNotification(GladeGtk, _Notification):
+class GaugeNotification(GladeGtk, _Notification, metaclass=Singleton):
     GLADE = "../share/gauge_notification.glade"
     _timeout = 2
     
@@ -211,7 +211,7 @@ class MenuMixin:
         self._footer_items.append(Gtk.SeparatorMenuItem())
 
         item_settings = Gtk.MenuItem('Program Settings')
-        item_settings.connect('activate', lambda *args: Settings().show())
+        item_settings.connect('activate', lambda *args: self.settings.show())
         self._footer_items.append(item_settings)
 
         item_about = Gtk.MenuItem('About %s'%NAME)
@@ -294,7 +294,7 @@ class Tray(MenuMixin):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        Settings(self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
+        self.settings = Settings(self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.scale_popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)

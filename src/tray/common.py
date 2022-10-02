@@ -15,7 +15,7 @@ def gtk(func):
     return lambda *args,**xargs: GLib.idle_add(lambda:func(*args,**xargs))
 
 
-class GladeGtk(metaclass=Singleton):
+class GladeGtk:
     GLADE = ""
     
     def __init__(self, *args, **xargs):
