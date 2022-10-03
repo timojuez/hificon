@@ -29,14 +29,15 @@ class AvailableFeaturesList:
         self.available_list = self.builder.get_object("available_list")
         self.available_column = self.builder.get_object("available_column")
         self.avail_view = self.builder.get_object("avail_view")
-        avail_list = AvailTreeStore(self.avail_view, GObject.TYPE_PYOBJECT)
-        category = {c:avail_list.append(None, [c]) for c in self.target.feature_categories}
-        for f in self.target.features.values(): avail_list.append(category[f.category], [f])
-        self.avail_view.set_model(avail_list)
-        cell = Gtk.CellRendererText()
-        self.available_column.set_cell_data_func(cell, self._set_avail_cell_text)
-        self.available_column.pack_start(cell, True)
-        #self.available_column.add_attribute(cell, "text", 0)
+        if self.target:
+            avail_list = AvailTreeStore(self.avail_view, GObject.TYPE_PYOBJECT)
+            category = {c:avail_list.append(None, [c]) for c in self.target.feature_categories}
+            for f in self.target.features.values(): avail_list.append(category[f.category], [f])
+            self.avail_view.set_model(avail_list)
+            cell = Gtk.CellRendererText()
+            self.available_column.set_cell_data_func(cell, self._set_avail_cell_text)
+            self.available_column.pack_start(cell, True)
+            #self.available_column.add_attribute(cell, "text", 0)
 
         self.avail_view.enable_model_drag_source(
             Gdk.ModifierType.BUTTON1_MASK, DND_FROM_AVAIL, Gdk.DragAction.COPY)
@@ -88,7 +89,7 @@ class SelectedFeaturesList:
 
     def _id_to_feature(self, f_id):
         f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
-        return self.target.features.get(f_id)
+        if self.target: return self.target.features.get(f_id)
 
     def _id_to_string(self, f_id):
         f = self._id_to_feature(f_id)
