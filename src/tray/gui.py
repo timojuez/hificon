@@ -329,7 +329,11 @@ class Tray(MenuMixin):
     
     @gtk
     def set_icon(self, *args): self.icon.set_icon_full(*args)
-    
+
+    def __exit__(self, *args, **xargs):
+        super().__exit__(*args, **xargs)
+        self.hide()
+
 
 css = b'''
 window.dark { background-color: #2e2e2e; }
