@@ -153,11 +153,11 @@ class Notification(_Notification, Notify.Notification):
 
 
 class MenuMixin:
-    _header_items = {}
-    _footer_items = []
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self._header_items = {}
+        self._footer_items = []
         self._menu = Gtk.Menu()
 
         # header features
