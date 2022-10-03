@@ -267,19 +267,18 @@ class MenuMixin:
         submenu = Gtk.Menu()
         item = Gtk.MenuItem(f.name, submenu=submenu)
         if compact: f.bind(gtk(item.set_label))
-        f.bind(gtk(lambda _:self._refill_submenu(f, submenu, compact)))
+        f.bind(gtk(lambda value:self._refill_submenu(f, value, submenu, compact)))
         return item
 
-    def _refill_submenu(self, f, submenu, compact):
+    def _refill_submenu(self, f, value, submenu, compact):
         submenu.foreach(lambda child: child.destroy())
         if compact:
             submenu.append(Gtk.MenuItem(f.name, sensitive=False))
             submenu.append(Gtk.SeparatorMenuItem())
-        f_get = f.get()
-        if f_get not in f.options:
-            submenu.append(Gtk.CheckMenuItem(f_get, sensitive=False, active=True, draw_as_radio=True))
+        if value not in f.options:
+            submenu.append(Gtk.CheckMenuItem(value, sensitive=False, active=True, draw_as_radio=True))
         for o in f.options:
-            active = f_get==o
+            active = value==o
             label = {True: "On", False: "Off"}.get(o, o)
             item = Gtk.CheckMenuItem(label, active=active, draw_as_radio=True)
             def on_activate(item, o=o, active=active):

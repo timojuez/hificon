@@ -126,6 +126,7 @@ class _MetaFeature(type):
 class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     """
     A target attribute for high level communication
+    If being used in a with statement, the value will not change during execution of the inside code.
     
     Warning: Calling get() in the event callbacks can cause deadlocks.
         Instead, get the value from the function parameter.
@@ -148,7 +149,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     name = property(lambda self:self.__class__.__name__)
     
     def __str__(self): return str(self.get()) if self.isset() else "..."
-    
+
+    def __enter__(self):
+        self._lock.__enter__()
+        return self
+
+    def __exit__(self, *args, **xargs):
+        self._lock.__exit__(*args, **xargs)
+
     def get(self):
         if not self.isset(): raise AttributeError(f"`{self.id}` not available. Use Target.schedule")
         else: return self._val
