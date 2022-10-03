@@ -1,3 +1,6 @@
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 from ..common import GladeGtk, gtk
 from .popup_menu_settings import PopupMenuSettings
 
@@ -5,8 +8,9 @@ from .popup_menu_settings import PopupMenuSettings
 class SettingsBase(GladeGtk):
     GLADE = "../share/settings.glade"
 
-    def __init__(self, target, config, *args, **xargs):
+    def __init__(self, app_manager, target, config, *args, **xargs):
         super().__init__(*args, **xargs)
+        self.app_manager = app_manager
         self.target = target
         self.window = self.builder.get_object("window")
         self.config = config
@@ -26,9 +30,12 @@ class SettingsBase(GladeGtk):
         pass
 
     def on_close_click(self, *args, **xargs):
-        self.hide()
+        if self._first_run: Gtk.main_quit()
+        else: self.hide()
         return True
 
+    def on_first_run(self):
+        self._first_run = True
 
 class Settings(PopupMenuSettings, SettingsBase): pass
 

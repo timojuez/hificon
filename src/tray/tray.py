@@ -1,4 +1,4 @@
-import sys, math, pkgutil, os, tempfile, argparse
+import sys, math, pkgutil, os, tempfile, argparse, traceback
 from threading import Thread, Timer, Lock
 from .. import Target
 from .. import NAME
@@ -9,6 +9,7 @@ from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
+from .common import gtk
 
 
 class FeatureNotification:
@@ -300,21 +301,55 @@ class AutoPower(TargetController):
         self.target.schedule(lambda:self.can_poweroff and self.target.features[config.power].remote_set(False),
             requires=(config.power, config.source))
 
-    def mainloop(self):
-        Thread(name="TargetController", target=lambda:TargetController.mainloop(self), daemon=True).start()
-        super().mainloop()
-
     def main_quit(self):
         gui.GUI_Backend.exit()
 
 
-def _Base:
+class AppBase:
 
     def __enter__(self): pass
     def __exit__(self, *args, **xargs): pass
 
 
-class Main(NotificationMixin, AutoPower, KeyBinding, TrayMixin, gui.GUI_Backend, _Base): pass
+class App(NotificationMixin, AutoPower, KeyBinding, TrayMixin, AppBase):
+
+    def __init__(self, app_manager, *args, **xargs):
+        self.app_manager = app_manager
+        super().__init__(*args, **xargs)
+
+
+class AppManager:
+
+    def __init__(self, verbose):
+        self.main_app = None
+        self._entered = []
+        self.verbose = verbose+1
+
+    def mainloop(self):
+        try: gui.GUI_Backend.mainloop()
+        finally: self.exit_all()
+
+    def exit_all(self):
+        while self._entered:
+            obj = self._entered.pop()
+            try: obj.__exit__(None, None, None)
+            except: traceback.print_exc()
+
+    @gtk
+    def run_app(self, uri, setup=False, callback=None):
+        self.exit_all()
+        if setup or not config["Target"]["uri"]:
+            return gui.Settings(self, None, ConfigDict("tray.json")).on_first_run()
+        target = Target(uri, connect=False, verbose=self.verbose)
+        icon = self.enter(Icon(target))
+        self.main_app = self.enter(App(self, target, icon=icon, verbose=self.verbose))
+        self.enter(target)
+        if callback: callback()
+
+    def enter(self, obj):
+        obj.__enter__()
+        self._entered.append(obj)
+        return obj
 
 
 def main():
@@ -325,8 +360,7 @@ def main():
     args = parser.parse_args()
     if not Setup.configured() or args.setup: Setup.setup()
 
-    target = Target(args.target, connect=False, verbose=args.verbose+1)
-    with Icon(target) as icon:
-        app = Main(target, icon=icon, verbose=args.verbose+1)
-        with target, app: app.mainloop()
+    am = AppManager(verbose=args.verbose)
+    Thread(target=lambda: am.run_app(args.target, args.setup), name="mainapp", daemon=True).start()
+    am.mainloop()
 

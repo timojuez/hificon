@@ -31,6 +31,7 @@ class _Notification(Bindable):
 
 class GUI_Backend:
 
+    @classmethod
     def mainloop(self): Gtk.main()
     
     @classmethod
@@ -294,7 +295,8 @@ class Tray(MenuMixin):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.settings = Settings(self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
+        self.settings = Settings(
+            self.app_manager, self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.scale_popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)
