@@ -53,9 +53,12 @@ class DBusMixin(_Abstract):
     Connects to system bus and fire events, e.g. on shutdown and suspend
     """
 
-    def mainloop(self,*args,**xargs):
-        system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
-        system_bus.signal_subscribe('org.freedesktop.login1',
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.__class__.glib_mainloop = getattr(self.__class__, "glib_mainloop", GLib.MainLoop())
+        # _system_bus may not be deleted by garbage collector so adding it to self
+        self._system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+        self._system_bus.signal_subscribe('org.freedesktop.login1',
             'org.freedesktop.login1.Manager',
             'PrepareForSleep',
             '/org/freedesktop/login1',
@@ -63,8 +66,11 @@ class DBusMixin(_Abstract):
             Gio.DBusSignalFlags.NONE,
             self._onLoginmanagerEvent,
             None)
-        Thread(target=GLib.MainLoop().run, name="GLib.MainLoop", daemon=True).start()
-        super().mainloop(*args,**xargs)
+
+    def mainloop(self, *args, **xargs):
+        Thread(target=lambda:self.glib_mainloop.is_running() or self.glib_mainloop.run(),
+            name="GLib.MainLoop", daemon=True).start()
+        super().mainloop(*args, **xargs)
         
     def _onLoginmanagerEvent(self, conn, sender, obj, interface, signal, parameters, data):
         if parameters[0]:
