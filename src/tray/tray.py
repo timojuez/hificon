@@ -304,7 +304,7 @@ class AutoPower(TargetController):
         Thread(name="TargetController", target=lambda:TargetController.mainloop(self), daemon=True).start()
         super().mainloop()
 
-    def exit(self):
+    def main_quit(self):
         gui.GUI_Backend.exit()
 
 

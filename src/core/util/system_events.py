@@ -32,8 +32,8 @@ class SignalMixin(_Abstract):
         signal.signal(signal.SIGTERM, self.on_shutdown)
         
     def on_startup(self): pass
-    def on_shutdown(self, sig, frame): self.exit()
-    def exit(self): sys.exit(0)
+    def on_shutdown(self, sig, frame): self.main_quit()
+    def main_quit(self): sys.exit(0)
 
 
 class PulseMixin(_Abstract):

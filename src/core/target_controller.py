@@ -26,7 +26,7 @@ class AutoConnect(_Base):
     def on_shutdown(self, sig, frame):
         """ when shutting down computer """
         self.target.exit()
-        self.exit()
+        self.main_quit()
         
     @log_call
     def on_suspend(self):
