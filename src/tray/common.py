@@ -12,7 +12,7 @@ class Singleton(type):
 
 
 def gtk(func):
-    return lambda *args,**xargs: GLib.idle_add(lambda:func(*args,**xargs))
+    return lambda *args,**xargs: GLib.idle_add(lambda:[False, func(*args,**xargs)][0])
 
 
 class GladeGtk:
