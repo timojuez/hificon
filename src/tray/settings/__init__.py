@@ -8,8 +8,9 @@ from .popup_menu_settings import PopupMenuSettings
 class SettingsBase(GladeGtk):
     GLADE = "../share/settings.glade"
 
-    def __init__(self, app_manager, target, config, *args, **xargs):
+    def __init__(self, app_manager, target, config, *args, first_run=False, **xargs):
         super().__init__(*args, **xargs)
+        self._first_run = first_run
         self.app_manager = app_manager
         self.target = target
         self.window = self.builder.get_object("window")
@@ -34,8 +35,6 @@ class SettingsBase(GladeGtk):
         else: self.hide()
         return True
 
-    def on_first_run(self):
-        self._first_run = True
 
 class Settings(PopupMenuSettings, SettingsBase): pass
 

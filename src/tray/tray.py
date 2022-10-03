@@ -339,7 +339,7 @@ class AppManager:
     def run_app(self, uri, setup=False, callback=None):
         self.exit_all()
         if setup or not config["Target"]["uri"]:
-            return gui.Settings(self, None, ConfigDict("tray.json")).on_first_run()
+            return gui.Settings(self, None, ConfigDict("tray.json"), first_run=True)
         target = Target(uri, connect=False, verbose=self.verbose)
         icon = self.enter(Icon(target))
         self.main_app = self.enter(App(self, target, icon=icon, verbose=self.verbose))
