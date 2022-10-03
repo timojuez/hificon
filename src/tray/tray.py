@@ -344,6 +344,7 @@ class AppManager:
         icon = self.enter(Icon(target))
         self.main_app = self.enter(App(self, target, icon=icon, verbose=self.verbose))
         self.enter(target)
+        Thread(name="App.mainloop()", target=self.main_app.mainloop, daemon=True).start()
         if callback: callback()
 
     def enter(self, obj):
