@@ -90,10 +90,13 @@ class SelectedFeaturesList:
         f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
         return self.target.features.get(f_id)
 
+    def _id_to_string(self, f_id):
+        f = self._id_to_feature(f_id)
+        return f"{f.name} ({f.category})" if f else f"{f_id} (Unavailable)"
+
     def _set_menu_cell_text(self, column, cell, model, it, data):
         f_id = model.get_value(it, 0)
-        f = self._id_to_feature(f_id)
-        s = f"{f.name} ({f.category})" if f else f"{f_id} (Unavailable)"
+        s = self._id_to_string(f_id)
         cell.set_property('text', s)
 
     def on_menu_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
