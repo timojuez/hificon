@@ -119,17 +119,16 @@ class InputDeviceListener:
         if LINUX: self._xgrab = XGrab()
         self._controller = keyboard.Controller()
 
-    def __enter__(self): self.enter(); return self
-    def __exit__(self, *args, **xargs): self.exit()
-
-    def enter(self):
+    def __enter__(self):
+        super().__enter__()
         self.mouse_listener.start()
         self.key_listener.start()
         self.set_key_grabbing(self.config["volume_hotkeys"])
         self.set_button_grabbing(bool(self._config_button))
         if LINUX: self._xgrab.enter()
 
-    def exit(self):
+    def __exit__(self, *args, **xargs):
+        super().__exit__(*args, **xargs)
         self.mouse_listener.stop()
         self.key_listener.stop()
         self.set_key_grabbing(False)

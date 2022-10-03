@@ -308,7 +308,13 @@ class AutoPower(TargetController):
         gui.GUI_Backend.exit()
 
 
-class Main(NotificationMixin, AutoPower, KeyBinding, TrayMixin, gui.GUI_Backend): pass
+def _Base:
+
+    def __enter__(self): pass
+    def __exit__(self, *args, **xargs): pass
+
+
+class Main(NotificationMixin, AutoPower, KeyBinding, TrayMixin, gui.GUI_Backend, _Base): pass
 
 
 def main():
