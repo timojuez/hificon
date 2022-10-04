@@ -21,10 +21,10 @@ class _Abstract(AbstractContextManager):
 class SignalMixin(_Abstract):
 
     def __enter__(self):
-        super().__enter__()
         self._sigterm_handler = signal.getsignal(signal.SIGTERM)
         signal.signal(signal.SIGTERM, self.on_shutdown)
         Thread(target=self.on_startup, name="on_startup", daemon=True).start()
+        return super().__enter__()
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
@@ -42,8 +42,8 @@ class PulseMixin(_Abstract):
         self.pulse = PulseListener(self, consider_old_sinks=False, verbose=xargs.get("verbose",0) > 1)
 
     def __enter__(self):
-        super().__enter__()
         self.pulse.__enter__()
+        return super().__enter__()
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
@@ -60,7 +60,6 @@ class DBusMixin(_Abstract):
     """
 
     def __enter__(self):
-        super().__enter__()
         self.glib_mainloop = GLib.MainLoop()
         # _system_bus may not be deleted by garbage collector so adding it to self
         self._system_bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
@@ -73,6 +72,7 @@ class DBusMixin(_Abstract):
             self._onLoginmanagerEvent,
             None)
         Thread(target=self.glib_mainloop.run, name="GLib.MainLoop", daemon=True).start()
+        return super().__enter__()
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)

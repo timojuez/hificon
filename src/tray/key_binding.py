@@ -120,12 +120,12 @@ class InputDeviceListener:
         self._controller = keyboard.Controller()
 
     def __enter__(self):
-        super().__enter__()
         self.mouse_listener.start()
         self.key_listener.start()
         self.set_key_grabbing(self.config["volume_hotkeys"])
         self.set_button_grabbing(bool(self._config_button))
         if LINUX: self._xgrab.enter()
+        return super().__enter__()
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)

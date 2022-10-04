@@ -1,8 +1,9 @@
 import pulsectl, sys
 from threading import Thread, Event
+from contextlib import AbstractContextManager
 
 
-class ConnectedPulse(pulsectl.Pulse):
+class ConnectedPulse(pulsectl.Pulse, AbstractContextManager):
 
     def __init__(self, *args, verbose=False, **xargs):
         super().__init__(*args, connect=False, **xargs)
@@ -12,8 +13,10 @@ class ConnectedPulse(pulsectl.Pulse):
     def __enter__(self):
         self._disconnect_evt.clear()
         self.connect_async()
+        return super().__enter__()
 
     def __exit__(self, *args, **xargs):
+        super().__exit__(*args, **xargs)
         self._disconnect_evt.set()
 
     def connect_async(self):
