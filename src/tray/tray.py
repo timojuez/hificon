@@ -1,5 +1,6 @@
 import sys, math, pkgutil, os, tempfile, argparse, traceback
 from threading import Thread, Timer, Lock
+from contextlib import AbstractContextManager
 from .. import Target
 from .. import NAME
 from ..core import features
@@ -247,6 +248,10 @@ class AutoPower(TargetController):
             self._idle_timer = Timer(timeout, self.on_idle_timeout)
             self._idle_timer.start()
 
+    def __exit__(self, *args, **xargs):
+        super().__exit__(*args, **xargs)
+        self.stop_idle_timer()
+
     def stop_idle_timer(self):
         with self._idle_timer_lock:
             if self._idle_timer: self._idle_timer.cancel()
@@ -305,13 +310,7 @@ class AutoPower(TargetController):
         gui.GUI_Backend.exit()
 
 
-class AppBase:
-
-    def __enter__(self): pass
-    def __exit__(self, *args, **xargs): pass
-
-
-class App(NotificationMixin, AutoPower, KeyBinding, TrayMixin, AppBase):
+class App(NotificationMixin, AutoPower, KeyBinding, TrayMixin, AbstractContextManager):
 
     def __init__(self, app_manager, *args, **xargs):
         self.app_manager = app_manager
@@ -344,7 +343,6 @@ class AppManager:
         icon = self.enter(Icon(target))
         self.main_app = self.enter(App(self, target, icon=icon, verbose=self.verbose))
         self.enter(target)
-        Thread(name="App.mainloop()", target=self.main_app.mainloop, daemon=True).start()
         if callback: callback()
 
     def enter(self, obj):

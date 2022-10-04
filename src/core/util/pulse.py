@@ -1,23 +1,31 @@
-import pulsectl, time, sys
-from threading import Thread
+import pulsectl, sys
+from threading import Thread, Event
 
 
 class ConnectedPulse(pulsectl.Pulse):
 
-    def __init__(self,*args,connect=True,verbose=False,**xargs):
-        super().__init__(*args,connect=False,**xargs)
+    def __init__(self, *args, verbose=False, **xargs):
+        super().__init__(*args, connect=False, **xargs)
         self._verbose = verbose
-        if connect: self.connect_async()
+        self._disconnect_evt = Event()
+
+    def __enter__(self):
+        self._disconnect_evt.clear()
+        self.connect_async()
+
+    def __exit__(self, *args, **xargs):
+        self._disconnect_evt.set()
 
     def connect_async(self):
         def connect():
             self.connect()
             self.on_connected()
         def keep_reconnecting():
-            while True:
+            while not self._disconnect_evt.is_set():
                 try: connect()
-                except pulsectl.pulsectl.PulseError: time.sleep(3)
+                except pulsectl.pulsectl.PulseError: self._disconnect_evt.wait(3)
                 else: break
+        if self._disconnect_evt.is_set(): return
         if self._verbose: print("[%s] Connecting..."%self.__class__.__name__, file=sys.stderr)
         try: connect()
         except pulsectl.pulsectl.PulseError:
@@ -66,7 +74,7 @@ class PulseListener(ConnectedPulse):
             self.event_mask_set(pulsectl.PulseEventMaskEnum.sink,
                 pulsectl.PulseEventMaskEnum.sink_input)
             self.event_callback_set(self._callback)
-            while True:
+            while not self._disconnect_evt.is_set():
                 self.event_listen()
                 if self.ev.facility == pulsectl.PulseEventFacilityEnum.sink:
                     self._on_pulse_sink_event()

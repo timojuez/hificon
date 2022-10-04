@@ -5,6 +5,7 @@ gi.require_version('AppIndicator3', '0.1')
 from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio
 import sys, pkgutil
 from threading import Timer
+from contextlib import AbstractContextManager
 from ..core.util.async_widget import bind_widget_to_value
 from ..core import features, config
 from ..core.util.function_bind import Bindable
@@ -290,7 +291,7 @@ class MenuMixin:
         submenu.show_all()
     
 
-class Tray(MenuMixin):
+class Tray(MenuMixin, AbstractContextManager):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
