@@ -1,6 +1,6 @@
 import sys, math, pkgutil, os, tempfile, argparse, traceback
 from threading import Thread, Timer, Lock
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, ExitStack
 from .. import Target
 from .. import NAME
 from ..core import features
@@ -321,34 +321,22 @@ class AppManager:
 
     def __init__(self, verbose):
         self.main_app = None
-        self._entered = []
+        self._exit_stack = ExitStack()
         self.verbose = verbose+1
 
     def mainloop(self):
-        try: gui.GUI_Backend.mainloop()
-        finally: self.exit_all()
-
-    def exit_all(self):
-        while self._entered:
-            obj = self._entered.pop()
-            try: obj.__exit__(None, None, None)
-            except: traceback.print_exc()
+        with self._exit_stack: gui.GUI_Backend.mainloop()
 
     @gtk
     def run_app(self, uri, setup=False, callback=None):
-        self.exit_all()
+        self._exit_stack.close()
         if setup or not config["Target"]["uri"]:
             return gui.Settings(self, None, ConfigDict("tray.json"), first_run=True)
         target = Target(uri, connect=False, verbose=self.verbose)
-        icon = self.enter(Icon(target))
-        self.main_app = self.enter(App(self, target, icon=icon, verbose=self.verbose))
-        self.enter(target)
+        icon = self._exit_stack.enter_context(Icon(target))
+        self.main_app = self._exit_stack.enter_context(App(self, target, icon=icon, verbose=self.verbose))
+        self._exit_stack.enter_context(target)
         if callback: callback()
-
-    def enter(self, obj):
-        obj.__enter__()
-        self._entered.append(obj)
-        return obj
 
 
 def main():
