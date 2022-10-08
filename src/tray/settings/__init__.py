@@ -31,7 +31,7 @@ class SettingsBase(GladeGtk):
         pass
 
     def on_close_click(self, *args, **xargs):
-        if self._first_run: Gtk.main_quit()
+        if self._first_run: self.app_manager.main_quit()
         else: self.hide()
         return True
 

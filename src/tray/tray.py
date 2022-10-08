@@ -307,7 +307,8 @@ class AutoPower(TargetController):
             requires=(config.power, config.source))
 
     def main_quit(self):
-        gui.GUI_Backend.exit()
+        """ called by SystemEvents """
+        self.app_manager.main_quit()
 
 
 class App(NotificationMixin, AutoPower, KeyBinding, TrayMixin, AbstractContextManager):
@@ -337,6 +338,10 @@ class AppManager:
         self.main_app = self._exit_stack.enter_context(App(self, target, icon=icon, verbose=self.verbose))
         self._exit_stack.enter_context(target)
         if callback: callback()
+
+    @gtk
+    def main_quit(self):
+        gui.GUI_Backend.exit()
 
 
 def main():

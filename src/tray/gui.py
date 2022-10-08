@@ -221,7 +221,7 @@ class MenuMixin:
         self._footer_items.append(item_about)
 
         item_quit = Gtk.MenuItem('Quit')
-        item_quit.connect('activate', lambda *args: (self.target.exit(), GUI_Backend.exit()))
+        item_quit.connect('activate', lambda *args: self.app_manager.main_quit())
         self._footer_items.append(item_quit)
 
         for e in self._footer_items+list(self._header_items.values()): e.show_all()
