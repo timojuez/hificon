@@ -1,5 +1,5 @@
 import time, socket, time, selectors, traceback, sys
-from telnetlib import Telnet
+from telnetlib import Telnet, TELNET_PORT
 from threading import Lock, Thread, Event
 from contextlib import suppress
 from ..util.json_service import Service
@@ -19,7 +19,7 @@ class TelnetClient(AbstractClient):
     _send_lock = None
     _pulse_stop = None
     
-    def __init__(self, host, port=23, *args, **xargs):
+    def __init__(self, host, port=TELNET_PORT, *args, **xargs):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
         self._pulse_stop = Event()
