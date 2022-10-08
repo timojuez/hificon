@@ -350,7 +350,6 @@ def main():
     parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')
     args = parser.parse_args()
-    if not Setup.configured() or args.setup: Setup.setup()
 
     am = AppManager(verbose=args.verbose)
     Thread(target=lambda: am.run_app(args.target, args.setup), name="mainapp", daemon=True).start()

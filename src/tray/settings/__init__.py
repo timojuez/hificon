@@ -3,6 +3,7 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from ..common import GladeGtk, gtk
 from .popup_menu_settings import PopupMenuSettings
+from .target_setup import TargetSetup
 
 
 class SettingsBase(GladeGtk):
@@ -17,11 +18,11 @@ class SettingsBase(GladeGtk):
         self.config = config
         item_poweroffsd = self.builder.get_object("poweroff")
         item_poweroffsd.set_active(self.config["control_power_off"])
-        item_poweroffsd.connect("toggled", lambda *args:
+        item_poweroffsd.connect("state-set", lambda *args:
             self.config.__setitem__("control_power_off",item_poweroffsd.get_active()))
         item_hotkeys = self.builder.get_object("hotkeys")
         item_hotkeys.set_active(self.config["volume_hotkeys"])
-        item_hotkeys.connect("toggled", lambda *args:
+        item_hotkeys.connect("state-set", lambda *args:
             self.set_keyboard_media_keys(item_hotkeys.get_active()))
 
     def set_keyboard_media_keys(self, active):
@@ -36,5 +37,5 @@ class SettingsBase(GladeGtk):
         return True
 
 
-class Settings(PopupMenuSettings, SettingsBase): pass
+class Settings(TargetSetup, PopupMenuSettings, SettingsBase): pass
 
