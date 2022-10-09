@@ -116,7 +116,6 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
         self.title = self.builder.get_object("title")
         self.image = self.builder.get_object("image")
         self.adj = self.builder.get_object("adjustment")
-        self.adj.set_page_increment(config["tray"]["scroll_delta"])
         
         for f in self.target.features.values(): f.bind(
             gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
