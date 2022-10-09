@@ -80,21 +80,21 @@ class Icon(Bindable):
         self.update_icon()
 
     def on_feature_change(self, f_id, value, *args): # bound to target
-        if f_id in (config.volume, config.muted, config.power): self.update_icon()
+        if f_id in (config.tray_feature, config.muted, config.power): self.update_icon()
 
     def update_icon(self):
-        self.target.schedule(self._update_icon, requires=(config.muted, config.volume, config.power))
+        self.target.schedule(self._update_icon, requires=(config.muted, config.tray_feature, config.power))
 
     def _update_icon(self):
-        volume = self.target.features[config.volume]
+        f = self.target.features[config.tray_feature]
         if not self.target.features[config.power].get(): self.set_icon("power")
-        elif self.target.features[config.muted].get() or volume.get() == volume.min:
+        elif self.target.features[config.muted].get() or f.get() == f.min:
             self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-            icon_idx = math.ceil(volume.get()/volume.max*len(icons))-1
+            icon_idx = math.ceil(f.get()/f.max*len(icons))-1
             self.set_icon(icons[icon_idx])
-    
+
     def set_icon(self, name="disconnected"):
         if self._icon_name == name: return
         self._icon_name = name
@@ -159,6 +159,7 @@ class TrayMixin(gui.Tray):
         super().__init__(*args,**xargs)
         self.target.preload_features.update((config.volume,config.muted))
         icon.bind(on_change = self.on_icon_change)
+        self.icon = icon
         self.show()
 
     def on_icon_change(self, path, name):

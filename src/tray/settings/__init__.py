@@ -53,6 +53,7 @@ class TrayIconMixin:
     def on_tray_icon_function_changed(self, *_):
         config["tray"]["scroll_feature"] = self.tray_combobox.get_active()
         config.save()
+        if self.app_manager.main_app: self.app_manager.main_app.icon.update_icon()
 
     def on_scroll_delta_value_changed(self, *args, **xargs):
         config["tray"]["scroll_delta"] = self.scroll_delta.get_value()
