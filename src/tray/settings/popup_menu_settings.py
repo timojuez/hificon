@@ -108,12 +108,7 @@ class SelectedFeaturesList:
         self.on_menu_change()
 
     def on_menu_change(self):
-        f_ids = []
-        it = self.menu_list.get_iter_first()
-        while it:
-            f_id = self.menu_list.get_value(it, 0)
-            f_ids.append(f_id)
-            it = self.menu_list.iter_next(it)
+        f_ids = [row[0] for row in self.menu_list]
         self._save_tray_menu_features(f_ids)
         self._update_listeners(f_ids)
 
