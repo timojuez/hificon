@@ -117,6 +117,10 @@ class DeviceListMixin:
         self.builder.get_object("devices_view_radiobutton").set_active(True)
         self.on_target_setup_changed()
 
+    def _reset_target_setup(self):
+        self.devices_list.clear()
+        super()._reset_target_setup()
+
 
 class TextEditMixin:
 
