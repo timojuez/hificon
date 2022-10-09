@@ -1,6 +1,7 @@
 import sys, math, pkgutil, os, tempfile, argparse, traceback
 from threading import Thread, Timer, Lock
 from contextlib import AbstractContextManager, ExitStack
+from decimal import Decimal
 from .. import Target
 from .. import NAME
 from ..core import features
@@ -157,7 +158,6 @@ class TrayMixin(gui.Tray):
     def __init__(self, *args, icon, **xargs):
         super().__init__(*args,**xargs)
         self.target.preload_features.update((config.volume,config.muted))
-        self.scroll_delta = config["tray"]["scroll_delta"]
         icon.bind(on_change = self.on_icon_change)
         self.show()
 
@@ -168,13 +168,13 @@ class TrayMixin(gui.Tray):
     def on_scroll_up(self, steps):
         volume = self.target.features[config.volume]
         try:
-            if volume.isset(): volume.remote_set(volume.get()+self.scroll_delta*steps)
+            if volume.isset(): volume.remote_set(volume.get()+Decimal(config["tray"]["scroll_delta"])*steps)
         except ConnectionError: pass
 
     def on_scroll_down(self, steps):
         volume = self.target.features[config.volume]
         try:
-            if volume.isset(): volume.remote_set(volume.get()-self.scroll_delta*steps)
+            if volume.isset(): volume.remote_set(volume.get()-Decimal(config["tray"]["scroll_delta"])*steps)
         except ConnectionError: pass
 
 

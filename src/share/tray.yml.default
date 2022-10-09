@@ -31,7 +31,7 @@ notifications:
     timeout: 2000
 
 tray:
-    scroll_delta: !decimal 2.0
+    scroll_delta: 2.0
     menu_features:
         - '@volume_id'
         - '@power_id'

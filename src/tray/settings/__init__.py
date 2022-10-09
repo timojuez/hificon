@@ -6,6 +6,18 @@ from .popup_menu_settings import PopupMenuSettings
 from .target_setup import TargetSetup
 
 
+class TrayIconMixin:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.scroll_delta = self.builder.get_object("scroll_delta")
+        self.scroll_delta.set_value(config["tray"]["scroll_delta"])
+
+    def on_scroll_delta_value_changed(self, *args, **xargs):
+        config["tray"]["scroll_delta"] = self.scroll_delta.get_value()
+        config.save()
+
+
 class HotkeysMixin:
 
     def __init__(self, *args, **xargs):
@@ -43,5 +55,5 @@ class SettingsBase(GladeGtk):
         return True
 
 
-class Settings(HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
+class Settings(TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
 
