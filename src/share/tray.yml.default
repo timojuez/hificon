@@ -32,6 +32,7 @@ notifications:
 
 tray:
     scroll_delta: 2.0
+    scroll_feature: '@volume_id'
     menu_features:
         - '@volume_id'
         - '@power_id'

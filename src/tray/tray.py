@@ -10,7 +10,7 @@ from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
-from .common import gtk, config
+from .common import gtk, config, resolve_feature_id
 
 
 class FeatureNotification:
@@ -144,11 +144,11 @@ class NotificationMixin(object):
         if self.target.features[f_id]._prev_val is not None: self.show_notification(f_id)
 
     def on_scroll_up(self, *args, **xargs):
-        self.show_notification(config.volume)
+        self.show_notification(resolve_feature_id(config["tray"]["scroll_feature"]))
         super().on_scroll_up(*args,**xargs)
         
     def on_scroll_down(self, *args, **xargs):
-        self.show_notification(config.volume)
+        self.show_notification(resolve_feature_id(config["tray"]["scroll_feature"]))
         super().on_scroll_down(*args,**xargs)
 
 
@@ -166,15 +166,17 @@ class TrayMixin(gui.Tray):
         self.set_icon(path, name)
     
     def on_scroll_up(self, steps):
-        volume = self.target.features[config.volume]
+        f = self.target.features.get(resolve_feature_id(config["tray"]["scroll_feature"]))
+        if not f: return
         try:
-            if volume.isset(): volume.remote_set(volume.get()+Decimal(config["tray"]["scroll_delta"])*steps)
+            if f.isset(): f.remote_set(f.get()+Decimal(config["tray"]["scroll_delta"])*steps)
         except ConnectionError: pass
 
     def on_scroll_down(self, steps):
-        volume = self.target.features[config.volume]
+        f = self.target.features.get(resolve_feature_id(config["tray"]["scroll_feature"]))
+        if not f: return
         try:
-            if volume.isset(): volume.remote_set(volume.get()-Decimal(config["tray"]["scroll_delta"])*steps)
+            if f.isset(): f.remote_set(f.get()-Decimal(config["tray"]["scroll_delta"])*steps)
         except ConnectionError: pass
 
 
