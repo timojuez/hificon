@@ -2,11 +2,11 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject
 from threading import Thread
-from ..common import gtk
 from ...core.transmission.discovery import discover_targets, get_name
-from ...core.config import config
+from ...core.config import config as main_config
 from ... import Target
 from ...amp import AbstractAmp
+from ..common import gtk, config
 
 
 class UriSettingMode:
@@ -34,10 +34,11 @@ class DeviceListMode(UriSettingMode):
         else: self.target_setup.show_error("No item selected.")
 
     def set_uri(self, uri, active_mode):
-        if active_mode and active_mode != self: return
-        row = self.target_setup._add_target_to_list(Target(uri))
-        path=self.target_setup.devices_list.get_path(row)
-        self.target_setup.devices_view.set_cursor(path)
+        if active_mode == self:
+            row = self.target_setup._add_target_to_list(Target(uri))
+            path=self.target_setup.devices_list.get_path(row)
+            self.target_setup.devices_view.set_cursor(path)
+        elif active_mode: return # active_mode is set and not self
         self.radio.set_active(True)
 
 
@@ -153,8 +154,8 @@ class Base:
     def reset_target_setup(self): self._reset_target_setup()
 
     def _reset_target_setup(self):
-        uri = config["Target"]["uri"]
-        target_setup_mode = config["Tray"]["target_setup_mode"]
+        uri = main_config["Target"]["uri"]
+        target_setup_mode = config["target"]["setup_mode"]
         for m in self._modes.values():
             m.set_uri(uri, target_setup_mode)
         self.apply_button.set_sensitive(False)
@@ -175,8 +176,9 @@ class Base:
         if not isinstance(target, AbstractAmp):
             return self.show_error(f"URI must refer to an amplifier: '{uri}'")
 
-        config["Target"]["uri"] = uri
-        config["Tray"]["target_setup_mode"] = str(m)
+        main_config["Target"]["uri"] = uri
+        config["target"]["setup_mode"] = str(m)
+        config.save()
         self.hide()
         self.app_manager.run_app(uri, callback=lambda: self.app_manager.main_app.settings.show_device_settings())
 
