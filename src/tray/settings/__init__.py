@@ -6,16 +6,10 @@ from .popup_menu_settings import PopupMenuSettings
 from .target_setup import TargetSetup
 
 
-class SettingsBase(GladeGtk):
-    GLADE = "../share/settings.glade"
+class HotkeysMixin:
 
-    def __init__(self, app_manager, target, config, *args, first_run=False, **xargs):
+    def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._first_run = first_run
-        self.app_manager = app_manager
-        self.target = target
-        self.window = self.builder.get_object("window")
-        self.config = config
         item_poweroffsd = self.builder.get_object("poweroff")
         item_poweroffsd.set_active(self.config["control_power_off"])
         item_poweroffsd.connect("state-set", lambda *args:
@@ -31,11 +25,23 @@ class SettingsBase(GladeGtk):
     def set_mouse_key(self, key):
         pass
 
+
+class SettingsBase(GladeGtk):
+    GLADE = "../share/settings.glade"
+
+    def __init__(self, app_manager, target, config, *args, first_run=False, **xargs):
+        super().__init__(*args, **xargs)
+        self._first_run = first_run
+        self.app_manager = app_manager
+        self.target = target
+        self.window = self.builder.get_object("window")
+        self.config = config
+
     def on_close_click(self, *args, **xargs):
         if self._first_run: self.app_manager.main_quit()
         else: self.hide()
         return True
 
 
-class Settings(TargetSetup, PopupMenuSettings, SettingsBase): pass
+class Settings(HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
 
