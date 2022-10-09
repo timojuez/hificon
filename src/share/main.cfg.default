@@ -1,36 +1,3 @@
 [Target]
 uri = auto
 
-
-[Amp]
-# Feature ids to be controlled by this program:
-power_feature_id = power
-source_feature_id = source
-volume_feature_id = volume
-muted_feature_id = muted
-
-# Amp input source that this program controls. Important for power control. Empty means "all"
-source = 
-
-# Delay in minutes to power off Amp after last output stopped (float or "no")
-poweroff_after = 2.5
-
-
-[Tray]
-notification_blacklist = fallback, maxvol, is_playing, source_names, device_power, technical_sound_mode
-# on screen notification timeout in milliseconds
-notification_timeout = 2000
-tray_scroll_delta = 2.0
-target_setup_mode = 
-
-
-[Hotkeys]
-# Wait @interval milliseconds after each volume change
-interval = 100
-# keyboard hotkey options
-step = 3
-# mouse gesture options
-mouse_button = button9
-mouse_sensitivity = 0.06
-mouse_max_volume_step = 8
-

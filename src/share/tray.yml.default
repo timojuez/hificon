@@ -1,0 +1,53 @@
+power_control:
+    # Switch the target on when playing audio
+    auto_power_on: True
+    # Switch the target off when it idles
+    auto_power_off: True
+    # Switch the target off when local device powers off or suspends
+    control_power_off: True
+    # Delay in minutes to power off Amp after last output stopped (float or "no")
+    poweroff_after: 2.5
+
+target:
+    features:
+        # Feature ids to be controlled by this program:
+        power_id: power
+        source_id: source
+        volume_id: volume
+        muted_id: muted
+    # Amp input source that this program controls. Important for power control. Empty means "all"
+    source: []
+    setup_mode:
+
+notifications:
+    blacklist: 
+        - fallback
+        - maxvol
+        - is_playing
+        - source_names
+        - device_power
+        - technical_sound_mode
+    # on screen notification timeout in milliseconds
+    timeout: 2000
+
+tray:
+    scroll_delta: !decimal 2.0
+    menu_features:
+        - '@volume_id'
+        - '@power_id'
+        - sound_mode
+        - sound_mode_setting
+        - '@source_id'
+
+hotkeys:
+    # Use volume media keys from keyboard to control target
+    volume_hotkeys: True
+    # Wait @interval milliseconds after each volume change
+    interval: 100
+    # keyboard hotkey options
+    step: !decimal 3
+    # mouse gesture options
+    mouse_button: button9
+    mouse_sensitivity: !decimal 0.06
+    mouse_max_volume_step: 8
+

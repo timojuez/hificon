@@ -1,6 +1,7 @@
 import gi, pkgutil
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
+from ..core.config import YamlConfig
 
 
 class Singleton(type):
@@ -29,4 +30,16 @@ class GladeGtk:
 
     @gtk
     def hide(self): self.window.hide()
+
+
+class TrayConfig(YamlConfig):
+
+    def __init__(self): super().__init__("tray.yml")
+    volume = property(lambda self: self["target"]["features"]["volume_id"])
+    muted = property(lambda self: self["target"]["features"]["muted_id"])
+    power = property(lambda self: self["target"]["features"]["power_id"])
+    source = property(lambda self: self["target"]["features"]["source_id"])
+
+
+config = TrayConfig()
 

@@ -3,14 +3,14 @@ import time, sys, tempfile, os
 from threading import Thread, Lock, Event
 from decimal import Decimal
 from contextlib import suppress
-from ..core import config
 from ..info import PKG_NAME
+from .common import config
 from pynput import mouse, keyboard
 LINUX = sys.platform == "linux"
 if LINUX: from ..core.util.x11_grab import XGrab
 
 
-MAX_VOL_CHANGE = config.getint("Hotkeys", "mouse_max_volume_step")
+MAX_VOL_CHANGE = config["hotkeys"]["mouse_max_volume_step"]
 
 
 class VolumeChanger:
@@ -21,8 +21,8 @@ class VolumeChanger:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.interval = config.getfloat("Hotkeys","interval")/1000
-        self.step = config.getdecimal("Hotkeys","step")
+        self.interval = config["hotkeys"]["interval"]/1000
+        self.step = config["hotkeys"]["step"]
         self._volume_changed = Event()
         self._volume_step = Event()
         self._set_volume_lock = Lock()
@@ -57,7 +57,7 @@ class VolumeChanger:
     def _on_activated_mouse_move(self, x, y):
         if self._volume_ref is not None:
             vol = self.target.features[config.volume]
-            new_vol = self._volume_ref-int((y-self._y_ref)*config.getdecimal("Hotkeys", "mouse_sensitivity"))
+            new_vol = self._volume_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
             vol_max = min(vol.max, vol.get()+MAX_VOL_CHANGE)
             vol_min = vol.min
             if new_vol > vol_max or new_vol < vol_min:
@@ -115,14 +115,14 @@ class InputDeviceListener:
             on_press=self.on_hotkey_press,
             on_release=self.on_hotkey_release,
         )
-        self._config_button = config["Hotkeys"]["mouse_button"]
+        self._config_button = config["hotkeys"]["mouse_button"]
         if LINUX: self._xgrab = XGrab()
         self._controller = keyboard.Controller()
 
     def __enter__(self):
         self.mouse_listener.start()
         self.key_listener.start()
-        self.set_key_grabbing(self.config["volume_hotkeys"])
+        self.set_key_grabbing(config["hotkeys"]["volume_hotkeys"])
         self.set_button_grabbing(bool(self._config_button))
         if LINUX: self._xgrab.enter()
         return super().__enter__()
@@ -145,7 +145,7 @@ class InputDeviceListener:
         if self._pressed: self.on_activated_mouse_move(x, y)
 
     def on_hotkey_press(self, key):
-        if not self.config["volume_hotkeys"]: return
+        if not config["hotkeys"]["volume_hotkeys"]: return
         key = self.key_listener.canonical(key)
         if key == keyboard.Key.ctrl: self._ctrl = True
         elif not self._ctrl: return
@@ -160,7 +160,7 @@ class InputDeviceListener:
     def set_keyboard_media_keys(self, *args, **xargs):
         self.set_key_grabbing(False)
         super().set_keyboard_media_keys(*args, **xargs)
-        self.set_key_grabbing(self.config["volume_hotkeys"])
+        self.set_key_grabbing(config["hotkeys"]["volume_hotkeys"])
 
     def set_key_grabbing(self, value):
         """ stop forwarding volume media buttons to other programs """

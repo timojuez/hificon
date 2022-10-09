@@ -2,7 +2,7 @@ import argparse, os, pkgutil, tempfile, sys, traceback
 from decimal import Decimal
 from .core.util.async_widget import bind_widget_to_value
 from .core import features
-from .core.config import config, ConfigDict, CONFDIR
+from .core.config import config, DictConfig, CONFDIR
 from . import Target, get_schemes, NAME, VERSION, AUTHOR, COPYRIGHT
 
 
@@ -29,7 +29,7 @@ from kivy.uix.screenmanager import ScreenManager, Screen
 
 
 class TabPanel(ScrollView):
-    config = ConfigDict("menu.json")
+    config = DictConfig("menu.json")
     _filter = lambda *_: False
 
     def __init__(self, target):

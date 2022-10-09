@@ -7,10 +7,10 @@ import sys, pkgutil
 from threading import Timer
 from contextlib import AbstractContextManager
 from ..core.util.async_widget import bind_widget_to_value
-from ..core import features, config
+from ..core import features
 from ..core.util.function_bind import Bindable
 from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
-from .common import gtk, GladeGtk, Singleton
+from .common import gtk, GladeGtk, Singleton, config
 from .settings import Settings
 
 
@@ -116,7 +116,7 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
         self.title = self.builder.get_object("title")
         self.image = self.builder.get_object("image")
         self.adj = self.builder.get_object("adjustment")
-        self.adj.set_page_increment(config.getdecimal("Tray","tray_scroll_delta"))
+        self.adj.set_page_increment(config["tray"]["scroll_delta"])
         
         for f in self.target.features.values(): f.bind(
             gtk(lambda *args, f=f, **xargs: f==self._current_feature and self.on_value_change(*args,**xargs)))
@@ -199,15 +199,15 @@ class MenuMixin:
         self._footer_items.append(Gtk.SeparatorMenuItem())
 
         item_poweron = Gtk.CheckMenuItem("Auto power on")
-        item_poweron.set_active(self.config["auto_power_on"])
+        item_poweron.set_active(config["power_control"]["auto_power_on"])
         item_poweron.connect("toggled", lambda *args:
-            self.config.__setitem__("auto_power_on",item_poweron.get_active()))
+            [config["power_control"].__setitem__("auto_power_on",item_poweron.get_active()), config.save()])
         self._footer_items.append(item_poweron)
 
         item_poweroff = Gtk.CheckMenuItem("Auto power off")
-        item_poweroff.set_active(self.config["auto_power_off"])
+        item_poweroff.set_active(config["power_control"]["auto_power_off"])
         item_poweroff.connect("toggled", lambda *args:
-            self.config.__setitem__("auto_power_off",item_poweroff.get_active()))
+            [config["power_control"].__setitem__("auto_power_off",item_poweroff.get_active()), config.save()])
         self._footer_items.append(item_poweroff)
 
         self._footer_items.append(Gtk.SeparatorMenuItem())
@@ -296,7 +296,7 @@ class Tray(MenuMixin, AbstractContextManager):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.settings = Settings(
-            self.app_manager, self.target, self.config, on_menu_settings_change=self.on_menu_settings_change)
+            self.app_manager, self.target, on_menu_settings_change=self.on_menu_settings_change)
         self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.scale_popup = ScalePopup(self.target)
         self.icon.connect("scroll-event", self.on_scroll)

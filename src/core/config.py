@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*- 
 
-import os, configparser, pkgutil, json
+import os, configparser, pkgutil, json, yaml
 from collections import UserDict
 from decimal import Decimal
 from ..info import PKG_NAME
@@ -8,6 +8,17 @@ from ..info import PKG_NAME
 
 CONFDIR = os.path.expanduser("~/.%s"%PKG_NAME)
 FILE = os.path.join(CONFDIR, "main.cfg")
+
+
+def decimal_constructor(loader, node):
+    value = loader.construct_scalar(node)
+    return Decimal(value)
+
+def decimal_representer(dumper, data):
+    return dumper.represent_scalar(u'!decimal', str(data))
+
+yaml.add_representer(Decimal, decimal_representer)
+yaml.add_constructor('!decimal', decimal_constructor)
 
 
 class ExtendedConfigParser(configparser.ConfigParser):
@@ -60,14 +71,7 @@ class ConfigDiffMixin:
             self._local.write(f)
 
 
-class ShortcutsMixin:
-    volume = property(lambda self: self.get("Amp","volume_feature_id"))
-    muted = property(lambda self: self.get("Amp","muted_feature_id"))
-    power = property(lambda self: self.get("Amp","power_feature_id"))
-    source = property(lambda self: self.get("Amp","source_feature_id"))
-
-
-class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass
+class ConfigParser(ConfigDiffMixin, ExtendedConfigParser): pass
 
 
 class _Config(UserDict):
@@ -93,10 +97,16 @@ class _Config(UserDict):
     def dict_to_str(self, d): raise NotImplementedError()
 
 
-class ConfigDict(_Config):
+class DictConfig(_Config):
 
     def str_to_dict(self, s): return json.loads(s)
     def dict_to_str(self, d): return json.dumps(d)
+
+
+class YamlConfig(_Config):
+
+    def str_to_dict(self, s): return yaml.full_load(s)
+    def dict_to_str(self, d): return yaml.dump(d)
 
 
 try: os.mkdir(CONFDIR)

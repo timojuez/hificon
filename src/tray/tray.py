@@ -5,12 +5,11 @@ from .. import Target
 from .. import NAME
 from ..core import features
 from ..core.util import Bindable
-from ..core.config import config, ConfigDict
 from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
-from .common import gtk
+from .common import gtk, config
 
 
 class FeatureNotification:
@@ -26,7 +25,7 @@ class TextNotification(FeatureNotification, gui.Notification):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.set_urgency(2)
-        self.set_timeout(config.getint("Tray","notification_timeout"))
+        self.set_timeout(config["notifications"]["timeout"])
         super().update("Connecting ...", self.target.uri)
         self.target.preload_features.add("name")
     
@@ -46,7 +45,7 @@ class NumericNotification(FeatureNotification):
         super().__init__(*args, **xargs)
         self.scale_popup = scale_popup
         self._n = gui.GaugeNotification()
-        self._n.set_timeout(config.getint("Tray","notification_timeout"))
+        self._n.set_timeout(config["notifications"]["timeout"])
 
     def update(self): pass
 
@@ -118,7 +117,7 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        notification_blacklist = config.getlist("Tray","notification_blacklist")
+        notification_blacklist = config["notifications"]["blacklist"]
         n_features = [f for f in self.target.features.values()
             if f.id not in notification_blacklist]
         self._notifications = {f.id: n for f in n_features for n in [self.create_notification(f)] if n}
@@ -156,10 +155,9 @@ class TrayMixin(gui.Tray):
     """ Tray Icon """
 
     def __init__(self, *args, icon, **xargs):
-        self.config = ConfigDict("tray.json")
         super().__init__(*args,**xargs)
         self.target.preload_features.update((config.volume,config.muted))
-        self.scroll_delta = config.getdecimal("Tray","tray_scroll_delta")
+        self.scroll_delta = config["tray"]["scroll_delta"]
         icon.bind(on_change = self.on_icon_change)
         self.show()
 
@@ -242,7 +240,7 @@ class AutoPower(TargetController):
     def start_idle_timer(self):
         with self._idle_timer_lock:
             if self._playing or self._idle_timer and self._idle_timer.is_alive(): return
-            try: timeout = config.getfloat("Amp","poweroff_after")*60
+            try: timeout = config["power_control"]["poweroff_after"]*60
             except ValueError: return
             if not timeout: return
             self._idle_timer = Timer(timeout, self.on_idle_timeout)
@@ -278,7 +276,7 @@ class AutoPower(TargetController):
         self.target.schedule(self._on_idle_timeout, requires=("name", config.power, config.source))
 
     def _on_idle_timeout(self):
-        if self.config["auto_power_off"] and self.can_poweroff:
+        if config["power_control"]["auto_power_off"] and self.can_poweroff:
             self._n.update("Power off %s"%self.target.name)
             self._n.show()
         
@@ -288,21 +286,21 @@ class AutoPower(TargetController):
 
     def poweron(self):
         """ poweron target """
-        if self.config["auto_power_on"]:
+        if config["power_control"]["auto_power_on"]:
             self.target.schedule(self._poweron, requires=(config.power, config.source))
 
     def _poweron(self):
         if self.target.features[config.power].get(): return
-        if config["Amp"].get("source"):
-            self.target.features[config.source].remote_set(config.getlist("Amp","source")[0])
+        if config.source:
+            self.target.features[config.source].remote_set(config["target"]["source"][0])
         self.target.features[config.power].remote_set(True)
 
     can_poweroff = property(
         lambda self: self.target.features[config.power].get()
-        and (not config["Amp"]["source"] or self.target.features[config.source].get() in config.getlist("Amp","source")))
+        and (not config.source or self.target.features[config.source].get() in config["target"]["source"]))
 
     def poweroff(self):
-        if not self.config["control_power_off"]: return
+        if not config["power_control"]["control_power_off"]: return
         self.target.schedule(lambda:self.can_poweroff and self.target.features[config.power].remote_set(False),
             requires=(config.power, config.source))
 
@@ -331,8 +329,8 @@ class AppManager:
     @gtk
     def run_app(self, uri, setup=False, callback=None):
         self._exit_stack.close()
-        if setup or not config["Target"]["uri"]:
-            return gui.Settings(self, None, ConfigDict("tray.json"), first_run=True)
+        if setup or not config["target"]["setup_mode"]:
+            return gui.Settings(self, None, first_run=True)
         target = Target(uri, connect=False, verbose=self.verbose)
         icon = self._exit_stack.enter_context(Icon(target))
         self.main_app = self._exit_stack.enter_context(App(self, target, icon=icon, verbose=self.verbose))

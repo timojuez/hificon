@@ -1,7 +1,8 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GObject
-from ...core import features, config
+from ...core import features
+from ..common import config
 
 
 DND_FROM_MENU_INFO = 1000 # drag n drop id
@@ -80,15 +81,16 @@ class SelectedFeaturesList:
         self.on_menu_settings_change(features)
 
     def _load_tray_menu_features(self):
-        features = self.config["tray_menu_features"]
+        features = config["tray"]["menu_features"]
         for f_id in features: self.menu_list.append([f_id])
         self._update_listeners(features)
 
     def _save_tray_menu_features(self, features):
-        self.config["tray_menu_features"] = features
+        config["tray"]["menu_features"] = features
+        config.save()
 
     def _id_to_feature(self, f_id):
-        f_id = config.get("Amp", f_id[1:]) if f_id.startswith("@") else f_id
+        f_id = config["target"]["features"].get(f_id[1:]) if f_id.startswith("@") else f_id
         if self.target: return self.target.features.get(f_id)
 
     def _id_to_string(self, f_id):
