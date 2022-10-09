@@ -21,6 +21,7 @@ notification_blacklist = fallback, maxvol, is_playing, source_names, device_powe
 # on screen notification timeout in milliseconds
 notification_timeout = 2000
 tray_scroll_delta = 2.0
+target_setup_mode = 
 
 
 [Hotkeys]

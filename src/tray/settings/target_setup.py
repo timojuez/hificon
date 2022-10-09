@@ -18,7 +18,9 @@ class UriSettingMode:
 
     def is_active(self): return self.radio.get_active()
     def get_uri(self): raise NotImplementedError()
-    def set_uri(self): raise NotImplementedError()
+    def set_uri(self, uri, active_mode): raise NotImplementedError()
+    def __str__(self): return self.RADIO_NAME
+    def __eq__(self, o): return str(o) == str(self)
 
 
 class DeviceListMode(UriSettingMode):
@@ -31,7 +33,8 @@ class DeviceListMode(UriSettingMode):
             return target.uri
         else: self.target_setup.show_error("No item selected.")
 
-    def set_uri(self, uri):
+    def set_uri(self, uri, active_mode):
+        if active_mode and active_mode != self: return
         row = self.target_setup._add_target_to_list(Target(uri))
         path=self.target_setup.devices_list.get_path(row)
         self.target_setup.devices_view.set_cursor(path)
@@ -50,8 +53,10 @@ class TextEditMode(UriSettingMode):
         if not uri: return self.target_setup.show_error("URI cannot be empty.")
         return uri
 
-    def set_uri(self, uri):
+    def set_uri(self, uri, active_mode):
         self.uri_edit.set_text(uri)
+        if active_mode == self:
+            self.radio.set_active(True)
 
 
 class DemoMode(UriSettingMode):
@@ -60,10 +65,9 @@ class DemoMode(UriSettingMode):
 
     def get_uri(self): return self.URI
 
-    def set_uri(self, uri):
-        if uri == self.URI:
+    def set_uri(self, uri, active_mode):
+        if active_mode == self:
             self.radio.set_active(True)
-            return True # don't call next modes' set_uri()
 
 
 class DeviceListMixin:
@@ -126,30 +130,29 @@ class TextEditMixin:
         self.on_target_setup_changed()
 
 
-class TargetSetup(DeviceListMixin, TextEditMixin):
+class Base:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.apply_button = self.builder.get_object("apply_button")
         self._modes = {C:C(self) for C in (TextEditMode, DemoMode, DeviceListMode)}
-        self.set_uri(config["Target"]["uri"])
         if self._first_run: self.on_first_run()
 
-    def get_uri(self):
-        for m in self._modes.values():
-            if m.is_active():
-                uri = m.get_uri()
-                break
-        try: target = Target(uri)
-        except Exception as e: return self.show_error(f"Could not create target for URI '{uri}': {e}")
-        if not isinstance(target, AbstractAmp):
-            return self.show_error(f"URI must refer to an amplifier: '{uri}'")
-        return uri
+    @gtk
+    def show(self): self._show()
+
+    def _show(self):
+        self._reset_target_setup()
+        super().show()
 
     @gtk
-    def set_uri(self, uri):
+    def reset_target_setup(self): self._reset_target_setup()
+
+    def _reset_target_setup(self):
+        uri = config["Target"]["uri"]
+        target_setup_mode = config["Tray"]["target_setup_mode"]
         for m in self._modes.values():
-            if m.set_uri(uri): break
+            m.set_uri(uri, target_setup_mode)
         self.apply_button.set_sensitive(False)
 
     def on_device_settings_radiobutton_toggled(self, *args, **xargs):
@@ -159,15 +162,22 @@ class TargetSetup(DeviceListMixin, TextEditMixin):
         self.apply_button.set_sensitive(True)
 
     def on_apply_device_settings(self, *args, **xargs):
-        uri = self.get_uri()
+        for m in self._modes.values():
+            if m.is_active(): break
+        uri = m.get_uri()
         if uri is None: return
+        try: target = Target(uri)
+        except Exception as e: return self.show_error(f"Could not create target for URI '{uri}': {e}")
+        if not isinstance(target, AbstractAmp):
+            return self.show_error(f"URI must refer to an amplifier: '{uri}'")
+
         config["Target"]["uri"] = uri
+        config["Tray"]["target_setup_mode"] = str(m)
         self.hide()
         self.app_manager.run_app(uri, callback=lambda: self.app_manager.main_app.settings.show_device_settings())
 
-    @gtk
     def show_device_settings(self):
-        self.show()
+        self._show()
         tab = self.builder.get_object("device_settings")
         nb = self.builder.get_object("notebook")
         for i in range(nb.get_n_pages()):
@@ -185,4 +195,7 @@ class TargetSetup(DeviceListMixin, TextEditMixin):
     def on_first_run(self):
         self.show_device_settings()
         self.search_and_add_targets()
+
+
+class TargetSetup(DeviceListMixin, TextEditMixin, Base): pass
 
