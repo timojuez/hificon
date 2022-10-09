@@ -43,3 +43,15 @@ class TrayConfig(YamlConfig):
 
 config = TrayConfig()
 
+
+def resolve_feature_id(f_id):
+    return config["target"]["features"].get(f_id[1:]) if f_id.startswith("@") else f_id
+
+def id_to_feature(target, f_id):
+    if target: return target.features.get(f_id)
+
+def id_to_string(target, f_id):
+    f_id = resolve_feature_id(f_id)
+    f = id_to_feature(target, f_id)
+    return f"{f.name} ({f.category})" if f else f"{f_id} (Unavailable)"
+

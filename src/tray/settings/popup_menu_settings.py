@@ -2,7 +2,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GObject
 from ...core import features
-from ..common import config
+from ..common import config, resolve_feature_id, id_to_string, id_to_feature
 
 
 DND_FROM_MENU_INFO = 1000 # drag n drop id
@@ -75,7 +75,7 @@ class SelectedFeaturesList:
 
     def _update_listeners(self, f_ids):
         if not self.on_menu_settings_change: return
-        features = [f for f_id in f_ids for f in [self._id_to_feature(f_id)] if f]
+        features = [f for f_id in f_ids for f in [id_to_feature(self.target, resolve_feature_id(f_id))] if f]
         self.on_menu_settings_change(features)
 
     def _load_tray_menu_features(self):
@@ -87,17 +87,9 @@ class SelectedFeaturesList:
         config["tray"]["menu_features"] = features
         config.save()
 
-    def _id_to_feature(self, f_id):
-        f_id = config["target"]["features"].get(f_id[1:]) if f_id.startswith("@") else f_id
-        if self.target: return self.target.features.get(f_id)
-
-    def _id_to_string(self, f_id):
-        f = self._id_to_feature(f_id)
-        return f"{f.name} ({f.category})" if f else f"{f_id} (Unavailable)"
-
     def _set_menu_cell_text(self, column, cell, model, it, data):
         f_id = model.get_value(it, 0)
-        s = self._id_to_string(f_id)
+        s = id_to_string(self.target, f_id)
         cell.set_property('text', s)
 
     def on_menu_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
