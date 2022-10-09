@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from threading import Timer
 from decimal import Decimal, InvalidOperation
 from ..amp import TelnetAmp
-from ..core import config, features
+from ..core import features
 from ..core.transmission.types import ClientType, ServerType
 
 

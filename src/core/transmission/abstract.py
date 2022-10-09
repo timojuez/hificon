@@ -8,8 +8,6 @@ from urllib.parse import parse_qsl
 from threading import Thread, Event
 from ..util.function_bind import Bindable
 from ..util import log_call
-from ..config import config
-from ..config import FILE as CONFFILE
 from .types import SchemeType, ServerType, ClientType
 from .discovery import DiscoverySchemeMixin
 from . import features

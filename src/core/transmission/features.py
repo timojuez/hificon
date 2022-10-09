@@ -4,7 +4,6 @@ from decimal import Decimal
 from threading import Event, Lock, Timer, Thread
 from datetime import datetime, timedelta
 from ..util import call_sequence, Bindable, AttrDict
-from ..config import config
 from .types import ClientType, ServerType
 
 

@@ -4,7 +4,7 @@ Examples in src/schemes
 """
 
 from .core.util import log_call
-from .core import config, AbstractScheme, TelnetScheme, features
+from .core import AbstractScheme, TelnetScheme, features
 
 
 class AbstractAmp(AbstractScheme): pass
