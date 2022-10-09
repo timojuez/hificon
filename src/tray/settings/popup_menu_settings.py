@@ -27,7 +27,6 @@ class AvailableFeaturesList:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.available_list = self.builder.get_object("available_list")
         self.available_column = self.builder.get_object("available_column")
         self.avail_view = self.builder.get_object("avail_view")
         if self.target:
@@ -59,7 +58,6 @@ class SelectedFeaturesList:
     def __init__(self, *args, on_menu_settings_change=None, **xargs):
         super().__init__(*args, **xargs)
         self.on_menu_settings_change = on_menu_settings_change
-        self.menu_list = self.builder.get_object("menu_list")
         self.menu_column = self.builder.get_object("menu_column")
         self.menu_view = self.builder.get_object("menu_view")
         
