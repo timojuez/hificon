@@ -14,9 +14,8 @@ class UriSettingMode:
 
     def __init__(self, target_setup):
         self.target_setup = target_setup
+        self.radio = self.target_setup.builder.get_object(self.RADIO_NAME)
 
-    @property
-    def radio(self): return self.target_setup.builder.get_object(self.RADIO_NAME)
     def is_active(self): return self.radio.get_active()
     def get_uri(self): raise NotImplementedError()
     def set_uri(self): raise NotImplementedError()
