@@ -144,11 +144,11 @@ class NotificationMixin(object):
         if self.target.features[f_id]._prev_val is not None: self.show_notification(f_id)
 
     def on_scroll_up(self, *args, **xargs):
-        self.show_notification(resolve_feature_id(config["tray"]["scroll_feature"]))
+        self.show_notification(config.tray_feature)
         super().on_scroll_up(*args,**xargs)
         
     def on_scroll_down(self, *args, **xargs):
-        self.show_notification(resolve_feature_id(config["tray"]["scroll_feature"]))
+        self.show_notification(config.tray_feature)
         super().on_scroll_down(*args,**xargs)
 
 
@@ -166,14 +166,14 @@ class TrayMixin(gui.Tray):
         self.set_icon(path, name)
     
     def on_scroll_up(self, steps):
-        f = self.target.features.get(resolve_feature_id(config["tray"]["scroll_feature"]))
+        f = self.target.features.get(config.tray_feature)
         if not f: return
         try:
             if f.isset(): f.remote_set(f.get()+Decimal(config["tray"]["scroll_delta"])*steps)
         except ConnectionError: pass
 
     def on_scroll_down(self, steps):
-        f = self.target.features.get(resolve_feature_id(config["tray"]["scroll_feature"]))
+        f = self.target.features.get(config.tray_feature)
         if not f: return
         try:
             if f.isset(): f.remote_set(f.get()-Decimal(config["tray"]["scroll_delta"])*steps)

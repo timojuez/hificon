@@ -39,6 +39,7 @@ class TrayConfig(YamlConfig):
     muted = property(lambda self: self["target"]["features"]["muted_id"])
     power = property(lambda self: self["target"]["features"]["power_id"])
     source = property(lambda self: self["target"]["features"]["source_id"])
+    tray_feature = property(lambda self: resolve_feature_id(self["tray"]["scroll_feature"]))
 
 
 config = TrayConfig()
