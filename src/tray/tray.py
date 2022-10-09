@@ -91,8 +91,12 @@ class Icon(Bindable):
         elif self.target.features[config.muted].get() or f.get() == f.min:
             self.set_icon("audio-volume-muted")
         else:
+            f_val = f.get()
+            if not (f.min <= f_val <= f.max):
+                return sys.stderr.write(
+                    f"[{self.__class__.__name__}] WARNING: Value out of bounds: {f_val} for {f.id}.\n")
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-            icon_idx = math.ceil((f.get()-f.min)/(f.max-f.min)*len(icons))-1
+            icon_idx = math.ceil((f_val-f.min)/(f.max-f.min)*len(icons))-1
             self.set_icon(icons[icon_idx])
 
     def set_icon(self, name="disconnected"):

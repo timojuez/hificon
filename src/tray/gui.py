@@ -59,7 +59,9 @@ class GaugeNotification(GladeGtk, _Notification, metaclass=Singleton):
     
     @gtk
     def update(self, title, message, value, min, max):
-        assert(min <= value <= max)
+        if not (min <= value <= max):
+            return sys.stderr.write(f"[{self.__class__.__name__}] WARNING: "
+                f"Value out of bounds: {value}. title='{title}', message='{message}'.\n")
         diff = max-min
         value_normalised = (value-min)/diff
         self.title.set_text(title)
