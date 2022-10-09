@@ -199,6 +199,7 @@ class Base:
     def on_first_run(self):
         self.show_device_settings()
         self.search_and_add_targets()
+        self.apply_button.set_sensitive(True)
 
 
 class TargetSetup(DeviceListMixin, TextEditMixin, Base): pass
