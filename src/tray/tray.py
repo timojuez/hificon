@@ -92,7 +92,7 @@ class Icon(Bindable):
             self.set_icon("audio-volume-muted")
         else:
             icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-            icon_idx = math.ceil(f.get()/f.max*len(icons))-1
+            icon_idx = math.ceil((f.get()-f.min)/(f.max-f.min)*len(icons))-1
             self.set_icon(icons[icon_idx])
 
     def set_icon(self, name="disconnected"):
