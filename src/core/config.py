@@ -70,14 +70,14 @@ class ShortcutsMixin:
 class ConfigParser(ShortcutsMixin, ConfigDiffMixin, ExtendedConfigParser): pass
 
 
-class ConfigDict(UserDict):
+class _Config(UserDict):
     
     def __init__(self, filename):
         self._filename = filename
         if isinstance(filename, dict): return super().__init__(filename)
-        dct = json.loads(pkgutil.get_data(__name__,"../share/%s.default"%filename).decode())
+        dct = self.str_to_dict(pkgutil.get_data(__name__,"../share/%s.default"%filename).decode())
         try:
-            with open(os.path.join(CONFDIR, filename)) as fp: dct.update(json.load(fp))
+            with open(os.path.join(CONFDIR, filename)) as fp: dct.update(self.str_to_dict(fp.read()))
         except FileNotFoundError: pass
         super().__init__(dct)
     
@@ -87,7 +87,16 @@ class ConfigDict(UserDict):
     
     def save(self):
         with open(os.path.join(CONFDIR, self._filename),"w") as fp:
-            json.dump(dict(self), fp)
+            fp.write(self.dict_to_str(dict(self)))
+
+    def str_to_dict(self, s): raise NotImplementedError()
+    def dict_to_str(self, d): raise NotImplementedError()
+
+
+class ConfigDict(_Config):
+
+    def str_to_dict(self, s): return json.loads(s)
+    def dict_to_str(self, d): return json.dumps(d)
 
 
 try: os.mkdir(CONFDIR)
