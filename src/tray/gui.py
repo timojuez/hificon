@@ -296,10 +296,10 @@ class Tray(MenuMixin, AbstractContextManager):
         super().__init__(*args, **xargs)
         self.settings = Settings(
             self.app_manager, self.target, on_menu_settings_change=self.on_menu_settings_change)
-        self.icon = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
+        self._app_indicator = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.scale_popup = ScalePopup(self.target)
-        self.icon.connect("scroll-event", self.on_scroll)
-        self.icon.set_menu(self._menu)
+        self._app_indicator.connect("scroll-event", self.on_scroll)
+        self._app_indicator.set_menu(self._menu)
         
     def on_scroll_up(self, steps): pass
     
@@ -323,13 +323,13 @@ class Tray(MenuMixin, AbstractContextManager):
         elif direction == Gdk.ScrollDirection.DOWN: self.on_scroll_down(steps)
     
     @gtk
-    def show(self): self.icon.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
+    def show(self): self._app_indicator.set_status(AppIndicator3.IndicatorStatus.ACTIVE)
     
     @gtk
-    def hide(self): self.icon.set_status(AppIndicator3.IndicatorStatus.PASSIVE)
+    def hide(self): self._app_indicator.set_status(AppIndicator3.IndicatorStatus.PASSIVE)
     
     @gtk
-    def set_icon(self, *args): self.icon.set_icon_full(*args)
+    def set_icon(self, *args): self._app_indicator.set_icon_full(*args)
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
