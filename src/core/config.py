@@ -3,6 +3,7 @@
 import os, configparser, pkgutil, json, yaml
 from collections import UserDict
 from decimal import Decimal
+from copy import deepcopy
 from ..info import PKG_NAME
 
 
@@ -81,10 +82,12 @@ class _Config(UserDict):
         if isinstance(filename, dict): return super().__init__(filename)
         dct = self.str_to_dict(pkgutil.get_data(__name__,"../share/%s.default"%filename).decode())
         try:
-            with open(os.path.join(CONFDIR, filename)) as fp: dct.update(self.str_to_dict(fp.read()))
+            with open(os.path.join(CONFDIR, filename)) as fp:
+                user = self.str_to_dict(fp.read())
         except FileNotFoundError: pass
+        else: dct = dict(deep_merge(dct, user))
         super().__init__(dct)
-    
+
     def __setitem__(self, *args, **xargs):
         super().__setitem__(*args, **xargs)
         self.save()
@@ -95,6 +98,19 @@ class _Config(UserDict):
 
     def str_to_dict(self, s): raise NotImplementedError()
     def dict_to_str(self, d): raise NotImplementedError()
+
+
+def deep_merge(dict1, dict2):
+    overlapping_keys = dict1.keys() & dict2.keys()
+    for key in overlapping_keys:
+        if isinstance(dict1[key], dict) and isinstance(dict2[key], dict):
+            yield key, dict(deep_merge(dict1[key], dict2[key]))
+        else:
+            yield key, deepcopy(dict2[key])
+    for key in dict1.keys() - overlapping_keys:
+        yield key, deepcopy(dict1[key])
+    for key in dict2.keys() - overlapping_keys:
+        yield key, deepcopy(dict2[key])
 
 
 class DictConfig(_Config):
