@@ -169,20 +169,23 @@ class TrayMixin(gui.Tray):
     def on_icon_change(self, path, name):
         self.scale_popup.set_image(path)
         self.set_icon(path, name)
-    
-    def on_scroll_up(self, steps):
-        f = self.target.features.get(config.tray_feature)
-        if not f: return
+
+    def _save_set_feature_to_relative_value(self, f_id, add):
+        f = self.target.features.get(f_id)
+        if not f or not f.isset(): return
         try:
-            if f.isset(): f.remote_set(f.get()+Decimal(config["tray"]["scroll_delta"])*steps)
+            value = f.get()+add
+            snapped_value = min(max(f.min, value), f.max)
+            f.remote_set(snapped_value)
         except ConnectionError: pass
 
+    def on_scroll_up(self, steps):
+        self._save_set_feature_to_relative_value(
+            config.tray_feature, steps*Decimal(config["tray"]["scroll_delta"]))
+
     def on_scroll_down(self, steps):
-        f = self.target.features.get(config.tray_feature)
-        if not f: return
-        try:
-            if f.isset(): f.remote_set(f.get()-Decimal(config["tray"]["scroll_delta"])*steps)
-        except ConnectionError: pass
+        self._save_set_feature_to_relative_value(
+            config.tray_feature, steps*-1*Decimal(config["tray"]["scroll_delta"]))
 
 
 class AutoPower(TargetController):

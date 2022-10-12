@@ -365,5 +365,8 @@ class DummyServerMixin:
     """ Server class that fills feature values with some values """
 
     def poll_feature(self, f, *args, **xargs): f.poll_on_dummy()
-    def on_receive_feature_value(self, f, value): f.set(value)
+
+    def on_receive_feature_value(self, f, value):
+        if isinstance(f, features.NumericFeature) and not (f.min <= value <= f.max): return
+        f.set(value)
 

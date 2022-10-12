@@ -300,8 +300,6 @@ class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
 
-    def remote_set(self, value, **xargs): super().remote_set(min(max(self.min,value),self.max), **xargs)
-
     def matches(self, data): return data.startswith(self.function) and (
         data[len(self.function):].isnumeric() or data[len(self.function):] in ["UP", "DOWN"])
 
