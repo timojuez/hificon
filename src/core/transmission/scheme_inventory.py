@@ -29,7 +29,6 @@ def get_scheme(cls_path):
         Scheme = getattr(module, cls)
     else: Scheme = cls_or_path_
     Scheme.scheme = cls_path
-    Scheme.Scheme = Scheme
     assert(issubclass(Scheme, SchemeType))
     return Scheme
 

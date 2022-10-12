@@ -30,6 +30,8 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
     verbose = 0
     connected = False
     uri = ""
+    scheme = "[undefined]"
+    Scheme = None
     features = features.Features()
     feature_categories = dict()
     _pending = list
@@ -200,7 +202,7 @@ class AbstractServer(ServerType, SchemeBase):
     
     def new_attached_client(self, *args, **xargs):
         """ return new Client instance that connects to this server. Should be overwritten in inheriting classes """
-        Client = self.new_client(*args, **xargs).__class__
+        Client = self.Scheme.new_client(*args, **xargs).__class__
         AttachedClient = type(Client.__name__, (AttachedClientMixin, Client), {"_server":self})
         return AttachedClient(*args, **xargs)
 
@@ -339,16 +341,16 @@ class AbstractScheme(DiscoverySchemeMixin, SchemeBase, SchemeType):
 
     @classmethod
     def new_client(cls, *args, **xargs):
-        return type(cls.__name__, (cls.Scheme, cls.Client), {})(*args, **xargs)
+        return type(cls.__name__, (cls, cls.Client), {"Scheme": cls})(*args, **xargs)
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        return type(cls.__name__, (cls.Scheme, cls.Server), {})(*args, **xargs)
+        return type(cls.__name__, (cls, cls.Server), {"Scheme": cls})(*args, **xargs)
 
     @classmethod
     def new_dummyserver(cls, *args, **xargs):
         """ Returns a server instance that stores bogus values """
-        return type(cls.__name__, (DummyServerMixin, cls.Scheme, cls.Server), {})(*args, **xargs)
+        return type(cls.__name__, (DummyServerMixin, cls, cls.Server), {"Scheme": cls})(*args, **xargs)
 
 
 class DummyServerMixin:
