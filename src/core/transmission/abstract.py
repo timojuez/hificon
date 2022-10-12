@@ -192,7 +192,8 @@ class AbstractServer(ServerType, SchemeBase):
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         for f in self.features.values(): f.init_on_server()
-        for f in self.features.values(): not f.id=="fallback" and f.bind(on_change=lambda *_,f=f:f.resend())
+        for f in self.features.values():
+            not f.id=="fallback" and f.bind(on_change=lambda *_,f=f: self.connected and f.resend())
     
     def enter(self): self.connected = True
     def exit(self): self.connected = False
