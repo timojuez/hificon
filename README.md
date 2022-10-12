@@ -42,18 +42,18 @@
 For a complete list, run `hifish --help-schemes`
 
 
-### Requirements on the Client
+### Requirements for Client Setup
 - Python 3 and Pip
 
 **Amplifiers**
-- The amplifier needs to be connected via LAN/Wifi
+- The amplifier needs to be connected via network
 
-**For automatic power control:**
+**Optionally for automatic power control:**
 - SystemD
 - Pulseaudio
 
 
-### Requirements on Server
+### Requirements for Server Setup
 - Python 3 and Pip
 
 
@@ -78,14 +78,14 @@ See configuration options in ~/.hificon/main.cfg and src/share/main.cfg.default.
 
 ## Usage
 
-Note that this program is still in development and therefore try it first with all sound output stopped.
+Note that we do not take any responsibility and you are using this software at your own risk.
 
-### Tray Control
-Start the HiFi Icon:
+### HiFiCon Tray Control
+Start HiFiCon Tray Control:
 `python3 -m hificon.tray`
 
 
-### Control Menu
+### HiFiCon Menu Control
 
 The menu lets you control all available features, e.g. sound mode, input, power, Audyssey settings, single speaker volume, etc. (depending on your target).
 
@@ -93,10 +93,10 @@ The menu lets you control all available features, e.g. sound mode, input, power,
 
 
 
-### HiFi Shell
+### HiFiSh HiFi Shell
 HiFiSh is the HiFi Shell and it offers its own language called PyFiHiFi. PyFiHiFi is a Python dialect that is customised for programming with HiFiCon. It can read and write the target's features or run e.g. remote control actions (depending on the target).
 
-#### Starting the shell
+#### Starting HiFiSh
 Calling `hifish` without arguments will start the prompt.
 To execute a command from bash, call `hifish -c '[command]'`.
 Hifi scripts can be executed by `hifish FILE.hifi`
@@ -135,14 +135,14 @@ If `__return__` is a callable, `$""` will return the received line from the targ
 
 The create_script tool helps to create HiFi scripts automatically or even to record remote control actions.
 
-Example 1:
+Example 1: Record and repeat changing the feature values
 ```
 python3 -m hificon.create_script record --raw > my_script.hifi # start recording
 # now change the target's values that you want to store
 hifish my_script.hifi # repeat
 ```
 
-Example 2:
+Example 2: Store all settings to file
 ```
 python3 -m hificon.create_script -t emulate:denon full > example_script.hifi
 ```
@@ -187,6 +187,5 @@ You can also emulate the HiFi Shell directly: `hifish --target emulate:denon`
 
 ## Troubleshoot
 - If HiFiCon cannot find your device automatically, add its URI as "uri = SCHEME://IP:PORT" under [Target] to ~/.hificon/main.cfg in your user directory.
-- If you are on a GNU OS and the key binding does not work, you can try the setup for proprietary OS.
-- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.server --target repeat:auto --listen-port 1234`. In the programs, set `localhost:1234` as your target.
+- If your device lets you connect only once but you would like to run several HiFiCon programs at the same time, run `python3 -m hificon.server --target repeat:auto --listen-port 1234`. In the clients, set `localhost:1234` as your target.
 
