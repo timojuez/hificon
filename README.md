@@ -123,8 +123,9 @@ target = Target()
 
 | HiFiSh | Python |
 | --- | --- |
-| `$"X"` or `$'X'` | `target.query("X", __return__); time.sleep(__wait__)` |
-| `$X` | `target.X` |
+| `CMD` or `$"CMD"` or `$'CMD'` | `target.query("CMD", __return__); time.sleep(__wait__)` |
+| `$F` | `target.features.F.get()` |
+| `$F = value` | `target.features.F.remote_set(value)` |
 | `wait(X)` | `time.sleep(X)` |
 
 If `__return__` is a callable, `$""` will return the received line from the target where `__return__(line) == True`.

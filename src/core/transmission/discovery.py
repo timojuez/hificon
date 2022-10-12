@@ -12,7 +12,7 @@ def check_target(target): return get_name(target) is not None
 
 def get_name(target):
     try:
-        with target: return target.name
+        with target: return target.features.name.get()
     except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError): return
 
 

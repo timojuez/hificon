@@ -516,7 +516,7 @@ class SoundModeSettings(MultipartFeatureMixin): # according to current sound mod
     dummy_value = {"010":"Stereo", "020":"Dolby Surround", "030":"DTS Neural:X", "040":"DTS Virtual:X", "050":"Multi Ch Stereo", "061":"Mono Movie", "070":"Virtual"}
 
     def to_parts(self, d):
-        return ["".join([key[:2], str(int(self.target.sound_mode_setting == val)), val])
+        return ["".join([key[:2], str(int(self.target.features.sound_mode_setting.get() == val)), val])
             for key, val in d.items()]
 
     def from_parts(self, l): return {data[:3]: data[3:] for data in l}
@@ -1147,7 +1147,7 @@ for zone in range(2,ZONES+1):
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
         def _resolve_main_zone_source(self):
-            self.target.schedule(lambda: self._from_mainzone and Source.set(self, self.target.source),
+            self.target.schedule(lambda: self._from_mainzone and Source.set(self, self.target.features.source.get()),
                 requires=("source",))
 
         def set(self, data):

@@ -50,13 +50,6 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
             and self.uri == target.uri
             and isinstance(self, self.Scheme.Client) == isinstance(target, self.Scheme.Client))
 
-    def __setattr__(self, name, value):
-        """ @name must match an existing attribute """
-        if hasattr(self.__class__, name): super().__setattr__(name, value)
-        else: raise AttributeError(("%s object has no attribute %s. To rely on "
-            "optional features, use Target.schedule.")
-            %(repr(self.__class__.__name__),repr(name)))
-
     def __enter__(self): self.enter(); return self
 
     def __exit__(self, type, value, tb): self.exit()
@@ -96,13 +89,9 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
             if Feature.id.startswith("_"): raise KeyError("Feature.id may not start with '_'")
             if hasattr(cls.features.__class__, Feature.id):
                 raise KeyError("Feature.id `%s` is already occupied."%Feature.id)
-            if not overwrite and any([hasattr(a, Feature.id) for a in (cls, cls.Server, cls.Client)]):
+            if not overwrite and Feature.id in cls.features:
                 raise KeyError(
                     "Feature.id `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.id)
-            setattr(cls, Feature.id, property(
-                lambda self:self.features[Feature.id].get(),
-                lambda self,val:self.set_feature_value(self.features[Feature.id], val)
-            ))
             cls.features.pop(Feature.id, None)
             cls.features[Feature.id] = Feature
             cls.feature_categories[Feature.category] = None

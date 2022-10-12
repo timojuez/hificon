@@ -14,7 +14,7 @@ def on_feature_change(key, value):
     
 
 def print_volume():
-    print("Current volume: %.1f"%target.volume)
+    print("Current volume: %.1f"%target.features.volume.get())
     print(PROMPT)
 
 
@@ -31,5 +31,5 @@ if __name__ == "__main__":
         while True:
             print(PROMPT)
             newvol = input()
-            if newvol: target.volume = Decimal(newvol)
+            if newvol: target.features.volume.remote_set(Decimal(newvol))
 

@@ -53,6 +53,7 @@ class CLI:
                 __wait__ = .1,
                 Decimal = Decimal,
                 target = self.target,
+                features = FeaturesProperties(self.target),
                 help = self.print_help,
                 help_features = self.print_help_features,
             )
@@ -194,7 +195,24 @@ class CommandTransformation(ast.NodeTransformer):
         elif isinstance(node, ast.Constant) and isinstance(node.value, str): node.value = self.preprocessor.unserialize(node.value)
         elif isinstance(node, ast.Str): node.s = self.preprocessor.unserialize(node.s)
         return r
-        
+
+
+class FeaturesProperties:
+
+    def __init__(self, target):
+        super().__setattr__("_target", target)
+
+    def __dir__(self): return self._target.features.keys()
+
+    def __getattr__(self, name):
+        try: return self._target.features[name].get()
+        except KeyError as e: raise AttributeError(e)
+
+    def __setattr__(self, name, value):
+        try: f = self._target.features[name]
+        except KeyError as e: raise AttributeError(e)
+        self._target.set_feature_value(f, value)
+
 
 class Preprocessor:
     """ Taking care of syntax that might be incompatible with the python parser
@@ -205,7 +223,7 @@ class Preprocessor:
         ("?",   ("__quest__",       "__quest__")),
         ("$'",  ("'__dollar1__",    "__dollar1__")),
         ('$"',  ('"__dollar2__',    "__dollar2__")),
-        ("$",   ("target.",            "target.")),
+        ("$",   ("features.",       "features.")),
     ]
     
     def __init__(self, source):
