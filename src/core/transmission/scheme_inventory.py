@@ -1,4 +1,4 @@
-import importlib
+import importlib, sys
 from . import SchemeType
 
 schemes = {
@@ -32,4 +32,10 @@ def get_scheme(cls_path):
     Scheme.Scheme = Scheme
     assert(issubclass(Scheme, SchemeType))
     return Scheme
+
+
+def register_scheme(key, cls_or_path):
+    if key in schemes:
+        sys.stderr.write(f"WARNING: Overwriting scheme with key = '{key}'\n")
+    schemes[key] = cls_or_path
 

@@ -13,6 +13,7 @@ from threading import Thread, Lock
 from hificon.core.transmission.telnet import TelnetServer, TelnetScheme
 from hificon.amp import TelnetAmp
 from hificon.core.transmission import features
+from hificon import Target, register_scheme
 
 
 class ExternalCounter:
@@ -26,8 +27,8 @@ class ExternalCounter:
 
     def count(self):
         while True:
-            self.set((self.value+1)%50)
-            time.sleep(1)
+            self.set((self.value+1)%10)
+            time.sleep(5)
 
     def set(self, value):
         if value < 50:
@@ -68,4 +69,9 @@ class CounterFeature(features.IntFeature):
     def init_on_server(self): self.external_counter = ExternalCounter(self)
     def set_on_server(self, value): self.external_counter.set(value)
     def poll_on_server(self): self.set(self.external_counter.value)
+
+
+if __name__ == "__main__":
+    register_scheme("myscheme", MyScheme)
+    with Target("myscheme", role="server"): input("Running. Press ENTER to quit")
 
