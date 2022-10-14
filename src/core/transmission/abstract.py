@@ -152,7 +152,8 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
 @SchemeBase.add_feature
 class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
     """ Matches always, if no other feature matched """
-    
+    name = "Last Unexpected Message"
+
     def consume(self, data):
         if self.target.verbose > 1:
             print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
