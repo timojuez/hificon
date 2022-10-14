@@ -13,27 +13,15 @@ from .discovery import DiscoverySchemeMixin
 from . import features
 
 
-class _SchemeBaseMeta(type):
-
-    def __init__(cls, name, bases, dct):
-        cls.features = cls.features.copy()
-        cls.feature_categories = cls.feature_categories.copy()
-
-
-class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
-    title = None
-    description = None
-    Client = None
-    Server = None
-    client_args_help = None # tuple, if None, will be read from Client.init_args_help
-    server_args_help = None # tuple
+class AbstractTarget(Bindable):
+    """ A server or client instance """
     verbose = 0
     connected = False
     uri = ""
     scheme = "[undefined]"
     Scheme = None
     features = features.Features()
-    feature_categories = dict()
+    feature_categories = property(lambda self: self.Scheme.feature_categories)
     _pending = list
 
     def __init__(self, *args, verbose=0, **xargs):
@@ -41,14 +29,12 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
         self.update_uri()
         self.features = self.features.__class__()
         self._pending = self._pending()
-        def disable_add_feature(*args, **xargs): raise TypeError("add_feature must be called on class.")
-        self.add_feature = disable_add_feature
         # apply @features to self
-        for F in self.__class__.features.values(): F(self)
+        for F in self.Scheme.features.values(): F(self)
         super().__init__(*args, **xargs)
 
     def __eq__(self, target):
-        return (isinstance(target, SchemeBase)
+        return (isinstance(target, AbstractTarget)
             and self.uri == target.uri
             and isinstance(self, self.Scheme.Client) == isinstance(target, self.Scheme.Client))
 
@@ -60,46 +46,6 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
     
     def exit(self): pass
 
-    @classmethod
-    def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
-
-    @classmethod
-    def get_client_uri(cls):
-        args = cls.client_args_help
-        if args is None: args = getattr(cls.Client,"init_args_help",None)
-        if args is not None: return ":".join((cls.scheme, *args))
-
-    @classmethod
-    def get_server_uri(cls):
-        args = cls.server_args_help
-        if args is None: args = getattr(cls.Server,"init_args_help",None)
-        if args is not None: return ":".join((cls.scheme, *args))
-
-    @classmethod
-    def add_feature(cls, Feature=None, overwrite=False):
-        """
-        This is a decorator to be used on Feature class definitions that belong to the current class.
-        @overwrite: If true, proceeds if a feature with same id already exists.
-        Example:
-            from client.feature import Feature
-            @AbstractClient.add_feature
-            class MyFeature(Feature): pass
-        """
-        def add(Feature, overwrite=overwrite):
-            if not issubclass(Feature, features.Feature):
-                raise TypeError(f"Feature must be of type {features.Feature}")
-            if Feature.id.startswith("_"): raise KeyError("Feature.id may not start with '_'")
-            if hasattr(cls.features.__class__, Feature.id):
-                raise KeyError("Feature.id `%s` is already occupied."%Feature.id)
-            if not overwrite and Feature.id in cls.features:
-                raise KeyError(
-                    "Feature.id `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.id)
-            cls.features.pop(Feature.id, None)
-            cls.features[Feature.id] = Feature
-            cls.feature_categories[Feature.category] = None
-            return Feature
-        return add(Feature) if Feature else add
-    
     def update_uri(self, *args): self.uri = ":".join(map(str, [self.scheme, *args]))
 
     def poll_feature(self, f, *args, **xargs):
@@ -149,31 +95,6 @@ class SchemeBase(Bindable, metaclass=_SchemeBaseMeta):
                 else: self.send(key) # ?COMMAND #FIXME: use self.on_receive_raw_data for server
 
 
-@SchemeBase.add_feature
-class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
-    """ Matches always, if no other feature matched """
-    name = "Last Unexpected Message"
-
-    def consume(self, data):
-        if self.target.verbose > 1:
-            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
-        with self._lock:
-            self._prev_val = self._val
-            self._val = data
-            self.on_change(data)
-            #TODO: must call on_set() according to architecture. but shall not be visible in settings
-            #if self._prev_val == None: self.on_set()
-            self.on_processed(data)
-
-
-@SchemeBase.add_feature
-class Name(features.OfflineFeatureMixin, features.SelectFeature):
-    
-    def get(self): return self.target.get_title()
-    def isset(self): return True
-    def unset(self): pass
-
-
 class AttachedClientMixin:
     """ This client class automatically connects to an internal server instance """
     _server = None
@@ -189,7 +110,7 @@ class AttachedClientMixin:
         super().exit()
 
 
-class AbstractServer(ServerType, SchemeBase):
+class AbstractServer(ServerType, AbstractTarget):
     init_args_help = None # tuple
 
     def __init__(self, *args, **xargs):
@@ -262,7 +183,7 @@ class _FeaturesMixin:
     def set_feature_value(self, f, value): f.remote_set(value)
 
 
-class _AbstractClient(ClientType, SchemeBase):
+class _AbstractClient(ClientType, AbstractTarget):
     """
     Abstract Client
     Note: Event callbacks (on_connect, on_feature_change) might be called in the mainloop
@@ -332,9 +253,22 @@ class _AbstractClient(ClientType, SchemeBase):
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 
 
-class AbstractScheme(DiscoverySchemeMixin, SchemeBase, SchemeType):
+class _AbstractSchemeMeta(type):
+
+    def __init__(cls, name, bases, dct):
+        cls.features = cls.features.copy()
+        cls.feature_categories = cls.feature_categories.copy()
+
+
+class AbstractScheme(DiscoverySchemeMixin, AbstractTarget, SchemeType, metaclass=_AbstractSchemeMeta):
+    title = None
+    description = None
     Client = AbstractClient
     Server = AbstractServer
+    client_args_help = None # tuple, if None, will be read from Client.init_args_help
+    server_args_help = None # tuple
+    features = features.Features()
+    feature_categories = dict()
 
     @classmethod
     def new(cls, func, *args, **xargs):
@@ -353,6 +287,46 @@ class AbstractScheme(DiscoverySchemeMixin, SchemeBase, SchemeType):
         """ Returns a server instance that stores bogus values """
         return type(cls.__name__, (DummyServerMixin, cls, cls.Server), {"Scheme": cls})(*args, **xargs)
 
+    @classmethod
+    def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
+
+    @classmethod
+    def get_client_uri(cls):
+        args = cls.client_args_help
+        if args is None: args = getattr(cls.Client,"init_args_help",None)
+        if args is not None: return ":".join((cls.scheme, *args))
+
+    @classmethod
+    def get_server_uri(cls):
+        args = cls.server_args_help
+        if args is None: args = getattr(cls.Server,"init_args_help",None)
+        if args is not None: return ":".join((cls.scheme, *args))
+
+    @classmethod
+    def add_feature(cls, Feature=None, overwrite=False):
+        """
+        This is a decorator to be used on Feature class definitions that belong to the current class.
+        @overwrite: If true, proceeds if a feature with same id already exists.
+        Example:
+            from client.feature import Feature
+            @AbstractClient.add_feature
+            class MyFeature(Feature): pass
+        """
+        def add(Feature, overwrite=overwrite):
+            if not issubclass(Feature, features.Feature):
+                raise TypeError(f"Feature must be of type {features.Feature}")
+            if Feature.id.startswith("_"): raise KeyError("Feature.id may not start with '_'")
+            if hasattr(cls.features.__class__, Feature.id):
+                raise KeyError("Feature.id `%s` is already occupied."%Feature.id)
+            if not overwrite and Feature.id in cls.features:
+                raise KeyError(
+                    "Feature.id `%s` is already occupied. Use add_feature(overwrite=True)"%Feature.id)
+            cls.features.pop(Feature.id, None)
+            cls.features[Feature.id] = Feature
+            cls.feature_categories[Feature.category] = None
+            return Feature
+        return add(Feature) if Feature else add
+    
 
 class DummyServerMixin:
     """ Server class that fills feature values with some values """
@@ -362,4 +336,29 @@ class DummyServerMixin:
     def on_receive_feature_value(self, f, value):
         if isinstance(f, features.NumericFeature) and not (f.min <= value <= f.max): return
         f.set(value)
+
+
+@AbstractScheme.add_feature
+class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
+    """ Matches always, if no other feature matched """
+    name = "Last Unexpected Message"
+
+    def consume(self, data):
+        if self.target.verbose > 1:
+            print("[%s] WARNING: could not parse `%s`"%(self.__class__.__name__, data))
+        with self._lock:
+            self._prev_val = self._val
+            self._val = data
+            self.on_change(data)
+            #TODO: must call on_set() according to architecture. but shall not be visible in settings
+            #if self._prev_val == None: self.on_set()
+            self.on_processed(data)
+
+
+@AbstractScheme.add_feature
+class Name(features.OfflineFeatureMixin, features.SelectFeature):
+    
+    def get(self): return self.target.Scheme.get_title()
+    def isset(self): return True
+    def unset(self): pass
 
