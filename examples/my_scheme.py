@@ -1,6 +1,13 @@
+"""
+    Registering an own scheme and running HiFiSh. Call this script e.g. with
+    "--help-schemes" or "--target emulate:myscheme" and change $value to any number
+    to see that it works!
+"""
+
 from decimal import Decimal
 from hificon.amp import TelnetAmp
 from hificon.core.transmission import features
+from hificon import register_scheme, hifish
 
 
 class MyTelnetScheme(TelnetAmp):
@@ -33,4 +40,9 @@ class Value(features.DecimalFeature):
     def matches(self, data): return data.startswith("set value")
     def set_on_server(self, value): self.set(value)
     def poll_on_server(self): self.set(5)
+
+
+if __name__ == "__main__":
+    register_scheme("myscheme", MyTelnetScheme)
+    hifish.main()
 

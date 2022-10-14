@@ -72,6 +72,5 @@ class CounterFeature(features.IntFeature):
 
 
 if __name__ == "__main__":
-    register_scheme("myscheme", MyScheme)
-    with Target("myscheme", role="server"): input("Running. Press ENTER to quit")
+    with MyScheme.new_server(): input("Running. Press ENTER to quit")
 
