@@ -162,7 +162,7 @@ Examples:
 ## Development
 
 ### Support for other devices
-It is possible to implement the support e.g. for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/schemes/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target raw_telnet://IP:PORT -f` prints all data received from `IP` via telnet.
+It is possible to implement the support e.g. for other AVR brands like Yamaha, Pioneer, Onkyo. It is easy to connect to any network device that communicates via telnet. See src/schemes/* as an example. See also "target" parameter in config and in hifish. Hint: `hifish --target telnet://IP:PORT -f` prints all data received from `IP` via telnet.
 
 ### Reverse Engineering a Target
 `hifish -f` opens a shell and prints all received data. Meanwhile change settings on the target e.g. with a remote and observe on what it prints. This may help you to program an own scheme.
