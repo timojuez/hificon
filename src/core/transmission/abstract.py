@@ -271,21 +271,22 @@ class AbstractScheme(DiscoverySchemeMixin, AbstractTarget, SchemeType, metaclass
     feature_categories = dict()
 
     @classmethod
-    def _new_target(cls, bases, *args, **kwargs):
-        return type(cls.__name__, bases, {"Scheme": cls})(*args, **kwargs)
+    def _new_target(cls, base, *args, **kwargs):
+        return type(cls.__name__, (cls, base), {"Scheme": cls})(*args, **kwargs)
 
     @classmethod
     def new_client(cls, *args, **xargs):
-        return cls._new_target((cls, cls.Client), *args, **xargs)
+        return cls._new_target(cls.Client, *args, **xargs)
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        return cls._new_target((cls, cls.Server), *args, **xargs)
+        return cls._new_target(cls.Server, *args, **xargs)
 
     @classmethod
     def new_dummyserver(cls, *args, **xargs):
         """ Returns a server instance that stores bogus values """
-        return cls._new_target((DummyServerMixin, cls, cls.Server), *args, **xargs)
+        DummyServer = type("DummyServer", (DummyServerMixin, cls.Server), {})
+        return cls._new_target(DummyServer, *args, **xargs)
 
     @classmethod
     def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
