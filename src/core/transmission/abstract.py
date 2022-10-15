@@ -259,51 +259,18 @@ class _AbstractSchemeMeta(type):
         cls.features = cls.features.copy()
         cls.feature_categories = cls.feature_categories.copy()
 
+    # the following methods are only available on class
 
-class AbstractScheme(DiscoverySchemeMixin, AbstractTarget, SchemeType, metaclass=_AbstractSchemeMeta):
-    title = None
-    description = None
-    Client = AbstractClient
-    Server = AbstractServer
-    client_args_help = None # tuple, if None, will be read from Client.init_args_help
-    server_args_help = None # tuple
-    features = features.Features()
-    feature_categories = dict()
-
-    @classmethod
-    def _new_target(cls, base, *args, **kwargs):
-        return type(cls.__name__, (cls, base), {"Scheme": cls})(*args, **kwargs)
-
-    @classmethod
-    def new_client(cls, *args, **xargs):
-        return cls._new_target(cls.Client, *args, **xargs)
-
-    @classmethod
-    def new_server(cls, *args, **xargs):
-        return cls._new_target(cls.Server, *args, **xargs)
-
-    @classmethod
-    def new_dummyserver(cls, *args, **xargs):
-        """ Returns a server instance that stores bogus values """
-        DummyServer = type("DummyServer", (DummyServerMixin, cls.Server), {})
-        return cls._new_target(DummyServer, *args, **xargs)
-
-    @classmethod
-    def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
-
-    @classmethod
     def get_client_uri(cls):
         args = cls.client_args_help
         if args is None: args = getattr(cls.Client,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
 
-    @classmethod
     def get_server_uri(cls):
         args = cls.server_args_help
         if args is None: args = getattr(cls.Server,"init_args_help",None)
         if args is not None: return ":".join((cls.scheme, *args))
 
-    @classmethod
     def add_feature(cls, Feature=None, overwrite=False):
         """
         This is a decorator to be used on Feature class definitions that belong to the current class.
@@ -327,7 +294,41 @@ class AbstractScheme(DiscoverySchemeMixin, AbstractTarget, SchemeType, metaclass
             cls.feature_categories[Feature.category] = None
             return Feature
         return add(Feature) if Feature else add
-    
+
+
+class AbstractScheme(DiscoverySchemeMixin, SchemeType, metaclass=_AbstractSchemeMeta):
+    title = None
+    description = None
+    Client = AbstractClient
+    Server = AbstractServer
+    client_args_help = None # tuple, if None, will be read from Client.init_args_help
+    server_args_help = None # tuple
+    features = features.Features()
+    feature_categories = dict()
+
+    @classmethod
+    def _new_target(cls, base, *args, **kwargs):
+        if issubclass(cls, AbstractTarget): raise TypeError(
+            f"Cannot run method on concrete class. Check {cls.__name__}.Scheme.")
+        return type(cls.__name__, (cls, base), {"Scheme": cls})(*args, **kwargs)
+
+    @classmethod
+    def new_client(cls, *args, **xargs):
+        return cls._new_target(cls.Client, *args, **xargs)
+
+    @classmethod
+    def new_server(cls, *args, **xargs):
+        return cls._new_target(cls.Server, *args, **xargs)
+
+    @classmethod
+    def new_dummyserver(cls, *args, **xargs):
+        """ Returns a server instance that stores bogus values """
+        DummyServer = type("DummyServer", (DummyServerMixin, cls.Server), {})
+        return cls._new_target(DummyServer, *args, **xargs)
+
+    @classmethod
+    def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
+
 
 class DummyServerMixin:
     """ Server class that fills feature values with some values """
