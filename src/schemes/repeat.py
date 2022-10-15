@@ -37,5 +37,5 @@ class Repeat(Emulate):
     @classmethod
     def new_server(cls, scheme, *args, **xargs):
         target = get_scheme(scheme).new_client(*args, connect=False)
-        return type("Server", (ClientRepeaterMixin, target.Server, cls), {"Scheme": cls})(target, **xargs)
+        return cls._new_target((ClientRepeaterMixin, target.Server, cls), target, **xargs)
 
