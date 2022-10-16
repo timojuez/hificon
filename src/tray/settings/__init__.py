@@ -7,20 +7,14 @@ from .popup_menu_settings import PopupMenuSettings
 from .target_setup import TargetSetup
 
 
-class FeatureCombobox:
+class _FeatureCombobox:
 
-    def __init__(self, target, combobox, allow_type=features.Feature, default_value=None):
+    def __init__(self, target, combobox):
         self._active_value = None
         self.c = combobox
         self.target = target
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
-        if default_value:
-            self.store.append(None, ["Default – %s"%id_to_string(self.target, default_value), default_value])
-        if self.target:
-            features_ = [f for f in self.target.features.values() if isinstance(f, allow_type)]
-            categories = {f.category:0 for f in features_}
-            category = {c:self.store.append(None, [c, None]) for c in categories}
-            for f in features_: self.store.append(category[f.category], [f.name, f.id])
+        self.fill()
         self.c.set_model(self.store)
         renderer_text = Gtk.CellRendererText()
         self.c.pack_start(renderer_text, expand=True)
@@ -47,6 +41,39 @@ class FeatureCombobox:
     def __getattr__(self, name): return getattr(self.c, name)
 
 
+class FeatureSelectorCombobox(_FeatureCombobox):
+
+    def __init__(self, *args, allow_type=features.Feature, default_value=None, **xargs):
+        self._allow_type = allow_type
+        self._default_value = default_value
+        super().__init__(*args, **xargs)
+
+    def fill(self):
+        if self._default_value:
+            self.store.append(
+                None, ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value])
+        if self.target:
+            features_ = [f for f in self.target.features.values() if isinstance(f, self._allow_type)]
+            categories = {f.category:0 for f in features_}
+            category = {c:self.store.append(None, [c, None]) for c in categories}
+            for f in features_: self.store.append(category[f.category], [f.name, f.id])
+
+
+class FeatureValueCombobox(_FeatureCombobox):
+
+    def __init__(self, target, c, f_id, **xargs):
+        self._feature = target.features.get(f_id) if target else None
+        super().__init__(target, c, **xargs)
+        if self._feature: self._feature.bind(on_change=lambda *_: self.fill())
+
+    def fill(self):
+        if not self._feature: return
+        active = self.get_active()
+        self.store.clear()
+        for val in self._feature.options: self.store.append(None, [str(val), val])
+        if active: self.set_active(active)
+
+
 class PowerControlMixin:
 
     def __init__(self, *args, **xargs):
@@ -55,7 +82,8 @@ class PowerControlMixin:
         item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
             item_poweroffsd.get_active, item_poweroffsd.set_active))
         self.connect_adjustment_to_config("poweroff_delay", ("power_control", "poweroff_after"))
-        self.connect_combobox_to_config("power_source_function", ("target", "features", "source_id"))
+        self.connect_feature_selector_to_config("power_source_function", ("target", "features", "source_id"))
+        self.connect_value_selector_to_config("source_value", ("target", "source"), config.source)
 
 
 class TrayIconMixin:
@@ -63,7 +91,7 @@ class TrayIconMixin:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.connect_adjustment_to_config("scroll_delta", ("tray", "scroll_delta"))
-        self.connect_combobox_to_config(
+        self.connect_feature_selector_to_config(
             combobox_id="tray_icon_function", config_property=("tray", "scroll_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id",
             on_changed=lambda *_:self.app_manager.main_app.icon.update_icon())
@@ -76,10 +104,10 @@ class HotkeysMixin:
         item_hotkeys = self.builder.get_object("hotkeys")
         item_hotkeys.connect("state-set", config.connect_to_object(("hotkeys", "volume_hotkeys"),
             item_hotkeys.get_active, item_hotkeys.set_active))
-        self.connect_combobox_to_config(
+        self.connect_feature_selector_to_config(
             combobox_id="mouse_gesture_function", config_property=("hotkeys", "mouse_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
-        self.connect_combobox_to_config(
+        self.connect_feature_selector_to_config(
             combobox_id="keyboard_hotkeys_function", config_property=("hotkeys", "hotkeys_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
         self.connect_adjustment_to_config("mouse_sensitivity", ("hotkeys", "mouse_sensitivity"))
@@ -106,9 +134,15 @@ class SettingsBase(GladeGtk):
         else: self.hide()
         return True
 
-    def connect_combobox_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
-        fc = FeatureCombobox(
-            self.target, self.builder.get_object(combobox_id), *args, **xargs)
+    def connect_feature_selector_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
+        fc = FeatureSelectorCombobox(self.target, self.builder.get_object(combobox_id), *args, **xargs)
+        self._connect_combobox_to_config(config_property, fc, on_changed)
+
+    def connect_value_selector_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
+        fc = FeatureValueCombobox(self.target, self.builder.get_object(combobox_id), *args, **xargs)
+        self._connect_combobox_to_config(config_property, fc, on_changed)
+
+    def _connect_combobox_to_config(self, config_property, fc, on_changed=None):
         on_changed_ = config.connect_to_object(config_property, fc.get_active, fc.set_active)
         fc.connect("changed", on_changed_)
         if on_changed: fc.connect("changed", on_changed)
