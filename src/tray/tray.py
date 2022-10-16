@@ -160,7 +160,7 @@ class TrayMixin(gui.Tray):
 
     def __init__(self, *args, icon, **xargs):
         super().__init__(*args,**xargs)
-        self.target.preload_features.update((config.volume,config.muted))
+        self.target.preload_features.update((config.tray_feature, config.muted))
         icon.bind(on_change = self.on_icon_change)
         self.icon = icon
         self.show()
