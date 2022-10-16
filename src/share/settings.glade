@@ -555,7 +555,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkComboBox">
+                              <object class="GtkComboBox" id="mouse_gesture_function">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                               </object>

@@ -24,13 +24,12 @@ class FeatureChanger:
         self._set_feature_lock = Lock()
         self.target.preload_features.add(config.volume)
         self.target.preload_features.add(config.gesture_feature)
-        self.target.features[config.gesture_feature].bind(
-            on_change = self.on_gesture_feature_change,
-            on_send = self._feature_changed.clear)
+        self.target.bind(on_feature_change=self.on_gesture_feature_change)
         Thread(target=self.mouse_gesture_thread, daemon=True, name="key_binding").start()
 
-    def on_gesture_feature_change(self, val):
+    def on_gesture_feature_change(self, f_id, val):
         """ target feature changed """
+        if f_id != config.gesture_feature: return
         #self.set_position_reference(self._y, val)
         self._feature_changed.set()
 
@@ -92,6 +91,7 @@ class FeatureChanger:
             new_value = max(min(new_value, f.max), f.min)
             if new_value != f.get():
                 f.remote_set(new_value)
+                self._feature_changed.clear()
                 if self.interval: time.sleep(self.interval)
                 self._feature_changed.wait(.2) # wait for on_feature_change
 
