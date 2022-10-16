@@ -28,7 +28,6 @@
   <object class="GtkAdjustment" id="mouse_sensitivity">
     <property name="lower">0.01</property>
     <property name="upper">4</property>
-    <property name="value">0.05</property>
     <property name="step_increment">0.01</property>
     <property name="page_increment">10</property>
   </object>
@@ -327,12 +326,6 @@
                     <property name="left_attach">1</property>
                     <property name="top_attach">0</property>
                   </packing>
-                </child>
-                <child>
-                  <placeholder/>
-                </child>
-                <child>
-                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -832,7 +825,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkComboBox">
+                              <object class="GtkComboBox" id="power_source_function">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                               </object>
@@ -853,7 +846,7 @@
                               </packing>
                             </child>
                             <child>
-                              <object class="GtkComboBox">
+                              <object class="GtkComboBox" id="source_value">
                                 <property name="visible">True</property>
                                 <property name="can_focus">False</property>
                               </object>

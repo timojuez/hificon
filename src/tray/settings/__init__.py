@@ -43,6 +43,17 @@ class FeatureCombobox:
     def __getattr__(self, name): return getattr(self.c, name)
 
 
+class PowerControlMixin:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        item_poweroffsd = self.builder.get_object("poweroff")
+        item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
+            item_poweroffsd.get_active, item_poweroffsd.set_active))
+        self.connect_adjustment_to_config("poweroff_delay", ("power_control", "poweroff_after"))
+        self.connect_combobox_to_config("power_source_function", ("target", "features", "source_id"))
+
+
 class TrayIconMixin:
 
     def __init__(self, *args, **xargs):
@@ -58,9 +69,6 @@ class HotkeysMixin:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        item_poweroffsd = self.builder.get_object("poweroff")
-        item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
-            item_poweroffsd.get_active, item_poweroffsd.set_active))
         item_hotkeys = self.builder.get_object("hotkeys")
         item_hotkeys.connect("state-set", config.connect_to_object(("hotkeys", "volume_hotkeys"),
             item_hotkeys.get_active, item_hotkeys.set_active))
@@ -106,5 +114,6 @@ class SettingsBase(GladeGtk):
         ad.connect("value-changed", config.connect_to_object(config_property, ad.get_value, ad.set_value))
 
 
-class Settings(TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
+class Settings(PowerControlMixin, TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings,
+    SettingsBase): pass
 
