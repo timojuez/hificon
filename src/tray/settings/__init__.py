@@ -70,6 +70,10 @@ class HotkeysMixin:
         self.connect_combobox_to_config(
             combobox_id="keyboard_hotkeys_function", config_property=("hotkeys", "hotkeys_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
+        self.connect_adjustment_to_config("mouse_sensitivity", ("hotkeys", "mouse_sensitivity"))
+        self.connect_adjustment_to_config("mouse_max_steps", ("hotkeys", "mouse_max_step"))
+        self.connect_adjustment_to_config("mouse_delay", ("hotkeys", "interval"))
+        self.connect_adjustment_to_config("hotkey_steps", ("hotkeys", "step"))
 
     def set_mouse_key(self, key):
         pass
