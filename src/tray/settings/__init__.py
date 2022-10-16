@@ -49,15 +49,10 @@ class TrayIconMixin:
         super().__init__(*args, **xargs)
         self.scroll_delta = self.builder.get_object("scroll_delta")
         self.scroll_delta.set_value(config["tray"]["scroll_delta"])
-        tray_combobox = FeatureCombobox(
-            self.target, self.builder.get_object("tray_icon_function"), features.NumericFeature, "@volume_id")
-        tray_combobox.set_active(config["tray"]["scroll_feature"])
-        tray_combobox.connect("changed", self.on_tray_icon_function_changed)
-
-    def on_tray_icon_function_changed(self, combobox):
-        config["tray"]["scroll_feature"] = combobox.get_active()
-        config.save()
-        if self.app_manager.main_app: self.app_manager.main_app.icon.update_icon()
+        self.connect_combobox_to_config(
+            combobox_id="tray_icon_function", config_property=("tray", "scroll_feature"),
+            allow_type=features.NumericFeature, default_value="@volume_id",
+            on_changed=lambda *_:self.app_manager.main_app.icon.update_icon())
 
     def on_scroll_delta_value_changed(self, *args, **xargs):
         config["tray"]["scroll_delta"] = self.scroll_delta.get_value()
@@ -76,15 +71,9 @@ class HotkeysMixin:
         item_hotkeys.set_active(config["hotkeys"]["volume_hotkeys"])
         item_hotkeys.connect("state-set", lambda *args:
             self.set_keyboard_media_keys(item_hotkeys.get_active()))
-        mouse_gesture_function = FeatureCombobox(
-            self.target, self.builder.get_object("mouse_gesture_function"),
-            features.NumericFeature, "@volume_id")
-        mouse_gesture_function.set_active(config["hotkeys"]["mouse_feature"])
-        mouse_gesture_function.connect("changed", self.on_mouse_gesture_function_changed)
-
-    def on_mouse_gesture_function_changed(self, combobox):
-        config["hotkeys"]["mouse_feature"] = combobox.get_active()
-        config.save()
+        self.connect_combobox_to_config(
+            combobox_id="mouse_gesture_function", config_property=("hotkeys", "mouse_feature"),
+            allow_type=features.NumericFeature, default_value="@volume_id")
 
     def set_keyboard_media_keys(self, active):
         config["hotkeys"].__setitem__("volume_hotkeys", active)
@@ -108,6 +97,20 @@ class SettingsBase(GladeGtk):
         if self._first_run: self.app_manager.main_quit()
         else: self.hide()
         return True
+
+    def connect_combobox_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
+        fc = FeatureCombobox(
+            self.target, self.builder.get_object(combobox_id), *args, **xargs)
+        config_property = list(config_property)
+        item = config_property.pop()
+        config_d = config
+        for p in config_property: config_d = config_d[p]
+        fc.set_active(config_d[item])
+        def on_changed_(fc):
+            config_d[item] = fc.get_active()
+            config.save()
+            if on_changed: on_changed(fc)
+        fc.connect("changed", on_changed_)
 
 
 class Settings(TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
