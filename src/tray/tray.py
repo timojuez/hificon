@@ -301,12 +301,12 @@ class AutoPower(TargetController):
     def _poweron(self):
         if self.target.features[config.power].get(): return
         if config.source:
-            self.target.features[config.source].remote_set(config["target"]["source"][0])
+            self.target.features[config.source].remote_set(config["target"]["source"])
         self.target.features[config.power].remote_set(True)
 
     can_poweroff = property(
         lambda self: self.target.features[config.power].get()
-        and (not config.source or self.target.features[config.source].get() in config["target"]["source"]))
+        and (not config.source or self.target.features[config.source].get() == config["target"]["source"]))
 
     def poweroff(self):
         if not config["power_control"]["control_power_off"]: return
