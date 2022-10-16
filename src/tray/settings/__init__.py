@@ -10,6 +10,7 @@ from .target_setup import TargetSetup
 class FeatureCombobox:
 
     def __init__(self, target, combobox, allow_type=features.Feature, default_value=None):
+        self._active_value = None
         self.c = combobox
         self.target = target
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
@@ -26,13 +27,16 @@ class FeatureCombobox:
         self.c.add_attribute(renderer_text, "text", column=0)
 
     def get_active(self):
-        return self.store.get_value(self.c.get_active_iter(), 1)
+        it = self.c.get_active_iter()
+        return self.store.get_value(it, 1) if it else self._active_value
 
     def set_active(self, value):
         def iterate(store, path, it):
             v = store.get_value(it, 1)
             if v == value:
                 self.c.set_active_iter(it)
+                self._active_value = value
+        self._active_value = value
         self.c.set_active(-1)
         self.store.foreach(iterate)
 
