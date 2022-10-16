@@ -36,6 +36,10 @@ class FeatureCombobox:
         self.c.set_active(-1)
         self.store.foreach(iterate)
 
+    def connect(self, name, cb):
+        decorated = lambda *args: cb(*tuple([self if arg == self.c else arg for arg in args]))
+        return self.c.connect(name, decorated)
+
     def __getattr__(self, name): return getattr(self.c, name)
 
 
@@ -45,13 +49,13 @@ class TrayIconMixin:
         super().__init__(*args, **xargs)
         self.scroll_delta = self.builder.get_object("scroll_delta")
         self.scroll_delta.set_value(config["tray"]["scroll_delta"])
-        self.tray_combobox = FeatureCombobox(
+        tray_combobox = FeatureCombobox(
             self.target, self.builder.get_object("tray_icon_function"), features.NumericFeature, "@volume_id")
-        self.tray_combobox.set_active(config["tray"]["scroll_feature"])
-        self.tray_combobox.connect("changed", self.on_tray_icon_function_changed)
+        tray_combobox.set_active(config["tray"]["scroll_feature"])
+        tray_combobox.connect("changed", self.on_tray_icon_function_changed)
 
-    def on_tray_icon_function_changed(self, *_):
-        config["tray"]["scroll_feature"] = self.tray_combobox.get_active()
+    def on_tray_icon_function_changed(self, combobox):
+        config["tray"]["scroll_feature"] = combobox.get_active()
         config.save()
         if self.app_manager.main_app: self.app_manager.main_app.icon.update_icon()
 
