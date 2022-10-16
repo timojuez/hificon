@@ -22,7 +22,6 @@ class VolumeChanger:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.interval = config["hotkeys"]["interval"]/1000
-        self.step = config["hotkeys"]["step"]
         self._volume_changed = Event()
         self._volume_step = Event()
         self._set_volume_lock = Lock()
@@ -72,9 +71,8 @@ class VolumeChanger:
             self._volume_step.set()
 
     def on_volume_key_press(self, button):
-        self.target.schedule(
-            lambda:self.set_volume(self.target.features[config.volume].get() + self.step*(int(button)*2-1)),
-            requires=(config.volume,))
+        self._save_set_feature_to_relative_value(
+            config.volume, config["hotkeys"]["step"]*(int(button)*2-1))
 
     def on_mute_key_press(self):
         self.target.schedule(
