@@ -43,7 +43,6 @@
     <property name="value">3</property>
     <property name="step_increment">0.5</property>
     <property name="page_increment">1</property>
-    <signal name="value-changed" handler="on_scroll_delta_value_changed" swapped="no"/>
   </object>
   <object class="GtkDialog" id="window">
     <property name="width_request">540</property>

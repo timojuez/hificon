@@ -99,6 +99,23 @@ class _Config(UserDict):
     def str_to_dict(self, s): raise NotImplementedError()
     def dict_to_str(self, d): raise NotImplementedError()
 
+    def connect_to_object(self, config_property, getter, setter):
+        """
+        Synchronises a config property to another object
+        config_property: path to value under config as tuple. Is ("item") for config["item"]
+        getter and setter refer to the external object.
+        returns a function that has to be called whenever the object's value changes
+        """
+        config_property = list(config_property)
+        item = config_property.pop()
+        path = self
+        for p in config_property: path = path[p]
+        setter(path[item])
+        def on_changed(*args, **xargs):
+            path[item] = getter()
+            self.save()
+        return on_changed
+
 
 def deep_merge(dict1, dict2):
     overlapping_keys = dict1.keys() & dict2.keys()

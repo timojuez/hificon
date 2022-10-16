@@ -47,16 +47,11 @@ class TrayIconMixin:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.scroll_delta = self.builder.get_object("scroll_delta")
-        self.scroll_delta.set_value(config["tray"]["scroll_delta"])
+        self.connect_adjustment_to_config("scroll_delta", ("tray", "scroll_delta"))
         self.connect_combobox_to_config(
             combobox_id="tray_icon_function", config_property=("tray", "scroll_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id",
             on_changed=lambda *_:self.app_manager.main_app.icon.update_icon())
-
-    def on_scroll_delta_value_changed(self, *args, **xargs):
-        config["tray"]["scroll_delta"] = self.scroll_delta.get_value()
-        config.save()
 
 
 class HotkeysMixin:
@@ -104,16 +99,13 @@ class SettingsBase(GladeGtk):
     def connect_combobox_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
         fc = FeatureCombobox(
             self.target, self.builder.get_object(combobox_id), *args, **xargs)
-        config_property = list(config_property)
-        item = config_property.pop()
-        config_d = config
-        for p in config_property: config_d = config_d[p]
-        fc.set_active(config_d[item])
-        def on_changed_(fc):
-            config_d[item] = fc.get_active()
-            config.save()
-            if on_changed: on_changed(fc)
+        on_changed_ = config.connect_to_object(config_property, fc.get_active, fc.set_active)
         fc.connect("changed", on_changed_)
+        fc.connect("changed", on_changed)
+
+    def connect_adjustment_to_config(self, adjustment_id, config_property):
+        ad = self.builder.get_object(adjustment_id)
+        ad.connect("value-changed", config.connect_to_object(config_property, ad.get_value, ad.set_value))
 
 
 class Settings(TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings, SettingsBase): pass
