@@ -300,7 +300,7 @@ class AutoPower(TargetController):
 
     def _poweron(self):
         if self.target.features[config.power].get(): return
-        if config.source:
+        if config.source and config["target"]["source"]:
             self.target.features[config.source].remote_set(config["target"]["source"])
         self.target.features[config.power].remote_set(True)
 
