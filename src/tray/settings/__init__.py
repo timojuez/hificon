@@ -74,6 +74,9 @@ class HotkeysMixin:
         self.connect_combobox_to_config(
             combobox_id="mouse_gesture_function", config_property=("hotkeys", "mouse_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
+        self.connect_combobox_to_config(
+            combobox_id="keyboard_hotkeys_function", config_property=("hotkeys", "hotkeys_feature"),
+            allow_type=features.NumericFeature, default_value="@volume_id")
 
     def set_keyboard_media_keys(self, active):
         config["hotkeys"].__setitem__("volume_hotkeys", active)
