@@ -43,6 +43,7 @@ tray:
 hotkeys:
     # Use volume media keys from keyboard to control target
     volume_hotkeys: True
+    hotkeys_feature: '@volume_id'
     # Wait @interval milliseconds after each volume change
     interval: 100
     # keyboard hotkey options

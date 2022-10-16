@@ -22,7 +22,7 @@ class FeatureChanger:
         self._feature_changed = Event()
         self._feature_step = Event()
         self._set_feature_lock = Lock()
-        self.target.preload_features.add(config.volume)
+        self.target.preload_features.add(config.hotkeys_feature)
         self.target.preload_features.add(config.gesture_feature)
         self.target.bind(on_feature_change=self.on_gesture_feature_change)
         Thread(target=self.mouse_gesture_thread, daemon=True, name="key_binding").start()
@@ -69,7 +69,7 @@ class FeatureChanger:
 
     def on_volume_key_press(self, button):
         self._save_set_feature_to_relative_value(
-            config.volume, config["hotkeys"]["step"]*(int(button)*2-1))
+            config.hotkeys_feature, config["hotkeys"]["step"]*(int(button)*2-1))
 
     def on_mute_key_press(self):
         self.target.schedule(

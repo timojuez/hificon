@@ -126,7 +126,6 @@ class NotificationMixin(object):
         n_features = [f for f in self.target.features.values()
             if f.id not in notification_blacklist]
         self._notifications = {f.id: n for f in n_features for n in [self.create_notification(f)] if n}
-        self.target.preload_features.add(config.volume)
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
     def create_notification(self, f):
@@ -140,7 +139,7 @@ class NotificationMixin(object):
         super().on_mouse_down(*args,**xargs)
 
     def on_volume_key_press(self,*args,**xargs):
-        self.show_notification(config.volume)
+        self.show_notification(config.hotkeys_feature)
         super().on_volume_key_press(*args,**xargs)
 
     def show_notification_on_feature_change(self, f_id, value): # bound to target
