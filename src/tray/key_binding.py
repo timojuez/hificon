@@ -10,65 +10,65 @@ LINUX = sys.platform == "linux"
 if LINUX: from ..core.util.x11_grab import XGrab
 
 
-MAX_VOL_CHANGE = config["hotkeys"]["mouse_max_volume_step"]
+MAX_STEP = config["hotkeys"]["mouse_max_step"]
 
 
-class VolumeChanger:
+class FeatureChanger:
     """ Mixin class for managing volume up/down hot keys and mouse gesture """
-    _new_vol = None
-    _volume_ref = None
+    _new_value = None
+    _position_ref = None
     _y_ref = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.interval = config["hotkeys"]["interval"]/1000
-        self._volume_changed = Event()
-        self._volume_step = Event()
-        self._set_volume_lock = Lock()
+        self._feature_changed = Event()
+        self._feature_step = Event()
+        self._set_feature_lock = Lock()
         self.target.preload_features.add(config.volume)
         self.target.features[config.volume].bind(
-            on_change = self.on_volume_change,
-            on_send = self._volume_changed.clear)
-        Thread(target=self.volume_thread, daemon=True, name="key_binding").start()
+            on_change = self.on_gesture_feature_change,
+            on_send = self._feature_changed.clear)
+        Thread(target=self.mouse_gesture_thread, daemon=True, name="key_binding").start()
 
-    def on_volume_change(self, val):
+    def on_gesture_feature_change(self, val):
         """ target volume changed """
-        #self.set_volume_reference(self._y, val)
-        self._volume_changed.set()
+        #self.set_position_reference(self._y, val)
+        self._feature_changed.set()
 
-    def set_volume_reference(self, y, vol):
-        """ link a y-coordinate to a volume value """
-        self._y_ref, self._volume_ref = y, vol
+    def set_position_reference(self, y, vol):
+        """ link a y-coordinate to a feature value """
+        self._y_ref, self._position_ref = y, vol
 
     def on_mouse_down(self, x, y):
-        self._new_vol = None
-        try: self.set_volume_reference(y, self.target.features[config.volume].get())
+        self._new_value = None
+        try: self.set_position_reference(y, self.target.features[config.volume].get())
         except ConnectionError: pass
         if self.interval: time.sleep(self.interval)
 
     def on_mouse_up(self, x, y):
-        self._volume_ref = None
+        self._position_ref = None
         #Thread(target=self.poweron, args=(True,), name="poweron", daemon=True).start()
 
     def on_activated_mouse_move(self, x, y):
         self.target.schedule(lambda:self._on_activated_mouse_move(x,y), requires=(config.volume,))
 
     def _on_activated_mouse_move(self, x, y):
-        if self._volume_ref is not None:
-            vol = self.target.features[config.volume]
-            new_vol = self._volume_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
-            vol_max = min(vol.max, vol.get()+MAX_VOL_CHANGE)
-            vol_min = vol.min
-            if new_vol > vol_max or new_vol < vol_min:
+        if self._position_ref is not None:
+            f = self.target.features[config.volume]
+            new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
+            max_ = min(f.max, f.get()+MAX_STEP)
+            min_ = f.min
+            if new_value > max_ or new_value < min_:
                 # mouse has been moved to an illegal point
-                new_vol = max(vol_min, min(vol_max, new_vol))
-                self.set_volume_reference(y, new_vol)
-            self.set_volume(new_vol)
+                new_value = max(min_, min(max_, new_value))
+                self.set_position_reference(y, new_value)
+            self.set_feature_value(new_value)
 
-    def set_volume(self, volume):
-        with self._set_volume_lock:
-            self._new_vol = volume
-            self._volume_step.set()
+    def set_feature_value(self, value):
+        with self._set_feature_lock:
+            self._new_value = value
+            self._feature_step.set()
 
     def on_volume_key_press(self, button):
         self._save_set_feature_to_relative_value(
@@ -79,23 +79,23 @@ class VolumeChanger:
             lambda:self.target.features[config.muted].remote_set(not self.target.features[config.muted].get()),
             requires=(config.muted,))
 
-    def volume_thread(self):
+    def mouse_gesture_thread(self):
         while True:
-            self._volume_step.wait()
-            self.target.schedule(self.step_volume, requires=(config.volume,))
+            self._feature_step.wait()
+            self.target.schedule(self._update_feature_value, requires=(config.volume,))
     
-    def step_volume(self):
-        with self._set_volume_lock:
-            self._volume_step.clear()
-            new_vol = self._new_vol
-            self._new_vol = None
-        if new_vol is not None:
-            volume = self.target.features[config.volume]
-            new_vol = max(min(new_vol, volume.max), volume.min)
-            if new_vol != volume.get():
-                volume.remote_set(new_vol)
+    def _update_feature_value(self):
+        with self._set_feature_lock:
+            self._feature_step.clear()
+            new_value = self._new_value
+            self._new_value = None
+        if new_value is not None:
+            f = self.target.features[config.volume]
+            new_value = max(min(new_value, f.max), f.min)
+            if new_value != f.get():
+                f.remote_set(new_value)
                 if self.interval: time.sleep(self.interval)
-                self._volume_changed.wait(.2) # wait for on_feature_change
+                self._feature_changed.wait(.2) # wait for on_feature_change
 
 
 class InputDeviceListener:
@@ -181,5 +181,5 @@ class InputDeviceListener:
         else: self._xgrab.ungrab_button(button_int)
 
 
-class KeyBinding(VolumeChanger, InputDeviceListener): pass
+class KeyBinding(FeatureChanger, InputDeviceListener): pass
 

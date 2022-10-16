@@ -50,5 +50,5 @@ hotkeys:
     # mouse gesture options
     mouse_button: button9
     mouse_sensitivity: !decimal 0.06
-    mouse_max_volume_step: 8
+    mouse_max_step: 8
 
