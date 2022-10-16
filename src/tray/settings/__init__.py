@@ -59,23 +59,17 @@ class HotkeysMixin:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         item_poweroffsd = self.builder.get_object("poweroff")
-        item_poweroffsd.set_active(config["power_control"]["control_power_off"])
-        item_poweroffsd.connect("state-set", lambda *args:
-            [config["power_control"].__setitem__("control_power_off",item_poweroffsd.get_active()), config.save()])
+        item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
+            item_poweroffsd.get_active, item_poweroffsd.set_active))
         item_hotkeys = self.builder.get_object("hotkeys")
-        item_hotkeys.set_active(config["hotkeys"]["volume_hotkeys"])
-        item_hotkeys.connect("state-set", lambda *args:
-            self.set_keyboard_media_keys(item_hotkeys.get_active()))
+        item_hotkeys.connect("state-set", config.connect_to_object(("hotkeys", "volume_hotkeys"),
+            item_hotkeys.get_active, item_hotkeys.set_active))
         self.connect_combobox_to_config(
             combobox_id="mouse_gesture_function", config_property=("hotkeys", "mouse_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
         self.connect_combobox_to_config(
             combobox_id="keyboard_hotkeys_function", config_property=("hotkeys", "hotkeys_feature"),
             allow_type=features.NumericFeature, default_value="@volume_id")
-
-    def set_keyboard_media_keys(self, active):
-        config["hotkeys"].__setitem__("volume_hotkeys", active)
-        config.save()
 
     def set_mouse_key(self, key):
         pass
