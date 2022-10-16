@@ -28,7 +28,7 @@
   <object class="GtkAdjustment" id="mouse_sensitivity">
     <property name="lower">0.01</property>
     <property name="upper">4</property>
-    <property name="value">0.059999999999999998</property>
+    <property name="value">0.05</property>
     <property name="step_increment">0.01</property>
     <property name="page_increment">10</property>
   </object>
@@ -535,7 +535,8 @@
                                 <property name="visible">True</property>
                                 <property name="can_focus">True</property>
                                 <property name="adjustment">mouse_sensitivity</property>
-                                <property name="value">0.059999999999999998</property>
+                                <property name="digits">2</property>
+                                <property name="value">0.5</property>
                               </object>
                               <packing>
                                 <property name="left_attach">1</property>

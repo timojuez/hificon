@@ -58,7 +58,7 @@ class FeatureChanger:
         if self._position_ref is not None:
             f = self.target.features[config.gesture_feature]
             new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
-            max_ = min(f.max, f.get()+config["hotkeys"]["mouse_max_step"])
+            max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse_max_step"]))
             min_ = f.min
             if new_value > max_ or new_value < min_:
                 # mouse has been moved to an illegal point
