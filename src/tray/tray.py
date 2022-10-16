@@ -35,7 +35,7 @@ class TextNotification(FeatureNotification, gui.Notification):
     def _update(self):
         if not self.f.isset(): return
         val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
-        super().update(f"{self.f.name}: {val}", self.target.name)
+        super().update(f"{self.f.name}: {val}", self.target.features.name.get())
 
     def show(self): self.target.schedule(super(TextNotification, self).show, requires=("name",))
 
@@ -228,7 +228,7 @@ class AutoPower(TargetController):
         """ stop playing locally """
         super().on_stop_playing()
         # execute on_idle() if target is not playing
-        try: target_playing = self.target.features.is_playing.isset() and self.target.is_playing
+        try: target_playing = self.target.features.is_playing.isset() and self.target.features.is_playing.get()
         except ConnectionError: target_playing = False
         if not target_playing: self.on_idle()
         if not self.target.features.is_playing.isset():
@@ -287,7 +287,7 @@ class AutoPower(TargetController):
 
     def _on_idle_timeout(self):
         if config["power_control"]["auto_power_off"] and self.can_poweroff:
-            self._n.update("Power off %s"%self.target.name)
+            self._n.update("Power off %s"%self.target.features.name.get())
             self._n.show()
         
     def close_popup(self):
