@@ -99,7 +99,7 @@ class SettingsBase(GladeGtk):
             self.target, self.builder.get_object(combobox_id), *args, **xargs)
         on_changed_ = config.connect_to_object(config_property, fc.get_active, fc.set_active)
         fc.connect("changed", on_changed_)
-        fc.connect("changed", on_changed)
+        if on_changed: fc.connect("changed", on_changed)
 
     def connect_adjustment_to_config(self, adjustment_id, config_property):
         ad = self.builder.get_object(adjustment_id)
