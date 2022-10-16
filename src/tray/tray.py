@@ -136,7 +136,7 @@ class NotificationMixin(object):
     def show_notification(self, f_id): f_id in self._notifications and self._notifications[f_id].show()
     
     def on_mouse_down(self,*args,**xargs):
-        self.show_notification(config.volume)
+        self.show_notification(config.gesture_feature)
         super().on_mouse_down(*args,**xargs)
 
     def on_volume_key_press(self,*args,**xargs):

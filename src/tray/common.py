@@ -40,6 +40,7 @@ class TrayConfig(YamlConfig):
     power = property(lambda self: self["target"]["features"]["power_id"])
     source = property(lambda self: self["target"]["features"]["source_id"])
     tray_feature = property(lambda self: resolve_feature_id(self["tray"]["scroll_feature"]))
+    gesture_feature = property(lambda self: resolve_feature_id(self["hotkeys"]["mouse_feature"]))
 
 
 config = TrayConfig()

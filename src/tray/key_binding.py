@@ -10,9 +10,6 @@ LINUX = sys.platform == "linux"
 if LINUX: from ..core.util.x11_grab import XGrab
 
 
-MAX_STEP = config["hotkeys"]["mouse_max_step"]
-
-
 class FeatureChanger:
     """ Mixin class for managing volume up/down hot keys and mouse gesture """
     _new_value = None
@@ -26,13 +23,14 @@ class FeatureChanger:
         self._feature_step = Event()
         self._set_feature_lock = Lock()
         self.target.preload_features.add(config.volume)
-        self.target.features[config.volume].bind(
+        self.target.preload_features.add(config.gesture_feature)
+        self.target.features[config.gesture_feature].bind(
             on_change = self.on_gesture_feature_change,
             on_send = self._feature_changed.clear)
         Thread(target=self.mouse_gesture_thread, daemon=True, name="key_binding").start()
 
     def on_gesture_feature_change(self, val):
-        """ target volume changed """
+        """ target feature changed """
         #self.set_position_reference(self._y, val)
         self._feature_changed.set()
 
@@ -42,7 +40,7 @@ class FeatureChanger:
 
     def on_mouse_down(self, x, y):
         self._new_value = None
-        try: self.set_position_reference(y, self.target.features[config.volume].get())
+        try: self.set_position_reference(y, self.target.features[config.gesture_feature].get())
         except ConnectionError: pass
         if self.interval: time.sleep(self.interval)
 
@@ -51,13 +49,13 @@ class FeatureChanger:
         #Thread(target=self.poweron, args=(True,), name="poweron", daemon=True).start()
 
     def on_activated_mouse_move(self, x, y):
-        self.target.schedule(lambda:self._on_activated_mouse_move(x,y), requires=(config.volume,))
+        self.target.schedule(lambda:self._on_activated_mouse_move(x,y), requires=(config.gesture_feature,))
 
     def _on_activated_mouse_move(self, x, y):
         if self._position_ref is not None:
-            f = self.target.features[config.volume]
+            f = self.target.features[config.gesture_feature]
             new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
-            max_ = min(f.max, f.get()+MAX_STEP)
+            max_ = min(f.max, f.get()+config["hotkeys"]["mouse_max_step"])
             min_ = f.min
             if new_value > max_ or new_value < min_:
                 # mouse has been moved to an illegal point
@@ -82,7 +80,7 @@ class FeatureChanger:
     def mouse_gesture_thread(self):
         while True:
             self._feature_step.wait()
-            self.target.schedule(self._update_feature_value, requires=(config.volume,))
+            self.target.schedule(self._update_feature_value, requires=(config.gesture_feature,))
     
     def _update_feature_value(self):
         with self._set_feature_lock:
@@ -90,7 +88,7 @@ class FeatureChanger:
             new_value = self._new_value
             self._new_value = None
         if new_value is not None:
-            f = self.target.features[config.volume]
+            f = self.target.features[config.gesture_feature]
             new_value = max(min(new_value, f.max), f.min)
             if new_value != f.get():
                 f.remote_set(new_value)
