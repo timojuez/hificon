@@ -41,16 +41,17 @@ tray:
         - '@source_id'
 
 hotkeys:
+    # keyboard hotkey options
     # Use volume media keys from keyboard to control target
     volume_hotkeys: True
     hotkeys_feature: '@volume_id'
-    # Wait @interval milliseconds after each volume change
-    interval: 100
-    # keyboard hotkey options
     step: !decimal 3
+
     # mouse gesture options
     mouse_button: button9
     mouse_feature: '@volume_id'
     mouse_sensitivity: !decimal 0.06
+    # Wait @mouse_delay milliseconds after each volume change
+    mouse_delay: 100
     mouse_max_step: 8
 

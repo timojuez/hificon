@@ -10,6 +10,11 @@ LINUX = sys.platform == "linux"
 if LINUX: from ..core.util.x11_grab import XGrab
 
 
+def sleep():
+    delay = config["hotkeys"]["mouse_delay"]
+    if delay: time.sleep(delay/1000)
+
+
 class FeatureChanger:
     """ Mixin class for managing volume up/down hot keys and mouse gesture """
     _new_value = None
@@ -18,7 +23,6 @@ class FeatureChanger:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.interval = config["hotkeys"]["interval"]/1000
         self._feature_changed = Event()
         self._feature_step = Event()
         self._set_feature_lock = Lock()
@@ -41,7 +45,7 @@ class FeatureChanger:
         self._new_value = None
         try: self.set_position_reference(y, self.target.features[config.gesture_feature].get())
         except ConnectionError: pass
-        if self.interval: time.sleep(self.interval)
+        sleep()
 
     def on_mouse_up(self, x, y):
         self._position_ref = None
@@ -92,7 +96,7 @@ class FeatureChanger:
             if new_value != f.get():
                 f.remote_set(new_value)
                 self._feature_changed.clear()
-                if self.interval: time.sleep(self.interval)
+                sleep()
                 self._feature_changed.wait(.2) # wait for on_feature_change
 
 
