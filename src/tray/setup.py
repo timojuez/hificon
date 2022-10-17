@@ -5,22 +5,49 @@ from ..core.transmission.discovery import discover_target, check_target
 from .. import NAME, PKG_NAME, Target
 
 
+class _Autostart:
+    path = None
+
+    def get_active(self): return os.path.exists(self.path)
+    def set_active(self, value): self.activate() if value else self.deactivate()
+    def activate(self): raise NotImplementedError()
+    def deactivate(self):
+        try: os.remove(self.path)
+        except FileNotFoundError: pass
+
+
+class AutostartWin(_Autostart):
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        import getpass
+        user = getpass.getuser()
+        self.path = (f"C:\\Users\\{user}\\AppData\\Roaming\\Microsoft\\Windows"
+            f"\\Start Menu\\Programs\\Startup\\{PKG_NAME}.bat")
+
+    def activate(self):
+        with open(self.path, "w") as fp:
+            fp.write(f'start "" "pythonw.exe -m {__package__} 1>NUL 2>&1"')
+
+
+class AutostartGnu(_Autostart):
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.path = os.path.expanduser(f"~/.config/autostart/{PKG_NAME}.desktop")
+
+    def activate(self):
+        desktop = pkgutil.get_data(__name__,"../share/hificon_tray.desktop").decode()
+        with open(os.path.expanduser(self.path, "w") as fp:
+            fp.write(desktop)
+
+
+Autostart = AutostartWin if sys.platform.startswith("win") else AutostartGnu
+
+
 def autostart():
     if input("Add %s to autostart for current user? [Y/n] "%NAME) == "n": return
-    return autostart_win() if sys.platform.startswith("win") else autostart_gnu()
-
-
-def autostart_win():
-    import getpass
-    bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'%getpass.getuser()
-    with open("%s\\%s.bat"%(bat_path, PKG_NAME), "w") as fp:
-        fp.write(f'start "" "pythonw.exe -m {__package__} 1>NUL 2>&1"')
-
-
-def autostart_gnu():
-    desktop = pkgutil.get_data(__name__,"../share/hificon_tray.desktop").decode()
-    with open(os.path.expanduser("~/.config/autostart/%s_tray.desktop"%PKG_NAME), "w") as fp:
-        fp.write(desktop)
+    Autostart().activate()
 
 
 def source_setup():
