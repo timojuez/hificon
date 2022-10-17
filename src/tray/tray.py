@@ -3,14 +3,13 @@ from threading import Thread, Timer, Lock
 from contextlib import AbstractContextManager, ExitStack
 from decimal import Decimal
 from .. import Target
-from .. import NAME
 from ..core import features
 from ..core.util import Bindable
 from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
-from .common import gtk, config, resolve_feature_id
+from .common import gtk, config, resolve_feature_id, APP_NAME
 
 
 class FeatureNotification:
@@ -352,7 +351,7 @@ class AppManager:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='%s tray icon'%NAME)
+    parser = argparse.ArgumentParser(description=APP_NAME)
     parser.add_argument('--setup', default=False, action="store_true", help='Run initial setup')
     parser.add_argument('-t', '--target', metavar="URI", type=str, default=None, help='Target URI')
     parser.add_argument('--verbose', '-v', action='count', default=0, help='Verbose mode')

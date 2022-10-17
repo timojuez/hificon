@@ -2,6 +2,10 @@ import gi, pkgutil
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk
 from ..core.config import YamlConfig
+from .. import NAME
+
+
+APP_NAME = f"{NAME} Tray Control"
 
 
 class Singleton(type):

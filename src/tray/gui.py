@@ -10,11 +10,11 @@ from ..core.util.async_widget import bind_widget_to_value
 from ..core import features
 from ..core.util.function_bind import Bindable
 from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
-from .common import gtk, GladeGtk, Singleton, config
+from .common import gtk, GladeGtk, Singleton, config, APP_NAME
 from .settings import Settings
 
 
-Notify.init(NAME)
+Notify.init(APP_NAME)
 
 
 class _Icon(Bindable):
@@ -298,7 +298,8 @@ class Tray(MenuMixin, AbstractContextManager):
         super().__init__(*args, **xargs)
         self.settings = Settings(
             self.app_manager, self.target, on_menu_settings_change=self.on_menu_settings_change)
-        self._app_indicator = AppIndicator3.Indicator.new(NAME, NAME, AppIndicator3.IndicatorCategory.HARDWARE)
+        self._app_indicator = AppIndicator3.Indicator.new(
+            APP_NAME, APP_NAME, AppIndicator3.IndicatorCategory.HARDWARE)
         self.scale_popup = ScalePopup(self.target)
         self._app_indicator.connect("scroll-event", self.on_scroll)
         self._app_indicator.set_menu(self._menu)
@@ -309,7 +310,7 @@ class Tray(MenuMixin, AbstractContextManager):
     
     def build_about_dialog(self):
         ad = Gtk.AboutDialog()
-        ad.set_program_name(f"{NAME} Tray Control")
+        ad.set_program_name(APP_NAME)
         ad.set_version(VERSION)
         logo = pkgutil.get_data(__name__, "../share/icons/scalable/logo.svg")
         pixbuf = GdkPixbuf.Pixbuf.new_from_stream(Gio.MemoryInputStream.new_from_bytes(GLib.Bytes.new(logo)), None)
