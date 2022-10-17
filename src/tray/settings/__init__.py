@@ -2,7 +2,10 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject
 from ...core.transmission import features
+from ...core.util.autostart import Autostart
+from ...info import PKG_NAME
 from ..common import GladeGtk, gtk, config, id_to_string
+from ..common import __package__ as tray_package
 from .popup_menu_settings import PopupMenuSettings
 from .target_setup import TargetSetup
 
@@ -119,6 +122,16 @@ class HotkeysMixin:
         pass
 
 
+class GeneralMixin:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        checkbox = self.builder.get_object("autostart_checkbox")
+        autostart = Autostart(PKG_NAME, tray_package, terminal=False)
+        checkbox.set_active(autostart.get_active())
+        checkbox.connect("toggled", lambda *_: autostart.set_active(checkbox.get_active()))
+
+
 class SettingsBase(GladeGtk):
     GLADE = "../share/settings.glade"
 
@@ -153,5 +166,5 @@ class SettingsBase(GladeGtk):
 
 
 class Settings(PowerControlMixin, TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings,
-    SettingsBase): pass
+    GeneralMixin, SettingsBase): pass
 
