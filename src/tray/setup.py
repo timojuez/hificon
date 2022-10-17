@@ -14,7 +14,7 @@ def autostart_win():
     import getpass
     bat_path = r'C:\Users\%s\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup'%getpass.getuser()
     with open("%s\\%s.bat"%(bat_path, PKG_NAME), "w") as fp:
-        fp.write(r'start "" %s' % os.path.realpath(__file__)) # TODO: file path
+        fp.write(f'start "" "pythonw.exe -m {__package__} 1>NUL 2>&1"')
 
 
 def autostart_gnu():
