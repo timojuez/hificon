@@ -838,33 +838,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkGrid">
+              <object class="GtkBox" id="notification_settings">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkLabel">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="label" translatable="yes">Blacklist</property>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">0</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkTreeView">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="model">liststore1</property>
-                    <child internal-child="selection">
-                      <object class="GtkTreeSelection"/>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="left_attach">0</property>
-                    <property name="top_attach">1</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>

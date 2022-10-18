@@ -131,6 +131,15 @@ class PopupMenuSettings:
         fs.bind(on_change = config.connect_to_object(["tray", "menu_features"], fs.get_value, fs.set_value))
 
 
+class NotificationSettings:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        fs = FeatureSelectorView(self.target, self.builder.get_object("notification_settings"), "Blacklist")
+        fs.bind(on_change =
+            config.connect_to_object(["notifications", "blacklist"], fs.get_value, fs.set_value))
+
+
 class GeneralMixin:
 
     def __init__(self, *args, **xargs):
@@ -175,5 +184,5 @@ class SettingsBase(GladeGtk):
 
 
 class Settings(PowerControlMixin, TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings,
-    GeneralMixin, SettingsBase): pass
+    NotificationSettings, GeneralMixin, SettingsBase): pass
 
