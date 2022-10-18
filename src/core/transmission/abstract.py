@@ -352,8 +352,7 @@ class Fallback(features.OfflineFeatureMixin, features.SelectFeature):
             self._prev_val = self._val
             self._val = data
             self.on_change(data)
-            #TODO: must call on_set() according to architecture. but shall not be visible in settings
-            #if self._prev_val == None: self.on_set()
+            if self._prev_val == None: self.on_set()
             self.on_processed(data)
 
 
