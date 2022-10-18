@@ -73,7 +73,7 @@ class FeatureChanger:
 
     def on_volume_key_press(self, button):
         self._save_set_feature_to_relative_value(
-            config.hotkeys_feature, config["hotkeys"]["step"]*(int(button)*2-1))
+            config.hotkeys_feature, Decimal(config["hotkeys"]["step"])*(int(button)*2-1))
 
     def on_mute_key_press(self):
         self.target.schedule(
