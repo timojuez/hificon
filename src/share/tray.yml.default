@@ -50,7 +50,7 @@ hotkeys:
     # mouse gesture options
     mouse_button: button9
     mouse_feature: '@volume_id'
-    mouse_sensitivity: !decimal 0.06
+    mouse_sensitivity: 0.06
     # Wait @mouse_delay milliseconds after each volume change
     mouse_delay: 100
     mouse_max_step: 8
