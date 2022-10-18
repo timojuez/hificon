@@ -6,7 +6,7 @@ from ...core.util.autostart import Autostart
 from ...info import PKG_NAME
 from ..common import GladeGtk, gtk, config, id_to_string
 from ..common import __package__ as tray_package
-from .popup_menu_settings import PopupMenuSettings
+from .feature_selector_view import FeatureSelectorView
 from .target_setup import TargetSetup
 
 
@@ -120,6 +120,15 @@ class HotkeysMixin:
 
     def set_mouse_key(self, key):
         pass
+
+
+class PopupMenuSettings:
+
+    def __init__(self, *args, on_menu_settings_change=None, **xargs):
+        super().__init__(*args, **xargs)
+        fs = FeatureSelectorView(self.target, self.builder.get_object("popup_menu_settings"), "Context Menu")
+        if on_menu_settings_change: fs.bind(on_change = on_menu_settings_change)
+        fs.bind(on_change = config.connect_to_object(["tray", "menu_features"], fs.get_value, fs.set_value))
 
 
 class GeneralMixin:

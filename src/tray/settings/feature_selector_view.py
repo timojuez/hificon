@@ -1,3 +1,10 @@
+"""
+Creates a treeview inside a Gtk widget for drag n drop feature selection
+"""
+
+__all__ = ["FeatureSelectorView"]
+
+
 from random import randint
 import gi
 gi.require_version("Gtk", "3.0")
@@ -149,12 +156,4 @@ class SelectedFeaturesList(Bindable):
 
 class FeatureSelectorView(SelectedFeaturesList, AvailableFeaturesList, _Base): pass
 
-
-class PopupMenuSettings:
-
-    def __init__(self, *args, on_menu_settings_change=None, **xargs):
-        super().__init__(*args, **xargs)
-        fs = FeatureSelectorView(self.target, self.builder.get_object("popup_menu_settings"), "Context Menu")
-        if on_menu_settings_change: fs.bind(on_change = on_menu_settings_change)
-        fs.bind(on_change = config.connect_to_object(["tray", "menu_features"], fs.get_value, fs.set_value))
 
