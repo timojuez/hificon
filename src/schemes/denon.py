@@ -809,7 +809,7 @@ class _SubwooferAdjustment: #undocumented
     name = "Subwoofer Adjustment"
 
 @Denon.add_feature
-class SubwooferAdjustmentSwitch(_SubwooferAdjustment, LooseBoolFeature): pass
+class SubwooferAdjustmentActive(_SubwooferAdjustment, LooseBoolFeature): pass
 
 @Denon.add_feature
 class SubwooferAdjustment(_SubwooferAdjustment, LooseDecimalFeature): pass
@@ -820,7 +820,7 @@ class _DialogLevel: #undocumented
     name = "Dialog Level"
 
 @Denon.add_feature
-class DialogLevelSwitch(_DialogLevel, LooseBoolFeature): pass
+class DialogLevelActive(_DialogLevel, LooseBoolFeature): pass
 
 @Denon.add_feature
 class DialogLevel(_DialogLevel, LooseDecimalFeature): pass
@@ -1064,7 +1064,7 @@ for source_code, source_id, source_name in SOURCES:
 class Equalizer: category = f"Equalizer"
 
 @Denon.add_feature
-class EqualizerSwitch(Equalizer, BoolFeature): function = "PSGEQ "
+class EqualizerActive(Equalizer, BoolFeature): function = "PSGEQ "
 
 @Denon.add_feature
 class EqualizerChannels(Equalizer, SelectFeature):
