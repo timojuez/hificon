@@ -344,67 +344,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkPaned">
+              <object class="GtkBox" id="popup_menu_settings">
                 <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="margin_bottom">76</property>
-                <property name="wide_handle">True</property>
+                <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="shadow_type">in</property>
-                    <child>
-                      <object class="GtkTreeView" id="avail_view">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <signal name="drag-data-get" handler="on_view_drag_data_get" swapped="no"/>
-                        <signal name="drag-data-received" handler="on_avail_view_drag_data_received" swapped="no"/>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection"/>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="available_column">
-                            <property name="title" translatable="yes">Available Features</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="resize">True</property>
-                    <property name="shrink">True</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkScrolledWindow">
-                    <property name="visible">True</property>
-                    <property name="can_focus">True</property>
-                    <property name="shadow_type">in</property>
-                    <child>
-                      <object class="GtkTreeView" id="menu_view">
-                        <property name="visible">True</property>
-                        <property name="can_focus">True</property>
-                        <property name="reorderable">True</property>
-                        <signal name="drag-data-get" handler="on_view_drag_data_get" swapped="no"/>
-                        <signal name="drag-data-received" handler="on_menu_view_drag_data_received" swapped="no"/>
-                        <signal name="drag-drop" handler="on_menu_view_drag_drop" swapped="no"/>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection"/>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="menu_column">
-                            <property name="title" translatable="yes">Context Menu</property>
-                            <property name="reorderable">True</property>
-                          </object>
-                        </child>
-                      </object>
-                    </child>
-                  </object>
-                  <packing>
-                    <property name="resize">True</property>
-                    <property name="shrink">True</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>

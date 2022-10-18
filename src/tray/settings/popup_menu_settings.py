@@ -23,12 +23,29 @@ class AvailTreeStore(Gtk.TreeStore):
         return isinstance(obj, features.Feature)
 
 
+class _Base:
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.popup_menu_settings = Gtk.Paned()
+        self.popup_menu_settings.show_all()
+        self.builder.get_object("popup_menu_settings").pack_start(self.popup_menu_settings, True, True, 0)
+
+
 class AvailableFeaturesList:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.available_column = self.builder.get_object("available_column")
-        self.avail_view = self.builder.get_object("avail_view")
+        sw = Gtk.ScrolledWindow()
+        self.popup_menu_settings.pack1(sw, False, True)
+        self.avail_view = Gtk.TreeView()
+        self.avail_view.connect("drag-data-get", self.on_view_drag_data_get)
+        self.avail_view.connect("drag-data-received", self.on_avail_view_drag_data_received)
+        self.available_column = Gtk.TreeViewColumn()
+        self.available_column.set_title("Available Features")
+        self.avail_view.append_column(self.available_column)
+        sw.add(self.avail_view)
+        sw.show_all()
         if self.target:
             avail_list = AvailTreeStore(self.avail_view, GObject.TYPE_PYOBJECT)
             category = {c:avail_list.append(None, [c]) for c in self.target.feature_categories}
@@ -57,9 +74,19 @@ class SelectedFeaturesList:
 
     def __init__(self, *args, on_menu_settings_change=None, **xargs):
         super().__init__(*args, **xargs)
+        sw = Gtk.ScrolledWindow()
+        self.popup_menu_settings.pack2(sw, False, True)
+        self.menu_view = Gtk.TreeView()
+        self.menu_view.connect("drag-data-get", self.on_view_drag_data_get)
+        self.menu_view.connect("drag-data-received", self.on_menu_view_drag_data_received)
+        self.menu_view.connect("drag-drop", self.on_menu_view_drag_drop)
+        self.menu_column = Gtk.TreeViewColumn()
+        self.menu_column.set_title("Context Menu")
+        self.menu_view.append_column(self.menu_column)
+        sw.add(self.menu_view)
+        sw.show_all()
+
         self.on_menu_settings_change = on_menu_settings_change
-        self.menu_column = self.builder.get_object("menu_column")
-        self.menu_view = self.builder.get_object("menu_view")
         
         self.menu_list = Gtk.ListStore(GObject.TYPE_PYOBJECT)
         self.menu_view.set_model(self.menu_list)
@@ -116,7 +143,7 @@ class SelectedFeaturesList:
         context.finish(True, False, time)
 
 
-class PopupMenuSettings(SelectedFeaturesList, AvailableFeaturesList):
+class PopupMenuSettings(SelectedFeaturesList, AvailableFeaturesList, _Base):
 
     def on_view_drag_data_get(self, treeview, context, selection, info, timestamp):
         treeselection = treeview.get_selection()
