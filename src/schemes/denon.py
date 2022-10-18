@@ -72,11 +72,23 @@ SPEAKER_PAIRS = [
     ("SUD", "surround_atmos", "Surround Atmos"),
 ]
 
+SPEAKER_PAIRS_2 = [
+    ("FRO", "front", "Front"),
+    ("SUR", "surround", "Surround"),
+    ("CEN", "center", "Center"),
+    ("SBK", "surround_back", "Surround Back"),
+    ("FRH", "front_height", "Front Height"),
+    ("TFR", "top_front", "Top Front"),
+    ("TPM", "top_middle", "Top Middle"),
+    ("FRD", "front_atmos", "Front Atmos"),
+    ("SUD", "surround_atmos", "Surround Atmos"),
+]
+
 EQ_BOUNDS = ["63 Hz", "125 Hz", "250 Hz", "500 Hz", "1 kHz", "2 kHz", "4 kHz", "8 kHz", "16 kHz"]
 
 EQ_OPTIONS = [
     ("ALL", "all", "All Channels", [("ALL", "all", "(all ch.)")]),
-    ("LRS", "lr", "Left+Right", SPEAKER_PAIRS),
+    ("LRS", "lr", "Left+Right", SPEAKER_PAIRS_2),
     ("EAC", "channel", "Each Channel", SPEAKERS_2)
 ]
 
