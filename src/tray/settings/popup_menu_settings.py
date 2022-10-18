@@ -1,13 +1,10 @@
+from random import randint
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GObject
 from ...core import features
+from ...core.util import Bindable
 from ..common import config, resolve_feature_id, id_to_string, id_to_feature
-
-
-DND_FROM_MENU_INFO = 1000 # drag n drop id
-DND_FROM_AVAIL = [('a', Gtk.TargetFlags.SAME_APP, DND_FROM_MENU_INFO+1)]
-DND_FROM_MENU = [('b', Gtk.TargetFlags.SAME_APP, DND_FROM_MENU_INFO)]
 
 
 class AvailTreeStore(Gtk.TreeStore):
@@ -25,11 +22,23 @@ class AvailTreeStore(Gtk.TreeStore):
 
 class _Base:
 
-    def __init__(self, *args, **xargs):
+    def __init__(self, target, parent_widget, title="", *args, **xargs):
         super().__init__(*args, **xargs)
+        self.dnd_from_menu_info = randint(0,1000) # drag n drop id
+        self.dnd_from_avail = [('a', Gtk.TargetFlags.SAME_APP, self.dnd_from_menu_info+1)]
+        self.dnd_from_menu = [('b', Gtk.TargetFlags.SAME_APP, self.dnd_from_menu_info)]
+        self.target = target
+        self.title = title
         self.popup_menu_settings = Gtk.Paned()
         self.popup_menu_settings.show_all()
-        self.builder.get_object("popup_menu_settings").pack_start(self.popup_menu_settings, True, True, 0)
+        parent_widget.pack_start(self.popup_menu_settings, True, True, 0)
+
+    def on_view_drag_data_get(self, treeview, context, selection, info, timestamp):
+        treeselection = treeview.get_selection()
+        model, iter = treeselection.get_selected()
+        obj = model.get_value(iter, 0)
+        b = getattr(obj, "id", obj).encode()
+        selection.set(Gdk.TARGET_STRING, 8, b)
 
 
 class AvailableFeaturesList:
@@ -57,8 +66,8 @@ class AvailableFeaturesList:
             #column.add_attribute(cell, "text", 0)
 
         view.enable_model_drag_source(
-            Gdk.ModifierType.BUTTON1_MASK, DND_FROM_AVAIL, Gdk.DragAction.COPY)
-        view.enable_model_drag_dest(DND_FROM_MENU, Gdk.DragAction.MOVE)
+            Gdk.ModifierType.BUTTON1_MASK, self.dnd_from_avail, Gdk.DragAction.COPY)
+        view.enable_model_drag_dest(self.dnd_from_menu, Gdk.DragAction.MOVE)
 
     def _set_avail_cell_text(self, column, cell, model, it, data):
         obj = model.get_value(it, 0)
@@ -67,12 +76,13 @@ class AvailableFeaturesList:
 
     def on_avail_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
         context.finish(True, True, timestamp)
-        self.on_menu_change()
+        self.on_selected_features_change()
 
 
-class SelectedFeaturesList:
+class SelectedFeaturesList(Bindable):
+    _value = None
 
-    def __init__(self, *args, on_menu_settings_change=None, **xargs):
+    def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         sw = Gtk.ScrolledWindow()
         self.popup_menu_settings.pack2(sw, False, True)
@@ -81,13 +91,11 @@ class SelectedFeaturesList:
         view.connect("drag-data-received", self.on_menu_view_drag_data_received)
         view.connect("drag-drop", self.on_menu_view_drag_drop)
         column = Gtk.TreeViewColumn()
-        column.set_title("Context Menu")
+        column.set_title(self.title)
         view.append_column(column)
         sw.add(view)
         sw.show_all()
 
-        self.on_menu_settings_change = on_menu_settings_change
-        
         self.menu_list = Gtk.ListStore(GObject.TYPE_PYOBJECT)
         view.set_model(self.menu_list)
         cell = Gtk.CellRendererText()
@@ -95,24 +103,20 @@ class SelectedFeaturesList:
         column.pack_start(cell, True)
 
         view.enable_model_drag_source(
-            Gdk.ModifierType.BUTTON1_MASK, DND_FROM_MENU, Gdk.DragAction.MOVE)
-        view.enable_model_drag_dest(DND_FROM_AVAIL+DND_FROM_MENU, Gdk.DragAction.MOVE)
+            Gdk.ModifierType.BUTTON1_MASK, self.dnd_from_menu, Gdk.DragAction.MOVE)
+        view.enable_model_drag_dest(self.dnd_from_avail+self.dnd_from_menu, Gdk.DragAction.MOVE)
 
-        self._load_tray_menu_features()
+    def on_change(self, f_ids): pass
 
     def _update_listeners(self, f_ids):
-        if not self.on_menu_settings_change: return
         features = [f for f_id in f_ids for f in [id_to_feature(self.target, resolve_feature_id(f_id))] if f]
-        self.on_menu_settings_change(features)
+        self.on_change(features)
 
-    def _load_tray_menu_features(self):
-        features = config["tray"]["menu_features"]
-        for f_id in features: self.menu_list.append([f_id])
-        self._update_listeners(features)
+    def get_value(self): return self._value
 
-    def _save_tray_menu_features(self, features):
-        config["tray"]["menu_features"] = features
-        config.save()
+    def set_value(self, f_ids):
+        for f_id in f_ids: self.menu_list.append([f_id])
+        self._update_listeners(f_ids)
 
     def _set_menu_cell_text(self, column, cell, model, it, data):
         f_id = model.get_value(it, 0)
@@ -131,25 +135,26 @@ class SelectedFeaturesList:
             #widget.stop_emission('drag_data_received')
         else:
             self.menu_list.append([f_id])
-        context.finish(True, info == DND_FROM_MENU_INFO, timestamp)
-        self.on_menu_change()
+        context.finish(True, info == self.dnd_from_menu_info, timestamp)
+        self.on_selected_features_change()
 
-    def on_menu_change(self):
+    def on_selected_features_change(self):
         f_ids = [row[0] for row in self.menu_list]
-        self._save_tray_menu_features(f_ids)
+        self._value = f_ids
         self._update_listeners(f_ids)
 
     def on_menu_view_drag_drop(self, treeview, context, x, y, time):
         context.finish(True, False, time)
 
 
-class PopupMenuSettings(SelectedFeaturesList, AvailableFeaturesList, _Base):
+class FeatureSelectorView(SelectedFeaturesList, AvailableFeaturesList, _Base): pass
 
-    def on_view_drag_data_get(self, treeview, context, selection, info, timestamp):
-        treeselection = treeview.get_selection()
-        model, iter = treeselection.get_selected()
-        obj = model.get_value(iter, 0)
-        b = getattr(obj, "id", obj).encode()
-        selection.set(Gdk.TARGET_STRING, 8, b)
 
+class PopupMenuSettings:
+
+    def __init__(self, *args, on_menu_settings_change=None, **xargs):
+        super().__init__(*args, **xargs)
+        fs = FeatureSelectorView(self.target, self.builder.get_object("popup_menu_settings"), "Context Menu")
+        if on_menu_settings_change: fs.bind(on_change = on_menu_settings_change)
+        fs.bind(on_change = config.connect_to_object(["tray", "menu_features"], fs.get_value, fs.set_value))
 
