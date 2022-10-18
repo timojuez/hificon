@@ -296,6 +296,15 @@ class MultipartFeatureMixin(features.MultipartFeatureMixin, DenonFeature, featur
 ######### Features implementation (see Denon CLI protocol)
 
 @Denon.add_feature(overwrite=True)
+class Fallback(Denon.features.fallback):
+    """ hide known messages from AVR """
+    name = Denon.features.fallback.name
+
+    def consume(self, data):
+        if not data.endswith("END"): return super().consume(data)
+
+
+@Denon.add_feature(overwrite=True)
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"

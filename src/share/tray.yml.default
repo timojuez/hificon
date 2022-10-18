@@ -21,7 +21,6 @@ target:
 
 notifications:
     blacklist: 
-        - fallback
         - maxvol
         - is_playing
         - source_names
