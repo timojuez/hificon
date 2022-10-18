@@ -121,18 +121,17 @@ class NotificationMixin(object):
 
     def __init__(self,*args,**xargs):
         super().__init__(*args,**xargs)
-        notification_blacklist = config["notifications"]["blacklist"]
-        n_features = [f for f in self.target.features.values()
-            if f.id not in notification_blacklist]
-        self._notifications = {f.id: n for f in n_features for n in [self.create_notification(f)] if n}
+        self._notifications = {f.id: self.create_notification(f) for f in self.target.features.values()}
         self.target.bind(on_feature_change = self.show_notification_on_feature_change)
     
     def create_notification(self, f):
         if isinstance(f, features.NumericFeature): return NumericNotification(self.scale_popup, f)
         if isinstance(f, features.SelectFeature): return TextNotification(f)
 
-    def show_notification(self, f_id): f_id in self._notifications and self._notifications[f_id].show()
-    
+    def show_notification(self, f_id):
+        if f_id not in config["notifications"]["blacklist"]:
+            if n := self._notifications.get(f_id): n.show()
+
     def on_mouse_down(self,*args,**xargs):
         self.show_notification(config.gesture_feature)
         super().on_mouse_down(*args,**xargs)
@@ -142,7 +141,7 @@ class NotificationMixin(object):
         super().on_volume_key_press(*args,**xargs)
 
     def show_notification_on_feature_change(self, f_id, value): # bound to target
-        if f_id in self._notifications: self._notifications[f_id].update()
+        if n := self._notifications.get(f_id): n.update()
         if self.target.features[f_id]._prev_val is not None: self.show_notification(f_id)
 
     def on_scroll_up(self, *args, **xargs):
