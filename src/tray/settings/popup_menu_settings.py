@@ -38,27 +38,27 @@ class AvailableFeaturesList:
         super().__init__(*args, **xargs)
         sw = Gtk.ScrolledWindow()
         self.popup_menu_settings.pack1(sw, False, True)
-        self.avail_view = Gtk.TreeView()
-        self.avail_view.connect("drag-data-get", self.on_view_drag_data_get)
-        self.avail_view.connect("drag-data-received", self.on_avail_view_drag_data_received)
-        self.available_column = Gtk.TreeViewColumn()
-        self.available_column.set_title("Available Features")
-        self.avail_view.append_column(self.available_column)
-        sw.add(self.avail_view)
+        view = Gtk.TreeView()
+        view.connect("drag-data-get", self.on_view_drag_data_get)
+        view.connect("drag-data-received", self.on_avail_view_drag_data_received)
+        column = Gtk.TreeViewColumn()
+        column.set_title("Available Features")
+        view.append_column(column)
+        sw.add(view)
         sw.show_all()
         if self.target:
-            avail_list = AvailTreeStore(self.avail_view, GObject.TYPE_PYOBJECT)
+            avail_list = AvailTreeStore(view, GObject.TYPE_PYOBJECT)
             category = {c:avail_list.append(None, [c]) for c in self.target.feature_categories}
             for f in self.target.features.values(): avail_list.append(category[f.category], [f])
-            self.avail_view.set_model(avail_list)
+            view.set_model(avail_list)
             cell = Gtk.CellRendererText()
-            self.available_column.set_cell_data_func(cell, self._set_avail_cell_text)
-            self.available_column.pack_start(cell, True)
-            #self.available_column.add_attribute(cell, "text", 0)
+            column.set_cell_data_func(cell, self._set_avail_cell_text)
+            column.pack_start(cell, True)
+            #column.add_attribute(cell, "text", 0)
 
-        self.avail_view.enable_model_drag_source(
+        view.enable_model_drag_source(
             Gdk.ModifierType.BUTTON1_MASK, DND_FROM_AVAIL, Gdk.DragAction.COPY)
-        self.avail_view.enable_model_drag_dest(DND_FROM_MENU, Gdk.DragAction.MOVE)
+        view.enable_model_drag_dest(DND_FROM_MENU, Gdk.DragAction.MOVE)
 
     def _set_avail_cell_text(self, column, cell, model, it, data):
         obj = model.get_value(it, 0)
@@ -76,27 +76,27 @@ class SelectedFeaturesList:
         super().__init__(*args, **xargs)
         sw = Gtk.ScrolledWindow()
         self.popup_menu_settings.pack2(sw, False, True)
-        self.menu_view = Gtk.TreeView()
-        self.menu_view.connect("drag-data-get", self.on_view_drag_data_get)
-        self.menu_view.connect("drag-data-received", self.on_menu_view_drag_data_received)
-        self.menu_view.connect("drag-drop", self.on_menu_view_drag_drop)
-        self.menu_column = Gtk.TreeViewColumn()
-        self.menu_column.set_title("Context Menu")
-        self.menu_view.append_column(self.menu_column)
-        sw.add(self.menu_view)
+        view = Gtk.TreeView()
+        view.connect("drag-data-get", self.on_view_drag_data_get)
+        view.connect("drag-data-received", self.on_menu_view_drag_data_received)
+        view.connect("drag-drop", self.on_menu_view_drag_drop)
+        column = Gtk.TreeViewColumn()
+        column.set_title("Context Menu")
+        view.append_column(column)
+        sw.add(view)
         sw.show_all()
 
         self.on_menu_settings_change = on_menu_settings_change
         
         self.menu_list = Gtk.ListStore(GObject.TYPE_PYOBJECT)
-        self.menu_view.set_model(self.menu_list)
+        view.set_model(self.menu_list)
         cell = Gtk.CellRendererText()
-        self.menu_column.set_cell_data_func(cell, self._set_menu_cell_text)
-        self.menu_column.pack_start(cell, True)
+        column.set_cell_data_func(cell, self._set_menu_cell_text)
+        column.pack_start(cell, True)
 
-        self.menu_view.enable_model_drag_source(
+        view.enable_model_drag_source(
             Gdk.ModifierType.BUTTON1_MASK, DND_FROM_MENU, Gdk.DragAction.MOVE)
-        self.menu_view.enable_model_drag_dest(DND_FROM_AVAIL+DND_FROM_MENU, Gdk.DragAction.MOVE)
+        view.enable_model_drag_dest(DND_FROM_AVAIL+DND_FROM_MENU, Gdk.DragAction.MOVE)
 
         self._load_tray_menu_features()
 
