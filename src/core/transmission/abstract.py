@@ -312,7 +312,7 @@ class AbstractScheme(DiscoverySchemeMixin, SchemeType, metaclass=_AbstractScheme
     @classmethod
     def _new_target(cls, base, *args, **kwargs):
         if issubclass(cls, AbstractTarget): raise TypeError(
-            f"Cannot run method on concrete class. Check {cls.__name__}.Scheme.")
+            f"Cannot run method on concrete class. Call this on self.Scheme (class {cls.__name__}).")
         return type(cls.__name__, (cls, base), {"Scheme": cls})(*args, **kwargs)
 
     @classmethod
