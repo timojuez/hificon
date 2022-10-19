@@ -18,10 +18,12 @@ class TelnetClient(AbstractClient):
     _telnet = None
     _send_lock = None
     _pulse_stop = None
+    _connect_lock = Lock
     
     def __init__(self, host, port=TELNET_PORT, *args, **xargs):
         super().__init__(*args, **xargs)
         self._send_lock = Lock()
+        self._connect_lock = self._connect_lock()
         self._pulse_stop = Event()
         if host: self._update_vars(host, port)
 
@@ -53,11 +55,12 @@ class TelnetClient(AbstractClient):
     
     def connect(self):
         super().connect()
-        if self.connected: return
-        try: self._telnet = Telnet(self.host,self.port,timeout=2)
-        except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
-            raise ConnectionError(e)
-        else: self.on_connect()
+        with self._connect_lock:
+            if self.connected: return
+            try: self._telnet = Telnet(self.host,self.port,timeout=2)
+            except (ConnectionError, socket.timeout, socket.gaierror, socket.herror, OSError) as e:
+                raise ConnectionError(e)
+            else: self.on_connect()
 
     def disconnect(self):
         super().disconnect()
