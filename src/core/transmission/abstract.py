@@ -86,13 +86,12 @@ class AbstractTarget(Bindable):
         if not consumed: self.features.fallback.consume(data)
 
     def handle_query(self, query):
-        with self:
-            for key, val in parse_qsl(query, True):
-                if val: # ?fkey=val
-                    f = self.features[key]
-                    convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
-                    self.set_feature_value(f, convert(val))
-                else: self.send(key) # ?COMMAND #FIXME: use self.on_receive_raw_data for server
+        for key, val in parse_qsl(query, True):
+            if val: # ?fkey=val
+                f = self.features[key]
+                convert = {bool: lambda s:s[0].lower() in "yt1"}.get(f.type, f.type)
+                self.set_feature_value(f, convert(val))
+            else: self.send(key) # ?COMMAND #FIXME: use self.on_receive_raw_data for server
 
 
 class AttachedClientMixin:
@@ -248,7 +247,11 @@ class _AbstractClient(ClientType, AbstractTarget):
     def mainloop_hook(self):
         """ This will be called regularly by mainloop """
         pass
-    
+
+    def handle_query(self, *args, **xargs):
+        self.connect()
+        super().handle_query(*args, **xargs)
+
 
 class AbstractClient(_FeaturesMixin, _AbstractClient): pass
 

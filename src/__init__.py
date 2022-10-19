@@ -19,6 +19,7 @@ def Target(uri=None, *args, role="client", **xargs):
     uri = uri.split(":")
     Scheme = getattr(get_scheme(uri.pop(0)), f"new_{role}")
     target = Scheme(*uri, *args, **xargs)
-    if query: target.handle_query(query)
+    if query:
+        with target: target.handle_query(query)
     return target
 
