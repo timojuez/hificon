@@ -155,7 +155,12 @@ class TelnetServer(AbstractServer):
 
     def new_attached_client(self, *args, **xargs):
         client = super().new_attached_client(None, *args, **xargs)
-        self.bind(enter=lambda:client._update_vars(self.host, self.port))
+        def on_enter():
+            client._update_vars(self.host, self.port)
+            if client.connected:
+                client.disconnect()
+                client.connect()
+        self.bind(enter=on_enter)
         return client
 
     def send(self, data): return self._server.on_target_send(data)
