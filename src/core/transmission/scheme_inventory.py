@@ -4,7 +4,7 @@ from . import SchemeType
 schemes = {
     "denon": ".denon.Denon",
     "emulate": ".emulate.Emulate",
-    "plain_emulate": ".emulate.PlainEmulate",
+    "dummyemulate": ".emulate.DummyEmulate",
     "telnet": ".telnet.Telnet",
     "auto": ".auto.Auto",
     "repeat": ".repeat.Repeat"

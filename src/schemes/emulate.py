@@ -8,7 +8,28 @@ from ..core.transmission import AbstractScheme
 from ..core.transmission.abstract import AbstractClient, AbstractServer
 
 
-class PlainDummyClientMixin:
+class Emulate(AbstractScheme):
+    title = "Emulator"
+    description = "Emulates a target"
+    client_args_help = ("SCHEME",)
+    server_args_help = ("SCHEME",)
+
+    @classmethod
+    def new_client(cls, *args, **xargs):
+        """ Create a server and return a client attached to it """
+        server = cls.new_server(*args)
+        return server.new_attached_client(**xargs)
+
+    @classmethod
+    def new_server(cls, *args, **xargs):
+        return cls.new_dummyserver(*args, **xargs)
+
+    @classmethod
+    def new_dummyserver(cls, scheme, *args, **xargs):
+        return get_scheme(scheme).new_dummyserver(*args, **xargs)
+
+
+class DummyClientMixin:
     """ This client skips connection related methods """
 
     def __init__(self, *args, **xargs):
@@ -37,28 +58,7 @@ class PlainDummyClientMixin:
         if not self.connected: raise BrokenPipeError("Not connected")
 
 
-class Emulate(AbstractScheme):
-    title = "Emulator"
-    description = "Emulates a target"
-    client_args_help = ("SCHEME",)
-    server_args_help = ("SCHEME",)
-
-    @classmethod
-    def new_client(cls, *args, **xargs):
-        """ Create a server and return a client attached to it """
-        server = cls.new_server(*args)
-        return server.new_attached_client(**xargs)
-
-    @classmethod
-    def new_server(cls, *args, **xargs):
-        return cls.new_dummyserver(*args, **xargs)
-
-    @classmethod
-    def new_dummyserver(cls, scheme, *args, **xargs):
-        return get_scheme(scheme).new_dummyserver(*args, **xargs)
-
-
-class PlainEmulate(Emulate):
+class DummyEmulate(Emulate):
     """ Emulator without network connection. Only internal variables are being used. """
     title = "Plain Emulator"
     description = "Emulator that skips network"
@@ -68,7 +68,7 @@ class PlainEmulate(Emulate):
         Scheme = get_scheme(scheme)
         class DummyScheme(Scheme):
             """ Server/client without e.g. Telnet inheritance """
-            Client = type("Client", (PlainDummyClientMixin, Scheme, AbstractClient), {})
+            Client = type("Client", (DummyClientMixin, Scheme, AbstractClient), {})
             Server = type("Server", (Scheme, AbstractServer), {})
         return DummyScheme
 
