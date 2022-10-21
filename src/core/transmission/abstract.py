@@ -123,7 +123,7 @@ class AbstractServer(ServerType, AbstractTarget):
     
     def new_attached_client(self, *args, **xargs):
         """ return new Client instance that connects to this server. Should be overwritten in inheriting classes """
-        Client = self.Scheme.new_client(*args, **xargs).__class__
+        Client = self.Scheme._new_target(self.Scheme.Client)
         AttachedClient = type(Client.__name__, (AttachedClientMixin, Client), {"_server":self})
         return AttachedClient(*args, **xargs)
 
@@ -310,24 +310,24 @@ class AbstractScheme(DiscoverySchemeMixin, SchemeType, metaclass=_AbstractScheme
     feature_categories = dict()
 
     @classmethod
-    def _new_target(cls, base, *args, **kwargs):
+    def _new_target(cls, base):
         if issubclass(cls, AbstractTarget): raise TypeError(
             f"Cannot run method on concrete class. Call this on self.Scheme (class {cls.__name__}).")
-        return type(cls.__name__, (cls, base), {"Scheme": cls})(*args, **kwargs)
+        return type(cls.__name__, (cls, base), {"Scheme": cls})
 
     @classmethod
     def new_client(cls, *args, **xargs):
-        return cls._new_target(cls.Client, *args, **xargs)
+        return cls._new_target(cls.Client)(*args, **xargs)
 
     @classmethod
     def new_server(cls, *args, **xargs):
-        return cls._new_target(cls.Server, *args, **xargs)
+        return cls._new_target(cls.Server)(*args, **xargs)
 
     @classmethod
     def new_dummyserver(cls, *args, **xargs):
         """ Returns a server instance that stores bogus values """
         DummyServer = type("DummyServer", (DummyServerMixin, cls.Server), {})
-        return cls._new_target(DummyServer, *args, **xargs)
+        return cls._new_target(DummyServer)(*args, **xargs)
 
     @classmethod
     def get_title(cls): return cls.title or re.sub(r'(?<!^)(?=[A-Z])', ' ', cls.__name__)
