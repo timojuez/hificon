@@ -4,18 +4,17 @@ Dry software run that emulates a target of another scheme
 
 from threading import Thread
 from .. import get_scheme
-from ..core.transmission import AbstractScheme, TelnetScheme
-from ..core.transmission.abstract import DummyServerMixin, AbstractClient, AbstractServer, AttachedClientMixin
+from ..core.transmission import AbstractScheme
+from ..core.transmission.abstract import AbstractClient, AbstractServer
 
 
-class PlainDummyClientMixin(AttachedClientMixin):
+class PlainDummyClientMixin:
     """ This client skips connection related methods """
 
-    def __init__(self, server, *args, **xargs):
+    def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._server = server
-        server.bind(send = self._newthread(self.on_receive_raw_data))
-        self.bind(send = self._newthread(server.on_receive_raw_data))
+        self._server.bind(send = self._newthread(self.on_receive_raw_data))
+        self.bind(send = self._newthread(self._server.on_receive_raw_data))
 
     def _newthread(self, func):
         # send() shall not block for avoiding deadlocks
@@ -59,26 +58,27 @@ class Emulate(AbstractScheme):
         return get_scheme(scheme).new_dummyserver(*args, **xargs)
 
 
-class PlainEmulate(AbstractScheme):
+class PlainEmulate(Emulate):
     """ Emulator without network connection. Only internal variables are being used. """
     title = "Plain Emulator"
     description = "Emulator that skips network"
-    client_args_help = ("SCHEME",)
-    server_args_help = ("SCHEME",)
 
     @classmethod
-    def new_client(cls, scheme, *args, **xargs):
-        Client = type("Client", (PlainDummyClientMixin, get_scheme(scheme), AbstractClient), {})
-        client = Client(cls.new_server(scheme), *args, **xargs)
+    def _get_dummy_scheme(cls, scheme):
+        Scheme = get_scheme(scheme)
+        class DummyScheme(Scheme):
+            """ Server/client without e.g. Telnet inheritance """
+            Client = type("Client", (PlainDummyClientMixin, Scheme, AbstractClient), {})
+            Server = type("Server", (Scheme, AbstractServer), {})
+        return DummyScheme
+
+    @classmethod
+    def new_client(cls, *args, **xargs):
+        client = super().new_client(*args, **xargs)
         client.uri = f"{cls.scheme}:{client.scheme}"
         return client
 
     @classmethod
-    def new_server(cls, scheme, *args, **xargs):
-        Scheme = get_scheme(scheme)
-        return type("Server", (DummyServerMixin, Scheme, AbstractServer), {})(*args, **xargs)
-
-    @classmethod
-    def new_dummyserver(cls, *args, **xargs):
-        raise NotImplementedError("Will not emulate the emulator.")
+    def new_dummyserver(cls, scheme, *args, **xargs):
+        return cls._get_dummy_scheme(scheme).new_dummyserver(*args, **xargs)
 
