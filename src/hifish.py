@@ -76,7 +76,7 @@ class CLI:
     def prompt(self):
         self.target.bind(on_disconnected=self.on_disconnected)
         ic = InteractiveHifish(
-            prompt="%s $ "%self.target.uri, compiler=self.compiler, locals=self.compiler.env)
+            prompt="%s > "%self.target.uri, compiler=self.compiler, locals=self.compiler.env)
         ic.interact(banner="", exitmsg="")
 
     def parse_file(self):
