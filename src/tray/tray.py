@@ -334,7 +334,7 @@ class AppManager:
         with self._exit_stack: gui.GUI_Backend.mainloop()
 
     @gtk
-    def run_app(self, uri, setup=False, callback=None):
+    def run_app(self, uri=None, setup=False, callback=None):
         self._exit_stack.close()
         if setup or not config["target"]["setup_mode"]:
             return gui.Settings(self, None, first_run=True)
