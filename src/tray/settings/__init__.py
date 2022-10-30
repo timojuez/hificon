@@ -1,80 +1,13 @@
 import gi
 gi.require_version("Gtk", "3.0")
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk
 from ...core.transmission import features
 from ...core.util.autostart import Autostart
 from ...info import PKG_NAME
-from ..common import GladeGtk, gtk, config, id_to_string
+from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox
 from ..common import __package__ as tray_package
 from .feature_selector_view import FeatureSelectorView
 from .target_setup import TargetSetup
-
-
-class _FeatureCombobox:
-
-    def __init__(self, target, combobox):
-        self._active_value = None
-        self.c = combobox
-        self.target = target
-        self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
-        self.fill()
-        self.c.set_model(self.store)
-        renderer_text = Gtk.CellRendererText()
-        self.c.pack_start(renderer_text, expand=True)
-        self.c.add_attribute(renderer_text, "text", column=0)
-
-    def get_active(self):
-        it = self.c.get_active_iter()
-        return self.store.get_value(it, 1) if it else self._active_value
-
-    def set_active(self, value):
-        def iterate(store, path, it):
-            v = store.get_value(it, 1)
-            if v == value:
-                self.c.set_active_iter(it)
-                self._active_value = value
-        self._active_value = value
-        self.c.set_active(-1)
-        self.store.foreach(iterate)
-
-    def connect(self, name, cb):
-        decorated = lambda *args: cb(*tuple([self if arg == self.c else arg for arg in args]))
-        return self.c.connect(name, decorated)
-
-    def __getattr__(self, name): return getattr(self.c, name)
-
-
-class FeatureSelectorCombobox(_FeatureCombobox):
-
-    def __init__(self, *args, allow_type=features.Feature, default_value=None, **xargs):
-        self._allow_type = allow_type
-        self._default_value = default_value
-        super().__init__(*args, **xargs)
-
-    def fill(self):
-        if self._default_value:
-            self.store.append(
-                None, ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value])
-        if self.target:
-            features_ = [f for f in self.target.features.values() if isinstance(f, self._allow_type)]
-            categories = {f.category:0 for f in features_}
-            category = {c:self.store.append(None, [c, None]) for c in categories}
-            for f in features_: self.store.append(category[f.category], [f.name, f.id])
-
-
-class FeatureValueCombobox(_FeatureCombobox):
-
-    def __init__(self, target, c, f_id, **xargs):
-        self._feature = target.features.get(f_id) if target else None
-        super().__init__(target, c, **xargs)
-        if self._feature: self._feature.bind(on_change=lambda *_: self.fill())
-
-    def fill(self):
-        if not self._feature: return
-        active = self.get_active()
-        self.store.clear()
-        for val in self._feature.options: self.store.append(None, [str(val), val])
-        if active: self.set_active(active)
 
 
 class PowerControlMixin:
