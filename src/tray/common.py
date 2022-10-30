@@ -20,6 +20,13 @@ def gtk(func):
     return lambda *args,**xargs: GLib.idle_add(lambda:[False, func(*args,**xargs)][0])
 
 
+class AbstractApp:
+
+    def __init__(self, app_manager, *args, **xargs):
+        self.app_manager = app_manager
+        super().__init__(*args, **xargs)
+
+
 class GladeGtk:
     GLADE = ""
     

@@ -9,7 +9,7 @@ from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
-from .common import gtk, config, resolve_feature_id, APP_NAME
+from .common import gtk, config, resolve_feature_id, APP_NAME, AbstractApp
 
 
 class FeatureNotification:
@@ -316,11 +316,7 @@ class AutoPower(TargetController):
         self.app_manager.main_quit()
 
 
-class App(NotificationMixin, AutoPower, KeyBinding, TrayMixin, AbstractContextManager):
-
-    def __init__(self, app_manager, *args, **xargs):
-        self.app_manager = app_manager
-        super().__init__(*args, **xargs)
+class App(AbstractApp, NotificationMixin, AutoPower, KeyBinding, TrayMixin, AbstractContextManager): pass
 
 
 class AppManager:
