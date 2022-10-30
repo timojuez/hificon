@@ -81,6 +81,7 @@ class _FeatureCombobox:
         self.fill()
         self.c.set_model(self.store)
         renderer_text = Gtk.CellRendererText()
+        self.c.clear()
         self.c.pack_start(renderer_text, expand=True)
         self.c.add_attribute(renderer_text, "text", column=0)
 
@@ -128,7 +129,11 @@ class FeatureValueCombobox(_FeatureCombobox):
     def __init__(self, target, c, f_id, **xargs):
         self._feature = target.features.get(f_id) if target else None
         super().__init__(target, c, **xargs)
-        if self._feature: self._feature.bind(on_change=lambda *_: self.fill())
+        if self._feature:
+            self._feature.bind(on_change=lambda *_: gtk(self.fill)())
+            self.target.preload_features.add(f_id)
+            try: self._feature.async_poll()
+            except ConnectionError: pass
 
     def fill(self):
         if not self._feature: return
