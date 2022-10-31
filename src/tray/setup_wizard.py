@@ -43,6 +43,7 @@ class InputsMixin:
     input_settings = [
         ("power", features.BoolFeature),
         ("muted", features.BoolFeature),
+        ("idle", features.BoolFeature),
         ("source", features.SelectFeature),
         ("volume", features.NumericFeature)
     ]

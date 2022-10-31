@@ -894,14 +894,14 @@ class Display(SelectFeature):
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
 @Denon.add_feature(overwrite=True)
-class IsPlaying(BoolFeature): #undocumented
+class Idle(BoolFeature): #undocumented
     """
     Information on Audio Input Signal
     Value seems to indicate if amp is playing something via HDMI
     """
     category = "Input"
     function = "SSINFAISSIG "
-    translation = {"01": False, "02": True, "12": False} #01: analog, 02: PCM
+    translation = {"01": True, "02": False, "12": True} #01: analog, 02: PCM
 
     def matches(self, data): return super().matches(data) and isinstance(self.unserialize(data), bool)
 

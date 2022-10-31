@@ -15,14 +15,15 @@ target:
         source_id: source
         volume_id: volume
         muted_id: muted
+        idle_id: idle
     # Amp input source that this program controls. Important for power control. Empty means "all"
     source:
     setup_mode:
 
 notifications:
     blacklist: 
+        - '@idle_id'
         - maxvol
-        - is_playing
         - source_names
         - device_power
         - technical_sound_mode

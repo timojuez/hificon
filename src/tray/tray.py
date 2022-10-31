@@ -204,7 +204,6 @@ class AutoPower(TargetController):
         self.target.bind(
             on_feature_change = self.on_target_feature_change,
             on_disconnected = self.close_popup)
-        self.target.features.is_playing.bind(self.on_target_playing)
         self._n = gui.Notification()
         buttons = [("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)]
         for name, func in buttons:
@@ -213,9 +212,9 @@ class AutoPower(TargetController):
         self._n.connect("closed", self.on_popup_closed)
         self._n.set_timeout(self.notification_timeout*1000)
 
-    def on_target_playing(self, playing):
-        if playing: self.on_unidle()
-        else: self.on_idle()
+    def on_target_idling(self, idle):
+        if idle: self.on_idle()
+        else: self.on_unidle()
 
     def on_start_playing(self):
         """ start playing locally, e.g. via pulse """
@@ -226,12 +225,16 @@ class AutoPower(TargetController):
         """ stop playing locally """
         super().on_stop_playing()
         # execute on_idle() if target is not playing
-        try: target_playing = self.target.features.is_playing.isset() and self.target.features.is_playing.get()
-        except ConnectionError: target_playing = False
+        try: target_playing = (
+            self.target.features[config.idle].isset() and self.target.features[config.idle].get() == False)
+        except (ConnectionError, KeyError): target_playing = False
         if not target_playing: self.on_idle()
-        if not self.target.features.is_playing.isset():
-            try: self.target.features.is_playing.async_poll()
-            except ConnectionError: pass
+        try: f = self.target.features[config.idle]
+        except KeyError: pass
+        else:
+            if not f.isset():
+                try: f.async_poll()
+                except ConnectionError: pass
 
     def on_idle(self):
         with self._playing_lock:
@@ -269,6 +272,8 @@ class AutoPower(TargetController):
                 self.start_idle_timer()
             elif value == False: # poweroff event
                 self.stop_idle_timer()
+        elif f_id == config.idle:
+            self.on_target_idling(value)
 
     def snooze_notification(self):
         self.start_idle_timer()
