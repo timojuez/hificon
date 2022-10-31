@@ -6,8 +6,8 @@ from ...core.util.autostart import Autostart
 from ...info import PKG_NAME
 from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox
 from ..common import __package__ as tray_package
+from ..setup_wizard import SetupWizard
 from .feature_selector_view import FeatureSelectorView
-from .target_setup import TargetSetup
 
 
 class PowerControlMixin:
@@ -18,8 +18,6 @@ class PowerControlMixin:
         item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
             item_poweroffsd.get_active, item_poweroffsd.set_active))
         self.connect_adjustment_to_config("poweroff_delay", ("power_control", "poweroff_after"))
-        self.connect_feature_selector_to_config("power_source_function", ("target", "features", "source_id"))
-        self.connect_value_selector_to_config("source_value", ("target", "source"), config.source)
 
 
 class TrayIconMixin:
@@ -82,6 +80,10 @@ class GeneralMixin:
         checkbox.set_active(autostart.get_active())
         checkbox.connect("toggled", lambda *_: autostart.set_active(checkbox.get_active()))
 
+    def on_setup_wizard_clicked(self, *args):
+        self.hide()
+        SetupWizard(self.app_manager).show()
+
 
 class SettingsBase(GladeGtk):
     GLADE = "../share/settings.glade"
@@ -116,6 +118,6 @@ class SettingsBase(GladeGtk):
         ad.connect("value-changed", config.connect_to_object(config_property, ad.get_value, ad.set_value))
 
 
-class Settings(PowerControlMixin, TrayIconMixin, HotkeysMixin, TargetSetup, PopupMenuSettings,
+class Settings(PowerControlMixin, TrayIconMixin, HotkeysMixin, PopupMenuSettings,
     NotificationSettings, GeneralMixin, SettingsBase): pass
 

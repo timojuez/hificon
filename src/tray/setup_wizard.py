@@ -1,0 +1,109 @@
+import pkgutil
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk, GObject, GdkPixbuf, Gio
+from .. import Target
+from ..core.util.autostart import Autostart
+from ..core import features
+from .common import GladeGtk, gtk, config, id_to_string, APP_NAME, FeatureSelectorCombobox, FeatureValueCombobox, AbstractApp
+from .settings.target_setup import TargetSetup
+
+
+class _Base(GladeGtk):
+    GLADE = "../share/setup_wizard.glade"
+
+    def __init__(self, first_run=False, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.applied = False
+        self.first_run = first_run
+        self.window = self.builder.get_object("window")
+        self.window.set_title(APP_NAME)
+        self._set_image()
+        self.builder.get_object("intro_label").set_text(f"{APP_NAME} Setup")
+
+    def _set_image(self):
+        image_data = pkgutil.get_data(__name__, f"../share/icons/scalable/logo.svg")
+        input_stream = Gio.MemoryInputStream.new_from_data(image_data, None)
+        pixbuf = GdkPixbuf.Pixbuf.new_from_stream(input_stream, None)
+        self.builder.get_object("image").set_from_pixbuf(pixbuf)
+
+    def show(self):
+        super().show()
+
+    def on_window_prepare(self, assistant, page): pass
+
+    def on_window_apply(self, assistant):
+        self.applied = True
+
+    def on_window_close(self, assistant):
+        Gtk.main_quit() if self.first_run and not self.applied else self.window.destroy()
+
+
+class InputsMixin:
+    input_settings = [
+        ("power", features.BoolFeature),
+        ("muted", features.BoolFeature),
+        ("source", features.SelectFeature),
+        ("volume", features.NumericFeature)
+    ]
+
+    def show(self, *args, **xargs):
+        self.input_selectors = None
+        super().show(*args, **xargs)
+        self._setup_input_selectors()
+        for f, fc in self.input_selectors.items(): fc.set_active(config["target"]["features"][f"{f}_id"])
+        self.on_selector_changed()
+
+    def on_target_setup_changed(self):
+        super().on_target_setup_changed()
+        self.on_selector_changed()
+
+    def on_window_prepare(self, assistant, page):
+        super().on_window_prepare(assistant, page)
+        if page == self.builder.get_object("inputs"):
+            self._prepare_inputs_menu()
+
+    @gtk
+    def _prepare_inputs_menu(self):
+        self._setup_input_selectors()
+        self.on_selector_changed()
+
+    def _setup_input_selectors(self):
+        self.input_selectors = {
+            f:FeatureSelectorCombobox(self.target, self.builder.get_object(f"{f}_feature"), allow_type=t)
+            for f, t in self.input_settings}
+
+    def on_selector_changed(self, *args):
+        completed = self.target and self.input_selectors and all(
+            [fc.get_active() in self.target.features for f, fc in self.input_selectors.items()])
+        self.window.set_page_complete(self.builder.get_object("inputs"), completed)
+
+    def on_window_apply(self, *args):
+        super().on_window_apply(*args)
+        for f, fc in self.input_selectors.items():
+            config["target"]["features"][f"{f}_id"] = fc.get_active()
+        config.save()
+
+
+class SourceMixin:
+    source = None
+
+    def on_window_prepare(self, assistant, page):
+        super().on_window_prepare(assistant, page)
+        if page == self.builder.get_object("input_source"):
+            f_id = self.input_selectors["source"].get_active()
+            self.source = FeatureValueCombobox(
+                self.target, self.builder.get_object("source_value"), f_id)
+            self.target.features[f_id].bind(gtk(self.source.set_active)) # TODO: dont do this on each prepare()
+
+    def on_window_apply(self, *args):
+        super().on_window_apply(*args)
+        if self.source: config["target"]["source"] = self.source.get_active()
+
+
+class SetupWizard(AbstractApp, SourceMixin, InputsMixin, TargetSetup, _Base):
+
+    def on_window_apply(self, *args):
+        super().on_window_apply(*args)
+        self.app_manager.run_app() # restart
+

@@ -1,4 +1,4 @@
-import gi
+import sys, gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject
 from threading import Thread
@@ -31,7 +31,7 @@ class DeviceListMode(UriSettingMode):
         if it:
             name, target = l.get_value(it, 0)
             return target.uri
-        else: self.target_setup.show_error("No item selected.")
+        else: sys.stderr.write("No item selected.\n")
 
     def set_uri(self, uri, active_mode):
         if active_mode == self:
@@ -50,9 +50,7 @@ class TextEditMode(UriSettingMode):
         self.uri_edit = self.target_setup.builder.get_object("uri_edit")
 
     def get_uri(self):
-        uri = self.uri_edit.get_text()
-        if not uri: return self.target_setup.show_error("URI cannot be empty.")
-        return uri
+        return self.uri_edit.get_text()
 
     def set_uri(self, uri, active_mode):
         self.uri_edit.set_text(uri)
@@ -84,6 +82,10 @@ class DeviceListMixin:
         column.pack_start(cell, True)
 
     def on_target_search_click(self, *args, **xargs):
+        self.search_and_add_targets()
+
+    def _show(self):
+        super()._show()
         self.search_and_add_targets()
 
     def search_and_add_targets(self):
@@ -129,19 +131,18 @@ class TextEditMixin:
         super().__init__(*args, **xargs)
         self.uri_edit_radio = self.builder.get_object("uri_edit_radiobutton")
 
-    @gtk
-    def on_uri_edit_button_release_event(self, *args, **xargs):
+    def on_uri_edit_changed(self, *args, **xargs):
         self.uri_edit_radio.set_active(True)
         self.on_target_setup_changed()
 
 
 class Base:
+    target = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.apply_button = self.builder.get_object("apply_button")
         self._modes = {C:C(self) for C in (TextEditMode, DemoMode, DeviceListMode)}
-        if self._first_run: self.on_first_run()
+        self._device_settings = self.builder.get_object("device_settings")
 
     @gtk
     def show(self): self._show()
@@ -158,50 +159,44 @@ class Base:
         target_setup_mode = config["target"]["setup_mode"]
         for m in self._modes.values():
             m.set_uri(uri, target_setup_mode)
-        self.apply_button.set_sensitive(False)
+        self.on_target_setup_changed()
 
     def on_device_settings_radiobutton_toggled(self, *args, **xargs):
         self.on_target_setup_changed()
 
     def on_target_setup_changed(self):
-        self.apply_button.set_sensitive(True)
+        for self.mode in self._modes.values():
+            if self.mode.is_active(): break
+        uri = self.mode.get_uri()
+        if uri is not None:
+            try: target = Target(uri, connect=False)
+            except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
+            else:
+                if isinstance(target, AbstractAmp):
+                    if self.target: self.target.exit() #FIXME: slow if target is not connected
+                    self.target = target
+                    self.target.enter()
+                    return self.window.set_page_complete(self._device_settings, True)
+                sys.stderr.write(f"URI must refer to an amplifier: '{uri}'\n")
+        self.window.set_page_complete(self._device_settings, False)
 
-    def on_apply_device_settings(self, *args, **xargs):
-        for m in self._modes.values():
-            if m.is_active(): break
-        uri = m.get_uri()
-        if uri is None: return
-        try: target = Target(uri)
-        except Exception as e: return self.show_error(f"Could not create target for URI '{uri}': {e}")
-        if not isinstance(target, AbstractAmp):
-            return self.show_error(f"URI must refer to an amplifier: '{uri}'")
+    def on_window_close(self, *args):
+        if self.target:
+            self.target.exit()
+            self.target = None
+        super().on_window_close(*args)
 
-        main_config["Target"]["uri"] = uri
-        config["target"]["setup_mode"] = str(m)
+    def on_window_apply(self, *args):
+        super().on_window_apply(*args)
+        main_config["Target"]["uri"] = self.mode.get_uri()
+        config["target"]["setup_mode"] = str(self.mode)
         config.save()
-        self.hide()
-        self.app_manager.run_app(uri, callback=lambda: self.app_manager.main_app.settings.show_device_settings())
-
-    def show_device_settings(self):
-        self._show()
-        tab = self.builder.get_object("device_settings")
-        nb = self.builder.get_object("notebook")
-        for i in range(nb.get_n_pages()):
-            if nb.get_nth_page(i) == tab:
-                return nb.set_current_page(i)
-        raise IndexError(f"{tab} not found in {nb}")
 
     def show_error(self, text):
         diag = Gtk.MessageDialog(self.window, 0, Gtk.MessageType.ERROR, 
             Gtk.ButtonsType.OK, text)
         diag.connect("response", lambda *_: diag.destroy())
         diag.run()
-
-    @gtk
-    def on_first_run(self):
-        self.show_device_settings()
-        self.search_and_add_targets()
-        self.apply_button.set_sensitive(True)
 
 
 class TargetSetup(DeviceListMixin, TextEditMixin, Base): pass

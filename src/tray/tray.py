@@ -10,6 +10,7 @@ from . import gui
 from .key_binding import KeyBinding
 from .setup import Setup
 from .common import gtk, config, resolve_feature_id, APP_NAME, AbstractApp
+from .setup_wizard import SetupWizard
 
 
 class FeatureNotification:
@@ -333,7 +334,7 @@ class AppManager:
     def run_app(self, uri=None, setup=False, callback=None):
         self._exit_stack.close()
         if setup or not config["target"]["setup_mode"]:
-            return gui.Settings(self, None, first_run=True)
+            return SetupWizard(self, first_run=True).show()
         target = Target(uri, connect=False, verbose=self.verbose)
         icon = self._exit_stack.enter_context(Icon(target))
         self.main_app = self._exit_stack.enter_context(App(self, target, icon=icon, verbose=self.verbose))
