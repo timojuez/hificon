@@ -87,10 +87,11 @@ class AvailableFeaturesList:
 
 
 class SelectedFeaturesList(Bindable):
-    _value = None
+    _value = list
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
+        self._value = self._value()
         sw = Gtk.ScrolledWindow()
         self.popup_menu_settings.pack2(sw, False, True)
         view = Gtk.TreeView()
@@ -122,6 +123,8 @@ class SelectedFeaturesList(Bindable):
     def get_value(self): return self._value
 
     def set_value(self, f_ids):
+        self._value = f_ids
+        self.menu_list.clear()
         for f_id in f_ids: self.menu_list.append([f_id])
         self._update_listeners(f_ids)
 
@@ -132,6 +135,7 @@ class SelectedFeaturesList(Bindable):
 
     def on_menu_view_drag_data_received(self, treeview, context, x, y, selection, info, timestamp):
         f_id = selection.get_text()
+        if f_id in self._value: return context.finish(False, False, timestamp) # reject
         drop_info = treeview.get_dest_row_at_pos(x, y)
         if drop_info:
             path, pos = drop_info
