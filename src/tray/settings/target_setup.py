@@ -138,6 +138,7 @@ class TextEditMixin:
 
 class Base:
     target = None
+    uri = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -168,6 +169,8 @@ class Base:
         for self.mode in self._modes.values():
             if self.mode.is_active(): break
         uri = self.mode.get_uri()
+        if uri == self.uri: return
+        self.uri = uri
         if uri is not None:
             try: target = Target(uri, connect=False)
             except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
