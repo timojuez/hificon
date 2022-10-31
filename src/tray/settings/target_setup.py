@@ -171,15 +171,18 @@ class Base:
         uri = self.mode.get_uri()
         if uri == self.uri: return
         self.uri = uri
-        if uri is not None:
-            try: target = Target(uri, connect=False)
-            except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
-            else:
-                if self.target: self.target.exit() #FIXME: slow if target is not connected
-                self.target = target
-                self.target.enter()
-                return self.window.set_page_complete(self._device_settings, True)
         self.window.set_page_complete(self._device_settings, False)
+        if uri is not None:
+            Thread(target=self.set_new_target, name="set_new_target", daemon=True).start()
+
+    def set_new_target(self):
+        try: target = Target(self.uri, connect=False)
+        except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
+        else:
+            if self.target: self.target.exit() #FIXME: slow if target is not connected
+            self.target = target
+            self.target.enter()
+            self.window.set_page_complete(self._device_settings, True)
 
     def on_window_close(self, *args):
         if self.target:
@@ -189,7 +192,7 @@ class Base:
 
     def on_window_apply(self, *args):
         super().on_window_apply(*args)
-        main_config["Target"]["uri"] = self.mode.get_uri()
+        main_config["Target"]["uri"] = self.uri
         config["target"]["setup_mode"] = str(self.mode)
         config.save()
 

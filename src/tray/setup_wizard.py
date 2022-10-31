@@ -55,8 +55,8 @@ class InputsMixin:
         for f, fc in self.input_selectors.items(): fc.set_active(config["target"]["features"][f"{f}_id"])
         self.on_selector_changed()
 
-    def on_target_setup_changed(self):
-        super().on_target_setup_changed()
+    def set_new_target(self):
+        super().set_new_target()
         self.on_selector_changed()
 
     def on_window_prepare(self, assistant, page):
