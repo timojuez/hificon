@@ -11,7 +11,6 @@ Run client:
 import time
 from threading import Thread, Lock
 from hificon.core.transmission.telnet import TelnetServer, TelnetScheme
-from hificon.amp import TelnetAmp
 from hificon.core.transmission import features
 from hificon import Target, register_scheme
 
@@ -49,8 +48,7 @@ class MyServer(TelnetServer):
 
 
 class MyScheme(TelnetScheme):
-    """ must have the reference to MyServer.
-    If this represents an amplifier, you can inherit from TelnetAmp instead of TelnetScheme. """
+    """ must have the reference to MyServer """
     description = "My custom scheme"
     Server = MyServer
 

@@ -5,12 +5,11 @@
 """
 
 from decimal import Decimal
-from hificon.amp import TelnetAmp
-from hificon.core.transmission import features
+from hificon.core import TelnetScheme, features
 from hificon import register_scheme, hifish
 
 
-class MyTelnetScheme(TelnetAmp):
+class MyTelnetScheme(TelnetScheme):
     """ try by running `examples$ python3 -m hificon.hifish -t emulate:my_scheme.MyTelnetScheme`
     or start the server by `examples$ python3 -m hificon.server -t my_scheme.MyTelnetScheme://127.0.0.1:1234`
     and start the client by `examples$ python3 -m hificon.hifish -t my_scheme.MyTelnetScheme://127.0.0.1:1234`

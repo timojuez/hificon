@@ -5,7 +5,6 @@ from threading import Thread
 from ...core.transmission.discovery import discover_targets, get_name
 from ...core.config import config as main_config
 from ... import Target
-from ...amp import AbstractAmp
 from ..common import gtk, config
 
 
@@ -173,12 +172,10 @@ class Base:
             try: target = Target(uri, connect=False)
             except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
             else:
-                if isinstance(target, AbstractAmp):
-                    if self.target: self.target.exit() #FIXME: slow if target is not connected
-                    self.target = target
-                    self.target.enter()
-                    return self.window.set_page_complete(self._device_settings, True)
-                sys.stderr.write(f"URI must refer to an amplifier: '{uri}'\n")
+                if self.target: self.target.exit() #FIXME: slow if target is not connected
+                self.target = target
+                self.target.enter()
+                return self.window.set_page_complete(self._device_settings, True)
         self.window.set_page_complete(self._device_settings, False)
 
     def on_window_close(self, *args):

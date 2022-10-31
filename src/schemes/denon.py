@@ -6,8 +6,7 @@ import sys, math
 from urllib.parse import urlparse
 from threading import Timer
 from decimal import Decimal, InvalidOperation
-from ..amp import TelnetAmp
-from ..core import features
+from ..core import features, TelnetScheme
 from ..core.transmission.types import ClientType, ServerType
 
 
@@ -135,7 +134,7 @@ INPUTS = {
 }
 
 
-class Denon(TelnetAmp):
+class Denon(TelnetScheme):
     description = "Denon/Marantz AVR compatible (tested with Denon X1400H)"
     _pulse = "CV?" # workaround for denon to retrieve CV?
     
@@ -316,7 +315,7 @@ class Fallback(Denon.features.fallback):
         if not data.endswith("END"): return super().consume(data)
 
 
-@Denon.add_feature(overwrite=True)
+@Denon.add_feature
 class Volume(DecimalFeature):
     category = "Volume"
     function = "MV"
@@ -396,7 +395,7 @@ class DevicePower(BoolFeature):
     function = "PW"
     translation = {"ON":True,"STANDBY":False}
 
-@Denon.add_feature(overwrite=True)
+@Denon.add_feature
 class Muted(BoolFeature):
     category = "Volume"
     function = "MU"
@@ -419,7 +418,7 @@ class SourceNames(MultipartFeatureMixin): #undocumented
     def to_parts(self, d): return [" ".join(e) for e in d.items()]
     def from_parts(self, l): return dict([line.split(" ",1) for line in l])
 
-@Denon.add_feature(overwrite=True)
+@Denon.add_feature
 class Source(SelectFeature):
     category = "Input"
     function = "SI"
@@ -476,7 +475,7 @@ for code, f_id, name in SPEAKERS:
         function = f"SSLEV{code} "
 
 
-@Denon.add_feature(overwrite=True)
+@Denon.add_feature
 class MainZonePower(BoolFeature):
     id = "power"
     category = "General"
@@ -893,7 +892,7 @@ class Display(SelectFeature):
     function = "DIM "
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
-@Denon.add_feature(overwrite=True)
+@Denon.add_feature
 class Idle(BoolFeature): #undocumented
     """
     Information on Audio Input Signal
