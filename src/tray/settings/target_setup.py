@@ -120,9 +120,9 @@ class DeviceListMixin:
         self.builder.get_object("devices_view_radiobutton").set_active(True)
         self.on_target_setup_changed()
 
-    def _reset_target_setup(self):
+    def reset_target_setup(self):
         self.devices_list.clear()
-        super()._reset_target_setup()
+        super().reset_target_setup()
 
 
 class TextEditMixin:
@@ -149,13 +149,10 @@ class Base:
     def show(self): self._show()
 
     def _show(self):
-        self._reset_target_setup()
+        self.reset_target_setup()
         super().show()
 
-    @gtk
-    def reset_target_setup(self): self._reset_target_setup()
-
-    def _reset_target_setup(self):
+    def reset_target_setup(self):
         uri = main_config["Target"]["uri"]
         target_setup_mode = config["target"]["setup_mode"]
         for m in self._modes.values():
