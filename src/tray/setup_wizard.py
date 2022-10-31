@@ -5,7 +5,7 @@ from gi.repository import Gtk, GObject, GdkPixbuf, Gio
 from .. import Target
 from ..core.util.autostart import Autostart
 from ..core import features
-from .common import GladeGtk, gtk, config, id_to_string, APP_NAME, FeatureSelectorCombobox, FeatureValueCombobox, AbstractApp
+from .common import GladeGtk, gtk, config, id_to_string, APP_NAME, FeatureSelectorCombobox, FeatureValueCombobox, AbstractApp, autostart
 from .settings.target_setup import TargetSetup
 
 
@@ -102,7 +102,15 @@ class SourceMixin:
         if self.source: config["target"]["source"] = self.source.get_active()
 
 
-class SetupWizard(AbstractApp, SourceMixin, InputsMixin, TargetSetup, _Base):
+class AutostartMixin:
+
+    def on_window_apply(self, assistant):
+        super().on_window_apply(assistant)
+        if self.builder.get_object("autostart_checkbox").get_active():
+            autostart.set_active(True)
+
+
+class SetupWizard(AbstractApp, AutostartMixin, SourceMixin, InputsMixin, TargetSetup, _Base):
 
     def on_window_apply(self, *args):
         super().on_window_apply(*args)

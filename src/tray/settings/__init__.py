@@ -2,10 +2,7 @@ import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from ...core.transmission import features
-from ...core.util.autostart import Autostart
-from ...info import PKG_NAME
-from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox
-from ..common import __package__ as tray_package
+from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox, autostart
 from ..setup_wizard import SetupWizard
 from .feature_selector_view import FeatureSelectorView
 
@@ -76,7 +73,6 @@ class GeneralMixin:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         checkbox = self.builder.get_object("autostart_checkbox")
-        autostart = Autostart(PKG_NAME, tray_package, terminal=False)
         checkbox.set_active(autostart.get_active())
         checkbox.connect("toggled", lambda *_: autostart.set_active(checkbox.get_active()))
 

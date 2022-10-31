@@ -3,10 +3,12 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk, GObject
 from ..core.transmission import features
 from ..core.config import YamlConfig
+from ..core.util.autostart import Autostart
 from .. import NAME
 
 
 APP_NAME = f"{NAME} Tray Control"
+autostart = Autostart(__package__, __package__, terminal=False)
 
 
 class Singleton(type):
