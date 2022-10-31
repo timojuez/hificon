@@ -43,7 +43,9 @@ class FeatureChanger:
 
     def on_mouse_down(self, x, y):
         self._new_value = None
-        try: self.set_position_reference(y, self.target.features[config.gesture_feature].get())
+        try: f = self.target.features[config.gesture_feature]
+        except KeyError: return
+        try: self.set_position_reference(y, f.get())
         except ConnectionError: pass
         sleep()
 
