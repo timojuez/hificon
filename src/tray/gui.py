@@ -303,7 +303,7 @@ class Tray(MenuMixin, AbstractContextManager):
         self.scale_popup = ScalePopup(self.target)
         self._app_indicator.connect("scroll-event", self.on_scroll)
         self._app_indicator.set_menu(self._menu)
-        
+
     def on_scroll_up(self, steps): pass
     
     def on_scroll_down(self, steps): pass
@@ -336,6 +336,7 @@ class Tray(MenuMixin, AbstractContextManager):
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
+        self.settings.hide()
         self.hide()
 
 

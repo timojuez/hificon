@@ -77,7 +77,6 @@ class GeneralMixin:
         checkbox.connect("toggled", lambda *_: autostart.set_active(checkbox.get_active()))
 
     def on_setup_wizard_clicked(self, *args):
-        self.hide()
         SetupWizard(self.app_manager).show()
 
 
