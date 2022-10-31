@@ -74,7 +74,6 @@ def id_to_string(target, f_id):
 class _FeatureCombobox:
 
     def __init__(self, target, combobox):
-        self._active_value = None
         self.c = combobox
         self.target = target
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
@@ -83,6 +82,12 @@ class _FeatureCombobox:
         self.c.clear()
         self.c.pack_start(renderer_text, expand=True)
         self.c.add_attribute(renderer_text, "text", column=0)
+
+    #_active_value stores the value if the selection is not in the model
+    _active_values = {}
+    def _active_value_get(self): return self._active_values.get(self.c)
+    def _active_value_set(self, val): self._active_values[self.c] = val
+    _active_value = property(_active_value_get, _active_value_set)
 
     def fill(self):
         active = self.get_active()
