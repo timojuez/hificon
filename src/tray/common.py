@@ -79,15 +79,23 @@ class _FeatureCombobox:
         self.target = target
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
         self.fill()
-        self.c.set_model(self.store)
         renderer_text = Gtk.CellRendererText()
         self.c.clear()
         self.c.pack_start(renderer_text, expand=True)
         self.c.add_attribute(renderer_text, "text", column=0)
 
+    def fill(self):
+        active = self.get_active()
+        self.store.clear()
+        self._fill()
+        self.c.set_model(self.store)
+        self.set_active(active)
+
+    def _fill(self): raise NotImplementedError()
+
     def get_active(self):
         it = self.c.get_active_iter()
-        return self.store.get_value(it, 1) if it else self._active_value
+        return self.c.get_model().get_value(it, 1) if it else self._active_value
 
     def set_active(self, value):
         def iterate(store, path, it):
@@ -113,7 +121,7 @@ class FeatureSelectorCombobox(_FeatureCombobox):
         self._default_value = default_value
         super().__init__(*args, **xargs)
 
-    def fill(self):
+    def _fill(self):
         if self._default_value:
             self.store.append(
                 None, ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value])
@@ -135,10 +143,7 @@ class FeatureValueCombobox(_FeatureCombobox):
             try: self._feature.async_poll()
             except ConnectionError: pass
 
-    def fill(self):
+    def _fill(self):
         if not self._feature: return
-        active = self.get_active()
-        self.store.clear()
         for val in self._feature.options: self.store.append(None, [str(val), val])
-        if active: self.set_active(active)
 
