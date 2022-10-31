@@ -39,7 +39,7 @@ class _Base(GladeGtk):
         Gtk.main_quit() if self.first_run and not self.applied else self.window.destroy()
 
 
-class InputsMixin:
+class InputsMixin(TargetSetup):
     input_settings = [
         ("power", features.BoolFeature),
         ("muted", features.BoolFeature),
@@ -86,7 +86,7 @@ class InputsMixin:
         config.save()
 
 
-class SourceMixin:
+class SourceMixin(InputsMixin):
     source = None
 
     def on_window_prepare(self, assistant, page):
