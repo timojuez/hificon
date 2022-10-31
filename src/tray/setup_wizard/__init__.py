@@ -2,11 +2,11 @@ import pkgutil
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, GdkPixbuf, Gio
-from .. import Target
-from ..core.util.autostart import Autostart
-from ..core import features
-from .common import GladeGtk, gtk, config, id_to_string, APP_NAME, FeatureSelectorCombobox, FeatureValueCombobox, AbstractApp, autostart
-from .settings.target_setup import TargetSetup
+from ... import Target
+from ...core.util.autostart import Autostart
+from ...core import features
+from ..common import GladeGtk, gtk, config, id_to_string, APP_NAME, FeatureSelectorCombobox, FeatureValueCombobox, AbstractApp, autostart
+from .target_setup import TargetSetup
 
 
 class _Base(GladeGtk):
@@ -22,7 +22,7 @@ class _Base(GladeGtk):
         self.builder.get_object("intro_label").set_text(f"{APP_NAME} Setup")
 
     def _set_image(self):
-        image_data = pkgutil.get_data(__name__, f"../share/icons/scalable/logo.svg")
+        image_data = pkgutil.get_data(__name__, "../../share/icons/scalable/logo.svg")
         input_stream = Gio.MemoryInputStream.new_from_data(image_data, None)
         pixbuf = GdkPixbuf.Pixbuf.new_from_stream(input_stream, None)
         self.builder.get_object("image").set_from_pixbuf(pixbuf)
