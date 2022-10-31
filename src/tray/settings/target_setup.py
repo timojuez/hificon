@@ -35,9 +35,7 @@ class DeviceListMode(UriSettingMode):
 
     def set_uri(self, uri, active_mode):
         if active_mode == self:
-            row = self.target_setup._add_target_to_list(Target(uri))
-            path=self.target_setup.devices_list.get_path(row)
-            self.target_setup.devices_view.set_cursor(path)
+            self.target_setup._add_target_to_list(Target(uri))
         elif active_mode: return # active_mode is set and not self
         self.radio.set_active(True)
 
@@ -107,9 +105,12 @@ class DeviceListMixin:
         def set_name(target=target, i=len(self.devices_list)):
             if name := get_name(target):
                 self.devices_list[i] = [(name, target)]
-        r = self.devices_list.append([(target.uri, target)])
+        treeiter = self.devices_list.append([(target.uri, target)])
         Thread(target=set_name, daemon=True, name="get_target_name").start()
-        return r
+        if not self.devices_view.get_cursor().path:
+            path = self.devices_list.get_path(treeiter)
+            self.devices_view.set_cursor(path)
+            self.on_target_setup_changed()
 
     def _set_devices_cell_text(self, column, cell, model, it, data):
         name, target = model.get_value(it, 0)
