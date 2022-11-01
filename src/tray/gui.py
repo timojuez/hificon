@@ -149,10 +149,32 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
 
 
 class Notification(_Notification, Notify.Notification):
+    _button_clicked = False
 
+    def __init__(self, timeout_action=None, default_click_action=None, buttons=None, *args, **xargs):
+        super().__init__(*args, **xargs)
+        if buttons:
+            for name, func in buttons:
+                self.add_action(name, name,
+                    lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
+        self.connect("closed", self.on_popup_closed)
+        self._timeout_action = timeout_action
+        self._default_click_action = default_click_action
+
+    def on_popup_closed(self, *args):
+        if self.get_closed_reason() == 1: # timeout
+            if self._timeout_action: self._timeout_action()
+        elif self.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
+            if self._default_click_action: self._default_click_action()
+        self._button_clicked = False
+    
     def show(self, *args, **xargs):
         try: return super().show(*args,**xargs)
         except GLib.Error as e: print(repr(e), file=sys.stderr)
+
+    def close(self, *args, **xargs):
+        try: super().close(*args, **xargs)
+        except: pass
 
 
 class MenuMixin:

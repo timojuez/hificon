@@ -189,7 +189,6 @@ class TrayMixin(gui.Tray):
 class AutoPower(TargetController):
     """ Power on when playing starts and show a notification warning to poweroff when idling """
     notification_timeout = 10
-    _button_clicked = False
     _playing_lock = Lock
     _playing = False
     _idle_timer_lock = Lock
@@ -203,14 +202,11 @@ class AutoPower(TargetController):
         self.target.preload_features.add("name")
         self.target.bind(
             on_feature_change = self.on_target_feature_change,
-            on_disconnected = self.close_popup)
-        self._n = gui.Notification()
-        buttons = [("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)]
-        for name, func in buttons:
-            self._n.add_action(name, name,
-                lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
-        self._n.connect("closed", self.on_popup_closed)
-        self._n.set_timeout(self.notification_timeout*1000)
+            on_disconnected = self.close_popups)
+        self._poweroff_n = gui.Notification(
+            buttons=[("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)],
+            timeout_action=self.poweroff, default_click_action=self.snooze_notification)
+        self._poweroff_n.set_timeout(self.notification_timeout*1000)
 
     def on_target_idling(self, idle):
         if idle: self.on_idle()
@@ -264,7 +260,7 @@ class AutoPower(TargetController):
     def stop_idle_timer(self):
         with self._idle_timer_lock:
             if self._idle_timer: self._idle_timer.cancel()
-        self.close_popup()
+        self._poweroff_n.close()
 
     def on_target_feature_change(self, f_id, value):
         if f_id == config.power:
@@ -278,24 +274,16 @@ class AutoPower(TargetController):
     def snooze_notification(self):
         self.start_idle_timer()
 
-    def on_popup_closed(self, *args):
-        if self._n.get_closed_reason() == 1: # timeout
-            self.poweroff()
-        elif self._n.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
-            self.snooze_notification()
-        self._button_clicked = False
-    
     def on_idle_timeout(self):
         self.target.schedule(self._on_idle_timeout, requires=("name", config.power, config.source))
 
     def _on_idle_timeout(self):
         if config["power_control"]["auto_power_off"] and self.can_poweroff:
-            self._n.update("Power off %s"%self.target.features.name.get())
-            self._n.show()
+            self._poweroff_n.update("Power off %s"%self.target.features.name.get())
+            self._poweroff_n.show()
         
-    def close_popup(self):
-        try: self._n.close()
-        except: pass
+    def close_popups(self):
+        self._poweroff_n.close()
 
     def poweron(self):
         """ poweron target """
