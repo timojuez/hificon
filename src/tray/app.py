@@ -10,7 +10,7 @@ from .setup_wizard import SetupWizard
 from .power_control import PowerControlMixin
 from .notifications import NotificationMixin
 from .key_binding import KeyBinding
-from .tray import TrayMixin, Icon
+from .tray import TrayMixin
 
 
 class App(AbstractApp, NotificationMixin, PowerControlMixin, KeyBinding, TrayMixin, AbstractContextManager):
@@ -33,8 +33,7 @@ class AppManager:
         if setup or not config["target"]["setup_mode"]:
             return SetupWizard(self, first_run=True).show()
         target = Target(uri, connect=False, verbose=self.verbose)
-        icon = self._exit_stack.enter_context(Icon(target))
-        self.main_app = self._exit_stack.enter_context(App(self, target, icon=icon, verbose=self.verbose))
+        self.main_app = self._exit_stack.enter_context(App(self, target, verbose=self.verbose))
         self._exit_stack.enter_context(target)
         if callback: callback()
 

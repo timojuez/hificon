@@ -244,11 +244,6 @@ class Icon(Bindable):
             on_disconnected=self.set_icon,
             on_feature_change=self.on_feature_change)
 
-    def bind(self, *args, **xargs):
-        super().bind(*args, **xargs)
-        self.set_icon()
-        self.update_icon()
-
     def on_feature_change(self, f_id, value, *args): # bound to target
         if f_id in (config.tray_feature, config.muted, config.power): self.update_icon()
 
@@ -280,8 +275,10 @@ class Icon(Bindable):
     
     def __enter__(self):
         self._path = tempfile.mktemp()
+        self.set_icon()
+        self.update_icon()
         return self
-    
+
     def __exit__(self, *args):
         try: os.remove(self._path)
         except FileNotFoundError: pass
@@ -338,12 +335,20 @@ class Tray(MenuMixin, AbstractContextManager):
 class TrayMixin(Tray):
     """ Tray Icon """
 
-    def __init__(self, *args, icon, **xargs):
+    def __init__(self, *args, **xargs):
         super().__init__(*args,**xargs)
         self.target.preload_features.update((config.tray_feature, config.muted))
-        icon.bind(on_change = self.on_icon_change)
-        self.icon = icon
+        self.icon = Icon(self.target)
+        self.icon.bind(on_change = self.on_icon_change)
         self.show()
+
+    def __enter__(self):
+        self.icon.__enter__()
+        return super().__enter__()
+
+    def __exit__(self, *args, **xargs):
+        super().__exit__(*args, **xargs)
+        self.icon.__exit__(*args, **xargs)
 
     def on_icon_change(self, path, name):
         self.scale_popup.set_image(path)
