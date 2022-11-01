@@ -79,12 +79,13 @@ class _FeatureCombobox:
     def __init__(self, target, combobox):
         self.c = combobox
         self.target = target
-        self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT)
+        self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, bool)
         self.fill()
         renderer_text = Gtk.CellRendererText()
         self.c.clear()
         self.c.pack_start(renderer_text, expand=True)
         self.c.add_attribute(renderer_text, "text", column=0)
+        self.c.add_attribute(renderer_text, "sensitive", column=2)
 
     #_active_value stores the value if the selection is not in the model
     _active_values = {}
@@ -131,13 +132,13 @@ class FeatureSelectorCombobox(_FeatureCombobox):
 
     def _fill(self):
         if self._default_value:
-            self.store.append(
-                None, ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value])
+            self.store.append(None,
+                ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value, True])
         if self.target:
             features_ = [f for f in self.target.features.values() if isinstance(f, self._allow_type)]
             categories = {f.category:0 for f in features_}
-            category = {c:self.store.append(None, [c, None]) for c in categories}
-            for f in features_: self.store.append(category[f.category], [f.name, f.id])
+            category = {c:self.store.append(None, [c, None, False]) for c in categories}
+            for f in features_: self.store.append(category[f.category], [f.name, f.id, True])
 
 
 class FeatureValueCombobox(_FeatureCombobox):
@@ -153,5 +154,5 @@ class FeatureValueCombobox(_FeatureCombobox):
 
     def _fill(self):
         if not self._feature: return
-        for val in self._feature.options: self.store.append(None, [str(val), val])
+        for val in self._feature.options: self.store.append(None, [str(val), val, True])
 
