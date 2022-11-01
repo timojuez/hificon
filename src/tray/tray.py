@@ -204,7 +204,11 @@ class AutoPower(TargetController):
             on_feature_change = self.on_target_feature_change,
             on_disconnected = self.close_popups)
         self._poweroff_n = gui.Notification(
-            buttons=[("Cancel", lambda:None), ("Snooze", self.snooze_notification), ("OK", self.poweroff)],
+            buttons=[
+                ("Don't show again", lambda:self.item_poweroff.set_active(False)),
+                ("Cancel", lambda:None),
+                #("Snooze", self.snooze_notification),
+                ("OK", self.poweroff)],
             timeout_action=self.poweroff, default_click_action=self.snooze_notification)
         self._poweroff_n.set_timeout(self.notification_timeout*1000)
 

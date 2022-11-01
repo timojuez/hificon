@@ -231,6 +231,7 @@ class MenuMixin:
         item_poweroff.set_active(config["power_control"]["auto_power_off"])
         item_poweroff.connect("toggled", lambda *args:
             [config["power_control"].__setitem__("auto_power_off",item_poweroff.get_active()), config.save()])
+        self.item_poweroff = item_poweroff
         self._footer_items.append(item_poweroff)
 
         self._footer_items.append(Gtk.SeparatorMenuItem())
