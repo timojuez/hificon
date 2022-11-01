@@ -6,7 +6,6 @@ from .. import Target
 from ..core.util import Bindable
 from . import gui
 from .key_binding import KeyBinding
-from .setup import Setup
 from .common import gtk, config, resolve_feature_id, APP_NAME, AbstractApp
 from .setup_wizard import SetupWizard
 from .power_control import PowerControlMixin
