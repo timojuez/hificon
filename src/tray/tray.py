@@ -130,7 +130,7 @@ class NotificationMixin(object):
         if isinstance(f, features.SelectFeature): return TextNotification(f)
 
     def show_notification(self, f_id):
-        if f_id not in config["notifications"]["blacklist"]:
+        if f_id not in [resolve_feature_id(f_id) for f_id in config["notifications"]["blacklist"]]:
             if n := self._notifications.get(f_id): n.show()
 
     def on_mouse_down(self,*args,**xargs):
