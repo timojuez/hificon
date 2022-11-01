@@ -116,12 +116,12 @@ class CLI:
             if uri := S.get_client_uri(): print(tw.fill(f"URI (Client): {uri}"))
             if uri := S.get_server_uri(): print(tw.fill(f"URI (Server): {uri}"))
             print()
-            #print(tw.fill("%-20s%-20s%s"%(bright(p), S.scheme, getattr(S, "help", ""))))
+            #print(tw.fill("%-20s%-20s%s"%(bright(p), S.scheme_id, getattr(S, "help", ""))))
 
     def print_help_features(self):
         tw = TextWrapper(
             initial_indent=" "*8, subsequent_indent=" "*12, width=shutil.get_terminal_size().columns)
-        print(f"Scheme '{self.target.scheme}' supports the following features.\n")
+        print(f"Scheme '{self.target.scheme_id}' supports the following features.\n")
         features_ = map(self.target.features.get, self.target.__class__.features.keys())
         features_ = sorted(features_, key=lambda f: (f.category, f.id))
         for category, ff in groupby(features_, key=lambda f:f.category):

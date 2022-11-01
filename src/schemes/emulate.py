@@ -75,7 +75,7 @@ class DummyEmulate(Emulate):
     @classmethod
     def new_client(cls, *args, **xargs):
         client = super().new_client(*args, **xargs)
-        client.uri = f"{cls.scheme}:{client.scheme}"
+        client.uri = f"{cls.scheme_id}:{client.scheme_id}"
         return client
 
     @classmethod

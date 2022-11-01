@@ -18,7 +18,7 @@ class AbstractTarget(Bindable):
     verbose = 0
     connected = False
     uri = ""
-    scheme = "[undefined]"
+    scheme_id = "[undefined]"
     Scheme = None
     features = features.Features()
     feature_categories = property(lambda self: self.Scheme.feature_categories)
@@ -46,7 +46,7 @@ class AbstractTarget(Bindable):
     
     def exit(self): pass
 
-    def update_uri(self, *args): self.uri = ":".join(map(str, [self.scheme, *args]))
+    def update_uri(self, *args): self.uri = ":".join(map(str, [self.scheme_id, *args]))
 
     def poll_feature(self, f, *args, **xargs):
         """ Called when a feature value is being requested """
@@ -267,12 +267,12 @@ class _AbstractSchemeMeta(type):
     def get_client_uri(cls):
         args = cls.client_args_help
         if args is None: args = getattr(cls.Client,"init_args_help",None)
-        if args is not None: return ":".join((cls.scheme, *args))
+        if args is not None: return ":".join((cls.scheme_id, *args))
 
     def get_server_uri(cls):
         args = cls.server_args_help
         if args is None: args = getattr(cls.Server,"init_args_help",None)
-        if args is not None: return ":".join((cls.scheme, *args))
+        if args is not None: return ":".join((cls.scheme_id, *args))
 
     def add_feature(cls, Feature=None, overwrite=False):
         """

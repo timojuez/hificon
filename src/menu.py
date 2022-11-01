@@ -253,7 +253,7 @@ class SettingsTab(StackLayout):
 
     def __init__(self):
         super().__init__()
-        scheme_names = {P.scheme: P.get_title() for P in get_schemes()}
+        scheme_names = {S.scheme_id: S.get_title() for S in get_schemes()}
         dropdown = SelectFeatureOptions()
         self.ids.scheme.bind(on_release=lambda i: dropdown.open(i))
         for scheme, title in scheme_names.items():
