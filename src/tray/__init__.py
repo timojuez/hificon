@@ -1,2 +1,2 @@
-from .tray import main
+from .app import main
 
