@@ -4,7 +4,7 @@ from contextlib import AbstractContextManager, ExitStack
 from decimal import Decimal
 from .. import Target
 from ..core import features
-from ..core.util import Bindable
+from ..core.util import Bindable, log_call
 from ..core.target_controller import TargetController
 from . import gui
 from .key_binding import KeyBinding
@@ -248,6 +248,7 @@ class AutoPower(TargetController):
             self.stop_idle_timer()
         self.poweron()
 
+    @log_call
     def start_idle_timer(self):
         with self._idle_timer_lock:
             if self._playing or self._idle_timer and self._idle_timer.is_alive(): return
@@ -261,6 +262,7 @@ class AutoPower(TargetController):
         super().__exit__(*args, **xargs)
         self.stop_idle_timer()
 
+    @log_call
     def stop_idle_timer(self):
         with self._idle_timer_lock:
             if self._idle_timer: self._idle_timer.cancel()
@@ -278,6 +280,7 @@ class AutoPower(TargetController):
     def snooze_notification(self):
         self.start_idle_timer()
 
+    @log_call
     def on_idle_timeout(self):
         self.target.schedule(self._on_idle_timeout, requires=("name", config.power, config.source))
 
