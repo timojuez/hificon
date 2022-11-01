@@ -225,6 +225,7 @@ class MenuMixin:
         item_poweron.set_active(config["power_control"]["auto_power_on"])
         item_poweron.connect("toggled", lambda *args:
             [config["power_control"].__setitem__("auto_power_on",item_poweron.get_active()), config.save()])
+        self.item_poweron = item_poweron
         self._footer_items.append(item_poweron)
 
         item_poweroff = Gtk.CheckMenuItem("Auto power off")

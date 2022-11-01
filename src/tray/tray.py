@@ -202,7 +202,15 @@ class AutoPower(TargetController):
         self.target.preload_features.add("name")
         self.target.bind(
             on_feature_change = self.on_target_feature_change,
-            on_disconnected = self.close_popups)
+            on_disconnected = self.close_power_notifications)
+        self._power_notifications = []
+        self._poweron_n = gui.Notification(
+            buttons=[
+                ("Don't show again", lambda:self.item_poweron.set_active(False)),
+                ("Cancel", lambda:None),
+                ("OK", self.poweron)],
+            timeout_action=self.poweron)
+        self._power_notifications.append(self._poweron_n)
         self._poweroff_n = gui.Notification(
             buttons=[
                 ("Don't show again", lambda:self.item_poweroff.set_active(False)),
@@ -210,7 +218,8 @@ class AutoPower(TargetController):
                 #("Snooze", self.snooze_notification),
                 ("OK", self.poweroff)],
             timeout_action=self.poweroff, default_click_action=self.snooze_notification)
-        self._poweroff_n.set_timeout(self.notification_timeout*1000)
+        self._power_notifications.append(self._poweroff_n)
+        for n in self._power_notifications: n.set_timeout(self.notification_timeout*1000)
 
     def on_target_idling(self, idle):
         if idle: self.on_idle()
@@ -246,7 +255,7 @@ class AutoPower(TargetController):
         with self._playing_lock:
             self._playing = True
             self.stop_idle_timer()
-        self.poweron()
+        if config["power_control"]["auto_power_on"]: self.ask_poweron()
 
     @log_call
     def start_idle_timer(self):
@@ -255,12 +264,13 @@ class AutoPower(TargetController):
             try: timeout = config["power_control"]["poweroff_after"]*60
             except ValueError: return
             if not timeout: return
-            self._idle_timer = Timer(timeout, self.on_idle_timeout)
+            self._idle_timer = Timer(timeout, self.ask_poweroff)
             self._idle_timer.start()
 
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
         self.stop_idle_timer()
+        self.close_power_notifications()
 
     @log_call
     def stop_idle_timer(self):
@@ -272,6 +282,7 @@ class AutoPower(TargetController):
         if f_id == config.power:
             if value == True: # poweron event
                 self.start_idle_timer()
+                self._poweron_n.close()
             elif value == False: # poweroff event
                 self.stop_idle_timer()
         elif f_id == config.idle:
@@ -280,25 +291,24 @@ class AutoPower(TargetController):
     def snooze_notification(self):
         self.start_idle_timer()
 
-    @log_call
-    def on_idle_timeout(self):
-        self.target.schedule(self._on_idle_timeout, requires=("name", config.power, config.source))
+    def ask_poweron(self):
+        def func():
+            if self.target.features[config.power].get(): return
+            self._poweron_n.update("Power on %s"%self.target.features.name.get())
+            self._poweron_n.show()
+        self.target.schedule(func, requires=("name", config.power))
 
-    def _on_idle_timeout(self):
-        if config["power_control"]["auto_power_off"] and self.can_poweroff:
-            self._poweroff_n.update("Power off %s"%self.target.features.name.get())
-            self._poweroff_n.show()
-        
-    def close_popups(self):
-        self._poweroff_n.close()
+    def ask_poweroff(self):
+        def func():
+            if config["power_control"]["auto_power_off"] and self.can_poweroff:
+                self._poweroff_n.update("Power off %s"%self.target.features.name.get())
+                self._poweroff_n.show()
+        self.target.schedule(func, requires=("name", config.power, config.source))
+
+    def close_power_notifications(self):
+        for n in self._power_notifications: n.close()
 
     def poweron(self):
-        """ poweron target """
-        if config["power_control"]["auto_power_on"]:
-            self.target.schedule(self._poweron, requires=(config.power, config.source))
-
-    def _poweron(self):
-        if self.target.features[config.power].get(): return
         if config.source and config["target"]["source"]:
             self.target.features[config.source].remote_set(config["target"]["source"])
         self.target.features[config.power].remote_set(True)
