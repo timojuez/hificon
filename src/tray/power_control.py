@@ -45,16 +45,17 @@ class PowerControlMixin(TargetController):
         else: self.on_unidle()
 
     def on_start_playing(self):
-        """ start playing locally, e.g. via pulse """
+        """ start playing audio locally, e.g. via pulse """
         super().on_start_playing()
         self.on_unidle()
 
     def on_stop_playing(self):
-        """ stop playing locally """
+        """ stop playing audio locally """
         super().on_stop_playing()
         # execute on_idle() if target is not playing
         try: target_playing = (
-            self.target.features[config.idle].isset() and self.target.features[config.idle].get() == False)
+            self.target.features[config.idle].isset() and self.target.features[config.idle].get() == False
+            and self.target.features[config.power].isset() and self.target.features[config.power].get() == True)
         except (ConnectionError, KeyError): target_playing = False
         if not target_playing: self.on_idle()
         try: f = self.target.features[config.idle]
@@ -68,6 +69,7 @@ class PowerControlMixin(TargetController):
         with self._playing_lock:
             self._playing = False
             self.start_idle_timer()
+        self._poweron_n.close()
 
     def on_unidle(self):
         """ when starting to play something locally or on amp """
