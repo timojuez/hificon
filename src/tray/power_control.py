@@ -2,7 +2,7 @@ from threading import Timer, Lock
 from ..core.util import Bindable, log_call
 from ..core.target_controller import TargetController
 from .common import config
-from . import gui
+from .notifications import Notification
 
 
 __all__ = ["PowerControlMixin"]
@@ -72,7 +72,7 @@ class PowerOnMixin:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._poweron_n = gui.Notification(
+        self._poweron_n = Notification(
             buttons=[
                 ("Don't show again", lambda:self.item_poweron.set_active(False)),
                 ("Cancel", lambda:None),
@@ -116,7 +116,7 @@ class PowerOffMixin:
         super().__init__(*args, **xargs)
         self._playing_lock = self._playing_lock()
         self._idle_timer_lock = self._idle_timer_lock()
-        self._poweroff_n = gui.Notification(
+        self._poweroff_n = Notification(
             buttons=[
                 ("Don't show again", lambda:self.item_poweroff.set_active(False)),
                 ("Cancel", lambda:None),

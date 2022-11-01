@@ -1,9 +1,8 @@
 import gi
 gi.require_version("Gtk", "3.0")
-gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
-from gi.repository import GLib, Gtk, Gdk, Notify, AppIndicator3, GdkPixbuf, Gio
-import sys, pkgutil
+from gi.repository import GLib, Gtk, Gdk, AppIndicator3, GdkPixbuf, Gio
+import pkgutil
 from threading import Timer
 from contextlib import AbstractContextManager
 from ..core.util.async_widget import bind_widget_to_value
@@ -14,9 +13,6 @@ from .common import gtk, GladeGtk, Singleton, config, APP_NAME
 from .settings import Settings
 
 
-Notify.init(APP_NAME)
-
-
 class _Icon(Bindable):
 
     def set_icon(self, icon, help):
@@ -25,11 +21,6 @@ class _Icon(Bindable):
         self.set_icon_by_path(self._icon_path, help)
         
 
-class _Notification(Bindable):
-
-    def set_urgency(self, n): pass
-
-
 class GUI_Backend:
 
     @classmethod
@@ -37,47 +28,6 @@ class GUI_Backend:
     
     @classmethod
     def exit(self): Gtk.main_quit()
-
-
-
-class GaugeNotification(GladeGtk, _Notification, metaclass=Singleton):
-    GLADE = "../share/gauge_notification.glade"
-    _timeout = 2
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self._position()
-        self.level = self.builder.get_object("level")
-        self.title = self.builder.get_object("title")
-        self.subtitle = self.builder.get_object("subtitle")
-        self.window = self.builder.get_object("window")
-        self.width, self.height = self.window.get_size()
-    
-    def set_timeout(self, t): self._timeout = t/1000
-    
-    def on_click(self, *args): self.hide()
-    
-    @gtk
-    def update(self, title, message, value, min, max):
-        if not (min <= value <= max):
-            return sys.stderr.write(f"[{self.__class__.__name__}] WARNING: "
-                f"Value out of bounds: {value}. title='{title}', message='{message}'.\n")
-        diff = max-min
-        value_normalised = (value-min)/diff
-        self.title.set_text(title)
-        self.subtitle.set_text(message)
-        self.level.set_value(value_normalised*100)
-
-    @gtk
-    def _position(self):
-        self.window.move(self.window.get_screen().get_width()-self.width-50, 170)
-
-    def show(self):
-        super().show()
-        try: self._timer.cancel()
-        except: pass
-        self._timer = Timer(self._timeout, self.hide)
-        self._timer.start()
 
 
 class HideOnUnfocusMixin:
@@ -146,35 +96,6 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
         self._current_feature = f
         self.on_value_change()
         super().show()
-
-
-class Notification(_Notification, Notify.Notification):
-    _button_clicked = False
-
-    def __init__(self, timeout_action=None, default_click_action=None, buttons=None, *args, **xargs):
-        super().__init__(*args, **xargs)
-        if buttons:
-            for name, func in buttons:
-                self.add_action(name, name,
-                    lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
-        self.connect("closed", self.on_popup_closed)
-        self._timeout_action = timeout_action
-        self._default_click_action = default_click_action
-
-    def on_popup_closed(self, *args):
-        if self.get_closed_reason() == 1: # timeout
-            if self._timeout_action: self._timeout_action()
-        elif self.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
-            if self._default_click_action: self._default_click_action()
-        self._button_clicked = False
-    
-    def show(self, *args, **xargs):
-        try: return super().show(*args,**xargs)
-        except GLib.Error as e: print(repr(e), file=sys.stderr)
-
-    def close(self, *args, **xargs):
-        try: super().close(*args, **xargs)
-        except: pass
 
 
 class MenuMixin:

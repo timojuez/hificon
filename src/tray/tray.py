@@ -3,7 +3,6 @@ from threading import Thread
 from contextlib import AbstractContextManager, ExitStack
 from decimal import Decimal
 from .. import Target
-from ..core import features
 from ..core.util import Bindable
 from . import gui
 from .key_binding import KeyBinding
@@ -11,57 +10,8 @@ from .setup import Setup
 from .common import gtk, config, resolve_feature_id, APP_NAME, AbstractApp
 from .setup_wizard import SetupWizard
 from .power_control import PowerControlMixin
+from .notifications import NotificationMixin
 
-
-class FeatureNotification:
-
-    def __init__(self, feature, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.f = feature
-        self.target = feature.target
-
-
-class TextNotification(FeatureNotification, gui.Notification):
-    
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.set_urgency(2)
-        self.set_timeout(config["notifications"]["timeout"])
-        super().update("Connecting ...", self.target.uri)
-        self.target.preload_features.add("name")
-    
-    def update(self): self.target.schedule(self._update, requires=("name",))
-    
-    def _update(self):
-        if not self.f.isset(): return
-        val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
-        super().update(f"{self.f.name}: {val}", self.target.features.name.get())
-
-    def show(self): self.target.schedule(super(TextNotification, self).show, requires=("name",))
-
-
-class NumericNotification(FeatureNotification):
-    
-    def __init__(self, scale_popup, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.scale_popup = scale_popup
-        self._n = gui.GaugeNotification()
-        self._n.set_timeout(config["notifications"]["timeout"])
-
-    def update(self): pass
-
-    def show(self):
-        if self.scale_popup._current_feature == self.f and self.scale_popup.visible: return
-        self._n.update(
-            title=self.f.name,
-            message=str(self.f),
-            value=self.f.get() if self.f.isset() else self.f.min,
-            min=self.f.min,
-            max=self.f.max)
-        self._n.show()
-
-    def hide(self): self._n.hide()
-        
 
 class Icon(Bindable):
     """ Functions regarding loading images from src/share """
@@ -115,43 +65,6 @@ class Icon(Bindable):
     def __exit__(self, *args):
         try: os.remove(self._path)
         except FileNotFoundError: pass
-
-
-class NotificationMixin(object):
-    """ Does the graphical notifications """
-
-    def __init__(self,*args,**xargs):
-        super().__init__(*args,**xargs)
-        self._notifications = {f.id: self.create_notification(f) for f in self.target.features.values()}
-        self.target.bind(on_feature_change = self.show_notification_on_feature_change)
-    
-    def create_notification(self, f):
-        if isinstance(f, features.NumericFeature): return NumericNotification(self.scale_popup, f)
-        if isinstance(f, features.SelectFeature): return TextNotification(f)
-
-    def show_notification(self, f_id):
-        if f_id not in [resolve_feature_id(f_id) for f_id in config["notifications"]["blacklist"]]:
-            if n := self._notifications.get(f_id): n.show()
-
-    def on_mouse_down(self,*args,**xargs):
-        self.show_notification(config.gesture_feature)
-        super().on_mouse_down(*args,**xargs)
-
-    def on_volume_key_press(self,*args,**xargs):
-        self.show_notification(config.hotkeys_feature)
-        super().on_volume_key_press(*args,**xargs)
-
-    def show_notification_on_feature_change(self, f_id, value): # bound to target
-        if n := self._notifications.get(f_id): n.update()
-        if self.target.features[f_id]._prev_val is not None: self.show_notification(f_id)
-
-    def on_scroll_up(self, *args, **xargs):
-        self.show_notification(config.tray_feature)
-        super().on_scroll_up(*args,**xargs)
-        
-    def on_scroll_down(self, *args, **xargs):
-        self.show_notification(config.tray_feature)
-        super().on_scroll_down(*args,**xargs)
 
 
 class TrayMixin(gui.Tray):
