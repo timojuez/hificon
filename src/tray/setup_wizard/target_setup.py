@@ -100,6 +100,7 @@ class DeviceListMixin:
             print("Finished search")
             gtk(lambda:self.builder.get_object("device_search_button").set_sensitive(True))()
 
+    @gtk
     def _add_target_to_list(self, target):
         def set_name(target=target, i=len(self.devices_list)):
             if name := get_name(target):
