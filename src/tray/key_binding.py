@@ -55,18 +55,17 @@ class FeatureChanger(TargetApp):
         #Thread(target=self.poweron, args=(True,), name="poweron", daemon=True).start()
 
     def on_activated_mouse_move(self, x, y):
-        self.target.schedule(self._on_activated_mouse_move, (x,y), requires=(config.gesture_feature,))
-
-    def _on_activated_mouse_move(self, f, x, y):
-        if self._position_ref is not None:
-            new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
-            max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse_max_step"]))
-            min_ = f.min
-            if new_value > max_ or new_value < min_:
-                # mouse has been moved to an illegal point
-                new_value = max(min_, min(max_, new_value))
-                self.set_position_reference(y, new_value)
-            self.set_feature_value(new_value)
+        def func(f):
+            if self._position_ref is not None:
+                new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
+                max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse_max_step"]))
+                min_ = f.min
+                if new_value > max_ or new_value < min_:
+                    # mouse has been moved to an illegal point
+                    new_value = max(min_, min(max_, new_value))
+                    self.set_position_reference(y, new_value)
+                self.set_feature_value(new_value)
+        self.target.schedule(func, requires=(config.gesture_feature,))
 
     def set_feature_value(self, value):
         with self._set_feature_lock:
@@ -84,7 +83,7 @@ class FeatureChanger(TargetApp):
         while True:
             self._feature_step.wait()
             self.target.schedule(self._update_feature_value, requires=(config.gesture_feature,))
-    
+
     def _update_feature_value(self, f):
         with self._set_feature_lock:
             self._feature_step.clear()
