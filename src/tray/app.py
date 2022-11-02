@@ -26,12 +26,11 @@ class AppManager:
         with self._exit_stack: Gtk.main()
 
     @gtk
-    def run_app(self, uri=None, setup=False, callback=None):
+    def run_app(self, uri=None, setup=False):
         self._exit_stack.close()
         if setup or not config["target"]["setup_mode"]:
             return SetupWizard(self, first_run=True).show()
         self.main_app = self._exit_stack.enter_context(App(self, uri, verbose=self.verbose))
-        if callback: callback()
 
     @gtk
     def main_quit(self):
