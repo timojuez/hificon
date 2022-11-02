@@ -3,7 +3,7 @@ Class that listens for system events such as shutdown, suspend, resume, sound pl
 The available events depend on the platform.
 Example:
     class MyListener(SystemEvents):
-        def on_shutdown(self): print("shutting down now!")
+        def on_sigterm(self, sig, frame): print("shutting down now!")
     with MyListener(): ...
 """
 
@@ -22,8 +22,8 @@ class SignalMixin(_Abstract):
 
     def __enter__(self):
         self._sigterm_handler = signal.getsignal(signal.SIGTERM)
-        signal.signal(signal.SIGTERM, self.on_shutdown)
         Thread(target=self.on_startup, name="on_startup", daemon=True).start()
+        signal.signal(signal.SIGTERM, self.on_sigterm)
         return super().__enter__()
 
     def __exit__(self, *args, **xargs):
@@ -31,7 +31,7 @@ class SignalMixin(_Abstract):
         signal.signal(signal.SIGTERM, self._sigterm_handler)
 
     def on_startup(self): pass
-    def on_shutdown(self, sig, frame): self.main_quit()
+    def on_sigterm(self, sig, frame): self.main_quit()
     def main_quit(self): sys.exit(0)
 
 

@@ -23,10 +23,10 @@ class AutoConnect(_Base):
     """ keep target connected whenever possible """
 
     @log_call
-    def on_shutdown(self, sig, frame):
+    def on_sigterm(self, sig, frame):
         """ when shutting down computer """
         self.target.exit()
-        self.main_quit()
+        super().on_sigterm(sig, frame)
         
     @log_call
     def on_suspend(self):
@@ -40,13 +40,13 @@ class AutoConnect(_Base):
         super().on_resume()
 
 
-class AutoPower(_Base):
+class AutoPower(AutoConnect, _Base):
     """ Power off target when computer shuts down or suspends """
 
-    def on_shutdown(self, sig, frame):
+    def on_sigterm(self, sig, frame):
         """ when shutting down computer """
         self.poweroff()
-        super().on_shutdown(sig,frame)
+        super().on_sigterm(sig, frame)
         
     def on_suspend(self):
         self.poweroff()
