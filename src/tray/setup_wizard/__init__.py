@@ -104,6 +104,11 @@ class SourceMixin(InputsMixin):
 
 class AutostartMixin:
 
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
+        self.builder.get_object("outro_label").set_text(f"You are going to find {APP_NAME} in "
+            "your tray icon panel.")
+
     def on_window_apply(self, assistant):
         super().on_window_apply(assistant)
         if self.builder.get_object("autostart_checkbox").get_active():
