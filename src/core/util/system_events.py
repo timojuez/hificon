@@ -22,7 +22,6 @@ class SignalMixin(_Abstract):
 
     def __enter__(self):
         self._sigterm_handler = signal.getsignal(signal.SIGTERM)
-        Thread(target=self.on_startup, name="on_startup", daemon=True).start()
         signal.signal(signal.SIGTERM, self.on_sigterm)
         return super().__enter__()
 
@@ -30,7 +29,6 @@ class SignalMixin(_Abstract):
         super().__exit__(*args, **xargs)
         signal.signal(signal.SIGTERM, self._sigterm_handler)
 
-    def on_startup(self): pass
     def on_sigterm(self, sig, frame): self.main_quit()
     def main_quit(self): sys.exit(0)
 
