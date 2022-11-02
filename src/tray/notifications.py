@@ -5,7 +5,9 @@ import sys
 from threading import Timer
 from ..core.util.function_bind import Bindable
 from ..core import features
-from .common import config, resolve_feature_id, gtk, GladeGtk, APP_NAME, Singleton
+from .common import config, resolve_feature_id, gtk, GladeGtk, APP_NAME, Singleton, TargetApp
+from .tray import TrayMixin
+from .key_binding import KeyBinding
 
 
 Notify.init(APP_NAME)
@@ -135,7 +137,7 @@ class NumericNotification(FeatureNotification):
     def hide(self): self._n.hide()
 
 
-class NotificationMixin(object):
+class NotificationMixin(TrayMixin, KeyBinding, TargetApp):
     """ Does the graphical notifications """
 
     def __init__(self, *args, **xargs):

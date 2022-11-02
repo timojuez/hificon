@@ -3,9 +3,8 @@ gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 import argparse
 from threading import Thread
-from contextlib import AbstractContextManager, ExitStack
-from .. import Target
-from .common import gtk, config, APP_NAME, AbstractApp
+from contextlib import ExitStack
+from .common import gtk, config, APP_NAME
 from .setup_wizard import SetupWizard
 from .power_control import PowerControlMixin
 from .notifications import NotificationMixin
@@ -13,8 +12,7 @@ from .key_binding import KeyBinding
 from .tray import TrayMixin
 
 
-class App(AbstractApp, NotificationMixin, PowerControlMixin, KeyBinding, TrayMixin, AbstractContextManager):
-    pass
+class App(NotificationMixin, TrayMixin, KeyBinding, PowerControlMixin): pass
 
 
 class AppManager:
@@ -32,9 +30,7 @@ class AppManager:
         self._exit_stack.close()
         if setup or not config["target"]["setup_mode"]:
             return SetupWizard(self, first_run=True).show()
-        target = Target(uri, connect=False, verbose=self.verbose)
-        self.main_app = self._exit_stack.enter_context(App(self, target, verbose=self.verbose))
-        self._exit_stack.enter_context(target)
+        self.main_app = self._exit_stack.enter_context(App(self, uri, verbose=self.verbose))
         if callback: callback()
 
     @gtk

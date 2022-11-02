@@ -3,8 +3,9 @@ import time, sys, tempfile, os
 from threading import Thread, Lock, Event
 from decimal import Decimal
 from contextlib import suppress
+from contextlib import AbstractContextManager
 from ..info import PKG_NAME
-from .common import config
+from .common import config, TargetApp
 from pynput import mouse, keyboard
 LINUX = sys.platform == "linux"
 if LINUX: from ..core.util.x11_grab import XGrab
@@ -15,7 +16,7 @@ def sleep():
     if delay: time.sleep(delay/1000)
 
 
-class FeatureChanger:
+class FeatureChanger(TargetApp):
     """ Mixin class for managing volume up/down hot keys and mouse gesture """
     _new_value = None
     _position_ref = None
@@ -102,7 +103,7 @@ class FeatureChanger:
                 self._feature_changed.wait(.2) # wait for on_feature_change
 
 
-class InputDeviceListener:
+class InputDeviceListener(AbstractContextManager):
     """ Runs the pynput listeners """
     _pressed = False
     

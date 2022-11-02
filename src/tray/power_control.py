@@ -1,14 +1,14 @@
 from threading import Timer, Lock
 from ..core.util import Bindable, log_call
 from ..core.target_controller import TargetController
-from .common import config
+from .common import config, TargetApp
 from .notifications import Notification
 
 
 __all__ = ["PowerControlMixin"]
 
 
-class Base(TargetController):
+class Base(TargetApp, TargetController):
     """ Power on when playing starts and show a notification warning to poweroff when idling """
 
     def __init__(self, *args, **xargs):
@@ -62,10 +62,6 @@ class Base(TargetController):
     def __exit__(self, *args, **xargs):
         super().__exit__(*args, **xargs)
         self.close_power_notifications()
-
-    def main_quit(self):
-        """ called by SystemEvents """
-        self.app_manager.main_quit()
 
 
 class PowerOnMixin:

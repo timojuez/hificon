@@ -4,13 +4,12 @@ gi.require_version('AppIndicator3', '0.1')
 from gi.repository import GLib, Gtk, Gdk, AppIndicator3, GdkPixbuf, Gio
 import sys, math, pkgutil, os, tempfile
 from threading import Timer
-from contextlib import AbstractContextManager
 from decimal import Decimal
 from ..core import features
 from ..core.util import Bindable
 from ..core.util.async_widget import bind_widget_to_value
 from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
-from .common import gtk, GladeGtk, config, APP_NAME
+from .common import gtk, GladeGtk, config, APP_NAME, TargetApp
 from .settings import Settings
 
 
@@ -94,7 +93,7 @@ class ScalePopup(HideOnUnfocusMixin, GladeGtk):
         super().show()
 
 
-class MenuMixin:
+class MenuMixin(TargetApp):
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
@@ -284,7 +283,7 @@ class Icon(Bindable):
         except FileNotFoundError: pass
 
 
-class Tray(MenuMixin, AbstractContextManager):
+class Tray(MenuMixin, TargetApp):
     
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)

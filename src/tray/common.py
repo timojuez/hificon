@@ -1,14 +1,48 @@
 import gi, pkgutil
 gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk, GObject
+from contextlib import AbstractContextManager
 from ..core.transmission import features
 from ..core.config import YamlConfig
 from ..core.util.autostart import Autostart
+from ..core.target_controller import TargetController
+from .. import Target
 from .. import NAME
 
 
 APP_NAME = f"{NAME} Tray Control"
 autostart = Autostart(__package__, __package__, terminal=False)
+
+
+class AbstractApp:
+
+    def __init__(self, app_manager, *args, **xargs):
+        self.app_manager = app_manager
+        super().__init__(*args, **xargs)
+
+
+class _TargetApp(TargetController, AbstractContextManager):
+
+    def __init__(self, uri, *args, **xargs):
+        self.target = Target(uri, connect=False, verbose=xargs.get("verbose", 0))
+        super().__init__(self.target, *args, **xargs)
+
+    def __enter__(self):
+        self.target.__enter__()
+        return super().__enter__()
+
+    def __exit__(self, *args, **xargs):
+        try: super().__exit__(*args, **xargs)
+        finally: self.target.__exit__(*args, **xargs)
+
+    def main_quit(self):
+        """ called by SystemEvents """
+        self.app_manager.main_quit()
+
+
+class TargetApp(AbstractApp, _TargetApp):
+    """ App that has the attribute self.target """
+    pass
 
 
 class Singleton(type):
@@ -21,13 +55,6 @@ class Singleton(type):
 
 def gtk(func):
     return lambda *args,**xargs: GLib.idle_add(lambda:[False, func(*args,**xargs)][0])
-
-
-class AbstractApp:
-
-    def __init__(self, app_manager, *args, **xargs):
-        self.app_manager = app_manager
-        super().__init__(*args, **xargs)
 
 
 class GladeGtk:
