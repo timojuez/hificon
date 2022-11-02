@@ -440,14 +440,14 @@ class Source(SelectFeature):
                 self.translation.update(source_names)
         
     def consume(self, data):
-        self.target.schedule(lambda:super(Source, self).consume(data), requires=("source_names",))
+        self.target.schedule(lambda *_: super(Source, self).consume(data), requires=("source_names",))
     
     def _remote_set(self, *args, **xargs):
         super(Source, self).remote_set(*args, **xargs)
         self.async_poll()
 
     def remote_set(self, *args, **xargs):
-        self.target.schedule(lambda:self._remote_set(*args, **xargs), requires=("source_names",))
+        self.target.schedule(lambda *_: self._remote_set(*args, **xargs), requires=("source_names",))
 
 
 @Denon.add_feature(overwrite=True)
@@ -611,7 +611,7 @@ class QuickSelectStore(features.ClientToServerFeatureMixin, _QuickSelect):
         self.target.features.quick_select.set(val)
         
     def resend(self):
-        self.target.schedule(self.target.features.quick_select.resend, requires=("quick_select",))
+        self.target.schedule(lambda quick_select: quick_select.resend(), requires=("quick_select",))
 
 
 @Denon.add_feature
@@ -1167,7 +1167,7 @@ for zone in range(2,ZONES+1):
         def matches(self, data): return super().matches(data) and data[len(self.function):] in self.translation
 
         def _resolve_main_zone_source(self):
-            self.target.schedule(lambda: self._from_mainzone and Source.set(self, self.target.features.source.get()),
+            self.target.schedule(lambda source: self._from_mainzone and Source.set(self, source.get()),
                 requires=("source",))
 
         def set(self, data):

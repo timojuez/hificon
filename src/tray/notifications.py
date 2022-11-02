@@ -106,12 +106,12 @@ class TextNotification(FeatureNotification, Notification):
     
     def update(self): self.target.schedule(self._update, requires=("name",))
     
-    def _update(self):
+    def _update(self, name):
         if not self.f.isset(): return
         val = {True:"On",False:"Off"}.get(self.f.get(), self.f.get())
-        super().update(f"{self.f.name}: {val}", self.target.features.name.get())
+        super().update(f"{self.f.name}: {val}", name.get())
 
-    def show(self): self.target.schedule(super(TextNotification, self).show, requires=("name",))
+    def show(self): self.target.schedule(lambda _: super(TextNotification, self).show(), requires=("name",))
 
 
 class NumericNotification(FeatureNotification):

@@ -55,11 +55,10 @@ class FeatureChanger(TargetApp):
         #Thread(target=self.poweron, args=(True,), name="poweron", daemon=True).start()
 
     def on_activated_mouse_move(self, x, y):
-        self.target.schedule(lambda:self._on_activated_mouse_move(x,y), requires=(config.gesture_feature,))
+        self.target.schedule(self._on_activated_mouse_move, (x,y), requires=(config.gesture_feature,))
 
-    def _on_activated_mouse_move(self, x, y):
+    def _on_activated_mouse_move(self, f, x, y):
         if self._position_ref is not None:
-            f = self.target.features[config.gesture_feature]
             new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
             max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse_max_step"]))
             min_ = f.min
@@ -79,22 +78,19 @@ class FeatureChanger(TargetApp):
             config.hotkeys_feature, Decimal(config["hotkeys"]["step"])*(int(button)*2-1))
 
     def on_mute_key_press(self):
-        self.target.schedule(
-            lambda:self.target.features[config.muted].remote_set(not self.target.features[config.muted].get()),
-            requires=(config.muted,))
+        self.target.schedule(lambda muted: muted.remote_set(not muted.get()), requires=(config.muted,))
 
     def mouse_gesture_thread(self):
         while True:
             self._feature_step.wait()
             self.target.schedule(self._update_feature_value, requires=(config.gesture_feature,))
     
-    def _update_feature_value(self):
+    def _update_feature_value(self, f):
         with self._set_feature_lock:
             self._feature_step.clear()
             new_value = self._new_value
             self._new_value = None
         if new_value is not None:
-            f = self.target.features[config.gesture_feature]
             new_value = max(min(new_value, f.max), f.min)
             if new_value != f.get():
                 f.remote_set(new_value)

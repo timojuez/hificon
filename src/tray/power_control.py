@@ -82,9 +82,9 @@ class PowerOnMixin:
         self.target.features[config.power].remote_set(True)
 
     def ask_poweron(self):
-        def func():
-            if self.target.features[config.power].get(): return
-            self._poweron_n.update("Power on %s"%self.target.features.name.get())
+        def func(name, power):
+            if power.get(): return
+            self._poweron_n.update("Power on %s"%name.get())
             self._poweron_n.show()
         self.target.schedule(func, requires=("name", config.power))
 
@@ -141,9 +141,9 @@ class PowerOffMixin:
         self._poweroff_n.close()
 
     def ask_poweroff(self):
-        def func():
+        def func(name, power, source):
             if config["power_control"]["auto_power_off"] and self.can_poweroff:
-                self._poweroff_n.update("Power off %s"%self.target.features.name.get())
+                self._poweroff_n.update("Power off %s"%name.get())
                 self._poweroff_n.show()
         self.target.schedule(func, requires=("name", config.power, config.source))
 
@@ -153,7 +153,7 @@ class PowerOffMixin:
 
     def poweroff(self):
         if not config["power_control"]["control_power_off"]: return
-        self.target.schedule(lambda:self.can_poweroff and self.target.features[config.power].remote_set(False),
+        self.target.schedule(lambda power, source:self.can_poweroff and power.remote_set(False),
             requires=(config.power, config.source))
 
     def on_idle(self):

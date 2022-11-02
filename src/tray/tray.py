@@ -247,12 +247,11 @@ class Icon(Bindable):
         if f_id in (config.tray_feature, config.muted, config.power): self.update_icon()
 
     def update_icon(self):
-        self.target.schedule(self._update_icon, requires=(config.muted, config.tray_feature, config.power))
+        self.target.schedule(self._update_icon, requires=(config.tray_feature, config.muted, config.power))
 
-    def _update_icon(self):
-        f = self.target.features[config.tray_feature]
-        if not self.target.features[config.power].get(): self.set_icon("power")
-        elif self.target.features[config.muted].get() or f.get() == f.min:
+    def _update_icon(self, f, muted, power):
+        if not power.get(): self.set_icon("power")
+        elif muted.get() or f.get() == f.min:
             self.set_icon("audio-volume-muted")
         else:
             f_val = f.get()

@@ -17,6 +17,7 @@ class FunctionCall(object):
         self._lock = Lock()
         self._target = target
         self._func = func
+        self._features = features
         self._args = args
         self._kwargs = kwargs
         self._missing_features = features
@@ -33,7 +34,7 @@ class FunctionCall(object):
             if not self.active: return False
             self._missing_features = list(filter(lambda f:not f.isset(), self._missing_features))
             if not self._missing_features:
-                try: self._func(*self._args, **self._kwargs)
+                try: self._func(*self._features, *self._args, **self._kwargs)
                 except ConnectionError: pass
                 self.cancel()
                 return True

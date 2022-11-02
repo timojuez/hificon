@@ -62,7 +62,7 @@ class AbstractTarget(Bindable):
 
     def schedule(self, func, args=tuple(), kwargs={}, requires=tuple()):
         """ Use this to call methods that use Target.features.
-        Call func(*args, **xargs) if all features in @requires are set.
+        Call func(feature_1, ..., feature_n, *args, **xargs) if all n features in @requires are set.
         Poll features and schedule func otherwise. """
         if not self.connected: return
         try: features_ = [self.features[name] for name in requires]
