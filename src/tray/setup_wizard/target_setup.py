@@ -174,7 +174,7 @@ class Base:
 
     def set_new_target(self):
         try: target = Target(self.uri, connect=False)
-        except Exception as e: sys.stderr.write(f"Could not create target for URI '{uri}': {e}\n")
+        except Exception as e: sys.stderr.write(f"Could not create target for URI '{self.uri}': {e}\n")
         else:
             if self.target: self.target.exit() #FIXME: slow if target is not connected
             self.target = target
