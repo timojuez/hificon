@@ -66,7 +66,16 @@ On Mac/Windows, download and install Python3 and Pip.
 
 Clone this repository in the current directory and install via pip:
 
-`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel && pip3 install --user ./hificon/[gui] && rm -R ./hificon && python3 -m hificon`
+`$ git clone https://github.com/timojuez/hificon.git hificon && pip3 install --user wheel`
+
+### Install HiFiCon Tray Control
+`pip3 install --user ./hificon/[tray]`
+
+### Install HiFiCon Menu Control
+`pip3 install --user ./hificon/[menu]`
+
+### Install HiFiCon Python Package with HiFiSh
+`pip3 install --user ./hificon/`
 
 
 ### Uninstall

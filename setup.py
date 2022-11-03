@@ -18,12 +18,14 @@ setup(name=PKG_NAME,
       package_dir={PKG_NAME: "src"},
       install_requires=["argparse"],
       extras_require={
-        "gui": [
+        "tray": [
             "PyGObject",
             "pycairo",
             "pynput",
             "python-xlib; sys_platform=='linux'",
             "pulsectl; sys_platform=='linux'",
+        ],
+        "menu": [
             "kivy"
         ],
       },
