@@ -176,8 +176,9 @@ class FeatureValueCombobox(_FeatureCombobox):
         if self._feature:
             self._feature.bind(on_change=lambda *_: gtk(self.fill)())
             self.target.preload_features.add(f_id)
-            try: self._feature.async_poll()
-            except ConnectionError: pass
+            if not self._feature.isset():
+                try: self._feature.async_poll()
+                except ConnectionError: pass
 
     def _fill(self):
         if not self._feature: return
