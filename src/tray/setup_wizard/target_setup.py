@@ -174,11 +174,12 @@ class Base:
             Thread(target=self.set_new_target, name="set_new_target", daemon=True).start()
 
     def set_new_target(self):
-        try: target = Target(self.uri, connect=False)
-        except Exception as e: sys.stderr.write(f"Could not create target for URI '{self.uri}': {e}\n")
+        if self.target: self.target.exit() #FIXME: slow if target is not connected
+        try: self.target = Target(self.uri, connect=False)
+        except Exception as e:
+            sys.stderr.write(f"Could not create target for URI '{self.uri}': {e}\n")
+            self.target = None
         else:
-            if self.target: self.target.exit() #FIXME: slow if target is not connected
-            self.target = target
             self.target.enter()
             self.window.set_page_complete(self._device_settings, True)
 
