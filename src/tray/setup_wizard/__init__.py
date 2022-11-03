@@ -62,12 +62,7 @@ class InputsMixin(TargetSetup):
     def on_window_prepare(self, assistant, page):
         super().on_window_prepare(assistant, page)
         if page == self.builder.get_object("inputs"):
-            self._prepare_inputs_menu()
-
-    @gtk
-    def _prepare_inputs_menu(self):
-        self._setup_input_selectors()
-        self.on_selector_changed()
+            gtk(self._setup_input_selectors)()
 
     def _setup_input_selectors(self):
         self.input_selectors = {
@@ -87,19 +82,45 @@ class InputsMixin(TargetSetup):
 
 
 class SourceMixin(InputsMixin):
-    source = None
+    source_selector = None
+    source_id = None
+
+    def show(self, *args, **xargs):
+        super().show(*args, **xargs)
+        self._setup_source_selector()
+        self.source_selector.set_active(config["target"]["source"])
 
     def on_window_prepare(self, assistant, page):
         super().on_window_prepare(assistant, page)
         if page == self.builder.get_object("input_source"):
-            f_id = self.input_selectors["source"].get_active()
-            self.source = FeatureValueCombobox(
-                self.target, self.builder.get_object("source_value"), f_id)
-            self.target.features[f_id].bind(gtk(self.source.set_active)) # TODO: dont do this on each prepare()
+            gtk(self._setup_source_selector)()
+
+    def _setup_source_selector(self):
+        self.source_selector = FeatureValueCombobox(
+            self.target, self.builder.get_object("source_value"), self.source_id)
+
+    def on_selector_changed(self, *args):
+        super().on_selector_changed(*args)
+        source_id = self.input_selectors["source"].get_active() if self.input_selectors else None
+        if source_id == self.source_id: return
+        self.source_id = source_id
+        if self.target and self.source_id:
+            self.target.schedule(gtk(lambda f: self.source_selector.set_active(f.get())),
+                requires=(self.source_id,))
+
+    def set_new_target(self):
+        super().set_new_target()
+        if self.target:
+            self.target.bind(on_feature_change = self.on_target_feature_change)
+
+    @gtk
+    def on_target_feature_change(self, f_id, value):
+        if self.source_selector and f_id == self.source_id:
+            self.source_selector.set_active(value)
 
     def on_window_apply(self, *args):
         super().on_window_apply(*args)
-        if self.source: config["target"]["source"] = self.source.get_active()
+        config["target"]["source"] = self.source_selector.get_active()
 
 
 class AutostartMixin:
