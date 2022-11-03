@@ -85,6 +85,7 @@ class DeviceListMixin:
         super()._show()
         self.search_and_add_targets()
 
+    @gtk
     def search_and_add_targets(self):
         Thread(target=self._search_and_add_targets, daemon=True, name="search_and_add_targets()").start()
 
