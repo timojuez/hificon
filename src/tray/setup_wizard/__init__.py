@@ -104,7 +104,7 @@ class SourceMixin(InputsMixin):
         source_id = self.input_selectors["source"].get_active() if self.input_selectors else None
         if source_id == self.source_id: return
         self.source_id = source_id
-        if self.target and self.source_id:
+        if self.target and self.source_id and self.source_selector:
             self.target.schedule(gtk(lambda f: self.source_selector.set_active(f.get())),
                 requires=(self.source_id,))
 
