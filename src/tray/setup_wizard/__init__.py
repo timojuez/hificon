@@ -53,11 +53,6 @@ class InputsMixin(TargetSetup):
         super().show(*args, **xargs)
         self._setup_input_selectors()
         for f, fc in self.input_selectors.items(): fc.set_active(config["target"]["features"][f"{f}_id"])
-        self.on_selector_changed()
-
-    def set_new_target(self):
-        super().set_new_target()
-        self.on_selector_changed()
 
     def on_window_prepare(self, assistant, page):
         super().on_window_prepare(assistant, page)
@@ -66,13 +61,11 @@ class InputsMixin(TargetSetup):
 
     def _setup_input_selectors(self):
         self.input_selectors = {
-            f:FeatureSelectorCombobox(self.target, self.builder.get_object(f"{f}_feature"), allow_type=t)
+            f:FeatureSelectorCombobox(self.target, self.builder.get_object(f"{f}_feature"), allow_type=t,
+                allow_none=True)
             for f, t in self.input_settings}
 
-    def on_selector_changed(self, *args):
-        completed = self.target and self.input_selectors and all(
-            [fc.get_active() in self.target.features for f, fc in self.input_selectors.items()])
-        self.window.set_page_complete(self.builder.get_object("inputs"), completed)
+    def on_selector_changed(self, *args): pass
 
     def on_window_apply(self, *args):
         super().on_window_apply(*args)
@@ -89,6 +82,7 @@ class SourceMixin(InputsMixin):
         super().show(*args, **xargs)
         self._setup_source_selector()
         self.source_selector.set_active(config["target"]["source"])
+        self._update_source_id()
 
     def on_window_prepare(self, assistant, page):
         super().on_window_prepare(assistant, page)
@@ -97,10 +91,13 @@ class SourceMixin(InputsMixin):
 
     def _setup_source_selector(self):
         self.source_selector = FeatureValueCombobox(
-            self.target, self.builder.get_object("source_value"), self.source_id)
+            self.target, self.builder.get_object("source_value"), self.source_id, allow_none=True)
 
     def on_selector_changed(self, *args):
         super().on_selector_changed(*args)
+        self._update_source_id()
+
+    def _update_source_id(self):
         source_id = self.input_selectors["source"].get_active() if self.input_selectors else None
         if source_id == self.source_id: return
         self.source_id = source_id
@@ -112,6 +109,7 @@ class SourceMixin(InputsMixin):
         super().set_new_target()
         if self.target:
             self.target.bind(on_feature_change = self.on_target_feature_change)
+            self._update_source_id()
 
     @gtk
     def on_target_feature_change(self, f_id, value):
