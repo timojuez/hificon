@@ -77,9 +77,9 @@ class PowerOnMixin:
         self._power_notifications.append(self._poweron_n)
 
     def poweron(self):
-        if config.source and config["target"]["source"]:
-            self.target.features[config.source].remote_set(config["target"]["source"])
-        self.target.features[config.power].remote_set(True)
+        if (source := self.target.features.get(config.source)) and config["target"]["source"]:
+            source.remote_set(config["target"]["source"])
+        if power := self.target.features.get(config.power): power.remote_set(True)
 
     def ask_poweron(self):
         def func(name, power):
