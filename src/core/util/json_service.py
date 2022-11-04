@@ -57,7 +57,10 @@ class Service(object):
         
     def connection(self, conn, mask):
         if mask & selectors.EVENT_READ:
-            data = conn.recv(1000)
+            try: data = conn.recv(1000)
+            except ConnectionError as e:
+                print(e, file=sys.stderr)
+                data = None
             if data: self.read(data)
             else:
                 self.sel.unregister(conn)
