@@ -158,7 +158,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self._lock.__exit__(*args, **xargs)
 
     def get(self):
-        if not self.isset(): raise AttributeError(f"`{self.id}` not available. Use Target.schedule")
+        if not self.isset(): raise ConnectionError(f"`{self.id}` not available. Use Target.schedule")
         else: return self._val
     
     def remote_set(self, value, force=False):
@@ -289,7 +289,7 @@ class SynchronousFeature(AsyncFeature):
     def get(self):
         with self._poll_lock:
             try: return super().get()
-            except AttributeError:
+            except ConnectionError:
                 if self.wait_poll(): return super().get()
                 else: raise ConnectionError("Timeout on waiting for answer for %s"%self.__class__.__name__)
 
