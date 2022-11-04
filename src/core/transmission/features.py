@@ -286,7 +286,7 @@ class SynchronousFeature(AsyncFeature):
         self._poll_lock = Lock()
         super().__init__(*args,**xargs)
 
-    def get(self):
+    def get_wait(self):
         with self._poll_lock:
             try: return super().get()
             except ConnectionError:

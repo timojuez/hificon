@@ -205,7 +205,7 @@ class FeaturesProperties:
     def __dir__(self): return self._target.features.keys()
 
     def __getattr__(self, name):
-        try: return self._target.features[name].get()
+        try: return self._target.features[name].get_wait()
         except KeyError as e: raise AttributeError(e)
 
     def __setattr__(self, name, value):
