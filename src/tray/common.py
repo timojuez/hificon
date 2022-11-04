@@ -103,9 +103,10 @@ def id_to_string(target, f_id):
 
 class _FeatureCombobox:
 
-    def __init__(self, target, combobox):
+    def __init__(self, target, combobox, allow_none=False):
         self.c = combobox
         self.target = target
+        self._allow_none = allow_none
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, bool)
         self.fill()
         renderer_text = Gtk.CellRendererText()
@@ -123,6 +124,8 @@ class _FeatureCombobox:
     def fill(self):
         active = self.get_active()
         self.store.clear()
+        if self._allow_none:
+            self.store.append(None, ["None", None, True])
         self._fill()
         self.c.set_model(self.store)
         self.set_active(active)
@@ -164,7 +167,7 @@ class FeatureSelectorCombobox(_FeatureCombobox):
         if self.target:
             features_ = [f for f in self.target.features.values() if isinstance(f, self._allow_type)]
             categories = {f.category:0 for f in features_}
-            category = {c:self.store.append(None, [c, None, False]) for c in categories}
+            category = {c:self.store.append(None, [c, -1, False]) for c in categories}
             for f in features_: self.store.append(category[f.category], [f.name, f.id, True])
 
 
