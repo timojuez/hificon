@@ -242,25 +242,29 @@ class Icon(Bindable):
             on_connect=self.update_icon,
             on_disconnected=self.set_icon,
             on_feature_change=self.on_feature_change)
+        self.target.preload_features.update(self.relevant_features())
+
+    def relevant_features(self): return config.tray_feature, config.muted, config.power
 
     def on_feature_change(self, f_id, value, *args): # bound to target
-        if f_id in (config.tray_feature, config.muted, config.power): self.update_icon()
+        if f_id in self.relevant_features(): self.update_icon()
 
     def update_icon(self):
-        self.target.schedule(self._update_icon, requires=(config.tray_feature, config.muted, config.power))
-
-    def _update_icon(self, f, muted, power):
-        if not power.get(): self.set_icon("power")
-        elif muted.get() or f.get() == f.min:
-            self.set_icon("audio-volume-muted")
-        else:
+        f = self.target.features.get(config.tray_feature)
+        if (power := self.target.features.get(config.power)) and power.isset() and power.get() == False:
+            return self.set_icon("power")
+        if (muted := self.target.features.get(config.muted)) and muted.isset() and muted.get():
+            return self.set_icon("audio-volume-muted")
+        if f and f.isset():
             f_val = f.get()
             if not (f.min <= f_val <= f.max):
-                return sys.stderr.write(
+                sys.stderr.write(
                     f"[{self.__class__.__name__}] WARNING: Value out of bounds: {f_val} for {f.id}.\n")
-            icons = ["audio-volume-low","audio-volume-medium","audio-volume-high"]
-            icon_idx = math.ceil((f_val-f.min)/(f.max-f.min)*len(icons))-1
-            self.set_icon(icons[icon_idx])
+            if f_val <= f.min: return self.set_icon("audio-volume-muted")
+            icons = ["audio-volume-low", "audio-volume-medium", "audio-volume-high"]
+            icon_idx = math.ceil(min(1, (f_val-f.min)/(f.max-f.min))*len(icons))-1
+            return self.set_icon(icons[icon_idx])
+        self.set_icon("logo")
 
     def set_icon(self, name="disconnected"):
         if self._icon_name == name: return
@@ -274,7 +278,6 @@ class Icon(Bindable):
     def __enter__(self):
         self._path = tempfile.mktemp()
         self.set_icon()
-        self.update_icon()
         return self
 
     def __exit__(self, *args):
