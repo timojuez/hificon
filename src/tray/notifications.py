@@ -1,3 +1,6 @@
+import gi
+gi.require_version("Gtk", "3.0")
+from gi.repository import Gtk
 import sys
 from threading import Timer
 from ..core import features
@@ -115,7 +118,18 @@ class NotificationMixin(TrayMixin, KeyBinding, PowerControlMixin, TargetApp):
     def create_notification(self, f):
         if isinstance(f, features.NumericFeature): return NumericNotification(self.scale_popup, f)
         if isinstance(f, features.SelectFeature): return TextNotification(f,
-            buttons=[("Don't show again", lambda: self.settings.notification_blacklist.add_item(f.id))])
+            default_click_action=lambda *_: self.on_notification_clicked(f))
+
+    def on_notification_clicked(self, f):
+        dialog = Gtk.MessageDialog(
+            message_type=Gtk.MessageType.QUESTION,
+            buttons=Gtk.ButtonsType.OK_CANCEL,
+            text=f"Disable notifications for '{f.name}'?",
+        )
+        response = dialog.run()
+        if response == Gtk.ResponseType.OK:
+            self.settings.notification_blacklist.add_item(f.id)
+        dialog.destroy()
 
     def show_notification(self, f_id):
         if f_id not in [resolve_feature_id(f_id) for f_id in config["notifications"]["blacklist"]]:
