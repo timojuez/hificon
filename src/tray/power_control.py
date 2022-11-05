@@ -77,9 +77,11 @@ class PowerOnMixin:
         self._power_notifications.append(self._poweron_n)
 
     def poweron(self):
-        if (source := self.target.features.get(config.source)) and config["target"]["source"]:
-            source.remote_set(config["target"]["source"])
-        if power := self.target.features.get(config.power): power.remote_set(True)
+        try:
+            if (source := self.target.features.get(config.source)) and config["target"]["source"]:
+                source.remote_set(config["target"]["source"])
+            if power := self.target.features.get(config.power): power.remote_set(True)
+        except ConnectionError: pass
 
     def ask_poweron(self):
         def func(name, power):
@@ -141,20 +143,25 @@ class PowerOffMixin:
         self._poweroff_n.close()
 
     def ask_poweroff(self):
-        def func(name, power, source):
-            if config["power_control"]["auto_power_off"] and self.can_poweroff:
+        def func(name, power, source=None):
+            if config["power_control"]["auto_power_off"] and self._can_poweroff(power, source):
                 self._poweroff_n.update("Power off %s"%name.get())
                 self._poweroff_n.show()
-        self.target.schedule(func, requires=("name", config.power, config.source))
+        requires = ["name", config.power]
+        if config.source in self.target.features: requires.append(config.source)
+        self.target.schedule(func, requires=requires)
 
-    can_poweroff = property(
-        lambda self: self.target.features[config.power].get()
-        and (not config.source or self.target.features[config.source].get() == config["target"]["source"]))
+    def _can_poweroff(self, power, source):
+        return power.get() and (
+            not source or not config["target"]["source"] or config["target"]["source"] == source.get())
 
     def poweroff(self):
         if not config["power_control"]["control_power_off"]: return
-        self.target.schedule(lambda power, source:self.can_poweroff and power.remote_set(False),
-            requires=(config.power, config.source))
+        requires = [config.power]
+        if config.source in self.target.features: requires.append(config.source)
+        self.target.schedule(
+            lambda power, source=None: self._can_poweroff(power, source) and power.remote_set(False),
+            requires=requires)
 
     def on_idle(self):
         super().on_idle()
