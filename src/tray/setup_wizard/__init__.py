@@ -62,7 +62,7 @@ class InputsMixin(TargetSetup):
     def _setup_input_selectors(self):
         self.input_selectors = {
             f:FeatureSelectorCombobox(self.target, self.builder.get_object(f"{f}_feature"), allow_type=t,
-                allow_none=True)
+                items=[("None", None)])
             for f, t in self.input_settings}
 
     def on_selector_changed(self, *args): pass
@@ -91,7 +91,7 @@ class SourceMixin(InputsMixin):
 
     def _setup_source_selector(self):
         self.source_selector = FeatureValueCombobox(
-            self.target, self.builder.get_object("source_value"), self.source_id, allow_none=True)
+            self.target, self.builder.get_object("source_value"), self.source_id, items=[("None", None)])
 
     def on_selector_changed(self, *args):
         super().on_selector_changed(*args)

@@ -103,10 +103,11 @@ def id_to_string(target, f_id):
 
 class _FeatureCombobox:
 
-    def __init__(self, target, combobox, allow_none=False):
+    def __init__(self, target, combobox, items=None):
+        """ items: list [(name string, value any)]. Additional items that appear in the combobox """
         self.c = combobox
         self.target = target
-        self._allow_none = allow_none
+        self._custom_items = items or []
         self.store = Gtk.TreeStore(str, GObject.TYPE_PYOBJECT, bool)
         self.fill()
         renderer_text = Gtk.CellRendererText()
@@ -124,8 +125,8 @@ class _FeatureCombobox:
     def fill(self):
         active = self.get_active()
         self.store.clear()
-        if self._allow_none:
-            self.store.append(None, ["None", None, True])
+        for text, value in self._custom_items:
+            self.store.append(None, [text, value, True])
         self._fill()
         self.c.set_model(self.store)
         self.set_active(active)
@@ -155,15 +156,14 @@ class _FeatureCombobox:
 
 class FeatureSelectorCombobox(_FeatureCombobox):
 
-    def __init__(self, *args, allow_type=features.Feature, default_value=None, **xargs):
+    def __init__(self, target, *args, allow_type=features.Feature, default_value=None, items=None, **xargs):
         self._allow_type = allow_type
-        self._default_value = default_value
-        super().__init__(*args, **xargs)
+        items = items or []
+        if default_value:
+            items.append(("Default – %s"%id_to_string(target, default_value), default_value))
+        super().__init__(target, *args, items=items, **xargs)
 
     def _fill(self):
-        if self._default_value:
-            self.store.append(None,
-                ["Default – %s"%id_to_string(self.target, self._default_value), self._default_value, True])
         if self.target:
             features_ = [f for f in self.target.features.values() if isinstance(f, self._allow_type)]
             categories = {f.category:0 for f in features_}
