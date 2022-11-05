@@ -1,4 +1,4 @@
-import importlib, sys
+import importlib, sys, traceback
 from . import SchemeType
 
 schemes = {
@@ -12,7 +12,10 @@ schemes = {
 
 
 def get_schemes():
-    for key in schemes.keys(): yield get_scheme(key)
+    for key in schemes.keys():
+        try: Scheme = get_scheme(key)
+        except: traceback.print_exc()
+        else: yield Scheme
 
 
 def get_scheme(cls_path):
