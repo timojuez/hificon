@@ -79,7 +79,9 @@ class GeneralMixin:
         checkbox.connect("toggled", lambda *_: autostart.set_active(checkbox.get_active()))
 
     def on_setup_wizard_clicked(self, *args):
-        SetupWizard(self.app_manager).show()
+        sw = SetupWizard(self.app_manager)
+        sw.window.set_transient_for(self.window)
+        sw.show()
 
 
 class SettingsBase(GladeGtk):
