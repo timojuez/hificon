@@ -451,11 +451,11 @@ class Source(SelectFeature):
 
 
 @Denon.add_feature(overwrite=True)
-class Name(SelectFeature): #undocumented
+class Name(features.ServerToClientFeatureMixin, SelectFeature): #undocumented
     default_value = "Denon AVR"
     dummy_value = "Dummy X7800H"
     function = "NSFRN "
-    def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
+
 
 for code, f_id, name in SPEAKERS:
     @Denon.add_feature
@@ -893,7 +893,7 @@ class Display(SelectFeature):
     translation = {"BRI":"Bright","DIM":"Dim","DAR":"Dark","OFF":"Off"}
 
 @Denon.add_feature
-class Idle(BoolFeature): #undocumented
+class Idle(features.ServerToClientFeatureMixin, BoolFeature): #undocumented
     """
     Information on Audio Input Signal
     Value seems to indicate if amp is playing something via HDMI

@@ -380,6 +380,12 @@ class ClientToServerFeatureMixin:
     def resend(self): isinstance(self.target, ClientType) and super().resend()
 
 
+class ServerToClientFeatureMixin:
+    options = []
+
+    def remote_set(self, *args, **xargs): raise RuntimeError("Cannot set value!")
+
+
 class MultipartFeatureMixin:
     """ This mixin allows you to send and receive a value in multiple parts. The parts are a
     list. In Telnet, parts could be rows.
