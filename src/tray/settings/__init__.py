@@ -12,7 +12,8 @@ class PowerControlMixin:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         item_poweroffsd = self.builder.get_object("poweroff")
-        item_poweroffsd.connect("state-set", config.connect_to_object(("power_control", "control_power_off"),
+        item_poweroffsd.connect("state-set",
+            config.connect_to_object(("power_control", "power_off_on_shutdown"),
             item_poweroffsd.get_active, item_poweroffsd.set_active))
         self.connect_adjustment_to_config("poweroff_delay", ("power_control", "poweroff_after"))
 

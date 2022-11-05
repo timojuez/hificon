@@ -512,7 +512,7 @@
                       <object class="GtkLabel">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Enable power control and power off when shutting down</property>
+                        <property name="label" translatable="yes">Power off when shutting down</property>
                       </object>
                       <packing>
                         <property name="left_attach">0</property>

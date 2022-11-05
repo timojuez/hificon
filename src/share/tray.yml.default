@@ -4,7 +4,7 @@ power_control:
     # Switch the target off when it idles
     auto_power_off: True
     # Switch the target off when local device powers off or suspends
-    control_power_off: True
+    power_off_on_shutdown: True
     # Delay in minutes to power off Amp after last output stopped (float or "no")
     poweroff_after: 2.5
 

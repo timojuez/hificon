@@ -119,8 +119,8 @@ class PowerOffMixin:
                 ("Don't show again", lambda:self.item_poweroff.set_active(False)),
                 ("Cancel", lambda:None),
                 #("Snooze", self.snooze_notification),
-                ("OK", self.poweroff)],
-            timeout_action=self.poweroff, default_click_action=self.snooze_notification)
+                ("OK", self._poweroff)],
+            timeout_action=self._poweroff, default_click_action=self.snooze_notification)
         self._power_notifications.append(self._poweroff_n)
 
     def snooze_notification(self):
@@ -156,7 +156,9 @@ class PowerOffMixin:
             not source or not config["target"]["source"] or config["target"]["source"] == source.get())
 
     def poweroff(self):
-        if not config["power_control"]["control_power_off"]: return
+        if config["power_control"]["power_off_on_shutdown"]: self._poweroff()
+
+    def _poweroff(self):
         requires = [config.power]
         if config.source in self.target.features: requires.append(config.source)
         self.target.schedule(
