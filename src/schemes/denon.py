@@ -1001,6 +1001,14 @@ for code, f_id, name in SOURCES:
             self.async_poll(force=True) #Denon workaround: missing echo
 
 
+@Denon.add_feature
+class SpeakerDistanceStep(SelectFeature): #undocumented
+    category = "Speakers"
+    call = "SSSDE ?"
+    function = "SSSDESTP "
+    translation = {"01M": "0.1m", "02M": "0.01m", "01F": "1ft", "02F": "0.1ft"}
+
+
 for code, f_id, name in SPEAKERS:
     @Denon.add_feature
     class SpeakerDistance(IntFeature): #undocumented
@@ -1011,6 +1019,12 @@ for code, f_id, name in SPEAKERS:
         max = 1800
         call = "SSSDE ?"
         function = f"SSSDE{code} "
+
+
+@Denon.add_feature
+class MenuVisibility(BoolFeature): #undocumented
+    category = "Video"
+    function = "MNMEN "
 
 
 @Denon.add_feature
