@@ -10,7 +10,7 @@ from ..core import features, TelnetScheme
 from ..core.transmission.types import ClientType, ServerType
 
 
-ZONES = 4
+ZONES = [2, 3, 4]
 
 SPEAKERS = [
     ('FL', 'front_left', 'Front Left'),
@@ -932,7 +932,7 @@ class AmpAssign(SelectFeature): #undocumented
     category = "Speakers"
     function = "SSPAAMOD "
     call = "SSPAA ?"
-    translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "Front Height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in range(2,ZONES+1)}}
+    translation = {"FRB": "Front B", "BIA": "Bi-Amping", "NOR": "Surround Back", "FRH": "Front Height", "TFR": "Top Front", "TPM": "Top Middle", "FRD": "Front Dolby", "SUD": "Surround Dolby", **{"ZO%s"%zone:"Zone %s"%zone for zone in ZONES}}
 
 
 @Denon.add_feature
@@ -1156,7 +1156,7 @@ class EnergyUse(IntFeature): #undocumented
 
 # TODO: implement PV
 
-for zone in range(2,ZONES+1):
+for zone in ZONES:
     
     class Zone:
         category = "Zone %s"%zone
