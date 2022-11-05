@@ -29,6 +29,7 @@ notifications:
         - source_names
         - device_power
         - technical_sound_mode
+        - bitrate
     # on screen notification timeout in milliseconds
     timeout: 2000
 

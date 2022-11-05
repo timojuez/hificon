@@ -906,6 +906,14 @@ class Idle(features.ServerToClientFeatureMixin, BoolFeature): #undocumented
 
 
 @Denon.add_feature
+class Bitrate(features.ServerToClientFeatureMixin, SelectFeature):
+    category = "Input"
+    function = "SSINFAISFSV "
+    translation = {"NON": "-"}
+    dummy_value = "441"
+
+
+@Denon.add_feature
 class SampleRate(SelectFeature): #undocumented
     """ Information on Audio Input Signal Sample Rate """
     category = "Input"
