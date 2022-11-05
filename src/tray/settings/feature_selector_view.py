@@ -128,6 +128,9 @@ class SelectedFeaturesList(Bindable):
         for f_id in f_ids: self.menu_list.append([f_id])
         self._update_listeners(f_ids)
 
+    def add_item(self, f_id):
+        self.set_value([*self.get_value(), f_id])
+
     def _set_menu_cell_text(self, column, cell, model, it, data):
         f_id = model.get_value(it, 0)
         s = id_to_string(self.target, f_id)
