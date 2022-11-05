@@ -65,7 +65,7 @@ class NotificationSettings:
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.notification_blacklist = nb = FeatureSelectorView(
-            self.target, self.builder.get_object("notification_settings"), "Blacklist")
+            self.target, self.builder.get_object("notification_settings"), "Disabled")
         nb.bind(on_change =
             config.connect_to_object(["notifications", "blacklist"], nb.get_value, nb.set_value))
 
