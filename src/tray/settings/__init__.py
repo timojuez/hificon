@@ -97,7 +97,10 @@ class SettingsBase(GladeGtk):
         else: self.hide()
         return True
 
-    def connect_feature_selector_to_config(self, combobox_id, config_property, *args, on_changed=None, **xargs):
+    def connect_feature_selector_to_config(self, combobox_id, config_property, default_value=None,
+            *args, on_changed=None, **xargs):
+        if default_value:
+            xargs["items"] = [("Default – %s"%id_to_string(self.target, default_value), default_value)]
         fc = FeatureSelectorCombobox(self.target, self.builder.get_object(combobox_id), *args, **xargs)
         self._connect_combobox_to_config(config_property, fc, on_changed)
 

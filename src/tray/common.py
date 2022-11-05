@@ -156,12 +156,9 @@ class _FeatureCombobox:
 
 class FeatureSelectorCombobox(_FeatureCombobox):
 
-    def __init__(self, target, *args, allow_type=features.Feature, default_value=None, items=None, **xargs):
+    def __init__(self, target, *args, allow_type=features.Feature, **xargs):
         self._allow_type = allow_type
-        items = items or []
-        if default_value:
-            items.append(("Default – %s"%id_to_string(target, default_value), default_value))
-        super().__init__(target, *args, items=items, **xargs)
+        super().__init__(target, *args, **xargs)
 
     def _fill(self):
         if self.target:
