@@ -7,6 +7,8 @@ power_control:
     power_off_on_shutdown: True
     # Delay in minutes to power off Amp after last output stopped (float or "no")
     poweroff_after: 2.5
+    poweron_notification_timeout: 2
+    poweroff_notification_timeout: 8
 
 target:
     features:

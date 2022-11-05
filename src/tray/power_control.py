@@ -73,6 +73,7 @@ class PowerOnMixin:
                 ("Cancel", lambda:None),
                 ("OK", self.poweron)],
             timeout_action=self.poweron)
+        self._poweron_n.set_timeout(config["power_control"]["poweron_notification_timeout"]*1000)
         self._power_notifications.append(self._poweron_n)
 
     def poweron(self):
@@ -120,6 +121,7 @@ class PowerOffMixin:
                 #("Snooze", self.snooze_notification),
                 ("OK", self._poweroff)],
             timeout_action=self._poweroff, default_click_action=self.snooze_notification)
+        self._poweroff_n.set_timeout(config["power_control"]["poweroff_notification_timeout"]*1000)
         self._power_notifications.append(self._poweroff_n)
 
     def snooze_notification(self):
@@ -188,10 +190,5 @@ class PowerOffMixin:
         self.stop_idle_timer()
 
 
-class PowerControlMixin(PowerOnMixin, PowerOffMixin, Base):
-    notification_timeout = 10
-
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        for n in self._power_notifications: n.set_timeout(self.notification_timeout*1000)
+class PowerControlMixin(PowerOnMixin, PowerOffMixin, Base): pass
 

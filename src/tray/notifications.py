@@ -109,6 +109,7 @@ class NotificationMixin(TrayMixin, KeyBinding, PowerControlMixin, TargetApp):
                 ("Cancel", lambda:None),
                 ("OK", self.poweron)],
             timeout_action=self.poweron)
+        self._poweron_n2.set_timeout(config["power_control"]["poweron_notification_timeout"]*1000)
         self._power_notifications.append(self._poweron_n2)
 
     def create_notification(self, f):
