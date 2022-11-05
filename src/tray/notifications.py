@@ -147,7 +147,8 @@ class NotificationMixin(TrayMixin, KeyBinding, TargetApp):
     
     def create_notification(self, f):
         if isinstance(f, features.NumericFeature): return NumericNotification(self.scale_popup, f)
-        if isinstance(f, features.SelectFeature): return TextNotification(f)
+        if isinstance(f, features.SelectFeature): return TextNotification(f,
+            buttons=[("Don't show again", lambda: self.settings.notification_blacklist.add_item(f.id))])
 
     def show_notification(self, f_id):
         if f_id not in [resolve_feature_id(f_id) for f_id in config["notifications"]["blacklist"]]:

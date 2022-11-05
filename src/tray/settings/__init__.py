@@ -64,9 +64,10 @@ class NotificationSettings:
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        fs = FeatureSelectorView(self.target, self.builder.get_object("notification_settings"), "Blacklist")
-        fs.bind(on_change =
-            config.connect_to_object(["notifications", "blacklist"], fs.get_value, fs.set_value))
+        self.notification_blacklist = nb = FeatureSelectorView(
+            self.target, self.builder.get_object("notification_settings"), "Blacklist")
+        nb.bind(on_change =
+            config.connect_to_object(["notifications", "blacklist"], nb.get_value, nb.set_value))
 
 
 class GeneralMixin:
