@@ -1,8 +1,7 @@
 from threading import Timer, Lock
-from ..core.util import Bindable, log_call
+from ..core.util import log_call
 from ..core.target_controller import TargetController
-from .common import config, TargetApp
-from .notifications import Notification
+from .common import config, TargetApp, Notification
 
 
 __all__ = ["PowerControlMixin"]

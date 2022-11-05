@@ -1,24 +1,12 @@
-import gi
-gi.require_version('Notify', '0.7')
-from gi.repository import GLib, Notify
 import sys
 from threading import Timer
-from ..core.util.function_bind import Bindable
 from ..core import features
-from .common import config, resolve_feature_id, gtk, GladeGtk, APP_NAME, Singleton, TargetApp
+from .common import config, resolve_feature_id, gtk, GladeGtk, APP_NAME, Singleton, TargetApp, NotificationBase, Notification
 from .tray import TrayMixin
 from .key_binding import KeyBinding
 
 
-Notify.init(APP_NAME)
-
-
-class _Notification(Bindable):
-
-    def set_urgency(self, n): pass
-
-
-class GaugeNotification(GladeGtk, _Notification, metaclass=Singleton):
+class GaugeNotification(GladeGtk, NotificationBase, metaclass=Singleton):
     GLADE = "../share/gauge_notification.glade"
     _timeout = 2
     
@@ -56,35 +44,6 @@ class GaugeNotification(GladeGtk, _Notification, metaclass=Singleton):
         except: pass
         self._timer = Timer(self._timeout, self.hide)
         self._timer.start()
-
-
-class Notification(_Notification, Notify.Notification):
-    _button_clicked = False
-
-    def __init__(self, timeout_action=None, default_click_action=None, buttons=None, *args, **xargs):
-        super().__init__(*args, **xargs)
-        if buttons:
-            for name, func in buttons:
-                self.add_action(name, name,
-                    lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
-        self.connect("closed", self.on_popup_closed)
-        self._timeout_action = timeout_action
-        self._default_click_action = default_click_action
-
-    def on_popup_closed(self, *args):
-        if self.get_closed_reason() == 1: # timeout
-            if self._timeout_action: self._timeout_action()
-        elif self.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
-            if self._default_click_action: self._default_click_action()
-        self._button_clicked = False
-    
-    def show(self, *args, **xargs):
-        try: return super().show(*args,**xargs)
-        except GLib.Error as e: print(repr(e), file=sys.stderr)
-
-    def close(self, *args, **xargs):
-        try: super().close(*args, **xargs)
-        except: pass
 
 
 class FeatureNotification:

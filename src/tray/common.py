@@ -1,9 +1,11 @@
-import gi, pkgutil
+import gi, pkgutil, sys
+gi.require_version('Notify', '0.7')
 gi.require_version("Gtk", "3.0")
-from gi.repository import GLib, Gtk, GObject
+from gi.repository import GLib, Gtk, GObject, Notify
 from contextlib import AbstractContextManager
 from ..core.transmission import features
 from ..core.config import YamlConfig
+from ..core.util import Bindable
 from ..core.util.autostart import Autostart
 from ..core.target_controller import TargetController
 from .. import Target
@@ -11,6 +13,7 @@ from .. import NAME
 
 
 APP_NAME = f"{NAME} Tray Control"
+Notify.init(APP_NAME)
 autostart = Autostart(__package__, __package__, terminal=False)
 
 
@@ -183,4 +186,40 @@ class FeatureValueCombobox(_FeatureCombobox):
     def _fill(self):
         if not self._feature: return
         for val in self._feature.options: self.store.append(None, [str(val), val, True])
+
+
+class NotificationBase(Bindable):
+
+    def set_urgency(self, n): pass
+
+
+class Notification(NotificationBase, Notify.Notification):
+    _button_clicked = False
+
+    def __init__(self, timeout_action=None, default_click_action=None, buttons=None, *args, **xargs):
+        super().__init__(*args, **xargs)
+        if buttons:
+            for name, func in buttons:
+                self.add_action(name, name,
+                    lambda *args,func=func,**xargs: [func(), setattr(self, '_button_clicked', True)])
+        self.connect("closed", self.on_popup_closed)
+        self._timeout_action = timeout_action
+        self._default_click_action = default_click_action
+
+    def on_popup_closed(self, *args):
+        if self.get_closed_reason() == 1: # timeout
+            if self._timeout_action: self._timeout_action()
+        elif self.get_closed_reason() == 2 and not self._button_clicked: # clicked outside buttons
+            if self._default_click_action: self._default_click_action()
+        self._button_clicked = False
+    
+    def show(self, *args, **xargs):
+        try: return super().show(*args,**xargs)
+        except GLib.Error as e: print(repr(e), file=sys.stderr)
+
+    def close(self, *args, **xargs):
+        try: super().close(*args, **xargs)
+        except: pass
+
+
 
