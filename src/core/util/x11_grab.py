@@ -85,7 +85,7 @@ class XGrab:
         self.root.ungrab_button(n, X.AnyModifier)
 
     def mainloop(self):
-        while self.running:
+        while self.running or self.display.pending_events():
             if self.display.pending_events():
                 event = self.display.next_event()
                 try:
