@@ -57,8 +57,8 @@ class FeatureChanger(TargetApp):
     def on_activated_mouse_move(self, x, y):
         def func(f):
             if self._position_ref is not None:
-                new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse_sensitivity"])
-                max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse_max_step"]))
+                new_value = self._position_ref-int((y-self._y_ref)*config["hotkeys"]["mouse"][0]["sensitivity"])
+                max_ = min(f.max, f.get()+Decimal(config["hotkeys"]["mouse"][0]["max_step"]))
                 min_ = f.min
                 if new_value > max_ or new_value < min_:
                     # mouse has been moved to an illegal point
@@ -74,7 +74,7 @@ class FeatureChanger(TargetApp):
 
     def on_volume_key_press(self, button):
         self._save_set_feature_to_relative_value(
-            config.hotkeys_feature, Decimal(config["hotkeys"]["step"])*(int(button)*2-1))
+            config.hotkeys_feature, Decimal(config["hotkeys"]["keyboard"][0]["step"])*(int(button)*2-1))
 
     def on_mute_key_press(self):
         self.target.schedule(lambda muted: muted.remote_set(not muted.get()), requires=(config.muted,))
@@ -113,7 +113,7 @@ class InputDeviceListener(AbstractContextManager):
             on_press=self.on_hotkey_press,
             on_release=self.on_hotkey_release,
         )
-        self._config_button = config["hotkeys"]["mouse_button"]
+        self._config_button = config["hotkeys"]["mouse"][0]["button"]
         if LINUX: self._xgrab = XGrab()
         self._controller = keyboard.Controller()
 

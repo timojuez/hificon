@@ -47,14 +47,16 @@ hotkeys:
     # keyboard hotkey options
     # Use volume media keys from keyboard to control target
     volume_hotkeys: True
-    hotkeys_feature: '@volume_id'
-    step: 3
+    keyboard:
+      - feature: '@volume_id'
+        step: 3
 
     # mouse gesture options
-    mouse_button: button9
-    mouse_feature: '@volume_id'
-    mouse_sensitivity: 0.06
+    mouse:
+      - button: button9
+        feature: '@volume_id'
+        sensitivity: 0.06
+        max_step: 8
     # Wait @mouse_delay milliseconds after each volume change
     mouse_delay: 100
-    mouse_max_step: 8
 
