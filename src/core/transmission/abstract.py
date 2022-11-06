@@ -6,6 +6,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 import sys, re
 from urllib.parse import parse_qsl
 from threading import Thread, Event
+from datetime import datetime, timedelta
 from ..util.function_bind import Bindable
 from ..util import log_call
 from .types import SchemeType, ServerType, ClientType
@@ -148,13 +149,13 @@ class AbstractServer(ServerType, AbstractTarget):
 
 
 class _FeaturesMixin:
-    _polled = list
+    _poll_timeout = dict
     preload_features = set() # feature ids to be polled on_connect
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
         self.preload_features = self.preload_features.copy()
-        self._polled = self._polled()
+        self._poll_timeout = self._poll_timeout()
 
     def on_connect(self):
         super().on_connect()
@@ -166,7 +167,7 @@ class _FeaturesMixin:
     def on_disconnected(self):
         super().on_disconnected()
         self._pending.clear()
-        self._polled.clear()
+        self._poll_timeout.clear()
         for f in self.features.values(): f.unset()
     
     def mainloop_hook(self):
@@ -174,9 +175,9 @@ class _FeaturesMixin:
         for p in self._pending: p.check_expiration()
     
     def poll_feature(self, f, force=False):
-        """ poll feature value if not polled before or force is True """
-        if f.call in self._polled and not force: return
-        self._polled.append(f.call)
+        """ poll feature value if not polled in same time frame or force is True """
+        if not force and (timeout := self._poll_timeout.get(f.call)) and timeout > datetime.now(): return
+        self._poll_timeout[f.call] = datetime.now()+timedelta(seconds=features.MAX_CALL_DELAY)
         f.poll_on_client()
 
     def on_receive_feature_value(self, f, value): f.set(value)
