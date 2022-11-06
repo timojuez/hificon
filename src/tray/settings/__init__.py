@@ -46,20 +46,25 @@ class HotkeysMixin:
         self.connect_adjustment_to_config("mouse_sensitivity", ("hotkeys", "mouse", 0, "sensitivity"))
         self.connect_adjustment_to_config("mouse_max_step", ("hotkeys", "mouse", 0, "max_step"))
         self.connect_adjustment_to_config("hotkey_steps", ("hotkeys", "keyboard", 0, "step"))
-        self.builder.get_object("mouse_button").set_label(config["hotkeys"]["mouse"][0]["button"])
+        self._set_mouse_button_label(self.builder.get_object("mouse_button"),
+            config["hotkeys"]["mouse"][0]["button"])
 
     def on_mouse_button_clicked(self, widget):
-        @gtk
         def on_click(x, y, button, pressed):
             mouse_listener.stop()
-            widget.set_label(button.name)
-            widget.set_sensitive(True)
-            config["hotkeys"]["mouse"][0]["button"] = button.name
+            self._set_mouse_button_label(widget, button.value)
+            config["hotkeys"]["mouse"][0]["button"] = button.value
             config.save()
         widget.set_label("Press mouse key ...")
         widget.set_sensitive(False)
         mouse_listener = mouse.Listener(on_click=on_click)
         mouse_listener.start()
+
+    @gtk
+    def _set_mouse_button_label(self, widget, value):
+        label = mouse.Button(value).name
+        widget.set_label(label)
+        widget.set_sensitive(True)
 
     def set_mouse_key(self, key):
         pass

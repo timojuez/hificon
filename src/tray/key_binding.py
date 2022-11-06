@@ -134,7 +134,7 @@ class InputDeviceListener(AbstractContextManager):
         if LINUX: self._xgrab.exit()
 
     def on_mouse_click(self, x, y, button, pressed):
-        if button.name != self._config_button: return
+        if button.value != self._config_button: return
         self._pressed = pressed
         if pressed: self.on_mouse_down(x, y)
         else: self.on_mouse_up(x, y)
@@ -176,9 +176,8 @@ class InputDeviceListener(AbstractContextManager):
     def set_button_grabbing(self, value):
         """ stop forwarding configured mouse button events to other programs """
         if not LINUX or not self._config_button: return
-        button_int = getattr(mouse.Button, self._config_button).value
-        if value: self._xgrab.grab_button(button_int)
-        else: self._xgrab.ungrab_button(button_int)
+        if value: self._xgrab.grab_button(self._config_button)
+        else: self._xgrab.ungrab_button(self._config_button)
 
 
 class KeyBinding(FeatureChanger, InputDeviceListener): pass

@@ -53,7 +53,7 @@ hotkeys:
 
     # mouse gesture options
     mouse:
-      - button: button9
+      - button: 9
         feature: '@volume_id'
         sensitivity: 0.06
         max_step: 8
