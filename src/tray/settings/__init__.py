@@ -56,6 +56,7 @@ class HotkeysMixin:
             self._set_mouse_button_label(widget, button.value)
             config["hotkeys"]["mouse"][0]["button"] = button.value
             config.save()
+            self.app_manager.main_app.input_listener.refresh_mouse()
         widget.set_label("Press mouse key ...")
         widget.set_sensitive(False)
         mouse_listener = mouse.Listener(on_click=on_click)
