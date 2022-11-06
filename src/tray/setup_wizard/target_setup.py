@@ -174,7 +174,7 @@ class Base:
             Thread(target=self.set_new_target, name="set_new_target", daemon=True).start()
 
     def set_new_target(self):
-        if self.target: self.target.exit() #FIXME: slow if target is not connected
+        if self.target: self.target.exit()
         try: self.target = Target(self.uri, connect=False)
         except Exception as e:
             sys.stderr.write(f"Could not create target for URI '{self.uri}': {e}\n")
