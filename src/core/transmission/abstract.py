@@ -7,8 +7,7 @@ import sys, re
 from urllib.parse import parse_qsl
 from threading import Thread, Event
 from datetime import datetime, timedelta
-from ..util.function_bind import Bindable
-from ..util import log_call
+from ..util import log_call, Bindable
 from .types import SchemeType, ServerType, ClientType
 from .discovery import DiscoverySchemeMixin
 from . import features
@@ -206,9 +205,10 @@ class _AbstractClient(ClientType, AbstractTarget):
         self._stoploop.clear()
         self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
         self._mainloopt.start()
-        return self
+        return super().enter()
 
     def exit(self):
+        super().exit()
         self._stoploop.set()
         self.disconnect()
         self._mainloopt.join()
