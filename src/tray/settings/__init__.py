@@ -44,7 +44,7 @@ class HotkeysMixin:
             allow_type=features.NumericFeature, default_value="@volume_id")
         self.connect_adjustment_to_config("mouse_sensitivity", ("hotkeys", "mouse_sensitivity"))
         self.connect_adjustment_to_config("mouse_max_step", ("hotkeys", "mouse_max_step"))
-        self.connect_adjustment_to_config("mouse_delay", ("hotkeys", "interval"))
+        self.connect_adjustment_to_config("mouse_delay", ("hotkeys", "mouse_delay"))
         self.connect_adjustment_to_config("hotkey_steps", ("hotkeys", "step"))
 
     def set_mouse_key(self, key):
