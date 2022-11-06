@@ -9,7 +9,7 @@ from ..core import features
 from ..core.util import Bindable
 from ..core.util.async_widget import bind_widget_to_value
 from ..info import NAME, AUTHOR, URL, VERSION, COPYRIGHT
-from .common import gtk, GladeGtk, config, APP_NAME, TargetApp
+from .common import gtk, GladeGtk, config, APP_NAME, TargetApp, HideOnUnfocusMixin
 from .settings import Settings
 
 
@@ -23,29 +23,6 @@ css_provider.load_from_data(css)
 context = Gtk.StyleContext()
 context.add_provider_for_screen(screen, css_provider,
                                 Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
-
-
-class HideOnUnfocusMixin:
-    """ Adds a popup behaviour to a window object: It closes, when the user clicks outside of it """
-
-    def __init__(self, *args, **xargs):
-        super().__init__(*args, **xargs)
-        self.window = self.builder.get_object("window")
-        self.window.set_keep_above(True)
-        self.window.connect("map-event", self.pointer_grab)
-        self.window.connect("unmap-event", self.pointer_ungrab)
-        self.window.connect("button-press-event", self. on_button_press)
-
-    def on_button_press(self, widget, event):
-        p_x, p_y = self.window.get_pointer()
-        w_x, w_y = self.window.get_size()
-        if p_x < 0 or p_y < 0 or p_x > w_x or p_y > w_y: # pointer outside window
-            self.hide()
-
-    def pointer_grab(self, *args):
-        Gdk.pointer_grab(self.window.get_window(), True, Gdk.EventMask.BUTTON_PRESS_MASK, None, None, 0)
-
-    def pointer_ungrab(self, *args): Gdk.pointer_ungrab(0)
 
 
 class ScalePopup(HideOnUnfocusMixin, GladeGtk):
