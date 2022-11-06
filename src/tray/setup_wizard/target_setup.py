@@ -1,5 +1,4 @@
-import sys, gi
-gi.require_version("Gtk", "3.0")
+import sys
 from gi.repository import Gtk, GObject
 from threading import Thread
 from ...core.transmission.discovery import discover_targets, get_name

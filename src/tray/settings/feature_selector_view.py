@@ -6,8 +6,6 @@ __all__ = ["FeatureSelectorView"]
 
 
 from random import randint
-import gi
-gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, Gdk, GObject
 from ...core import features
 from ...core.util import Bindable

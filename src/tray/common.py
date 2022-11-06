@@ -1,6 +1,5 @@
 import gi, pkgutil, sys
 gi.require_version('Notify', '0.7')
-gi.require_version("Gtk", "3.0")
 from gi.repository import GLib, Gtk, GObject, Notify, Gdk
 from contextlib import AbstractContextManager
 from ..core.transmission import features

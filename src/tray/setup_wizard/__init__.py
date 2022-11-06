@@ -1,6 +1,4 @@
 import pkgutil
-import gi
-gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk, GObject, GdkPixbuf, Gio
 from ... import Target
 from ...core.util.autostart import Autostart

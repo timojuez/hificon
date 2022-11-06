@@ -1,5 +1,3 @@
-import gi
-gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
 from ...core.transmission import features
 from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox, autostart
