@@ -158,8 +158,10 @@ class _FeaturesMixin:
 
     def on_connect(self):
         super().on_connect()
-        for f_id in set(self.preload_features):
-            if f_id in self.features: self.features[f_id].async_poll()
+        try:
+            for f_id in set(self.preload_features):
+                if f_id in self.features: self.features[f_id].async_poll()
+        except ConnectionError: pass
 
     def on_disconnected(self):
         super().on_disconnected()
