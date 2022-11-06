@@ -1,4 +1,5 @@
 import traceback
+from gi.repository import Gdk
 from pynput import mouse, keyboard
 from ...core.transmission import features
 from ..common import GladeGtk, gtk, config
@@ -25,6 +26,7 @@ class HotkeysMixin:
 
     def on_mouse_button_clicked(self, widget):
         def on_click(x, y, button, pressed):
+            Gdk.Seat.ungrab(seat)
             mouse_listener.stop()
             self._set_mouse_button_label(widget, button.value)
             config["hotkeys"]["mouse"][0]["button"] = button.value
@@ -32,6 +34,8 @@ class HotkeysMixin:
             self.app_manager.main_app.input_listener.refresh_mouse()
         widget.set_label("Press mouse key ...")
         widget.set_sensitive(False)
+        seat = Gdk.Display.get_default_seat(self.window.get_display())
+        Gdk.Seat.grab(seat, self.window.get_window(), Gdk.SeatCapabilities.POINTER, False)
         mouse_listener = mouse.Listener(on_click=on_click)
         mouse_listener.start()
 
