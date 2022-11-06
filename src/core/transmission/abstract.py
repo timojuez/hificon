@@ -194,12 +194,12 @@ class _AbstractClient(ClientType, AbstractTarget):
     init_args_help = None # tuple
     connected = False
     _mainloopt = None
-    _stoploop = None
+    _stoploop = Event
     _connect_on_enter = False
 
     def __init__(self, *args, connect=True, **xargs):
         super().__init__(*args, **xargs)
-        self._stoploop = Event()
+        self._stoploop = self._stoploop()
         self._connect_on_enter = connect
     
     def enter(self):

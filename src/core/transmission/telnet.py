@@ -16,15 +16,15 @@ class TelnetClient(AbstractClient):
     port = None
     _pulse = "" # this is being sent regularly to keep connection
     _telnet = None
-    _send_lock = None
-    _pulse_stop = None
+    _send_lock = Lock
+    _pulse_stop = Event
     _connect_lock = Lock
     
     def __init__(self, host, port=TELNET_PORT, *args, **xargs):
         super().__init__(*args, **xargs)
-        self._send_lock = Lock()
+        self._send_lock = self._send_lock()
         self._connect_lock = self._connect_lock()
-        self._pulse_stop = Event()
+        self._pulse_stop = self._pulse_stop()
         if host: self._update_vars(host, port)
 
     def _update_vars(self, host, port):

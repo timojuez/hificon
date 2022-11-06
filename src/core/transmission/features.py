@@ -135,6 +135,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     _prev_val = None
     _block_on_remote_set = None
     _block_on_remote_set_resetter = None
+    _lock = Lock
+    _event_on_set = Event
 
     def __init__(self, target):
         super().__init__()
@@ -142,8 +144,8 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         if not any([isinstance(target, c) for c in target_type]):
             raise TypeError("target must inherit one of %s."%(", ".join(map(lambda c:c.__name__, target_type))))
         self.target = target
-        self._lock = Lock()
-        self._event_on_set = Event()
+        self._lock = self._lock()
+        self._event_on_set = self._event_on_set()
         target.features[self.id] = self
         
     name = property(lambda self:self.__class__.__name__)
