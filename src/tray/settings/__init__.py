@@ -1,5 +1,6 @@
 import gi
 gi.require_version("Gtk", "3.0")
+import traceback
 from gi.repository import Gtk
 from pynput import mouse, keyboard
 from ...core.transmission import features
@@ -62,7 +63,10 @@ class HotkeysMixin:
 
     @gtk
     def _set_mouse_button_label(self, widget, value):
-        label = mouse.Button(value).name
+        try: label = mouse.Button(value).name
+        except:
+            traceback.print_exc()
+            label = "?"
         widget.set_label(label)
         widget.set_sensitive(True)
 

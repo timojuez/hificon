@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import time, sys, tempfile, os
+import time, sys, tempfile, os, traceback
 from threading import Thread, Lock, Event
 from decimal import Decimal
 from contextlib import suppress
@@ -176,8 +176,10 @@ class InputDeviceListener(AbstractContextManager):
     def set_button_grabbing(self, value):
         """ stop forwarding configured mouse button events to other programs """
         if not LINUX or not self._config_button: return
-        if value: self._xgrab.grab_button(self._config_button)
-        else: self._xgrab.ungrab_button(self._config_button)
+        try:
+            if value: self._xgrab.grab_button(self._config_button)
+            else: self._xgrab.ungrab_button(self._config_button)
+        except: traceback.print_exc()
 
 
 class KeyBinding(FeatureChanger, InputDeviceListener): pass
