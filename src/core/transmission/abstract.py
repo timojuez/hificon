@@ -157,13 +157,6 @@ class _FeaturesMixin:
         self.preload_features = self.preload_features.copy()
         self._poll_timeout = self._poll_timeout()
 
-    def on_connect(self):
-        super().on_connect()
-        try:
-            for f_id in set(self.preload_features):
-                if f_id in self.features: self.features[f_id].async_poll()
-        except ConnectionError: pass
-
     def on_disconnected(self):
         super().on_disconnected()
         self._pending.clear()
@@ -172,6 +165,11 @@ class _FeaturesMixin:
     
     def mainloop_hook(self):
         super().mainloop_hook()
+        if not self.connected: return
+        try:
+            for f_id in set(self.preload_features):
+                if (f := self.features.get(f_id)) and not f.isset(): f.async_poll()
+        except ConnectionError: pass
         for p in self._pending: p.check_expiration()
     
     def poll_feature(self, f, force=False):
