@@ -195,15 +195,15 @@ class _AbstractClient(ClientType, AbstractTarget):
     connected = False
     _mainloopt = None
     _stoploop = None
-    _connectOnEnter = False
+    _connect_on_enter = False
 
     def __init__(self, *args, connect=True, **xargs):
         super().__init__(*args, **xargs)
         self._stoploop = Event()
-        self._connectOnEnter = connect
+        self._connect_on_enter = connect
     
     def enter(self):
-        if self._connectOnEnter: self.connect()
+        if self._connect_on_enter: self.connect()
         self._stoploop.clear()
         self._mainloopt = Thread(target=self.mainloop, name=self.__class__.__name__, daemon=True)
         self._mainloopt.start()
