@@ -175,15 +175,14 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
         self.on_send()
         self.target.send(serialized)
 
-    @classmethod
-    def _blocked(cls, serialized):
+    def _blocked(self, serialized):
         """ prevent sending the same line many times """
-        if cls._block_on_remote_set == serialized: return True
-        cls._block_on_remote_set = serialized
-        try: cls._block_on_remote_set_resetter.cancel()
+        if self._block_on_remote_set == serialized: return True
+        self._block_on_remote_set = serialized
+        try: self._block_on_remote_set_resetter.cancel()
         except AttributeError: pass
-        cls._block_on_remote_set_resetter = Timer(1, lambda: setattr(cls, "_block_on_remote_set", None))
-        cls._block_on_remote_set_resetter.start()
+        self._block_on_remote_set_resetter = Timer(1, lambda: setattr(self, "_block_on_remote_set", None))
+        self._block_on_remote_set_resetter.start()
     
     def isset(self): return self._val != None
         
