@@ -1,6 +1,7 @@
 import gi
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gtk
+from pynput import mouse, keyboard
 from ...core.transmission import features
 from ..common import GladeGtk, gtk, config, id_to_string, FeatureSelectorCombobox, FeatureValueCombobox, autostart
 from ..setup_wizard import SetupWizard
@@ -45,6 +46,20 @@ class HotkeysMixin:
         self.connect_adjustment_to_config("mouse_sensitivity", ("hotkeys", "mouse", 0, "sensitivity"))
         self.connect_adjustment_to_config("mouse_max_step", ("hotkeys", "mouse", 0, "max_step"))
         self.connect_adjustment_to_config("hotkey_steps", ("hotkeys", "keyboard", 0, "step"))
+        self.builder.get_object("mouse_button").set_label(config["hotkeys"]["mouse"][0]["button"])
+
+    def on_mouse_button_clicked(self, widget):
+        @gtk
+        def on_click(x, y, button, pressed):
+            mouse_listener.stop()
+            widget.set_label(button.name)
+            widget.set_sensitive(True)
+            config["hotkeys"]["mouse"][0]["button"] = button.name
+            config.save()
+        widget.set_label("Press mouse key ...")
+        widget.set_sensitive(False)
+        mouse_listener = mouse.Listener(on_click=on_click)
+        mouse_listener.start()
 
     def set_mouse_key(self, key):
         pass
