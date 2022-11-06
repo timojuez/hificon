@@ -86,6 +86,7 @@ class HideOnUnfocusMixin(GladeGtk):
         self.window.connect("map-event", self.pointer_grab)
         self.window.connect("unmap-event", self.pointer_ungrab)
         self.window.connect("button-press-event", self. on_button_press)
+        self._seat = None
 
     def on_button_press(self, widget, event):
         p_x, p_y = self.window.get_pointer()
@@ -94,9 +95,11 @@ class HideOnUnfocusMixin(GladeGtk):
             self.hide()
 
     def pointer_grab(self, *args):
-        Gdk.pointer_grab(self.window.get_window(), True, Gdk.EventMask.BUTTON_PRESS_MASK, None, None, 0)
+        self._seat = Gdk.Display.get_default_seat(self.window.get_display())
+        Gdk.Seat.grab(self._seat, self.window.get_window(), Gdk.SeatCapabilities.POINTER, True)
 
-    def pointer_ungrab(self, *args): Gdk.pointer_ungrab(0)
+    def pointer_ungrab(self, *args):
+        if self._seat: Gdk.Seat.ungrab(self._seat)
 
 
 
