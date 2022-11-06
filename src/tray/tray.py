@@ -143,12 +143,13 @@ class MenuMixin(TargetApp):
 
         for e in self._footer_items+list(self._header_items.values()): e.show_all()
 
-    def on_menu_settings_change(self, features): self._refill_menu(features)
+    def on_menu_settings_change(self, features):
+        for f in features: self.target.preload_features.add(f.id)
+        self._refill_menu(features)
 
     @gtk
     def _refill_menu(self, header_features):
         for child in self._menu.get_children(): self._menu.remove(child)
-        for f in header_features: self.target.preload_features.add(f.id)
         for f in header_features:
             if item := self._header_items.get(f, None): self._menu.append(item)
         for item in self._footer_items: self._menu.append(item)
