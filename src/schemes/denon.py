@@ -553,6 +553,14 @@ class SoundModeSettings(MultipartFeatureMixin): # according to current sound mod
         return ["".join([key[:2], str(int(self.target.features.sound_mode_setting.get() == val)), val])
             for key, val in d.items()]
 
+    def resend(self):
+        self.target.schedule(lambda f: super(SoundModeSettings, self).resend(),
+            requires=("sound_mode_setting",))
+
+    def remote_set(self, *args, **xargs):
+        self.target.schedule(lambda f: super(SoundModeSettings, self).remote_set(*args, **xargs),
+            requires=("sound_mode_setting",))
+
     def from_parts(self, l): return {data[:3]: data[3:] for data in l}
 
 
