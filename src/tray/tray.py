@@ -103,11 +103,7 @@ class MenuMixin(TargetApp):
             try: d["menu"].append(self.add_feature(f, False))
             except TypeError: pass
             else: f.bind(on_set = gtk(lambda i=d["item"]: i.show()))
-        def poll_all():
-            try:
-                for f in self.target.features.values(): f.async_poll()
-            except ConnectionError: pass
-        self.target.bind(on_connect=lambda:Timer(1, poll_all).start())
+        self.target.preload_features[-10].update(self.target.features)
         item_more.set_submenu(submenu)
         self._footer_items.append(item_more)
 
@@ -144,7 +140,8 @@ class MenuMixin(TargetApp):
         for e in self._footer_items+list(self._header_items.values()): e.show_all()
 
     def on_menu_settings_change(self, features):
-        for f in features: self.target.preload_features.add(f.id)
+        self.target.preload_features[2].clear()
+        for f in features: self.target.preload_features[2].add(f.id)
         self._refill_menu(features)
 
     @gtk
@@ -219,7 +216,7 @@ class Icon(Bindable):
             on_connect=self.update_icon,
             on_disconnected=self.set_icon,
             on_feature_change=self.on_feature_change)
-        self.target.preload_features.update(self.relevant_features())
+        self.target.preload_features[10].update(self.relevant_features())
 
     def relevant_features(self): return config.tray_feature, config.muted, config.power
 
