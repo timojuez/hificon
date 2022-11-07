@@ -1158,8 +1158,8 @@ for cat_code, cat_id, cat_name, l in EQ_OPTIONS:
                     self._speaker_eq.remote_set_value(bound, self.type(value))
                 
                 def async_poll(self, *args, **xargs):
-                    self._channels.async_poll(*args, **xargs)
-                    self._speaker_eq.async_poll(*args, **xargs)
+                    if not self._channels.isset(): self._channels.async_poll(*args, **xargs)
+                    if not self._speaker_eq.isset(): self._speaker_eq.async_poll(*args, **xargs)
 
 
 @Denon.add_feature
