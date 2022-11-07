@@ -147,13 +147,66 @@ class AbstractServer(ServerType, AbstractTarget):
             super().on_receive_raw_data(data)
 
 
-class _FeaturesMixin:
-    _poll_timeout = dict
-    preload_features = set() # feature ids to be polled on_connect
+class GroupedSet:
+    """ This builds a list [*elements_of_set_1, *elements_of_set_2, ...].
+    You can access set_n using the index n on this object. """
+
+    def __init__(self, obj=None):
+        if isinstance(obj, type(self)): self.data = obj.data.copy()
+        else:
+            self.data = {}
+            if obj: self.update(obj)
+
+    def add(self, obj, group=0):
+        self[group].add(obj)
+
+    def update(self, objs, group=0):
+        self[group].update(objs)
+
+    def __getitem__(self, key):
+        r = self.data[key] = self.data.get(key, set())
+        return r
+
+    def __delitem__(self, key): del self.data[key]
+
+    def __iter__(self):
+        def iter():
+            for group, s in sorted(self.data.items(), reverse=True):
+                for e in s: yield e
+        return iter()
+
+
+class _PreloadMixin:
+    preload_features = GroupedSet() # feature ids to be polled constantly when not set
+    _preload_features_iter = None
 
     def __init__(self, *args, **xargs):
         super().__init__(*args, **xargs)
-        self.preload_features = self.preload_features.copy()
+        self.preload_features = GroupedSet(self.preload_features)
+
+    def on_disconnected(self):
+        super().on_disconnected()
+        self._preload_features_iter = None
+
+    def mainloop_hook(self):
+        super().mainloop_hook()
+        if not self.connected: return
+        if not self._preload_features_iter: self._preload_features_iter = iter(self.preload_features)
+        for _ in range(10):
+            try: f_id = next(self._preload_features_iter)
+            except StopIteration:
+                self._preload_features_iter = None
+                break
+            if (f := self.features.get(f_id)) and not f.isset():
+                try: f.async_poll()
+                except ConnectionError: break
+
+
+class _FeaturesMixin:
+    _poll_timeout = dict
+
+    def __init__(self, *args, **xargs):
+        super().__init__(*args, **xargs)
         self._poll_timeout = self._poll_timeout()
 
     def on_disconnected(self):
@@ -164,13 +217,8 @@ class _FeaturesMixin:
     
     def mainloop_hook(self):
         super().mainloop_hook()
-        if not self.connected: return
-        try:
-            for f_id in set(self.preload_features):
-                if (f := self.features.get(f_id)) and not f.isset(): f.async_poll()
-        except ConnectionError: pass
         for p in self._pending: p.check_expiration()
-    
+
     def poll_feature(self, f, force=False):
         """ poll feature value if not polled in same time frame or force is True """
         if not force and (timeout := self._poll_timeout.get(f.call)) and timeout > datetime.now(): return
@@ -254,7 +302,7 @@ class _AbstractClient(ClientType, AbstractTarget):
         super().handle_query(*args, **xargs)
 
 
-class AbstractClient(_FeaturesMixin, _AbstractClient): pass
+class AbstractClient(_PreloadMixin, _FeaturesMixin, _AbstractClient): pass
 
 
 class _AbstractSchemeMeta(type):
