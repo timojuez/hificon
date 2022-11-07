@@ -222,7 +222,7 @@ class _FeaturesMixin:
     def poll_feature(self, f, force=False):
         """ poll feature value if not polled in same time frame or force is True """
         if not force and (timeout := self._poll_timeout.get(f.call)) and timeout > datetime.now(): return
-        self._poll_timeout[f.call] = datetime.now()+timedelta(seconds=features.MAX_CALL_DELAY)
+        self._poll_timeout[f.call] = datetime.now()+timedelta(seconds=30)
         f.poll_on_client()
 
     def on_receive_feature_value(self, f, value): f.set(value)
