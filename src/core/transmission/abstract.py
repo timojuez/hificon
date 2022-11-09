@@ -4,6 +4,7 @@ values from a Telnet or non-Telnet server. A client supports features. See featu
 """
 
 import sys, re
+from abc import ABCMeta
 from urllib.parse import parse_qsl
 from threading import Thread, Event
 from datetime import datetime, timedelta
@@ -305,9 +306,10 @@ class _AbstractClient(ClientType, AbstractTarget):
 class AbstractClient(_PreloadMixin, _FeaturesMixin, _AbstractClient): pass
 
 
-class _AbstractSchemeMeta(type):
+class _AbstractSchemeMeta(ABCMeta):
 
     def __init__(cls, name, bases, dct):
+        super().__init__(name, bases, dct)
         cls.features = cls.features.copy()
         cls.feature_categories = cls.feature_categories.copy()
 
