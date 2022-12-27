@@ -264,7 +264,7 @@ class AsyncFeature(FeatureInterface, Bindable, metaclass=_MetaFeature):
     def consume(self, data):
         """ unserialize and apply @data to this object """
         self._buffer.extend(data)
-        if self.is_complete(self._buffer):
+        if isinstance(self.target, ServerType) or self.is_complete(self._buffer):
             data = self._buffer.copy()
             self._buffer.clear()
         else: return
